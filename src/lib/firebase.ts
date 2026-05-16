@@ -2,7 +2,19 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseConfig from '../../firebase-applet-config.json';
+import baseConfig from '../../firebase-applet-config.json';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || baseConfig.apiKey,
+  authDomain: typeof window !== 'undefined' && window.location.hostname === "amaanestate.vercel.app"
+    ? "amaanestate.vercel.app"
+    : (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "amaanestate-web.firebaseapp.com"),
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || baseConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || baseConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || baseConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || baseConfig.appId,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || baseConfig.firestoreDatabaseId,
+};
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
