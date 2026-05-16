@@ -170,8 +170,8 @@ service cloud.firestore {
     }
 
     match /properties/{propertyId} {
-      allow get: if isValidId(propertyId) && (isAdmin() || (existing().status == 'published') || (isSignedIn() && existing().agentId == request.auth.uid));
-      allow list: if isAdmin() || existing().status == 'published' || (isSignedIn() && existing().agentId == request.auth.uid);
+      allow get: if isValidId(propertyId) && (isAdmin() || (resource.data.status == 'published') || (isSignedIn() && resource.data.agentId == request.auth.uid));
+      allow list: if isAdmin() || (resource.data.status == 'published') || (isSignedIn() && resource.data.agentId == request.auth.uid);
       allow create: if isValidId(propertyId) && isAgent() && isValidPropertyCreate(incoming());
       allow update: if isValidId(propertyId) && isValidPropertyUpdate(incoming()) && (
         isAdmin() ||
@@ -181,8 +181,8 @@ service cloud.firestore {
     }
 
     match /vehicles/{vehicleId} {
-      allow get: if isValidId(vehicleId) && (isAdmin() || (existing().status == 'published') || (isSignedIn() && existing().agentId == request.auth.uid));
-      allow list: if isAdmin() || existing().status == 'published' || (isSignedIn() && existing().agentId == request.auth.uid);
+      allow get: if isValidId(vehicleId) && (isAdmin() || (resource.data.status == 'published') || (isSignedIn() && resource.data.agentId == request.auth.uid));
+      allow list: if isAdmin() || (resource.data.status == 'published') || (isSignedIn() && resource.data.agentId == request.auth.uid);
       allow create: if isValidId(vehicleId) && isAgent() && isValidVehicleCreate(incoming());
       allow update: if isValidId(vehicleId) && isValidVehicleUpdate(incoming()) && (
         isAdmin() ||
