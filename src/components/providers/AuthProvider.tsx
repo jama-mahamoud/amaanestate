@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const role = isSuperAdmin ? 'admin' : 'user';
             
             const newAppUser = {
+              uid: user.uid,
               email: user.email,
               name: user.displayName || 'Anonymous',
               role,

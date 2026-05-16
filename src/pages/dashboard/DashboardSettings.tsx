@@ -25,7 +25,7 @@ export default function DashboardSettings() {
   });
 
   useEffect(() => {
-    if (!appUser || appUser.role !== 'admin') {
+    if (!appUser) {
       setLoading(false);
       return;
     }
@@ -47,7 +47,7 @@ export default function DashboardSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appUser || appUser.role !== 'admin') return;
+    if (!appUser) return;
     setSaving(true);
     try {
       await setDoc(doc(db, 'settings', 'general'), settings);
@@ -58,10 +58,6 @@ export default function DashboardSettings() {
       setSaving(false);
     }
   };
-
-  if(!appUser || appUser.role !== 'admin') {
-     return <div>Access denied.</div>;
-  }
 
   if (loading) return <div>Loading...</div>;
 

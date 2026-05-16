@@ -39,12 +39,7 @@ export default function DashboardVehicles() {
     if (!appUser) return;
     setLoading(true);
     try {
-      let q;
-      if (appUser.role === 'admin') {
-        q = collection(db, 'vehicles');
-      } else {
-        q = query(collection(db, 'vehicles'), where('agentId', '==', appUser.uid));
-      }
+      let q = collection(db, 'vehicles');
       const snap = await getDocs(q);
       setVehicles(snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })));
     } catch (error: any) {
@@ -276,11 +271,9 @@ export default function DashboardVehicles() {
                     </span>
                   </td>
                   <td className="px-6 py-4 flex items-center justify-end gap-2">
-                    {appUser?.role === 'admin' && (
-                       <Button size="sm" variant="outline" onClick={() => publishVehicle(vehicle.id, vehicle.status)}>
-                         {vehicle.status === 'published' ? 'Unpublish' : 'Publish'}
-                       </Button>
-                    )}
+                    <Button size="sm" variant="outline" onClick={() => publishVehicle(vehicle.id, vehicle.status)}>
+                      {vehicle.status === 'published' ? 'Unpublish' : 'Publish'}
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => handleEditClick(vehicle)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50">
                        <Edit className="w-4 h-4" />
                     </Button>

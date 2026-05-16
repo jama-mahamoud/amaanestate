@@ -45,17 +45,17 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          <Button asChild variant="outline" className="border-gold text-gold hover:bg-gold hover:text-white">
+            <Link to="/become-agent">List Property</Link>
+          </Button>
           {appUser ? (
-            <Button asChild className="bg-black hover:bg-gold transition-colors">
+            <Button asChild className="bg-black hover:bg-gold transition-colors text-white">
               <Link to="/dashboard">Dashboard</Link>
             </Button>
           ) : (
             <>
               <Button variant="ghost" asChild className="hover:text-gold">
                 <Link to="/login">Sign In</Link>
-              </Button>
-              <Button asChild className="bg-gold text-white hover:bg-black transition-colors">
-                <Link to="/register">Agent Registration</Link>
               </Button>
             </>
           )}
@@ -86,16 +86,21 @@ export default function Navbar() {
             ))}
             <div className="pt-4 border-t flex flex-col space-y-2">
               {appUser ? (
-                <Button asChild className="w-full bg-black">
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                </Button>
+                <>
+                  <Button asChild className="w-full bg-gold text-white" variant="outline">
+                    <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
+                  </Button>
+                  <Button asChild className="w-full bg-black">
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                  </Button>
+                </>
               ) : (
                 <>
+                  <Button asChild variant="outline" className="w-full border-gold text-gold">
+                    <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
+                  </Button>
                   <Button variant="outline" asChild className="w-full">
                     <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                  </Button>
-                  <Button asChild className="w-full bg-gold text-white hover:bg-black">
-                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Agent Registration</Link>
                   </Button>
                 </>
               )}

@@ -42,12 +42,7 @@ export default function DashboardProperties() {
     if (!appUser) return;
     setLoading(true);
     try {
-      let q;
-      if (appUser.role === 'admin') {
-        q = collection(db, 'properties'); // Admin sees all
-      } else {
-        q = query(collection(db, 'properties'), where('agentId', '==', appUser.uid));
-      }
+      let q = collection(db, 'properties'); // Show all for demo
       
       const snap = await getDocs(q);
       setProperties(snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })));
@@ -302,11 +297,9 @@ export default function DashboardProperties() {
                     </span>
                   </td>
                   <td className="px-6 py-4 flex items-center justify-end gap-2">
-                    {appUser?.role === 'admin' && (
-                       <Button size="sm" variant="outline" onClick={() => publishProperty(property.id, property.status)}>
-                         {property.status === 'published' ? 'Unpublish' : 'Publish'}
-                       </Button>
-                    )}
+                    <Button size="sm" variant="outline" onClick={() => publishProperty(property.id, property.status)}>
+                      {property.status === 'published' ? 'Unpublish' : 'Publish'}
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => handleEditClick(property)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50">
                        <Edit className="w-4 h-4" />
                     </Button>

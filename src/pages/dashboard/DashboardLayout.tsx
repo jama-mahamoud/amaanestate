@@ -24,12 +24,12 @@ export default function DashboardLayout() {
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Properties', path: '/dashboard/properties', icon: <Home size={20} />, show: isAdmin || isAgent },
-    { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={20} />, show: isAdmin || isAgent },
-    { name: 'Articles', path: '/dashboard/articles', icon: <FileText size={20} />, show: isAdmin },
-    { name: 'Agents & Users', path: '/dashboard/users', icon: <Users size={20} />, show: isAdmin },
-    { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} />, show: isAdmin },
-  ].filter(link => link.show !== false);
+    { name: 'Properties', path: '/dashboard/properties', icon: <Home size={20} /> },
+    { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={20} /> },
+    { name: 'Articles', path: '/dashboard/articles', icon: <FileText size={20} /> },
+    { name: 'Agents & Users', path: '/dashboard/users', icon: <Users size={20} /> },
+    { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> },
+  ];
 
   const handleLogout = async () => {
     await signOut(auth);

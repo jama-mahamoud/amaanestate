@@ -30,7 +30,7 @@ export default function DashboardArticles() {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchArticles = async () => {
-    if (!appUser || appUser.role !== 'admin') {
+    if (!appUser) {
       setLoading(false);
       return;
     }
@@ -69,7 +69,7 @@ export default function DashboardArticles() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appUser || appUser.role !== 'admin') return;
+    if (!appUser) return;
     setUploading(true);
 
     try {
@@ -140,10 +140,6 @@ export default function DashboardArticles() {
       toast.error('Failed to delete');
     }
   };
-
-  if(!appUser || appUser.role !== 'admin') {
-    return <div>Access Denied. Admins only.</div>;
-  }
 
   return (
     <div className="space-y-6">

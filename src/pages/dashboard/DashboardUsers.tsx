@@ -11,7 +11,7 @@ export default function DashboardUsers() {
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = async () => {
-    if (!appUser || appUser.role !== 'admin') return;
+    if (!appUser) return;
     setLoading(true);
     try {
       const snap = await getDocs(collection(db, 'users'));
@@ -39,10 +39,6 @@ export default function DashboardUsers() {
       toast.error('Failed to update agent status');
     }
   };
-
-  if (appUser?.role !== 'admin') {
-    return <div>Access Denied</div>;
-  }
 
   return (
     <div className="space-y-6">

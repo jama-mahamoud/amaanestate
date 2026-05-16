@@ -11,6 +11,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import News from './pages/News';
 import ArticleDetails from './pages/ArticleDetails';
+import AgentRegistration from './pages/AgentRegistration';
 
 // Auth Pages
 import Login from './pages/Login';
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="news/:id" element={<ArticleDetails />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="become-agent" element={<AgentRegistration />} />
         
         {/* Auth Routes */}
         <Route path="login" element={<Login />} />
