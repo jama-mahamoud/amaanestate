@@ -38,15 +38,15 @@ service cloud.firestore {
     // --- VALIDATION BLUEPRINTS ---
     // Users
     function isValidUserCreate(data) {
-      return data.keys().hasAll(['email', 'role', 'name', 'createdAt', 'updatedAt']) &&
-             data.keys().hasAny(['phone', 'avatarUrl', 'isApproved']) == false && 
-             // we allow users to set phone etc., lets be exact
-             data.size() >= 5 && data.size() <= 8 &&
+      return data.keys().hasAll(['email', 'role', 'name', 'createdAt', 'updatedAt', 'isApproved']) &&
+             data.keys().hasAny(['phone', 'avatarUrl']) == false && 
+             data.size() >= 6 && data.size() <= 8 &&
              data.email is string && data.email.size() <= 256 &&
              data.role in ['admin', 'agent', 'user'] &&
              // Prevent non-superadmins from making themselves admins
              (data.role != 'admin' || isSuperAdmin()) &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.isApproved is bool &&
              data.createdAt == request.time &&
              data.updatedAt == request.time;
     }
@@ -55,6 +55,7 @@ service cloud.firestore {
       return data.email is string && data.email.size() <= 256 &&
              data.role in ['admin', 'agent', 'user'] &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.isApproved is bool &&
              data.updatedAt == request.time;
     }
 

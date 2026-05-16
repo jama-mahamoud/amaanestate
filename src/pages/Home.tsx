@@ -44,6 +44,19 @@ export default function Home() {
             Discover luxury homes, commercial spaces, and premium vehicles in Jigjiga, Dire Dawa, and beyond.
           </p>
           
+          <div className="flex flex-wrap gap-4 justify-center mb-12">
+            <Link to="/properties?type=rent">
+              <Button size="lg" className="bg-white text-black hover:bg-amber-500 hover:text-white transition-all text-lg h-14 px-8">
+                Properties for Rent
+              </Button>
+            </Link>
+            <Link to="/properties?type=sale">
+              <Button size="lg" className="bg-amber-500 hover:bg-black text-white transition-all text-lg h-14 px-8">
+                Properties for Sale
+              </Button>
+            </Link>
+          </div>
+
           <div className="bg-white p-4 rounded-xl shadow-2xl flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
             <div className="flex-1 flex items-center gap-2 border-b md:border-b-0 md:border-r pb-2 md:pb-0 px-2 text-black">
                <MapPin className="text-amber-500 shrink-0" />

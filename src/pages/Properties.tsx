@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bed, Bath, Square, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
 
 export default function Properties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [filterType, setFilterType] = useState(searchParams.get('type') || 'all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -25,23 +30,40 @@ export default function Properties() {
     fetchProperties();
   }, []);
 
+  const filteredProperties = properties.filter(p => {
+    const typeMatch = filterType === 'all' || p.listingType === filterType;
+    const searchMatch = p.title.toLowerCase().includes(search.toLowerCase()) || p.city.toLowerCase().includes(search.toLowerCase());
+    return typeMatch && searchMatch;
+  });
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-7xl">
       <h1 className="text-4xl font-bold mb-8">Properties</h1>
       
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+         <div className="flex-1">
+           <Input placeholder="Search by title or city..." onChange={(e) => setSearch(e.target.value)} />
+         </div>
+         <select className="p-2 border rounded" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <option value="all">All Types</option>
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
+         </select>
+      </div>
+      
       {loading ? (
          <p>Loading properties...</p>
-      ) : properties.length === 0 ? (
+      ) : filteredProperties.length === 0 ? (
          <div className="bg-gray-50 border p-12 text-center rounded-2xl">
             <h2 className="text-2xl font-bold mb-2">No Properties Found</h2>
-            <p className="text-gray-500">There are currently no published properties. Please check back later.</p>
+            <p className="text-gray-500">Try adjusting your filters.</p>
          </div>
       ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {properties.map(property => (
+            {filteredProperties.map(property => (
                <Link to={`/properties/${property.id}`} key={property.id}>
                   <Card className="overflow-hidden border-0 shadow-lg group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl h-full flex flex-col">
-                     <div className="h-64 bg-gray-200 relative overflow-hidden shrink-0">
+                     <div className="aspect-video bg-gray-200 relative overflow-hidden shrink-0">
                         <img 
                            src={property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80"} 
                            alt={property.title} 
