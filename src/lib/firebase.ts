@@ -6,9 +6,7 @@ import baseConfig from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || baseConfig.apiKey,
-  authDomain: typeof window !== 'undefined' && window.location.hostname === "amaanestate.vercel.app"
-    ? "amaanestate.vercel.app"
-    : (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "amaanestate-web.firebaseapp.com"),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "amaanestate-web.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || baseConfig.projectId,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || baseConfig.storageBucket,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || baseConfig.messagingSenderId,
