@@ -42,6 +42,15 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+          {appUser && (appUser.role === 'admin' || appUser.role === 'agent') && (
+            <>
+              <Link to="/dashboard/properties" className="text-sm transition-colors hover:text-gold">Add Property</Link>
+              <Link to="/dashboard/vehicles" className="text-sm transition-colors hover:text-gold">Add Vehicle</Link>
+            </>
+          )}
+          {appUser && appUser.role === 'admin' && (
+            <Link to="/dashboard/users" className="text-sm transition-colors hover:text-gold">Manage Agents</Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-4">

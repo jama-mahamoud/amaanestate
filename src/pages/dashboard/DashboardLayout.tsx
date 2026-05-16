@@ -27,7 +27,7 @@ export default function DashboardLayout() {
     { name: 'Properties', path: '/dashboard/properties', icon: <Home size={20} /> },
     { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={20} /> },
     { name: 'Articles', path: '/dashboard/articles', icon: <FileText size={20} /> },
-    { name: 'Agents & Users', path: '/dashboard/users', icon: <Users size={20} /> },
+    { name: 'Manage Agents', path: '/dashboard/users', icon: <Users size={20} /> },
     { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> },
   ];
 

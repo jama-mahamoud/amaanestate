@@ -20,12 +20,12 @@ export default function Login() {
       const userRef = doc(db, 'users', result.user.uid);
       const snap = await getDoc(userRef);
       if (!snap.exists()) {
-         // Create fresh user account as a normal user by default, they can upgrade to agent later or admin approves
+         // Create fresh user account
          await setDoc(userRef, {
            email: result.user.email,
            name: result.user.displayName || 'Anonymous',
-           role: result.user.email === 'towinnow0@gmail.com' ? 'admin' : 'user',
-           isApproved: result.user.email === 'towinnow0@gmail.com',
+           role: (result.user.email === 'towinnow0@gmail.com' || result.user.email === 'jamamahamoud01@gmail.com') ? 'admin' : 'user',
+           isApproved: (result.user.email === 'towinnow0@gmail.com' || result.user.email === 'jamamahamoud01@gmail.com'),
            createdAt: serverTimestamp(),
            updatedAt: serverTimestamp(),
          });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 
 interface AppUser {
@@ -39,11 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userRef = doc(db, 'users', user.uid);
         try {
           const userSnap = await getDoc(userRef);
+          const isSuperAdmin = user.email === 'towinnow0@gmail.com' || user.email === 'jamamahamoud01@gmail.com';
+          
           if (userSnap.exists()) {
-            setAppUser({ uid: user.uid, ...userSnap.data() } as AppUser);
+            const data = userSnap.data();
+            // Force admin role for super admins
+            if (isSuperAdmin && data.role !== 'admin') {
+              await updateDoc(userRef, { role: 'admin', isApproved: true });
+              setAppUser({ uid: user.uid, ...data, role: 'admin', isApproved: true } as AppUser);
+            } else {
+              setAppUser({ uid: user.uid, ...data } as AppUser);
+            }
           } else {
-            // Check if super admin
-            const isSuperAdmin = user.email === 'towinnow0@gmail.com';
             const role = isSuperAdmin ? 'admin' : 'user';
             
             const newAppUser = {
