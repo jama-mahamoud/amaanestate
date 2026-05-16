@@ -19,12 +19,14 @@ export default function DashboardArticles() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({
+  const defaultForm = {
     title: '',
     content: '',
     excerpt: '',
-  });
+  };
+  const [formData, setFormData] = useState(defaultForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchArticles = async () => {
@@ -47,6 +49,24 @@ export default function DashboardArticles() {
     fetchArticles();
   }, [appUser]);
 
+  const handleEditClick = (article: any) => {
+    setEditId(article.id);
+    setFormData({
+      title: article.title,
+      content: article.content,
+      excerpt: article.excerpt,
+    });
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleCreateClick = () => {
+    setEditId(null);
+    setFormData(defaultForm);
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appUser || appUser.role !== 'admin') return;
@@ -58,25 +78,40 @@ export default function DashboardArticles() {
         imageUrl = await uploadImage(imageFile, 'articles');
       }
 
-      const articleData = {
-        title: formData.title,
-        content: formData.content,
-        excerpt: formData.excerpt,
-        imageUrl,
-        author: appUser.uid,
-        status: 'published',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      if (editId) {
+        const updateData: any = {
+           title: formData.title,
+           content: formData.content,
+           excerpt: formData.excerpt,
+           updatedAt: serverTimestamp(),
+        };
+        if (imageUrl) {
+           updateData.imageUrl = imageUrl;
+        }
+        await updateDoc(doc(db, 'articles', editId), updateData);
+        toast.success('Article updated successfully');
+      } else {
+        const articleData = {
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt,
+          imageUrl,
+          author: appUser.uid,
+          status: 'published',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
 
-      await addDoc(collection(db, 'articles'), articleData);
-      toast.success('Article created successfully');
+        await addDoc(collection(db, 'articles'), articleData);
+        toast.success('Article created successfully');
+      }
+
       setIsDialogOpen(false);
       setImageFile(null);
-      setFormData({ title: '', content: '', excerpt: '' });
+      setFormData(defaultForm);
       fetchArticles();
     } catch (err: any) {
-      toast.error('Failed to create article: ' + err.message);
+      toast.error('Failed to save article: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -116,13 +151,13 @@ export default function DashboardArticles() {
         <h1 className="text-3xl font-bold tracking-tight">Articles & News</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-amber-500 hover:bg-black text-white">
+            <Button className="bg-amber-500 hover:bg-black text-white" onClick={handleCreateClick}>
               <Plus className="w-4 h-4 mr-2" /> Add Article
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Article</DialogTitle>
+              <DialogTitle>{editId ? 'Edit Article' : 'Create New Article'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="space-y-2">
@@ -142,7 +177,7 @@ export default function DashboardArticles() {
                 <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
               </div>
               <Button type="submit" disabled={uploading} className="w-full bg-amber-500 hover:bg-black text-white">
-                {uploading ? 'Uploading...' : 'Publish Article'}
+                {uploading ? 'Uploading...' : (editId ? 'Update Article' : 'Publish Article')}
               </Button>
             </form>
           </DialogContent>
@@ -155,7 +190,7 @@ export default function DashboardArticles() {
             <tr>
               <th className="px-6 py-4 font-medium text-gray-500">Article</th>
               <th className="px-6 py-4 font-medium text-gray-500">Status</th>
-              <th className="px-6 py-4 font-medium text-gray-500">Actions</th>
+              <th className="px-6 py-4 font-medium text-gray-500 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -177,9 +212,12 @@ export default function DashboardArticles() {
                       {article.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 flex items-center gap-2">
+                  <td className="px-6 py-4 flex items-center justify-end gap-2">
                     <Button size="sm" variant="outline" onClick={() => publishArticle(article.id, article.status)}>
                       {article.status === 'published' ? 'Unpublish' : 'Publish'}
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleEditClick(article)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50">
+                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteArticle(article.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
                        <Trash2 className="w-4 h-4" />

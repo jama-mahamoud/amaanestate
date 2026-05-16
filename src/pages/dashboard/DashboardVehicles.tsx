@@ -20,8 +20,9 @@ export default function DashboardVehicles() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({
+  const defaultForm = {
     title: '',
     description: '',
     make: '',
@@ -30,7 +31,8 @@ export default function DashboardVehicles() {
     listingType: 'sale',
     price: '',
     city: 'Jigjiga',
-  });
+  };
+  const [formData, setFormData] = useState(defaultForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchVehicles = async () => {
@@ -56,6 +58,29 @@ export default function DashboardVehicles() {
     fetchVehicles();
   }, [appUser]);
 
+  const handleEditClick = (vehicle: any) => {
+    setEditId(vehicle.id);
+    setFormData({
+      title: vehicle.title,
+      description: vehicle.description,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year.toString(),
+      listingType: vehicle.listingType,
+      price: vehicle.price.toString(),
+      city: vehicle.city,
+    });
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleCreateClick = () => {
+    setEditId(null);
+    setFormData(defaultForm);
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appUser) return;
@@ -66,31 +91,51 @@ export default function DashboardVehicles() {
         imageUrl = await uploadImage(imageFile, 'vehicles');
       }
 
-      const vehicleData = {
-        agentId: appUser.uid,
-        title: formData.title,
-        description: formData.description,
-        make: formData.make,
-        model: formData.model,
-        year: Number(formData.year),
-        listingType: formData.listingType,
-        price: Number(formData.price),
-        city: formData.city,
-        images: imageUrl ? [imageUrl] : [],
-        status: 'pending',
-        isFeatured: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      if (editId) {
+        const updateData: any = {
+           title: formData.title,
+           description: formData.description,
+           make: formData.make,
+           model: formData.model,
+           year: Number(formData.year),
+           listingType: formData.listingType,
+           price: Number(formData.price),
+           city: formData.city,
+           updatedAt: serverTimestamp(),
+        };
+        if (imageUrl) {
+           updateData.images = [imageUrl]; // override
+        }
+        await updateDoc(doc(db, 'vehicles', editId), updateData);
+        toast.success('Vehicle updated successfully');
+      } else {
+        const vehicleData = {
+          agentId: appUser.uid,
+          title: formData.title,
+          description: formData.description,
+          make: formData.make,
+          model: formData.model,
+          year: Number(formData.year),
+          listingType: formData.listingType,
+          price: Number(formData.price),
+          city: formData.city,
+          images: imageUrl ? [imageUrl] : [],
+          status: 'pending',
+          isFeatured: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
 
-      await addDoc(collection(db, 'vehicles'), vehicleData);
-      toast.success('Vehicle created successfully');
+        await addDoc(collection(db, 'vehicles'), vehicleData);
+        toast.success('Vehicle created successfully');
+      }
+
       setIsDialogOpen(false);
       setImageFile(null);
-      setFormData({ ...formData, title: '', price: '', description: '' });
+      setFormData(defaultForm);
       fetchVehicles();
     } catch (err: any) {
-      toast.error('Failed to create vehicle: ' + err.message);
+      toast.error('Failed to save vehicle: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -126,13 +171,13 @@ export default function DashboardVehicles() {
         <h1 className="text-3xl font-bold tracking-tight">Vehicles</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-amber-500 hover:bg-black text-white">
+            <Button className="bg-amber-500 hover:bg-black text-white" onClick={handleCreateClick}>
               <Plus className="w-4 h-4 mr-2" /> Add Vehicle
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Vehicle Listing</DialogTitle>
+              <DialogTitle>{editId ? 'Edit Vehicle Listing' : 'Create New Vehicle Listing'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
@@ -189,7 +234,7 @@ export default function DashboardVehicles() {
                  </div>
               </div>
               <Button type="submit" disabled={uploading} className="w-full bg-amber-500 hover:bg-black text-white">
-                {uploading ? 'Uploading...' : 'Create Vehicle'}
+                {uploading ? 'Uploading...' : (editId ? 'Update Vehicle' : 'Create Vehicle')}
               </Button>
             </form>
           </DialogContent>
@@ -205,7 +250,7 @@ export default function DashboardVehicles() {
               <th className="px-6 py-4 font-medium text-gray-500">Price</th>
               <th className="px-6 py-4 font-medium text-gray-500">Make & Model</th>
               <th className="px-6 py-4 font-medium text-gray-500">Status</th>
-              <th className="px-6 py-4 font-medium text-gray-500">Actions</th>
+              <th className="px-6 py-4 font-medium text-gray-500 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -230,12 +275,15 @@ export default function DashboardVehicles() {
                       {vehicle.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 flex items-center gap-2">
+                  <td className="px-6 py-4 flex items-center justify-end gap-2">
                     {appUser?.role === 'admin' && (
                        <Button size="sm" variant="outline" onClick={() => publishVehicle(vehicle.id, vehicle.status)}>
                          {vehicle.status === 'published' ? 'Unpublish' : 'Publish'}
                        </Button>
                     )}
+                    <Button size="icon" variant="ghost" onClick={() => handleEditClick(vehicle)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50">
+                       <Edit className="w-4 h-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteVehicle(vehicle.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
                        <Trash2 className="w-4 h-4" />
                     </Button>

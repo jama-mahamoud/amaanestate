@@ -20,9 +20,10 @@ export default function DashboardProperties() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   
   // Form State
-  const [formData, setFormData] = useState({
+  const defaultForm = {
     title: '',
     description: '',
     type: 'house',
@@ -33,7 +34,8 @@ export default function DashboardProperties() {
     bedrooms: '0',
     bathrooms: '0',
     area: '0',
-  });
+  };
+  const [formData, setFormData] = useState(defaultForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchProperties = async () => {
@@ -60,6 +62,31 @@ export default function DashboardProperties() {
     fetchProperties();
   }, [appUser]);
 
+  const handleEditClick = (property: any) => {
+    setEditId(property.id);
+    setFormData({
+      title: property.title,
+      description: property.description,
+      type: property.type,
+      listingType: property.listingType,
+      price: property.price.toString(),
+      location: property.location,
+      city: property.city,
+      bedrooms: property.bedrooms.toString(),
+      bathrooms: property.bathrooms.toString(),
+      area: property.area.toString(),
+    });
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleCreateClick = () => {
+    setEditId(null);
+    setFormData(defaultForm);
+    setImageFile(null);
+    setIsDialogOpen(true);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!appUser) return;
@@ -71,32 +98,53 @@ export default function DashboardProperties() {
         imageUrl = await uploadImage(imageFile, 'properties');
       }
 
-      const propertyData = {
-        agentId: appUser.uid,
-        title: formData.title,
-        description: formData.description,
-        type: formData.type,
-        listingType: formData.listingType,
-        price: Number(formData.price),
-        location: formData.location,
-        city: formData.city,
-        bedrooms: Number(formData.bedrooms),
-        bathrooms: Number(formData.bathrooms),
-        area: Number(formData.area),
-        images: imageUrl ? [imageUrl] : [],
-        status: 'pending', // Default
-        isFeatured: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      if (editId) {
+        const updateData: any = {
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          listingType: formData.listingType,
+          price: Number(formData.price),
+          location: formData.location,
+          city: formData.city,
+          bedrooms: Number(formData.bedrooms),
+          bathrooms: Number(formData.bathrooms),
+          area: Number(formData.area),
+          updatedAt: serverTimestamp(),
+        };
+        if (imageUrl) {
+          updateData.images = [imageUrl]; // just override for now
+        }
+        await updateDoc(doc(db, 'properties', editId), updateData);
+        toast.success('Property updated successfully');
+      } else {
+        const propertyData = {
+          agentId: appUser.uid,
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          listingType: formData.listingType,
+          price: Number(formData.price),
+          location: formData.location,
+          city: formData.city,
+          bedrooms: Number(formData.bedrooms),
+          bathrooms: Number(formData.bathrooms),
+          area: Number(formData.area),
+          images: imageUrl ? [imageUrl] : [],
+          status: 'pending', // Default
+          isFeatured: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        await addDoc(collection(db, 'properties'), propertyData);
+        toast.success('Property created successfully');
+      }
 
-      await addDoc(collection(db, 'properties'), propertyData);
-      toast.success('Property created successfully');
       setIsDialogOpen(false);
       setImageFile(null);
       fetchProperties();
     } catch (err: any) {
-      toast.error('Failed to create property: ' + err.message);
+      toast.error('Failed to save property: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -133,13 +181,13 @@ export default function DashboardProperties() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-amber-500 hover:bg-black text-white">
+            <Button className="bg-amber-500 hover:bg-black text-white" onClick={handleCreateClick}>
               <Plus className="w-4 h-4 mr-2" /> Add Property
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Property Listing</DialogTitle>
+              <DialogTitle>{editId ? 'Edit Property Listing' : 'Create New Property Listing'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
@@ -212,7 +260,7 @@ export default function DashboardProperties() {
                  </div>
               </div>
               <Button type="submit" disabled={uploading} className="w-full bg-amber-500 hover:bg-black text-white">
-                {uploading ? 'Uploading...' : 'Create Property'}
+                {uploading ? 'Uploading...' : (editId ? 'Update Property' : 'Create Property')}
               </Button>
             </form>
           </DialogContent>
@@ -228,7 +276,7 @@ export default function DashboardProperties() {
               <th className="px-6 py-4 font-medium text-gray-500">Price</th>
               <th className="px-6 py-4 font-medium text-gray-500">Type</th>
               <th className="px-6 py-4 font-medium text-gray-500">Status</th>
-              <th className="px-6 py-4 font-medium text-gray-500">Actions</th>
+              <th className="px-6 py-4 font-medium text-gray-500 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -253,12 +301,15 @@ export default function DashboardProperties() {
                       {property.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 flex items-center gap-2">
+                  <td className="px-6 py-4 flex items-center justify-end gap-2">
                     {appUser?.role === 'admin' && (
                        <Button size="sm" variant="outline" onClick={() => publishProperty(property.id, property.status)}>
                          {property.status === 'published' ? 'Unpublish' : 'Publish'}
                        </Button>
                     )}
+                    <Button size="icon" variant="ghost" onClick={() => handleEditClick(property)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50">
+                       <Edit className="w-4 h-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteProperty(property.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
                        <Trash2 className="w-4 h-4" />
                     </Button>
