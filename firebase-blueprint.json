@@ -1,0 +1,139 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role management",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "agent", "user"] },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "isApproved": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "name", "createdAt", "updatedAt"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Real estate properties for rent or sale",
+      "type": "object",
+      "properties": {
+        "agentId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["house", "apartment", "land", "commercial"] },
+        "listingType": { "type": "string", "enum": ["sale", "rent"] },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "location": { "type": "string" },
+        "city": { "type": "string", "enum": ["Jigjiga", "Dire Dawa", "Godey", "Dhagahbur", "Kabridahar"] },
+        "bedrooms": { "type": "number" },
+        "bathrooms": { "type": "number" },
+        "area": { "type": "number" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["pending", "published", "rejected", "sold", "rented"] },
+        "isFeatured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["agentId", "title", "description", "type", "listingType", "price", "location", "city", "status", "createdAt", "updatedAt"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Vehicles for sale or rent",
+      "type": "object",
+      "properties": {
+        "agentId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "make": { "type": "string" },
+        "model": { "type": "string" },
+        "year": { "type": "number" },
+        "listingType": { "type": "string", "enum": ["sale", "rent"] },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "city": { "type": "string", "enum": ["Jigjiga", "Dire Dawa", "Godey", "Dhagahbur", "Kabridahar"] },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["pending", "published", "rejected", "sold", "rented"] },
+        "isFeatured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["agentId", "title", "description", "make", "model", "year", "listingType", "price", "city", "status", "createdAt", "updatedAt"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "News and blog posts",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorId", "title", "content", "status", "createdAt", "updatedAt"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "General contacts or property inquiries",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "message": { "type": "string" },
+        "resourceType": { "type": "string", "enum": ["general", "property", "vehicle"] },
+        "resourceId": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "read", "replied"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message", "status", "createdAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Company global settings",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "aboutText": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["companyName", "phone", "email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles for admins, agents, and normal users."
+    },
+    "/properties/{propertyId}": {
+      "schema": { "$ref": "#/entities/Property" },
+      "description": "Real estate properties managed by agents and admins."
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": { "$ref": "#/entities/Vehicle" },
+      "description": "Vehicles listed by agents and admins."
+    },
+    "/articles/{articleId}": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "News and updates."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "Contact form submissions and resource inquiries."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "Company wide settings. Should only have one document 'global'."
+    }
+  }
+}
