@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { FormEvent } from 'react';
 import { useAuth } from '../../components/providers/AuthProvider';
 import { db } from '../../lib/firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp, deleteDoc } from 'firebase/firestore';
@@ -11,12 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Trash2, Edit, Plus, ExternalLink } from 'lucide-react';
+import { uploadImage } from '../../lib/upload';
 
 export default function DashboardProperties() {
   const { appUser } = useAuth();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -31,6 +34,7 @@ export default function DashboardProperties() {
     bathrooms: '0',
     area: '0',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchProperties = async () => {
     if (!appUser) return;
@@ -44,7 +48,7 @@ export default function DashboardProperties() {
       }
       
       const snap = await getDocs(q);
-      setProperties(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setProperties(snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })));
     } catch (error: any) {
       toast.error('Error fetching properties: ' + error.message);
     } finally {
@@ -56,11 +60,17 @@ export default function DashboardProperties() {
     fetchProperties();
   }, [appUser]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!appUser) return;
+    setUploading(true);
 
     try {
+      let imageUrl = '';
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile, 'properties');
+      }
+
       const propertyData = {
         agentId: appUser.uid,
         title: formData.title,
@@ -73,7 +83,7 @@ export default function DashboardProperties() {
         bedrooms: Number(formData.bedrooms),
         bathrooms: Number(formData.bathrooms),
         area: Number(formData.area),
-        images: [],
+        images: imageUrl ? [imageUrl] : [],
         status: 'pending', // Default
         isFeatured: false,
         createdAt: serverTimestamp(),
@@ -83,9 +93,12 @@ export default function DashboardProperties() {
       await addDoc(collection(db, 'properties'), propertyData);
       toast.success('Property created successfully');
       setIsDialogOpen(false);
+      setImageFile(null);
       fetchProperties();
     } catch (err: any) {
       toast.error('Failed to create property: ' + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -185,16 +198,22 @@ export default function DashboardProperties() {
                     <Label>Bathrooms</Label>
                     <Input type="number" value={formData.bathrooms} onChange={e => setFormData({...formData, bathrooms: e.target.value})} />
                  </div>
-                 <div className="space-y-2 col-span-2">
+                 <div className="space-y-2">
                     <Label>Area (Sq.m)</Label>
                     <Input type="number" value={formData.area} onChange={e => setFormData({...formData, area: e.target.value})} />
+                 </div>
+                 <div className="space-y-2">
+                    <Label>Image</Label>
+                    <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
                  </div>
                  <div className="space-y-2 col-span-2">
                     <Label>Description</Label>
                     <Textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="h-24" />
                  </div>
               </div>
-              <Button type="submit" className="w-full bg-amber-500 hover:bg-black text-white">Create Property</Button>
+              <Button type="submit" disabled={uploading} className="w-full bg-amber-500 hover:bg-black text-white">
+                {uploading ? 'Uploading...' : 'Create Property'}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -220,7 +239,10 @@ export default function DashboardProperties() {
             ) : (
               properties.map((property) => (
                 <tr key={property.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{property.title}</td>
+                  <td className="px-6 py-4 font-medium flex items-center gap-3">
+                     {property.images?.[0] && <img src={property.images[0]} alt="" className="w-10 h-10 object-cover rounded" />}
+                     {property.title}
+                  </td>
                   <td className="px-6 py-4">{property.city}</td>
                   <td className="px-6 py-4">{property.price.toLocaleString()}</td>
                   <td className="px-6 py-4 capitalize">{property.type} ({property.listingType})</td>

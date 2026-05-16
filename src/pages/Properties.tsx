@@ -3,6 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bed, Bath, Square, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Properties() {
   const [properties, setProperties] = useState<any[]>([]);
@@ -38,30 +39,35 @@ export default function Properties() {
       ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {properties.map(property => (
-               <Card key={property.id} className="overflow-hidden border-0 shadow-lg group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl">
-                  <div className="h-64 bg-gray-200 relative overflow-hidden">
-                     {/* Placeholder image */}
-                     <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80" alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                     <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded text-sm font-bold uppercase tracking-wider shadow-md">
-                        For {property.listingType}
+               <Link to={`/properties/${property.id}`} key={property.id}>
+                  <Card className="overflow-hidden border-0 shadow-lg group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl h-full flex flex-col">
+                     <div className="h-64 bg-gray-200 relative overflow-hidden shrink-0">
+                        <img 
+                           src={property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80"} 
+                           alt={property.title} 
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                        <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded text-sm font-bold uppercase tracking-wider shadow-md">
+                           For {property.listingType}
+                        </div>
+                        <div className="absolute bottom-4 right-4 bg-black/80 text-white px-3 py-1 rounded-sm text-lg font-bold backdrop-blur shadow-md">
+                           {property.price.toLocaleString()} ETB
+                        </div>
                      </div>
-                     <div className="absolute bottom-4 right-4 bg-black/80 text-white px-3 py-1 rounded-sm text-lg font-bold backdrop-blur shadow-md">
-                        {property.price.toLocaleString()} ETB
-                     </div>
-                  </div>
-                  <CardContent className="p-6">
-                     <h3 className="text-xl font-bold mb-2 line-clamp-1">{property.title}</h3>
-                     <p className="text-gray-500 flex items-center gap-2 mb-4 text-sm">
-                        <MapPin size={16} className="text-amber-500" /> {property.location}, {property.city}
-                     </p>
-                     
-                     <div className="flex items-center justify-between border-t pt-4 text-gray-500 text-sm">
-                        <span className="flex items-center gap-2"><Bed size={16} /> {property.bedrooms} Beds</span>
-                        <span className="flex items-center gap-2"><Bath size={16} /> {property.bathrooms} Baths</span>
-                        <span className="flex items-center gap-2"><Square size={16} /> {property.area} m²</span>
-                     </div>
-                  </CardContent>
-               </Card>
+                     <CardContent className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold mb-2 line-clamp-1">{property.title}</h3>
+                        <p className="text-gray-500 flex items-center gap-2 mb-4 text-sm">
+                           <MapPin size={16} className="text-amber-500 shrink-0" /> <span className="truncate">{property.location}, {property.city}</span>
+                        </p>
+                        
+                        <div className="mt-auto flex items-center justify-between border-t pt-4 text-gray-500 text-sm">
+                           <span className="flex items-center gap-2"><Bed size={16} /> {property.bedrooms}</span>
+                           <span className="flex items-center gap-2"><Bath size={16} /> {property.bathrooms}</span>
+                           <span className="flex items-center gap-2"><Square size={16} /> {property.area} m²</span>
+                        </div>
+                     </CardContent>
+                  </Card>
+               </Link>
             ))}
          </div>
       )}
