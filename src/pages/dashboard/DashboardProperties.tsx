@@ -1,39 +1,110 @@
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Edit3, Trash2, Eye, MapPin, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { motion } from 'motion/react';
+
+const MOCK_PROPERTIES = [
+  { id: '1', name: 'Al-Amaan Luxury Villa', location: 'Airport Road, Jigjiga', status: 'Published', price: '$450,000', leads: 24, views: '1.2k' },
+  { id: '2', name: 'Downtown Heights G+2', location: 'Main St, Dire Dawa', status: 'Under Review', price: '$280,000', leads: 0, views: '450' },
+  { id: '3', name: 'Imperial Estate Phase II', location: 'Bole Hub, Addis Ababa', status: 'Draft', price: '$890,000', leads: 0, views: '0' },
+];
 
 export default function DashboardProperties() {
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="space-y-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
         <div>
-          <h1 className="text-4xl font-display font-bold mb-2">My <span className="text-white/40">Properties</span></h1>
-          <p className="text-white/40 font-medium">Manage and monitor your real estate portfolio.</p>
+          <h1 className="text-4xl font-display font-bold mb-2 tracking-tight">Property <span className="text-white/20">Portfolio</span></h1>
+          <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Asset Management & Global Distribution</p>
         </div>
-        <Button className="bg-luxury-gold text-luxury-black hover:bg-white h-14 px-8 rounded-2xl font-bold">
-          <Plus size={20} className="mr-2" /> Add Property
+        <Button className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1">
+          <Plus size={20} className="mr-3" /> Initialize Listing
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-6">
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={18} />
-          <Input placeholder="Filter your listings..." className="bg-luxury-charcoal/40 border-white/5 h-14 pl-12 rounded-2xl text-white placeholder:text-white/20" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-luxury-gold transition-colors" size={20} />
+          <Input 
+            placeholder="Query portfolio database..." 
+            className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/10 text-lg focus-visible:ring-luxury-gold/30" 
+          />
         </div>
-        <Button variant="outline" className="border-white/10 text-white h-14 px-6 rounded-2xl hover:bg-white/5">
-          <Filter size={18} className="mr-2" /> Filters
+        <Button variant="outline" className="border-white/5 bg-white/5 text-white h-16 px-8 rounded-2xl hover:bg-luxury-gold hover:text-luxury-black transition-all duration-500 font-bold uppercase tracking-widest text-[10px]">
+          <Filter size={18} className="mr-3" /> Parameters
         </Button>
       </div>
 
-      <div className="h-96 w-full rounded-[3rem] border border-white/5 bg-luxury-charcoal/20 flex flex-col items-center justify-center text-center p-10">
-        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 text-white/20">
-          <Plus size={40} />
+      <div className="glass-card rounded-[3.5rem] overflow-hidden relative shadow-2xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Description</th>
+                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Status</th>
+                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Value</th>
+                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Analytics</th>
+                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {MOCK_PROPERTIES.map((property, i) => (
+                <motion.tr 
+                  key={property.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="group hover:bg-white/[0.02] transition-all duration-500"
+                >
+                  <td className="p-8">
+                    <div className="flex items-center gap-6">
+                       <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">
+                          <Building2 size={24} className="text-luxury-gold opacity-40 group-hover:opacity-100 transition-opacity" />
+                       </div>
+                       <div>
+                          <p className="text-lg font-display font-bold text-white mb-1 group-hover:text-luxury-gold transition-colors">{property.name}</p>
+                          <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
+                             <MapPin size={10} className="text-luxury-gold" /> {property.location}
+                          </div>
+                       </div>
+                    </div>
+                  </td>
+                  <td className="p-8">
+                    <div className="flex items-center gap-3">
+                       <div className={`w-1.5 h-1.5 rounded-full ${
+                         property.status === 'Published' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
+                         property.status === 'Under Review' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/20'
+                       }`} />
+                       <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{property.status}</span>
+                    </div>
+                  </td>
+                  <td className="p-8">
+                    <p className="text-lg font-display font-bold text-white tabular-nums">{property.price}</p>
+                  </td>
+                  <td className="p-8">
+                     <div className="flex items-center gap-8">
+                        <div className="text-center">
+                           <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Views</p>
+                           <p className="text-sm font-bold text-white tabular-nums">{property.views}</p>
+                        </div>
+                        <div className="text-center">
+                           <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Inquiries</p>
+                           <p className="text-sm font-bold text-white tabular-nums">{property.leads}</p>
+                        </div>
+                     </div>
+                  </td>
+                  <td className="p-8 text-right">
+                    <div className="flex items-center justify-end gap-3 opacity-20 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"><Eye size={18} /></Button>
+                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Edit3 size={18} /></Button>
+                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"><Trash2 size={18} /></Button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <h3 className="text-2xl font-display font-bold text-white mb-2">No Active Listings</h3>
-        <p className="text-white/40 max-w-xs mb-8">You haven't added any properties to your portfolio yet. Begin by adding your first luxury listing.</p>
-        <Button className="bg-white/5 text-white hover:bg-white/10 font-bold h-12 px-8 rounded-xl border border-white/10">
-          Add Listing
-        </Button>
       </div>
     </div>
   );

@@ -76,31 +76,78 @@ export default function Vehicles() {
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
       {/* Header */}
-      <div className="border-b border-white/5 pb-12 mb-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4">Masterpiece Mobility</p>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-white tracking-tight mb-8">
-            Luxury <span className="text-white/40">Vehicles</span>
-          </h1>
-          <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-             {['All', 'SUV', 'Sedan', 'Truck', 'Lux', 'Bus'].map(cat => (
-               <Button 
-                key={cat}
-                variant={currentCategory === cat ? 'default' : 'outline'}
-                onClick={() => setCurrentCategory(cat)}
-                className={`rounded-full h-10 px-6 transition-all border-white/10 ${
-                  currentCategory === cat ? 'bg-luxury-gold text-luxury-black font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-               >
-                 {cat}
-               </Button>
-             ))}
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-luxury-gold/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl">
+            <span className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">Masterpiece Mobility</span>
+            <h1 className="text-6xl md:text-8xl font-display font-bold text-white tracking-tighter leading-none mb-8">
+              Luxury <br /><span className="gold-text-gradient">Fleet</span>
+            </h1>
+            <p className="text-white/40 text-xl font-light leading-relaxed">
+              Explore the Somali Region's most exclusive collection of premium SUVs, luxury sedans, and high-performance trucks.
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {/* Marketplace Shell */}
+        <div className="glass-card p-6 md:p-8 rounded-[2.5rem] mb-20 shadow-2xl">
+          <div className="flex flex-col lg:flex-row gap-6 mb-8">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
+              <Input 
+                placeholder="Search the fleet... (e.g. Land Cruiser, AMG)" 
+                className="bg-white/5 border-white/5 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg border-0"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/5">
+                {['All', 'sale', 'rent'].map(type => (
+                  <button 
+                  key={type}
+                  onClick={() => setCurrentType(type)}
+                  className={`h-12 px-8 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all ${
+                    currentType === type ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
+                  }`}
+                 >
+                   {type}
+                 </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="h-0.5 bg-white/5 mb-8"></div>
+
+          {/* Categories Bar */}
+          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+            {['All', 'SUV', 'Sedan', 'Truck', 'Lux', 'Bus'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCurrentCategory(cat)}
+                className={`px-8 py-4 rounded-xl text-[10px] uppercase font-bold tracking-[0.15em] whitespace-nowrap border transition-all duration-300 ${
+                  currentCategory === cat 
+                    ? 'bg-luxury-gold border-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' 
+                    : 'bg-white/5 border-transparent text-white/30 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results Info */}
+        <div className="flex justify-between items-center mb-12 px-4">
+           <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">
+             Discovered <span className="text-white">{filteredVehicles.length}</span> Masterpieces
+           </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {filteredVehicles.map(vehicle => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} />
           ))}

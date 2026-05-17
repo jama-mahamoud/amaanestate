@@ -124,132 +124,117 @@ export default function Properties() {
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
       {/* Header */}
-      <div className="border-b border-white/5 pb-12 mb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <nav className="flex items-center gap-2 text-white/40 text-xs uppercase tracking-widest mb-4">
-                <Link to="/" className="hover:text-luxury-gold transition-colors">Home</Link>
-                <span>/</span>
-                <span className="text-luxury-gold font-bold">Marketplace</span>
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-luxury-gold/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+            <div className="max-w-3xl">
+              <nav className="flex items-center gap-3 text-white/40 text-[10px] uppercase font-bold tracking-[0.3em] mb-6">
+                <Link to="/" className="hover:text-luxury-gold transition-colors">AmaanEstate</Link>
+                <span className="w-1 h-1 rounded-full bg-white/20"></span>
+                <span className="text-luxury-gold">Marketplace</span>
               </nav>
-              <h1 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tight">
-                Our Premium <span className="text-white/40">Properties</span>
+              <h1 className="text-6xl md:text-8xl font-display font-bold text-white tracking-tighter leading-none mb-8">
+                Premium <br /><span className="gold-text-gradient">Portfolio</span>
               </h1>
+              <p className="text-white/40 text-xl font-light leading-relaxed max-w-xl">
+                The most exclusive real estate opportunities across the Somali Region, curated for those who seek excellence.
+              </p>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="flex items-center bg-luxury-charcoal p-1 rounded-xl border border-white/5">
+            <div className="flex items-center gap-6">
+               <div className="flex items-center bg-white/5 p-2 rounded-2xl border border-white/5">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`rounded-lg ${viewMode === 'grid' ? 'bg-luxury-gold text-luxury-black' : 'text-white/40 hover:text-white'}`}
+                  className={`w-12 h-12 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/20' : 'text-white/20 hover:text-white'}`}
                   onClick={() => setViewMode('grid')}
                 >
-                  <Grid size={18} />
+                  <Grid size={20} />
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`rounded-lg ${viewMode === 'list' ? 'bg-luxury-gold text-luxury-black' : 'text-white/40 hover:text-white'}`}
+                  className={`w-12 h-12 rounded-xl transition-all ${viewMode === 'list' ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/20' : 'text-white/20 hover:text-white'}`}
                   onClick={() => setViewMode('list')}
                 >
-                  <ListIcon size={18} />
+                  <ListIcon size={20} />
                 </Button>
               </div>
-              <Button 
-                onClick={() => setShowFilters(!showFilters)}
-                className={`bg-luxury-charcoal border-white/10 hover:border-luxury-gold text-white flex items-center gap-2 h-12 rounded-xl transition-all ${showFilters ? 'ring-2 ring-luxury-gold' : ''}`}
-                variant="outline"
-              >
-                <SlidersHorizontal size={18} />
-                <span>Filters</span>
-                {(currentCategory !== 'All' || currentType !== 'All' || currentCity !== 'All') && (
-                  <Badge className="bg-luxury-gold text-luxury-black ml-2 h-5 min-w-5 flex items-center justify-center p-0">
-                    !
-                  </Badge>
-                )}
-              </Button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="container mx-auto px-4">
-        <div className="flex flex-col lg:flex-row gap-10">
+        {/* Quick Filter Bar */}
+        <div className="glass-card mb-16 p-4 rounded-[2rem] flex flex-wrap items-center gap-4">
+           <div className="flex-1 min-w-[300px] relative group border-0">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+              <Input 
+                placeholder="Search location, villa, apartment..." 
+                className="bg-white/5 border-0 h-14 pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30"
+              />
+           </div>
+           <div className="h-10 w-px bg-white/5 hidden md:block" />
+           <div className="flex gap-2">
+             {['All', 'sale', 'rent'].map(type => (
+               <button 
+                key={type}
+                onClick={() => updateFilter('listingType', type)}
+                className={`h-14 px-8 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all ${
+                  currentType === type ? 'bg-luxury-gold text-luxury-black' : 'hover:bg-white/5 text-white/40'
+                }`}
+               >
+                 For {type}
+               </button>
+             ))}
+           </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-16">
           
           {/* Desktop Filters Sidebar */}
-          <aside className="hidden lg:block w-72 shrink-0 space-y-10">
+          <aside className="hidden lg:block w-80 shrink-0 space-y-12">
             <div>
-              <h3 className="text-white font-display font-bold uppercase tracking-widest text-xs mb-6 flex items-center">
-                Search <div className="h-px flex-1 bg-white/10 ml-4"></div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.3em] mb-8 flex items-center">
+                Property Category <div className="h-px flex-1 bg-white/5 ml-6"></div>
               </h3>
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
-                <Input 
-                  placeholder="Keyword..." 
-                  className="bg-luxury-charcoal/50 border-white/5 h-14 pl-12 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
-                />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-white font-display font-bold uppercase tracking-widest text-xs mb-6 flex items-center">
-                Property Type <div className="h-px flex-1 bg-white/10 ml-4"></div>
-              </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 {['All', 'Villa', 'Apartment', 'Commercial', 'Land', 'House'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => updateFilter('category', cat)}
-                    className={`w-full text-left py-3 px-4 rounded-xl transition-all flex justify-between items-center group ${
-                      currentCategory === cat ? 'bg-luxury-gold text-luxury-black font-bold' : 'text-white/40 hover:bg-white/5 hover:text-white'
+                    className={`flex items-center justify-between px-6 py-4 rounded-xl text-sm font-medium transition-all group ${
+                      currentCategory === cat 
+                        ? 'bg-luxury-gold text-luxury-black font-bold shadow-lg shadow-luxury-gold/10' 
+                        : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    <span>{cat}</span>
-                    {currentCategory === cat && <X size={14} className="opacity-60" />}
+                    {cat}
+                    <div className={`w-2 h-2 rounded-full transition-all ${currentCategory === cat ? 'bg-luxury-black' : 'bg-transparent group-hover:bg-white/20'}`} />
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <h3 className="text-white font-display font-bold uppercase tracking-widest text-xs mb-6 flex items-center">
-                Listing Type <div className="h-px flex-1 bg-white/10 ml-4"></div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.3em] mb-8 flex items-center">
+                Premium Regions <div className="h-px flex-1 bg-white/5 ml-6"></div>
               </h3>
-              <div className="flex gap-2">
-                {['All', 'sale', 'rent'].map((type) => (
-                  <Button
-                    key={type}
-                    variant={currentType === type ? 'default' : 'outline'}
-                    className={`flex-1 rounded-xl uppercase text-[10px] tracking-[0.2em] font-bold h-10 ${
-                      currentType === type ? 'bg-luxury-gold text-luxury-black border-0' : 'border-white/10 text-white/40 hover:bg-white/5 h-10'
-                    }`}
-                    onClick={() => updateFilter('listingType', type)}
-                  >
-                    {type}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-white font-display font-bold uppercase tracking-widest text-xs mb-6 flex items-center">
-                Location <div className="h-px flex-1 bg-white/10 ml-4"></div>
-              </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 {['All', 'Jigjiga', 'Dire Dawa', 'Addis Ababa', 'Godey'].map((city) => (
                   <button
                     key={city}
                     onClick={() => updateFilter('city', city)}
-                    className={`w-full text-left py-3 px-4 rounded-xl transition-all flex justify-between items-center group ${
-                      currentCity === city ? 'bg-luxury-gold text-luxury-black font-bold' : 'text-white/40 hover:bg-white/5 hover:text-white'
+                    className={`flex items-center gap-4 px-6 py-4 rounded-xl text-sm font-medium transition-all group ${
+                      currentCity === city 
+                        ? 'bg-luxury-gold text-luxury-black font-bold shadow-lg shadow-luxury-gold/10' 
+                        : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <MapPin size={14} className={currentCity === city ? 'text-luxury-black' : 'text-luxury-gold'} />
-                      <span>{city}</span>
-                    </div>
+                    <MapPin size={16} className={currentCity === city ? 'text-luxury-black' : 'text-luxury-gold'} />
+                    {city === 'All' ? 'All Locations' : city}
                   </button>
                 ))}
               </div>
@@ -257,10 +242,10 @@ export default function Properties() {
 
             <Button 
               variant="ghost" 
-              className="w-full text-white/40 hover:text-white hover:bg-white/5 rounded-xl text-xs uppercase tracking-widest"
+              className="w-full text-white/20 hover:text-white hover:bg-white/5 rounded-xl text-[10px] uppercase font-bold tracking-widest h-14"
               onClick={clearFilters}
             >
-              Reset All Filters
+              Clear Preferences
             </Button>
           </aside>
 

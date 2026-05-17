@@ -183,25 +183,25 @@ export default function Home() {
             </p>
 
             {/* Search Box */}
-            <div className="max-w-4xl mx-auto bg-luxury-charcoal/40 backdrop-blur-2xl p-2 rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row gap-2">
-              <div className="flex-1 flex items-center bg-white/5 rounded-xl px-4 py-3 group focus-within:bg-white/10 transition-all">
-                <Search className="text-luxury-gold mr-3 group-hover:scale-110 transition-transform" size={20} />
+            <div className="max-w-5xl mx-auto glass-card p-3 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row gap-2">
+              <div className="flex-[1.5] flex items-center bg-white/5 rounded-2xl px-6 py-4 group focus-within:bg-white/10 transition-all border border-white/5 focus-within:border-luxury-gold/50">
+                <Search className="text-luxury-gold mr-4 group-hover:scale-110 transition-transform" size={22} />
                 <Input 
                   placeholder="What are you looking for?" 
-                  className="bg-transparent border-0 text-white placeholder:text-white/30 focus-visible:ring-0 px-0 h-auto"
+                  className="bg-transparent border-0 text-white placeholder:text-white/20 focus-visible:ring-0 px-0 h-auto text-lg"
                 />
               </div>
-              <div className="flex-1 flex items-center bg-white/5 rounded-xl px-4 py-3 group focus-within:bg-white/10 transition-all border-l border-white/5">
-                <MapPin className="text-luxury-gold mr-3 group-hover:scale-110 transition-transform" size={20} />
-                <select className="bg-transparent border-0 text-white focus:outline-none w-full appearance-none">
+              <div className="flex-1 flex items-center bg-white/5 rounded-2xl px-6 py-4 group focus-within:bg-white/10 transition-all border border-white/5 focus-within:border-luxury-gold/50">
+                <MapPin className="text-luxury-gold mr-4 group-hover:scale-110 transition-transform" size={22} />
+                <select className="bg-transparent border-0 text-white focus:outline-none w-full appearance-none text-lg">
                   <option className="bg-luxury-black">All Cities</option>
                   <option className="bg-luxury-black">Jigjiga</option>
                   <option className="bg-luxury-black">Dire Dawa</option>
                   <option className="bg-luxury-black">Addis Ababa</option>
                 </select>
               </div>
-              <Button size="lg" className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-bold px-10 h-auto py-4 rounded-xl shadow-lg shadow-luxury-gold/20">
-                Search Excellence
+              <Button size="lg" className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-bold px-12 h-auto py-5 rounded-2xl shadow-xl shadow-luxury-gold/20 text-lg uppercase tracking-widest">
+                Search
               </Button>
             </div>
           </motion.div>

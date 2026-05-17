@@ -15,84 +15,83 @@ export default function Register() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
 
       <div className="w-full max-w-2xl relative z-10">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-white/40 hover:text-luxury-gold transition-colors mb-12 uppercase tracking-widest text-xs font-bold"
-        >
-          <ArrowLeft size={14} /> Back to Homepage
-        </Link>
+        <div className="flex justify-center mb-16">
+           <Link to="/" className="text-white hover:text-luxury-gold transition-all">
+              <span className="text-xl font-display font-bold tracking-[0.5em] uppercase">AmaanEstate</span>
+           </Link>
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-luxury-charcoal/50 backdrop-blur-2xl p-8 md:p-12 rounded-[3.5rem] border border-white/10 shadow-2xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="glass-card p-10 md:p-16 rounded-[4rem] shadow-2xl relative overflow-hidden"
         >
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-luxury-gold/10 flex items-center justify-center rounded-3xl mx-auto mb-6 text-luxury-gold shadow-lg shadow-luxury-gold/5">
-              <UserCircle size={40} />
-            </div>
-            <h1 className="text-3xl font-display font-bold text-white mb-2">Create Elite Account</h1>
-            <p className="text-white/40 text-sm">Join the regions most exclusive marketplace</p>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-luxury-gold/5 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
+          
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-display font-bold text-white mb-4 tracking-tighter">Apply for Access</h1>
+            <p className="text-white/40 text-sm font-light tracking-wide uppercase">Join the region's most exclusive portfolio</p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+              <div className="relative group md:col-span-2">
+                <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
                 <Input 
-                  placeholder="Full Name" 
-                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                  placeholder="Full Legal Name" 
+                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
 
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+              <div className="relative group md:col-span-2">
+                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
                 <Input 
                   type="email" 
-                  placeholder="Email Address" 
-                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                  placeholder="Official Email Address" 
+                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
                 <Input 
                   type="password" 
-                  placeholder="Password" 
-                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                  placeholder="Secure Password" 
+                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
 
               <div className="relative group">
-                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+                <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
                 <Input 
                   type="password" 
-                  placeholder="Confirm Password" 
-                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                  placeholder="Verify Password" 
+                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
             </div>
 
-            <div className="p-6 bg-luxury-gold/5 border border-luxury-gold/10 rounded-2xl">
-              <label className="flex items-start gap-3 text-xs text-white/60 cursor-pointer group">
-                <input type="checkbox" className="mt-0.5 rounded bg-white/5 border-white/10 checked:bg-luxury-gold" />
+            <div className="p-8 bg-white/5 border border-white/5 rounded-3xl">
+              <label className="flex items-start gap-4 text-xs text-white/40 cursor-pointer group leading-relaxed">
+                <input type="checkbox" className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
                 <span>
-                  I agree to AmaanEstate's <Link to="/terms" className="text-luxury-gold hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-luxury-gold hover:underline">Privacy Policy</Link>. I understand that some high-value inquiries may require identity verification.
+                  I acknowledge the <Link to="/terms" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Terms of Excellence</Link> and <Link to="/privacy" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Privacy Standards</Link>. High-value transactions may require institutional verification.
                 </span>
               </label>
             </div>
 
             <Button 
-              className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 rounded-2xl font-bold text-lg shadow-xl shadow-luxury-gold/20"
+              className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10"
               disabled={loading}
             >
-              Begin Your Journey
+              Initialize Membership
             </Button>
 
-            <div className="text-center pt-6">
-              <p className="text-white/40 text-sm">
-                Already have an account?{' '}
-                <Link to="/login" className="text-luxury-gold hover:text-white transition-colors font-bold uppercase tracking-widest text-[10px]">
+            <div className="text-center pt-8 border-t border-white/5">
+              <p className="text-white/40 text-xs font-light">
+                Already established an account?{' '}
+                <Link to="/login" className="text-luxury-gold hover:text-white transition-colors font-bold uppercase tracking-[0.2em] ml-2">
                   Sign In
                 </Link>
               </p>

@@ -94,58 +94,62 @@ export default function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
           {/* Main Info */}
-          <div className="lg:col-span-8 space-y-12">
+          <div className="lg:col-span-8 space-y-16">
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <Badge className={`uppercase text-[10px] tracking-widest font-bold px-4 py-1.5 border-0 ${
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <Badge className={`uppercase text-[10px] tracking-[0.3em] font-bold px-6 py-2 border-0 rounded-full ${
                   property.type === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
                 }`}>
                   For {property.type}
                 </Badge>
-                <Badge className="bg-white/5 border-white/10 text-white/60 uppercase text-[10px] tracking-widest px-4 py-1.5">
+                <div className="bg-white/5 border border-white/5 text-white/40 uppercase text-[10px] tracking-[0.3em] px-6 py-2 rounded-full font-bold">
                   {property.category}
-                </Badge>
+                </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6">
+              <h1 className="text-5xl md:text-8xl font-display font-bold text-white mb-8 tracking-tighter leading-[0.9]">
                 {property.title}
               </h1>
-              <div className="flex items-center text-white/50 text-xl">
-                <MapPin className="mr-2 text-luxury-gold" size={24} />
+              <div className="flex items-center text-white/40 text-xl font-light">
+                <MapPin className="mr-3 text-luxury-gold" size={24} />
                 <span>{property.location}, {property.city}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-12 border-b border-white/10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-12 border-y border-white/5">
               {[
-                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: property.beds },
-                { icon: <Bath size={24} />, label: 'Bathrooms', value: property.baths },
-                { icon: <Square size={24} />, label: 'Square Ft', value: property.size },
-                { icon: <Calendar size={24} />, label: 'Built Year', value: '2023' },
+                { icon: <BedDouble size={26} />, label: 'Bedrooms', value: property.beds },
+                { icon: <Bath size={26} />, label: 'Bathrooms', value: property.baths },
+                { icon: <Square size={26} />, label: 'Area', value: property.size },
+                { icon: <Calendar size={26} />, label: 'Built', value: '2023' },
               ].map((item, i) => (
-                <div key={i} className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col items-center text-center">
-                  <div className="text-luxury-gold mb-3">{item.icon}</div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1 font-bold">{item.label}</p>
-                  <p className="text-white font-bold text-lg">{item.value}</p>
+                <div key={i} className="flex flex-col items-center text-center group">
+                  <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-4">{item.icon}</div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-1 font-bold">{item.label}</p>
+                  <p className="text-white font-bold text-xl tracking-tight">{item.value}</p>
                 </div>
               ))}
             </div>
 
-            <div>
-              <h3 className="text-2xl font-display font-bold text-white mb-6">Executive Summary</h3>
-              <p className="text-white/60 text-lg leading-relaxed font-light">
+            <div className="max-w-3xl">
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                Executive Summary <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <p className="text-white/60 text-xl leading-[1.8] font-light">
                 {property.description}
               </p>
             </div>
 
             <div>
-              <h3 className="text-2xl font-display font-bold text-white mb-8">Exclusive Amenities</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                Exclusive Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {property.features.map((feature, i) => (
-                  <div key={i} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-xl bg-luxury-gold/10 flex items-center justify-center shrink-0 text-luxury-gold group-hover:bg-luxury-gold group-hover:text-luxury-black transition-all">
-                      <Check size={18} />
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
+                      <Check size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
                     </div>
-                    <span className="text-white/60 font-medium">{feature}</span>
+                    <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{feature}</span>
                   </div>
                 ))}
               </div>

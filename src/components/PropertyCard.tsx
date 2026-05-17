@@ -24,78 +24,89 @@ interface PropertyCardProps {
 export default function PropertyCard({ property }: PropertyCardProps) {
   return (
     <motion.div
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="group"
     >
       <Link to={`/properties/${property.id}`}>
-        <Card className="overflow-hidden border-0 bg-luxury-charcoal/50 backdrop-blur-sm group hover:shadow-2xl hover:shadow-luxury-gold/5 transition-all h-full flex flex-col border-white/5">
-          <div className="aspect-[4/3] overflow-hidden relative">
+        <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
+          <div className="aspect-[16/10] overflow-hidden relative">
             <img 
               src={property.image} 
               alt={property.title} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-luxury-black/80 via-transparent to-transparent opacity-60"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60"></div>
             
-            <div className="absolute top-4 left-4 flex gap-2">
-              <Badge className={`uppercase text-[10px] tracking-widest font-bold px-3 py-1 border-0 ${
+            <div className="absolute top-6 left-6 flex gap-2">
+              <Badge className={`uppercase text-[9px] tracking-widest font-bold px-3 py-1.5 border-0 rounded-lg ${
                 property.type === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
               }`}>
-                For {property.type}
-              </Badge>
-              <Badge className="bg-luxury-black/30 backdrop-blur-md text-white/90 border-white/10 uppercase text-[10px] tracking-widest">
-                {property.category}
+                {property.type === 'sale' ? 'For Sale' : 'For Rent'}
               </Badge>
             </div>
+          </div>
+          
+          <div className="p-8 flex-1 flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
+                  {property.category}
+                </span>
+                <h3 className="text-xl font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1">
+                  {property.title}
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center text-white/40 text-xs mb-8">
+              <MapPin size={12} className="mr-2 text-luxury-gold" />
+              <span className="line-clamp-1">{property.city}, {property.location}</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
+              {property.beds && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
+                  <div className="flex items-center gap-2">
+                    <BedDouble size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.beds}</span>
+                  </div>
+                </div>
+              )}
+              {property.baths && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
+                  <div className="flex items-center gap-2">
+                    <Bath size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.baths}</span>
+                  </div>
+                </div>
+              )}
+              {property.size && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
+                  <div className="flex items-center gap-2">
+                    <Square size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.size}</span>
+                  </div>
+                </div>
+              )}
+            </div>
             
-            <div className="absolute bottom-4 left-4 right-4">
-              <p className="text-luxury-gold font-display font-bold text-xl">
+            <div className="mt-auto flex items-center justify-between">
+              <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">
                 {typeof property.price === 'number' 
                   ? `$${property.price.toLocaleString()}` 
                   : property.price}
               </p>
+              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black transition-all duration-500">
+                <ArrowRight size={18} />
+              </div>
             </div>
           </div>
-          
-          <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <h3 className="text-lg font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1">
-                {property.title}
-              </h3>
-              <div className="flex items-center text-white/50 text-sm mt-2">
-                <MapPin size={14} className="mr-1 text-luxury-gold" />
-                <span className="line-clamp-1">{property.city}, {property.location}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-              <div className="flex items-center gap-4 text-white/60">
-                {property.beds && (
-                  <div className="flex items-center gap-1.5">
-                    <BedDouble size={16} className="text-luxury-gold" />
-                    <span className="text-xs font-medium">{property.beds}</span>
-                  </div>
-                )}
-                {property.baths && (
-                  <div className="flex items-center gap-1.5">
-                    <Bath size={16} className="text-luxury-gold" />
-                    <span className="text-xs font-medium">{property.baths}</span>
-                  </div>
-                )}
-                {property.size && (
-                  <div className="flex items-center gap-1.5">
-                    <Square size={14} className="text-luxury-gold" />
-                    <span className="text-xs font-medium">{property.size}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-luxury-gold group-hover:text-luxury-black transition-all">
-                <ArrowRight size={16} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        </div>
       </Link>
     </motion.div>
   );

@@ -112,80 +112,91 @@ export default function ProfessionalServices() {
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
       {/* Header */}
-      <div className="border-b border-white/5 pb-10 mb-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-8">
-            <div className="max-w-2xl">
-              <p className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4">Registry of Excellence</p>
-              <h1 className="text-5xl md:text-7xl font-display font-bold text-white tracking-tight leading-none mb-6">
-                Professional <span className="gold-text-gradient">Services</span>
-              </h1>
-              <p className="text-white/40 text-lg leading-relaxed max-w-lg">
-                Connect with the region's most skilled and verified experts across construction, technology, and more.
-              </p>
-            </div>
-            
-            <div className="flex gap-4 w-full md:w-auto">
-              <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white transition-all h-14 px-8 rounded-2xl font-bold">
-                <a href="/become-pro">Join Marketplace</a>
-              </Button>
-            </div>
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-luxury-gold/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl">
+            <span className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">Registry of Excellence</span>
+            <h1 className="text-6xl md:text-8xl font-display font-bold text-white tracking-tighter leading-none mb-8">
+              Expert <span className="gold-text-gradient">Registry</span>
+            </h1>
+            <p className="text-white/40 text-xl leading-relaxed font-light">
+              Connect with the Somali Region's most prestigious and verified professionals.
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="container mx-auto px-4">
         {/* Search & Filters */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-12">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
-            <Input 
-              placeholder="Search experts by name or specialty..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-luxury-charcoal/40 border-white/5 h-16 pl-14 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
-            />
-          </div>
-          
-          <div className="flex gap-4">
-            <select 
-              value={currentCity}
-              onChange={(e) => setCurrentCity(e.target.value)}
-              className="bg-luxury-charcoal/40 border border-white/5 rounded-2xl h-16 px-6 text-white appearance-none focus:outline-none focus:border-luxury-gold/50 min-w-[160px]"
-            >
-              {cities.map(city => <option key={city} value={city} className="bg-luxury-black">{city}</option>)}
-            </select>
+        <div className="glass-card p-6 md:p-8 rounded-[2.5rem] mb-20 shadow-2xl">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
+              <Input 
+                placeholder="Search experts by specialty or name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-white/5 border-white/5 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg border-0"
+              />
+            </div>
             
-            <Button 
-              variant="outline" 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="border-white/10 text-white h-16 px-8 rounded-2xl hover:bg-white/5"
-            >
-              <SlidersHorizontal size={20} className="mr-2" />
-              Advanced
-            </Button>
+            <div className="flex flex-wrap gap-4">
+              <div className="relative">
+                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-luxury-gold pointer-events-none" size={18} />
+                <select 
+                  value={currentCity}
+                  onChange={(e) => setCurrentCity(e.target.value)}
+                  className="bg-white/5 border-0 rounded-2xl h-16 pl-14 pr-10 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-luxury-gold/30 min-w-[200px] text-sm uppercase font-bold tracking-widest"
+                >
+                  {cities.map(city => <option key={city} value={city} className="bg-luxury-black">{city === 'All' ? 'All Regions' : city}</option>)}
+                </select>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="border-white/10 text-white h-16 px-8 rounded-2xl hover:bg-white/5 uppercase text-[10px] font-bold tracking-widest"
+              >
+                <SlidersHorizontal size={18} className="mr-3" />
+                Advanced
+              </Button>
+            </div>
+          </div>
+
+          <div className="h-0.5 bg-white/5 my-8"></div>
+
+          {/* Categories Bar */}
+          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCurrentCategory(cat)}
+                className={`px-8 py-4 rounded-xl text-[10px] uppercase font-bold tracking-[0.15em] whitespace-nowrap border transition-all duration-300 ${
+                  currentCategory === cat 
+                    ? 'bg-luxury-gold border-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' 
+                    : 'bg-white/5 border-transparent text-white/30 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Categories Bar */}
-        <div className="flex gap-2 overflow-x-auto pb-8 mb-4 no-scrollbar">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCurrentCategory(cat)}
-              className={`px-6 py-3 rounded-full text-[10px] uppercase font-bold tracking-widest whitespace-nowrap border transition-all ${
-                currentCategory === cat 
-                  ? 'bg-luxury-gold border-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' 
-                  : 'bg-white/5 border-white/5 text-white/40 hover:text-white hover:border-white/20'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Status Indicator */}
+        <div className="flex justify-between items-center mb-10 px-4">
+          <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.2em]">
+            Showing <span className="text-white">{filteredPros.length}</span> Verified Experts
+          </p>
+          <div className="flex items-center gap-4">
+             <Button variant="ghost" size="icon" className="text-white/20 hover:text-white"><Grid size={20} /></Button>
+             <Button variant="ghost" size="icon" className="text-white/20 hover:text-white"><ListIcon size={20} /></Button>
+          </div>
         </div>
 
         {/* Professionals Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           <AnimatePresence mode="popLayout">
             {filteredPros.map(pro => (
               <ProfessionalCard key={pro.id} professional={pro} />

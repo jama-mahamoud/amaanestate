@@ -93,39 +93,46 @@ export default function VehicleDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
           {/* Main Info */}
-          <div className="lg:col-span-8 space-y-12">
+          <div className="lg:col-span-8 space-y-16">
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-12 border-y border-white/5">
               {[
-                { icon: <Calendar size={24} />, label: 'Year', value: vehicle.year },
-                { icon: <Gauge size={24} />, label: 'Mileage', value: vehicle.mileage },
-                { icon: <Fuel size={24} />, label: 'Fuel', value: vehicle.fuelType },
-                { icon: <Settings2 size={24} />, label: 'Transmission', value: vehicle.transmission },
+                { icon: <Calendar size={26} />, label: 'Year', value: vehicle.year },
+                { icon: <Gauge size={26} />, label: 'Mileage', value: vehicle.mileage },
+                { icon: <Fuel size={26} />, label: 'Fuel', value: vehicle.fuelType },
+                { icon: <Settings2 size={26} />, label: 'Shift', value: vehicle.transmission },
               ].map((item, i) => (
-                <div key={i} className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col items-center text-center">
-                  <div className="text-luxury-gold mb-3">{item.icon}</div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1 font-bold">{item.label}</p>
-                  <p className="text-white font-bold">{item.value}</p>
+                <div key={i} className="flex flex-col items-center text-center group">
+                  <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-4">{item.icon}</div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-1 font-bold">{item.label}</p>
+                  <p className="text-white font-bold text-xl tracking-tight">{item.value}</p>
                 </div>
               ))}
             </div>
 
-            <div>
-              <h3 className="text-2xl font-display font-bold text-white mb-6">Vehicle Performance Overview</h3>
-              <p className="text-white/60 text-lg leading-relaxed font-light">
+            <div className="max-w-3xl">
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                Technical Narrative <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <p className="text-white/60 text-xl leading-[1.8] font-light italic">
                 {vehicle.description}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-               {vehicle.features.map((f, i) => (
-                 <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-luxury-gold/10 flex items-center justify-center text-luxury-gold">
-                       <Shield size={16} />
+            <div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                Masterpiece Features <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                {vehicle.features.map((f, i) => (
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
+                       <Shield size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
                     </div>
-                    <span className="text-white/60 text-sm font-medium">{f}</span>
-                 </div>
-               ))}
+                    <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{f}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="pt-12 border-t border-white/10 flex items-center gap-8">
