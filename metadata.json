@@ -1,6 +1,6 @@
 {
   "name": "AmaanEstate",
-  "description": "A premium full-stack real estate platform for the Somali Region of Ethiopia, offering property, vehicle, and related services.",
+  "description": "A premium, modern real estate and luxury vehicle marketplace frontend for the Somali Region, reimagined with professional UI/UX and elite typography.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

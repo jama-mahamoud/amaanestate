@@ -1,78 +1,110 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white pt-16 pb-8 border-t border-gray-800">
-      <div className="container mx-auto max-w-7xl px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+    <footer className="bg-luxury-black text-white pt-24 pb-12 border-t border-white/10 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+      
+      <div className="container mx-auto max-w-7xl px-4 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-gold text-black p-2 flex items-center justify-center font-bold text-xl rounded">
-                AE
+          <div className="space-y-6">
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="bg-luxury-gold text-luxury-black w-10 h-10 flex items-center justify-center font-bold text-xl rounded-lg shadow-lg shadow-luxury-gold/20">
+                A
               </div>
-              <span className="font-bold text-2xl tracking-tight text-white">
-                Amaan<span className="text-gold">Estate</span>
+              <span className="font-display font-bold text-2xl tracking-tight">
+                Amaan<span className="text-luxury-gold">Estate</span>
               </span>
             </Link>
-            <p className="text-gray-400 text-sm mt-4">
-              The premium real estate platform for the Somali Region of Ethiopia. We provide standard property sales, rentals, and vehicle listings across our major cities.
+            <p className="text-white/60 text-sm leading-relaxed max-w-xs">
+              Redefining luxury real estate in the Somali Region of Ethiopia. Discover premium properties and vehicles with unmatched transparency and professional service.
             </p>
+            <div className="flex gap-4 pt-4">
+              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-luxury-gold hover:text-luxury-black transition-all duration-300">
+                  <Icon size={18} />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div>
-            <h3 className="font-bold text-lg mb-4 text-gold">Quick Links</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/properties" className="hover:text-white transition-colors">Properties</Link></li>
-              <li><Link to="/vehicles" className="hover:text-white transition-colors">Vehicles</Link></li>
-              <li><Link to="/news" className="hover:text-white transition-colors">News & Updates</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Navigation</h3>
+            <ul className="space-y-4">
+              {[
+                { name: 'Featured Properties', path: '/properties' },
+                { name: 'Luxury Vehicles', path: '/vehicles' },
+                { name: 'Prime Land', path: '/properties' },
+                { name: 'About the Platform', path: '/about' },
+                { name: 'Professional Services', path: '/contact' }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group">
+                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="font-bold text-lg mb-4 text-gold">Top Cities</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/properties?city=Jigjiga" className="hover:text-white transition-colors">Jigjiga</Link></li>
-              <li><Link to="/properties?city=Dire%20Dawa" className="hover:text-white transition-colors">Dire Dawa</Link></li>
-              <li><Link to="/properties?city=Godey" className="hover:text-white transition-colors">Godey</Link></li>
-              <li><Link to="/properties?city=Dhagahbur" className="hover:text-white transition-colors">Dhagahbur</Link></li>
-              <li><Link to="/properties?city=Kabridahar" className="hover:text-white transition-colors">Kabridahar</Link></li>
+            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Strategic Cities</h3>
+            <ul className="space-y-4">
+              {['Jigjiga', 'Dire Dawa', 'Godey', 'Dhagahbur', 'Addis Ababa'].map((city) => (
+                <li key={city}>
+                  <Link to={`/properties?city=${city}`} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group">
+                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    {city}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="font-bold text-lg mb-4 text-gold">Contact Us</h3>
-            <ul className="space-y-4 text-sm text-gray-400">
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gold shrink-0" />
-                <span>Jigjiga, Somali Region, Ethiopia</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-gold shrink-0" />
-                <span>+251910012794</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-gold shrink-0" />
-                <span>info@amaanestate.com</span>
-              </li>
-            </ul>
-            <div className="flex gap-4 mt-6">
-              <a href="#" className="text-gray-400 hover:text-gold transition-colors"><Facebook className="h-5 w-5" /></a>
-              <a href="#" className="text-gray-400 hover:text-gold transition-colors"><Twitter className="h-5 w-5" /></a>
-              <a href="#" className="text-gray-400 hover:text-gold transition-colors"><Instagram className="h-5 w-5" /></a>
-              <a href="#" className="text-gray-400 hover:text-gold transition-colors"><Linkedin className="h-5 w-5" /></a>
+            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Inquiries</h3>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
+                  <MapPin size={18} className="text-luxury-gold" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold text-white mb-1">Regional Office</p>
+                  <p className="text-white/60">Main Road, Jigjiga, Ethiopia</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
+                  <Phone size={18} className="text-luxury-gold" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold text-white mb-1">Concierge</p>
+                  <p className="text-white/60">+251 910 012 794</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
+                  <Mail size={18} className="text-luxury-gold" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold text-white mb-1">Email</p>
+                  <p className="text-white/60">support@amaanestate.com</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} AmaanEstate. All rights reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-white/40 text-xs tracking-widest uppercase">
+            &copy; {new Date().getFullYear()} AmaanEstate. Global Real Estate Excellence.
+          </p>
+          <div className="flex gap-8">
+            <Link to="/privacy" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy</Link>
+            <Link to="/terms" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Terms</Link>
           </div>
         </div>
       </div>

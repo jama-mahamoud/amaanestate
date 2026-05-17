@@ -1,122 +1,118 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../providers/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Navbar() {
-  const { appUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
-    { name: 'News', path: '/news' },
+    { name: 'Land', path: '/properties?category=land' },
+    { name: 'Rentals', path: '/properties?listingType=rent' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto max-w-7xl px-4 flex h-20 items-center justify-between">
+    <header 
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-luxury-black/90 backdrop-blur-md py-4 border-b border-white/10 shadow-lg shadow-black/20' 
+          : 'bg-transparent py-6'
+      }`}
+    >
+      <div className="container mx-auto max-w-7xl px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gold text-white p-2 flex items-center justify-center font-bold text-xl rounded">
-              AE
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="bg-luxury-gold text-luxury-black w-10 h-10 flex items-center justify-center font-bold text-xl rounded-lg transition-transform group-hover:scale-110 shadow-lg shadow-luxury-gold/20">
+              A
             </div>
-            <span className="hidden sm:inline-block font-bold text-2xl tracking-tight">
-              Amaan<span className="text-gold">Estate</span>
+            <span className={`font-display font-bold text-2xl tracking-tight transition-colors ${
+              isScrolled ? 'text-white' : 'text-white drop-shadow-md'
+            }`}>
+              Amaan<span className="text-luxury-gold">Estate</span>
             </span>
           </Link>
         </div>
         
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 font-medium">
+        <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
               to={link.path} 
-              className="text-sm transition-colors hover:text-gold"
+              className={`text-sm font-medium tracking-wide transition-all hover:text-luxury-gold relative group ${
+                isScrolled ? 'text-white/80' : 'text-white drop-shadow-sm'
+              }`}
             >
               {link.name}
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-luxury-gold transition-all group-hover:w-full"></span>
             </Link>
           ))}
-          {appUser && (appUser.role === 'admin' || appUser.role === 'agent') && (
-            <>
-              <Link to="/dashboard/properties" className="text-sm transition-colors hover:text-gold">Add Property</Link>
-              <Link to="/dashboard/vehicles" className="text-sm transition-colors hover:text-gold">Add Vehicle</Link>
-            </>
-          )}
-          {appUser && appUser.role === 'admin' && (
-            <Link to="/dashboard/users" className="text-sm transition-colors hover:text-gold">Manage Agents</Link>
-          )}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Button asChild variant="outline" className="border-gold text-gold hover:bg-gold hover:text-white">
+        <div className="hidden lg:flex items-center gap-6">
+          <Button asChild variant="ghost" className="text-white hover:text-luxury-gold hover:bg-white/5 transition-colors font-medium">
+            <Link to="/login">Sign In</Link>
+          </Button>
+          <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-semibold shadow-xl shadow-luxury-gold/20 border-0">
             <Link to="/become-agent">List Property</Link>
           </Button>
-          {appUser ? (
-            <Button asChild className="bg-black hover:bg-gold transition-colors text-white">
-              <Link to="/dashboard">Dashboard</Link>
-            </Button>
-          ) : (
-            <>
-              <Button variant="ghost" asChild className="hover:text-gold">
-                <Link to="/login">Sign In</Link>
-              </Button>
-            </>
-          )}
         </div>
 
         {/* Mobile Menu Toggle */}
         <button 
-          className="md:hidden p-2" 
+          className="lg:hidden p-2 text-white" 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
         </button>
       </div>
 
       {/* Mobile Nav */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-white p-4">
-          <nav className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                to={link.path} 
-                className="text-sm font-medium transition-colors hover:text-gold"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <div className="pt-4 border-t flex flex-col space-y-2">
-              {appUser ? (
-                <>
-                  <Button asChild className="w-full bg-gold text-white" variant="outline">
-                    <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
-                  </Button>
-                  <Button asChild className="w-full bg-black">
-                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button asChild variant="outline" className="w-full border-gold text-gold">
-                    <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
-                  </Button>
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </nav>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="lg:hidden absolute top-full left-0 w-full bg-luxury-black/95 backdrop-blur-xl border-b border-white/10 p-6 shadow-2xl"
+          >
+            <nav className="flex flex-col space-y-6">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  className="text-lg font-medium text-white/90 hover:text-luxury-gold transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="pt-6 border-t border-white/10 flex flex-col space-y-4">
+                <Button asChild variant="outline" className="w-full border-white/10 text-white hover:bg-white/5 h-12">
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                </Button>
+                <Button asChild className="w-full bg-luxury-gold text-luxury-black h-12 font-bold">
+                  <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
+                </Button>
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

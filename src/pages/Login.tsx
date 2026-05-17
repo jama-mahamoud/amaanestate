@@ -1,81 +1,95 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { auth, db } from '../lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, User, Mail, Lock, ShieldCheck } from 'lucide-react';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      // check if user exists
-      const userRef = doc(db, 'users', result.user.uid);
-      const snap = await getDoc(userRef);
-      if (!snap.exists()) {
-         // Create fresh user account
-         await setDoc(userRef, {
-           email: result.user.email,
-           name: result.user.displayName || 'Anonymous',
-           role: (result.user.email === 'towinnow0@gmail.com' || result.user.email === 'jamamahamoud01@gmail.com') ? 'admin' : 'user',
-           isApproved: (result.user.email === 'towinnow0@gmail.com' || result.user.email === 'jamamahamoud01@gmail.com'),
-           createdAt: serverTimestamp(),
-           updatedAt: serverTimestamp(),
-         });
-      }
-      toast.success("Successfully logged in");
-      navigate('/dashboard');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to log in');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md shadow-xl border-0">
-        <CardHeader className="space-y-2 text-center pb-6">
-          <div className="mx-auto bg-black text-amber-500 w-12 h-12 rounded-lg flex items-center justify-center font-bold text-2xl mb-4">
-            AE
-          </div>
-          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>
-            Sign in to your AmaanEstate account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            className="w-full h-12 text-md transition-all font-semibold" 
-            variant="outline"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-          >
-            <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-            </svg>
-            Sign in with Google
-          </Button>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+    <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
+      {/* Decorative Orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="w-full max-w-lg relative z-10">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-white/40 hover:text-luxury-gold transition-colors mb-12 uppercase tracking-widest text-xs font-bold"
+        >
+          <ArrowLeft size={14} /> Back to Homepage
+        </Link>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-luxury-charcoal/50 backdrop-blur-2xl p-8 md:p-12 rounded-[3.5rem] border border-white/10 shadow-2xl"
+        >
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 bg-luxury-gold/10 flex items-center justify-center rounded-3xl mx-auto mb-6 text-luxury-gold shadow-lg shadow-luxury-gold/5">
+              <ShieldCheck size={40} />
             </div>
+            <h1 className="text-3xl font-display font-bold text-white mb-2">Welcome Back</h1>
+            <p className="text-white/40 text-sm">Access your AmaanEstate elite dashboard</p>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-center text-sm text-gray-500">
-          Want to become an agent? <Link to="/register" className="ml-1 text-amber-600 font-semibold hover:underline">Register here</Link>
-        </CardFooter>
-      </Card>
+
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div className="space-y-4">
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+                <Input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                />
+              </div>
+
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-luxury-gold transition-colors" size={18} />
+                <Input 
+                  type="password" 
+                  placeholder="Password" 
+                  className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/50"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">
+              <label className="flex items-center gap-2 text-white/40 cursor-pointer hover:text-white transition-colors">
+                <input type="checkbox" className="rounded bg-white/5 border-white/10 checked:bg-luxury-gold" />
+                Remember Me
+              </label>
+              <Link to="/forgot-password" size="sm" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4">
+                Forgot Password?
+              </Link>
+            </div>
+
+            <Button 
+              className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 rounded-2xl font-bold text-lg shadow-xl shadow-luxury-gold/20"
+              disabled={loading}
+            >
+              Sign In to Excellence
+            </Button>
+
+            <div className="text-center pt-6">
+              <p className="text-white/40 text-sm">
+                Don't have an elite account?{' '}
+                <Link to="/register" className="text-luxury-gold hover:text-white transition-colors font-bold uppercase tracking-widest text-[10px]">
+                  Join AmaanEstate
+                </Link>
+              </p>
+            </div>
+          </form>
+        </motion.div>
+        
+        <div className="mt-12 text-center">
+            <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.4em]">
+              Secure Authentication Protocol
+            </p>
+        </div>
+      </div>
     </div>
   );
 }

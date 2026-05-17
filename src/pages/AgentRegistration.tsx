@@ -1,110 +1,103 @@
-import * as React from 'react';
-import { useState } from 'react';
-import { useAuth } from '../components/providers/AuthProvider';
-import { db } from '../lib/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { ShieldCheck, UserCheck } from 'lucide-react';
+import { Shield, Award, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function AgentRegistration() {
-  const { appUser } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    phone: '',
-    experience: '',
-    address: '',
-  });
-
-  if (!appUser) return <div className="p-12 text-center">Please login to apply as an agent.</div>;
-
-  if (appUser.role === 'agent' || appUser.role === 'admin') {
-    return (
-      <div className="max-w-xl mx-auto py-24 px-4 text-center">
-        <UserCheck className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-        <h1 className="text-3xl font-bold mb-4">You are already an {appUser.role}!</h1>
-        <p className="text-gray-500 mb-8">You have access to all agent features in your dashboard.</p>
-        <Button onClick={() => window.location.href = '/dashboard'} className="bg-amber-500 hover:bg-black text-white">
-          Go to Dashboard
-        </Button>
-      </div>
-    );
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await updateDoc(doc(db, 'users', appUser.uid), {
-        role: 'agent',
-        isApproved: false, // Wait for admin
-        agentProfile: {
-          ...formData,
-          appliedAt: serverTimestamp(),
-        },
-        updatedAt: serverTimestamp(),
-      });
-      toast.success('Application submitted! An admin will review your profile shortly.');
-    } catch (error: any) {
-      toast.error('Application failed: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="max-w-2xl mx-auto py-24 px-4">
-      <Card className="border-0 shadow-2xl">
-        <CardHeader className="text-center pb-8">
-          <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="text-amber-500 w-8 h-8" />
-          </div>
-          <CardTitle className="text-3xl font-bold">Become an Agent</CardTitle>
-          <CardDescription>Join the AmaanEstate network and start listing your properties and vehicles.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Business Phone Number</label>
-              <Input 
-                required 
-                placeholder="+251 ..." 
-                value={formData.phone}
-                onChange={e => setFormData({...formData, phone: e.target.value})}
-              />
+    <div className="min-h-screen bg-luxury-black pt-28 pb-20">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <p className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-xs mb-4">Elite Partnership</p>
+            <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-8 tracking-tight">
+              Join Our Network of <br />
+              <span className="gold-text-gradient">Professional Brokers</span>
+            </h1>
+            <p className="text-white/60 text-lg mb-12 max-w-lg leading-relaxed">
+              AmaanEstate is more than a platform; it's a standard. We invite the regions most professional real estate agents and vehicle brokers to join our exclusive marketplace.
+            </p>
+
+            <div className="space-y-8">
+              {[
+                { icon: <Shield />, title: 'Premium Branding', desc: 'Associate your business with the regions most trusted name in luxury assets.' },
+                { icon: <TrendingUp />, title: 'Regional Reach', desc: 'Gain access to high-net-worth individuals across Ethiopia and the diaspora.' },
+                { icon: <Award />, title: 'Elite Toolkit', desc: 'Use our sophisticated dashboard to manage your listings and client inquiries.' },
+              ].map((item, i) => (
+                <div key={i} className="flex gap-6">
+                  <div className="w-12 h-12 rounded-xl bg-luxury-gold/10 flex items-center justify-center shrink-0 text-luxury-gold shadow-lg shadow-luxury-gold/5">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-display font-bold text-white mb-2">{item.title}</h4>
+                    <p className="text-white/40 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Office Address</label>
-              <Input 
-                required 
-                placeholder="City, District, State" 
-                value={formData.address}
-                onChange={e => setFormData({...formData, address: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Relevant Experience / About You</label>
-              <Textarea 
-                required 
-                placeholder="Tell us about your experience in real estate or vehicle sales..." 
-                className="min-h-[120px]"
-                value={formData.experience}
-                onChange={e => setFormData({...formData, experience: e.target.value})}
-              />
-            </div>
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="w-full h-12 text-lg bg-amber-500 hover:bg-black text-white transition-all"
-            >
-              {loading ? 'Submitting Application...' : 'Submit Application'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="bg-luxury-charcoal/50 backdrop-blur-2xl p-8 md:p-12 rounded-[3.5rem] border border-white/10 shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            
+            <h2 className="text-3xl font-display font-bold text-white mb-8">Application Inquiry</h2>
+            
+            <form className="space-y-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-white/40">Full Name</label>
+                  <Input placeholder="John Doe" className="bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-white/20" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-white/40">Agency Name</label>
+                  <Input placeholder="Elite Reality" className="bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-white/20" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-white/40">Professional Email</label>
+                <Input type="email" placeholder="john@agency.com" className="bg-white/5 border-white/10 h-14 rounded-xl text-white placeholder:text-white/20" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-white/40">Primary City</label>
+                <select className="flex h-14 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none appearance-none">
+                  <option className="bg-luxury-black">Jigjiga</option>
+                  <option className="bg-luxury-black">Dire Dawa</option>
+                  <option className="bg-luxury-black">Addis Ababa</option>
+                  <option className="bg-luxury-black">Godey</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-white/40">Professional Bio / Experience</label>
+                <Textarea placeholder="Tell us about your experience in the region..." className="bg-white/5 border-white/10 min-h-[120px] rounded-xl text-white placeholder:text-white/20" />
+              </div>
+
+              <Button className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 rounded-2xl font-bold text-lg shadow-xl shadow-luxury-gold/10">
+                Submit For Review
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 text-white/30 text-xs py-4">
+                <CheckCircle2 size={14} className="text-luxury-gold" />
+                <span>Our team typically responds within 48 business hours.</span>
+              </div>
+            </form>
+          </motion.div>
+
+        </div>
+      </div>
     </div>
   );
 }
