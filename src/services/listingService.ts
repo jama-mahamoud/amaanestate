@@ -164,6 +164,20 @@ export const listingService = {
     }
   },
 
+  async updateListing(id: string, data: Partial<Listing>) {
+    const listingRef = doc(db, 'listings', id);
+    try {
+      await updateDoc(listingRef, {
+        ...data,
+        updatedAt: serverTimestamp(),
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
+      return false;
+    }
+  },
+
   async getUserListings(userId: string, category?: ListingCategory, limitCount = 50) {
     const listingsRef = collection(db, 'listings');
     const constraints: QueryConstraint[] = [

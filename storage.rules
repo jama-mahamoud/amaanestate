@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Listing Assets
+    match /listings/{listingId}/{allPaths=**} {
+      // Public read access for marketplace visibility
+      allow read: if true;
+      
+      // Only the listing owner can manage assets
+      // We look up the ownerId from the corresponding Firestore document
+      allow write: if isSignedIn() && 
+        firestore.get(/databases/(default)/documents/listings/$(listingId)).data.ownerId == request.auth.uid;
+    }
+
+    // Professional Assets
+    match /professionals/{profileId}/{allPaths=**} {
+      allow read: if true;
+      
+      // Users can only upload to their own professional profile path
+      // Assuming profileId matches request.auth.uid or we check Firestore
+      allow write: if isOwner(profileId);
+    }
+    
+    // User Profile Assets
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
