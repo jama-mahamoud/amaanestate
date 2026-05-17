@@ -48,7 +48,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </div>
           </div>
           
-          <div className="p-8 flex-1 flex flex-col">
+          <div className="p-6 md:p-8 flex-1 flex flex-col">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">

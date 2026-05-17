@@ -3,11 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'motion/react';
 
-const MOCK_PROPERTIES = [
-  { id: '1', name: 'Al-Amaan Luxury Villa', location: 'Airport Road, Jigjiga', status: 'Published', price: '$450,000', leads: 24, views: '1.2k' },
-  { id: '2', name: 'Downtown Heights G+2', location: 'Main St, Dire Dawa', status: 'Under Review', price: '$280,000', leads: 0, views: '450' },
-  { id: '3', name: 'Imperial Estate Phase II', location: 'Bole Hub, Addis Ababa', status: 'Draft', price: '$890,000', leads: 0, views: '0' },
-];
+import DashboardEmptyState from '@/components/DashboardEmptyState';
+
+const MOCK_PROPERTIES: any[] = [];
 
 export default function DashboardProperties() {
   return (
@@ -36,75 +34,85 @@ export default function DashboardProperties() {
       </div>
 
       <div className="glass-card rounded-[3.5rem] overflow-hidden relative shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Description</th>
-                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Status</th>
-                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Value</th>
-                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Analytics</th>
-                <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {MOCK_PROPERTIES.map((property, i) => (
-                <motion.tr 
-                  key={property.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group hover:bg-white/[0.02] transition-all duration-500"
-                >
-                  <td className="p-8">
-                    <div className="flex items-center gap-6">
-                       <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">
-                          <Building2 size={24} className="text-luxury-gold opacity-40 group-hover:opacity-100 transition-opacity" />
-                       </div>
-                       <div>
-                          <p className="text-lg font-display font-bold text-white mb-1 group-hover:text-luxury-gold transition-colors">{property.name}</p>
-                          <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
-                             <MapPin size={10} className="text-luxury-gold" /> {property.location}
+        {MOCK_PROPERTIES.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Description</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Status</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Value</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Analytics</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {MOCK_PROPERTIES.map((property, i) => (
+                  <motion.tr 
+                    key={property.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="group hover:bg-white/[0.02] transition-all duration-500"
+                  >
+                    <td className="p-8">
+                      <div className="flex items-center gap-6">
+                         <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">
+                            <Building2 size={24} className="text-luxury-gold opacity-40 group-hover:opacity-100 transition-opacity" />
+                         </div>
+                         <div>
+                            <p className="text-lg font-display font-bold text-white mb-1 group-hover:text-luxury-gold transition-colors">{property.name}</p>
+                            <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
+                               <MapPin size={10} className="text-luxury-gold" /> {property.location}
+                            </div>
+                         </div>
+                      </div>
+                    </td>
+                    <td className="p-8">
+                      <div className="flex items-center gap-3">
+                         <div className={`w-1.5 h-1.5 rounded-full ${
+                           property.status === 'Published' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
+                           property.status === 'Under Review' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/20'
+                         }`} />
+                         <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{property.status}</span>
+                      </div>
+                    </td>
+                    <td className="p-8">
+                      <p className="text-lg font-display font-bold text-white tabular-nums">{property.price}</p>
+                    </td>
+                    <td className="p-8">
+                       <div className="flex items-center gap-8">
+                          <div className="text-center">
+                             <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Views</p>
+                             <p className="text-sm font-bold text-white tabular-nums">{property.views}</p>
+                          </div>
+                          <div className="text-center">
+                             <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Inquiries</p>
+                             <p className="text-sm font-bold text-white tabular-nums">{property.leads}</p>
                           </div>
                        </div>
-                    </div>
-                  </td>
-                  <td className="p-8">
-                    <div className="flex items-center gap-3">
-                       <div className={`w-1.5 h-1.5 rounded-full ${
-                         property.status === 'Published' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
-                         property.status === 'Under Review' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/20'
-                       }`} />
-                       <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{property.status}</span>
-                    </div>
-                  </td>
-                  <td className="p-8">
-                    <p className="text-lg font-display font-bold text-white tabular-nums">{property.price}</p>
-                  </td>
-                  <td className="p-8">
-                     <div className="flex items-center gap-8">
-                        <div className="text-center">
-                           <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Views</p>
-                           <p className="text-sm font-bold text-white tabular-nums">{property.views}</p>
-                        </div>
-                        <div className="text-center">
-                           <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Inquiries</p>
-                           <p className="text-sm font-bold text-white tabular-nums">{property.leads}</p>
-                        </div>
-                     </div>
-                  </td>
-                  <td className="p-8 text-right">
-                    <div className="flex items-center justify-end gap-3 opacity-20 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"><Eye size={18} /></Button>
-                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Edit3 size={18} /></Button>
-                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"><Trash2 size={18} /></Button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td className="p-8 text-right">
+                      <div className="flex items-center justify-end gap-3 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"><Eye size={18} /></Button>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Edit3 size={18} /></Button>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"><Trash2 size={18} /></Button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <DashboardEmptyState 
+            title="Portfolio Initialized" 
+            description="The asset registry is currently awaiting the first structural input. Begin by initializing a new estate log." 
+            actionLabel="Initialize Listing"
+            onAction={() => console.log('Init')}
+            icon={<Building2 size={48} />}
+          />
+        )}
       </div>
     </div>
   );

@@ -4,37 +4,26 @@ import { Calendar, User, Clock, ArrowLeft, Share2, Facebook, Twitter, Linkedin, 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-const MOCK_ARTICLES = {
-  '1': {
-    id: '1',
-    title: 'The Real Estate Boom in Jigjiga: What Investors Need to Know',
-    content: `
-      <p>Jigjiga is witnessing an unprecedented transformation. As the administrative and economic hub of the Somali Region, the city has become a magnet for investment, infrastructure development, and luxury residential growth.</p>
-      
-      <p>In the last 24 months, land value in prime locations like the Airport Road and the Presidential Palace vicinity has appreciated by over 40%. This growth is driven by several key factors:</p>
-      
-      <h3>1. Urban Decentralization</h3>
-      <p>New city plans are expanding the boundaries of Jigjiga, creating organized residential zones with wider roads and better drainage systems. These areas are attracting the diaspora and local elite who seek modern living standards.</p>
-      
-      <h3>2. Infrastructure Connectivity</h3>
-      <p>The paving of primary inter-city roads and the expansion of utilities have unlocked previously inaccessible land plots, making them viable for high-end developments.</p>
-      
-      <h3>3. Transparency in Land Ownership</h3>
-      <p>Regional efforts to digitize land registries have increased investor confidence, ensuring that "Amaan" (Trust) is backed by solid legal framework.</p>
-      
-      <p>For those looking to enter the market, we recommend focusing on 'G+1' and 'G+2' residential villas which currently see the highest demand and fastest rental yield turnover.</p>
-    `,
-    date: 'May 15, 2024',
-    author: 'Mohamed Abdi',
-    readTime: '5 min read',
-    category: 'Market Trends',
-    image: 'https://images.unsplash.com/photo-1548013146-72479768bbaa?auto=format&fit=crop&q=80&w=1200'
-  }
-};
+import NotFoundState from '@/components/NotFoundState';
+
+const MOCK_ARTICLES: Record<string, any> = {};
 
 export default function ArticleDetails() {
   const { id } = useParams();
-  const article = MOCK_ARTICLES[id as keyof typeof MOCK_ARTICLES] || MOCK_ARTICLES['1'];
+  const article = MOCK_ARTICLES[id as string];
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-luxury-black">
+        <NotFoundState 
+          title="Report Not Found" 
+          description="The requested intelligence report could not be retrieved from the editorial archive. It may have been retracted or is undergoing peer-review validation."
+          backLink="/news"
+          backLabel="BACK TO DIRECTORY"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">

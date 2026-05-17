@@ -6,90 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PropertyCard from '@/components/PropertyCard';
 import { motion, AnimatePresence } from 'motion/react';
+import EmptyState from '@/components/EmptyState';
 import { Property } from '@/types';
 
-const MOCK_PROPERTIES: Property[] = [
-  {
-    id: '1',
-    title: 'Modern Villa with Palace View',
-    price: 350000,
-    location: 'Airport Road',
-    city: 'Jigjiga',
-    beds: 5,
-    baths: 4,
-    size: '450 sqm',
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=1200',
-    type: 'sale',
-    category: 'Villa',
-    status: 'published'
-  },
-  {
-    id: '2',
-    title: 'Luxury Apartment Downtown',
-    price: 2500,
-    location: 'City Center',
-    city: 'Dire Dawa',
-    beds: 3,
-    baths: 2,
-    size: '180 sqm',
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1200',
-    type: 'rent',
-    category: 'Apartment',
-    status: 'published'
-  },
-  {
-    id: '3',
-    title: 'Premium Office Space',
-    price: 1200000,
-    location: 'Business District',
-    city: 'Addis Ababa',
-    size: '1200 sqm',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200',
-    type: 'sale',
-    category: 'Commercial',
-    status: 'published'
-  },
-  {
-    id: '4',
-    title: 'Prime G+1 Family House',
-    price: 180000,
-    location: 'Bole Area',
-    city: 'Addis Ababa',
-    beds: 4,
-    baths: 3,
-    size: '300 sqm',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200',
-    type: 'sale',
-    category: 'House',
-    status: 'published'
-  },
-  {
-    id: '5',
-    title: 'Strategic Development Land',
-    price: 55000,
-    location: 'Expanding Zone',
-    city: 'Jigjiga',
-    size: '1000 sqm',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1200',
-    type: 'sale',
-    category: 'Land',
-    status: 'published'
-  },
-  {
-    id: '6',
-    title: 'Exclusive Rental Apartment',
-    price: 1800,
-    location: 'Diplomatic Quarter',
-    city: 'Jigjiga',
-    beds: 2,
-    baths: 1,
-    size: '120 sqm',
-    image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=1200',
-    type: 'rent',
-    category: 'Apartment',
-    status: 'published'
-  }
-];
+const MOCK_PROPERTIES: Property[] = [];
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -134,10 +54,10 @@ export default function Properties() {
                 <span className="w-1 h-1 rounded-full bg-white/20"></span>
                 <span className="text-luxury-gold">Marketplace</span>
               </nav>
-              <h1 className="text-6xl md:text-8xl font-display font-bold text-white tracking-tighter leading-none mb-8">
+              <h1 className="text-4xl md:text-8xl font-display font-bold text-white tracking-tighter leading-[1.1] md:leading-none mb-6 md:mb-8">
                 Premium <br /><span className="gold-text-gradient">Portfolio</span>
               </h1>
-              <p className="text-white/40 text-xl font-light leading-relaxed max-w-xl">
+              <p className="text-white/40 text-lg md:text-xl font-light leading-relaxed max-w-xl">
                 The most exclusive real estate opportunities across the Somali Region, curated for those who seek excellence.
               </p>
             </div>
@@ -168,34 +88,41 @@ export default function Properties() {
 
       <div className="container mx-auto px-4">
         {/* Quick Filter Bar */}
-        <div className="glass-card mb-16 p-4 rounded-[2rem] flex flex-wrap items-center gap-4">
-           <div className="flex-1 min-w-[300px] relative group border-0">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+        <div className="glass-card mb-12 md:mb-16 p-2 md:p-4 rounded-3xl md:rounded-[2rem] flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+           <div className="flex-1 relative group border-0">
+              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={18} md:size={20} />
               <Input 
-                placeholder="Search location, villa, apartment..." 
-                className="bg-white/5 border-0 h-14 pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30"
+                placeholder="Search database..." 
+                className="bg-white/5 border-0 h-12 md:h-14 pl-14 md:pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-sm md:text-base w-full"
               />
            </div>
-           <div className="h-10 w-px bg-white/5 hidden md:block" />
-           <div className="flex gap-2">
+           <div className="h-px md:h-10 w-full md:w-px bg-white/5" />
+           <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
              {['All', 'sale', 'rent'].map(type => (
                <button 
                 key={type}
                 onClick={() => updateFilter('listingType', type)}
-                className={`h-14 px-8 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all ${
-                  currentType === type ? 'bg-luxury-gold text-luxury-black' : 'hover:bg-white/5 text-white/40'
+                className={`h-12 md:h-14 px-6 md:px-8 rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all whitespace-nowrap flex-1 md:flex-none ${
+                  currentType === type ? 'bg-luxury-gold text-luxury-black' : 'hover:bg-white/5 text-white/40 border border-white/5'
                 }`}
                >
                  For {type}
                </button>
              ))}
            </div>
+           <Button 
+             variant="outline" 
+             onClick={() => setShowFilters(!showFilters)}
+             className="lg:hidden h-12 border-white/5 bg-white/5 text-white rounded-xl text-[9px] uppercase font-bold tracking-widest"
+           >
+             <SlidersHorizontal size={14} className="mr-2" /> {showFilters ? 'Hide' : 'Filters'}
+           </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           
-          {/* Desktop Filters Sidebar */}
-          <aside className="hidden lg:block w-80 shrink-0 space-y-12">
+          {/* Filters Sidebar (Mobile Toggleable / Desktop Permanent) */}
+          <aside className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-80 shrink-0 space-y-10 lg:space-y-12 mb-12 lg:mb-0`}>
             <div>
               <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.3em] mb-8 flex items-center">
                 Property Category <div className="h-px flex-1 bg-white/5 ml-6"></div>
@@ -253,21 +180,13 @@ export default function Properties() {
           <div className="flex-1">
             <AnimatePresence mode="wait">
               {filterProperties.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-96 flex flex-col items-center justify-center text-center p-10 bg-luxury-charcoal/20 border border-white/5 rounded-[3rem]"
-                >
-                  <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 text-white/20">
-                    <Search size={40} />
-                  </div>
-                  <h3 className="text-2xl font-display font-bold text-white mb-2">Refine Your Search</h3>
-                  <p className="text-white/40 max-w-sm mb-8">No properties match your current filters. Experience tells us that excellence is worth the search.</p>
-                  <Button onClick={clearFilters} className="bg-luxury-gold text-luxury-black font-bold h-12 px-8 rounded-xl">
-                    View All Inventory
-                  </Button>
-                </motion.div>
+                <EmptyState 
+                  title="No Estates Found" 
+                  description={MOCK_PROPERTIES.length === 0 ? "The regional portfolio is currently being updated with verified listings." : "No properties match your current filters. Experience tells us that excellence is worth the search."} 
+                  actionLabel={MOCK_PROPERTIES.length === 0 ? undefined : "View All Inventory"}
+                  onAction={MOCK_PROPERTIES.length === 0 ? undefined : clearFilters}
+                  icon={<Search size={48} />}
+                />
               ) : (
                 <motion.div 
                   key="grid"

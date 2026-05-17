@@ -47,7 +47,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             </div>
           </div>
           
-          <div className="p-8 flex-1 flex flex-col">
+          <div className="p-6 md:p-8 flex-1 flex flex-col">
             <div className="mb-6">
               <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
                 {vehicle.category}

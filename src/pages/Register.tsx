@@ -1,12 +1,53 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, User, Mail, Lock, ShieldCheck, UserCircle } from 'lucide-react';
+import { User, Mail, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { signUp, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signUp(email, password, name);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Google sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
@@ -34,12 +75,26 @@ export default function Register() {
             <p className="text-white/40 text-sm font-light tracking-wide uppercase">Join the region's most exclusive portfolio</p>
           </div>
 
-          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-xs font-bold uppercase tracking-widest"
+            >
+              <AlertCircle size={16} />
+              {error}
+            </motion.div>
+          )}
+
+          <form className="space-y-8" onSubmit={handleRegister}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative group md:col-span-2">
                 <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
                 <Input 
                   placeholder="Full Legal Name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                   className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
@@ -49,6 +104,9 @@ export default function Register() {
                 <Input 
                   type="email" 
                   placeholder="Official Email Address" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
@@ -58,6 +116,9 @@ export default function Register() {
                 <Input 
                   type="password" 
                   placeholder="Secure Password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                   className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
@@ -67,6 +128,9 @@ export default function Register() {
                 <Input 
                   type="password" 
                   placeholder="Verify Password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
                   className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
                 />
               </div>
@@ -74,19 +138,33 @@ export default function Register() {
 
             <div className="p-8 bg-white/5 border border-white/5 rounded-3xl">
               <label className="flex items-start gap-4 text-xs text-white/40 cursor-pointer group leading-relaxed">
-                <input type="checkbox" className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
+                <input type="checkbox" required className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
                 <span>
                   I acknowledge the <Link to="/terms" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Terms of Excellence</Link> and <Link to="/privacy" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Privacy Standards</Link>. High-value transactions may require institutional verification.
                 </span>
               </label>
             </div>
 
-            <Button 
-              className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10"
-              disabled={loading}
-            >
-              Initialize Membership
-            </Button>
+            <div className="space-y-4">
+              <Button 
+                type="submit"
+                className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10"
+                disabled={loading}
+              >
+                {loading ? 'Initializing...' : 'Initialize Membership'}
+              </Button>
+
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                className="w-full bg-transparent border-white/10 text-white hover:bg-white/5 transition-all h-20 rounded-[2rem] font-bold text-lg"
+                disabled={loading}
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6 mr-3" alt="Google" />
+                Continue with Google
+              </Button>
+            </div>
 
             <div className="text-center pt-8 border-t border-white/5">
               <p className="text-white/40 text-xs font-light">

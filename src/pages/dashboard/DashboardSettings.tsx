@@ -31,19 +31,19 @@ export default function DashboardSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                  <div className="space-y-3">
                     <label className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/20 ml-2">Authorized Full Name</label>
-                    <Input defaultValue="Ahmed Mohamud" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
+                    <Input placeholder="Enter Identity Name" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
                  </div>
                  <div className="space-y-3">
                     <label className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/20 ml-2">Secure Email Endpoint</label>
-                    <Input defaultValue="ahmed@amaanestate.com" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
+                    <Input placeholder="email@amaanestate.com" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
                  </div>
                  <div className="space-y-3">
                     <label className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/20 ml-2">Geographic Assignment</label>
-                    <Input defaultValue="Jigjiga, Somali Region" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
+                    <Input placeholder="Assign Operational Region" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
                  </div>
                  <div className="space-y-3">
                     <label className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/20 ml-2">Institutional Title</label>
-                    <Input defaultValue="Regional Director" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
+                    <Input placeholder="Designate Rank" className="bg-white/5 border-0 h-16 rounded-2xl text-white px-6 focus-visible:ring-luxury-gold/30 text-lg" />
                  </div>
               </div>
            </section>

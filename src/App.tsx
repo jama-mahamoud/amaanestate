@@ -1,7 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import PublicRoute from './components/auth/PublicRoute';
 
 // Base Pages
+// ... imports stay same ...
 import Home from './pages/Home';
 import Properties from './pages/Properties';
 import Vehicles from './pages/Vehicles';
@@ -31,37 +35,43 @@ import DashboardArticles from './pages/dashboard/DashboardArticles';
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<RootLayout />}>
-        {/* Public Routes */}
-        <Route index element={<Home />} />
-        <Route path="properties" element={<Properties />} />
-        <Route path="properties/:id" element={<PropertyDetails />} />
-        <Route path="vehicles" element={<Vehicles />} />
-        <Route path="vehicles/:id" element={<VehicleDetails />} />
-        <Route path="news" element={<News />} />
-        <Route path="news/:id" element={<ArticleDetails />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="become-agent" element={<AgentRegistration />} />
-        <Route path="services" element={<ProfessionalServices />} />
-        <Route path="professionals/:id" element={<ProfessionalDetails />} />
-        <Route path="become-pro" element={<ProfessionalRegistration />} />
-        
-        {/* Auth Routes */}
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-      </Route>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<RootLayout />}>
+          {/* Public Routes */}
+          <Route index element={<Home />} />
+          <Route path="properties" element={<Properties />} />
+          <Route path="properties/:id" element={<PropertyDetails />} />
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="vehicles/:id" element={<VehicleDetails />} />
+          <Route path="news" element={<News />} />
+          <Route path="news/:id" element={<ArticleDetails />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="become-agent" element={<AgentRegistration />} />
+          <Route path="services" element={<ProfessionalServices />} />
+          <Route path="professionals/:id" element={<ProfessionalDetails />} />
+          <Route path="become-pro" element={<ProfessionalRegistration />} />
+          
+          {/* Auth Routes - Public Only */}
+          <Route element={<PublicRoute />}>
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+          </Route>
+        </Route>
 
-      {/* Dashboard Routes (Protected) */}
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<DashboardHome />} />
-        <Route path="properties" element={<DashboardProperties />} />
-        <Route path="vehicles" element={<DashboardVehicles />} />
-        <Route path="articles" element={<DashboardArticles />} />
-        <Route path="users" element={<DashboardUsers />} />
-        <Route path="settings" element={<DashboardSettings />} />
-      </Route>
-    </Routes>
+        {/* Dashboard Routes (Protected) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="properties" element={<DashboardProperties />} />
+            <Route path="vehicles" element={<DashboardVehicles />} />
+            <Route path="articles" element={<DashboardArticles />} />
+            <Route path="users" element={<DashboardUsers />} />
+            <Route path="settings" element={<DashboardSettings />} />
+          </Route>
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }

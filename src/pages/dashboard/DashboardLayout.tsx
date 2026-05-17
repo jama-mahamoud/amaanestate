@@ -15,11 +15,22 @@ import {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  };
 
   const navItems = [
     { name: 'Portfolio', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
@@ -85,8 +96,10 @@ export default function DashboardLayout() {
                   <Briefcase size={20} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-white truncate tracking-tight">Super Principal</p>
-                  <p className="text-[9px] text-white/20 uppercase font-black tracking-widest leading-none mt-1">Admin Level 5</p>
+                  <p className="text-xs font-bold text-white truncate tracking-tight uppercase">
+                    {user?.displayName || 'System Operator'}
+                  </p>
+                  <p className="text-[9px] text-white/20 uppercase font-black tracking-widest leading-none mt-1">Status: {user?.emailVerified ? 'Verified' : 'Member'}</p>
                 </div>
               </div>
             </div>
@@ -94,7 +107,7 @@ export default function DashboardLayout() {
             <Button 
               variant="ghost" 
               className="w-full justify-start text-white/20 hover:text-white hover:bg-white/5 rounded-2xl h-16 px-6 transition-all group"
-              onClick={() => navigate('/')}
+              onClick={handleLogout}
             >
               <LogOut size={20} className="mr-4 group-hover:translate-x-1 transition-transform" />
               <span className="text-[10px] uppercase tracking-widest font-bold">Terminate Session</span>

@@ -8,34 +8,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-const MOCK_PROFESSIONAL = {
-  id: 'p1',
-  name: 'Eng. Ahmed Duale',
-  title: 'Senior Civil Engineer',
-  category: 'Construction & Engineering',
-  skills: ['Structural Design', 'Project Management', 'AutoCAD', 'Surveying', 'Cost Estimation', 'Site Supervision'],
-  experienceYears: 12,
-  city: 'Jigjiga',
-  image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=600',
-  rating: 4.9,
-  reviewCount: 124,
-  availability: 'Available',
-  bio: 'With over a decade of experience in the Somali Region, I specialize in the structural design and project management of high-value residential and commercial properties. My mission is to elevate the engineering standards of our region by combining modern international practices with local understanding.',
-  isVerified: true,
-  languages: ['Somali', 'English', 'Arabic', 'Amharic'],
-  certifications: [
-    'Registered Professional Engineer - ET',
-    'Project Management Professional (PMP)',
-    'Structural Safety Certificate'
-  ],
-  education: 'Master of Civil Engineering - Addis Ababa University',
-  completedProjects: 45
-};
+import NotFoundState from '@/components/NotFoundState';
+
+const MOCK_PROFESSIONALS: Record<string, any> = {};
 
 export default function ProfessionalDetails() {
   const { id } = useParams();
-  // In a real app, fetch by id. Using mock for now.
-  const pro = MOCK_PROFESSIONAL;
+  const pro = MOCK_PROFESSIONALS[id as string];
+
+  if (!pro) {
+    return (
+      <div className="min-h-screen bg-luxury-black">
+        <NotFoundState 
+          title="Professional Not Found" 
+          description="The requested expert profile could not be retrieved from the service registry. They may have deactivated their availability or are undergoing credential verification."
+          backLink="/services"
+          backLabel="BACK TO MARKETPLACE"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">

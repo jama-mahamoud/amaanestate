@@ -8,37 +8,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-const MOCK_PROPERTIES = {
-  '1': {
-    id: '1',
-    title: 'Modern Villa with Palace View',
-    price: 350000,
-    location: 'Airport Road',
-    city: 'Jigjiga',
-    beds: 5,
-    baths: 4,
-    size: '450 sqm',
-    images: [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200'
-    ],
-    type: 'sale',
-    category: 'Villa',
-    description: 'This architectural masterpiece offers unparalleled views of the presidential palace. Featuring state-of-the-art security, multiple reception areas, and a private prayer room. The villa combines traditional Somali hospitality space with ultra-modern design aesthetics.',
-    features: ['24/7 Security', 'Borehole', 'Private Parking', 'Praying Room', 'Garden', 'Smart Home System'],
-    agent: {
-      name: 'Abdiwahid Farah',
-      phone: '+251 910 012 794',
-      email: 'abdiwahid@amaanestate.com',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200'
-    }
-  }
-};
+import NotFoundState from '@/components/NotFoundState';
+
+const MOCK_PROPERTIES: Record<string, any> = {};
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const property = MOCK_PROPERTIES[id as keyof typeof MOCK_PROPERTIES] || MOCK_PROPERTIES['1'];
+  const property = MOCK_PROPERTIES[id as string];
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-luxury-black">
+        <NotFoundState 
+          title="Asset Not Found" 
+          description="The requested estate record could not be retrieved from the central registry. It may have been archived or is awaiting listing validation."
+          backLink="/properties"
+          backLabel="BACK TO MARKETPLACE"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">
@@ -58,30 +47,30 @@ export default function PropertyDetails() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-[600px]">
-          <div className="md:col-span-8 rounded-[2.5rem] overflow-hidden group">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:h-[600px]">
+          <div className="md:col-span-8 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-[16/10] md:aspect-auto">
             <img 
               src={property.images[0]} 
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
               alt={property.title} 
             />
           </div>
-          <div className="md:col-span-4 flex flex-col gap-4">
-            <div className="flex-1 rounded-[2.5rem] overflow-hidden group">
+          <div className="md:col-span-4 flex flex-row md:flex-col gap-4">
+            <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-square md:aspect-auto">
               <img 
                 src={property.images[1]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 alt="View 2" 
               />
             </div>
-            <div className="flex-1 rounded-[2.5rem] overflow-hidden relative group">
+            <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative group aspect-square md:aspect-auto">
               <img 
                 src={property.images[2]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 alt="View 3" 
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <Button variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20">
+                <Button variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 text-[10px] md:text-sm h-8 md:h-10">
                   View All Photos
                 </Button>
               </div>
@@ -106,26 +95,26 @@ export default function PropertyDetails() {
                   {property.category}
                 </div>
               </div>
-              <h1 className="text-5xl md:text-8xl font-display font-bold text-white mb-8 tracking-tighter leading-[0.9]">
+              <h1 className="text-4xl md:text-8xl font-display font-bold text-white mb-6 md:mb-8 tracking-tighter leading-[1.1] md:leading-[0.9]">
                 {property.title}
               </h1>
-              <div className="flex items-center text-white/40 text-xl font-light">
-                <MapPin className="mr-3 text-luxury-gold" size={24} />
+              <div className="flex items-center text-white/40 text-lg md:text-xl font-light">
+                <MapPin className="mr-3 text-luxury-gold" size={20} md:size={24} />
                 <span>{property.location}, {property.city}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-12 border-y border-white/5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-12 border-y border-white/5">
               {[
-                { icon: <BedDouble size={26} />, label: 'Bedrooms', value: property.beds },
-                { icon: <Bath size={26} />, label: 'Bathrooms', value: property.baths },
+                { icon: <BedDouble size={26} />, label: 'Beds', value: property.beds },
+                { icon: <Bath size={26} />, label: 'Baths', value: property.baths },
                 { icon: <Square size={26} />, label: 'Area', value: property.size },
                 { icon: <Calendar size={26} />, label: 'Built', value: '2023' },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center group">
-                  <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-4">{item.icon}</div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-1 font-bold">{item.label}</p>
-                  <p className="text-white font-bold text-xl tracking-tight">{item.value}</p>
+                  <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-3 md:mb-4 scale-75 md:scale-100">{item.icon}</div>
+                  <p className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/20 mb-1 font-bold">{item.label}</p>
+                  <p className="text-white font-bold text-lg md:text-xl tracking-tight">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -173,13 +162,13 @@ export default function PropertyDetails() {
           </div>
 
           {/* Sidebar / Concierge Card */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-32 space-y-8">
+          <div className="lg:col-span-4 mt-12 lg:mt-0">
+            <div className="lg:sticky lg:top-32 space-y-8">
               
-              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-10 rounded-[3rem] border border-white/10 shadow-2xl">
+              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-white/10 shadow-2xl">
                 <div className="mb-8">
-                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2">Request Price / Inquire</p>
-                  <p className="text-4xl font-display font-bold text-luxury-gold">
+                  <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-widest font-bold mb-2">Request Price / Inquire</p>
+                  <p className="text-3xl md:text-4xl font-display font-bold text-luxury-gold">
                     ${property.price.toLocaleString()}
                   </p>
                 </div>

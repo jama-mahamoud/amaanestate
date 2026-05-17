@@ -9,37 +9,26 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
-const MOCK_VEHICLES = {
-  'v1': {
-    id: 'v1',
-    title: 'Toyota Land Cruiser V8',
-    price: 120000,
-    city: 'Jigjiga',
-    year: 2023,
-    mileage: '5,000 km',
-    fuelType: 'Diesel',
-    images: [
-      'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200'
-    ],
-    type: 'sale',
-    category: 'SUV',
-    transmission: 'Automatic',
-    description: 'The ultimate king of the road, the Land Cruiser V8 is perfect for the regions diverse terrain. This 2023 model comes with the full luxury package, including premium leather interior, advanced navigation, and top-tier security features.',
-    features: ['4WD', 'Leather Seats', 'Sunroof', 'Adaptive Cruise Control', 'Cool Box', '360 Camera'],
-    agent: {
-      name: 'Abdiwahid Farah',
-      phone: '+251 910 012 794',
-      email: 'abdiwahid@amaanestate.com',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200'
-    }
-  }
-};
+import NotFoundState from '@/components/NotFoundState';
+
+const MOCK_VEHICLES: Record<string, any> = {};
 
 export default function VehicleDetails() {
   const { id } = useParams();
-  const vehicle = MOCK_VEHICLES[id as keyof typeof MOCK_VEHICLES] || MOCK_VEHICLES['v1'];
+  const vehicle = MOCK_VEHICLES[id as string];
+
+  if (!vehicle) {
+    return (
+      <div className="min-h-screen bg-luxury-black">
+        <NotFoundState 
+          title="Vehicle Not Found" 
+          description="The requested mobility unit could not be retrieved from the central catalog. It may have been sold or is undergoing inventory maintenance."
+          backLink="/vehicles"
+          backLabel="BACK TO CATALOG"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">
