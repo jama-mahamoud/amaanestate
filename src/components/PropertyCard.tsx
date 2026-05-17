@@ -1,27 +1,19 @@
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, BedDouble, Bath, Square, Car, ArrowRight } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Property } from '@/types';
 
 interface PropertyCardProps {
-  key?: string | number;
-  property: {
-    id: string;
-    title: string;
-    price: number | string;
-    location: string;
-    city: string;
-    beds?: number;
-    baths?: number;
-    size?: string;
-    image: string;
-    type: 'sale' | 'rent';
-    category: string;
-  };
+  property: Property;
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const mainImage = property.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop';
+  const displayPrice = typeof property.price === 'number' 
+    ? `$${property.price.toLocaleString()}` 
+    : property.price;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,17 +25,17 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
           <div className="aspect-[16/10] overflow-hidden relative">
             <img 
-              src={property.image} 
+              src={mainImage} 
               alt={property.title} 
-              className="w-full h-full object-cover transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60"></div>
             
             <div className="absolute top-6 left-6 flex gap-2">
               <Badge className={`uppercase text-[9px] tracking-widest font-bold px-3 py-1.5 border-0 rounded-lg ${
-                property.type === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
+                property.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
               }`}>
-                {property.type === 'sale' ? 'For Sale' : 'For Rent'}
+                {property.listingType === 'sale' ? 'For Sale' : 'For Rent'}
               </Badge>
             </div>
           </div>
@@ -52,7 +44,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
-                  {property.category}
+                  {property.subcategory || 'Premium Property'}
                 </span>
                 <h3 className="text-xl font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1">
                   {property.title}
@@ -66,40 +58,32 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </div>
 
             <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-              {property.beds && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
-                  <div className="flex items-center gap-2">
-                    <BedDouble size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.beds}</span>
-                  </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
+                <div className="flex items-center gap-2">
+                  <BedDouble size={14} className="text-luxury-gold" />
+                  <span className="text-sm font-bold text-white/80">{property.beds || '-'}</span>
                 </div>
-              )}
-              {property.baths && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
-                  <div className="flex items-center gap-2">
-                    <Bath size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.baths}</span>
-                  </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
+                <div className="flex items-center gap-2">
+                  <Bath size={14} className="text-luxury-gold" />
+                  <span className="text-sm font-bold text-white/80">{property.baths || '-'}</span>
                 </div>
-              )}
-              {property.size && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
-                  <div className="flex items-center gap-2">
-                    <Square size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.size}</span>
-                  </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
+                <div className="flex items-center gap-2">
+                  <Square size={14} className="text-luxury-gold" />
+                  <span className="text-sm font-bold text-white/80">{property.size || '-'}</span>
                 </div>
-              )}
+              </div>
             </div>
             
             <div className="mt-auto flex items-center justify-between">
               <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">
-                {typeof property.price === 'number' 
-                  ? `$${property.price.toLocaleString()}` 
-                  : property.price}
+                {displayPrice}
               </p>
               <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black transition-all duration-500">
                 <ArrowRight size={18} />

@@ -1,33 +1,40 @@
-export interface Property {
+export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
+export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived';
+export type ListingType = 'sale' | 'rent';
+
+export interface Listing {
   id: string;
   title: string;
-  price: number | string;
-  location: string;
+  description: string;
+  category: ListingCategory;
+  subcategory?: string;
+  price: number;
+  currency: string;
   city: string;
+  location: string;
+  listingType: ListingType;
+  ownerId: string;
+  status: ListingStatus;
+  isFeatured?: boolean;
+  images: string[];
+  features?: Record<string, any>;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface Property extends Listing {
+  category: 'property';
   beds?: number;
   baths?: number;
   size?: string;
-  image: string;
-  type: 'sale' | 'rent';
-  category: 'Villa' | 'Apartment' | 'Commercial' | 'Land' | 'House';
-  status: 'published' | 'draft' | 'sold';
-  description?: string;
-  features?: string[];
 }
 
-export interface Vehicle {
-  id: string;
-  title: string;
-  price: number | string;
-  city: string;
+export interface VehicleListing extends Listing {
+  category: 'vehicle';
   year: number;
   mileage: string;
   fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid';
-  image: string;
-  type: 'sale' | 'rent';
-  category: 'SUV' | 'Sedan' | 'Truck' | 'Lux' | 'Bus';
   transmission: 'Automatic' | 'Manual';
-  description?: string;
 }
 
 export type ServiceCategory = 
@@ -36,6 +43,18 @@ export type ServiceCategory =
   | 'Plumbing & Water' 
   | 'Home & Maintenance' 
   | 'Education & Teaching';
+
+export type ServiceStatus = 'active' | 'hidden';
+
+export interface ProfessionalService {
+  id: string;
+  title: string;
+  description: string;
+  category: ServiceCategory;
+  providerId: string;
+  status: ServiceStatus;
+  createdAt: any;
+}
 
 export interface Professional {
   id: string;
@@ -53,5 +72,17 @@ export interface Professional {
   whatsapp?: string;
   phone?: string;
   email?: string;
+  isVerified: boolean;
+}
+
+export type UserRole = 'buyer' | 'seller' | 'agent' | 'admin';
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
+  createdAt: any; // Using any for Firestore Timestamp compatibility or date string
+  photoURL: string | null;
   isVerified: boolean;
 }

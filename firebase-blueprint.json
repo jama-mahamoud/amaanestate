@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique identifier for the user"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's full name"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User's email address"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["buyer", "seller", "agent", "admin"],
+          "description": "User's role in the system"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time when the user account was created"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL to the user's profile picture"
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Whether the user's email or identity is verified"
+        }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Listing": {
+      "title": "Listing",
+      "description": "Marketplace listing for property, vehicle, land, or rental",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["property", "rental", "land", "vehicle"] },
+        "subcategory": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "city": { "type": "string" },
+        "location": { "type": "string" },
+        "listingType": { "type": "string", "enum": ["sale", "rent"] },
+        "ownerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "active", "sold", "rented", "archived"] },
+        "isFeatured": { "type": "boolean" },
+        "images": { "type": "array" },
+        "features": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "price", "city", "listingType", "ownerId", "status", "createdAt"]
+    },
+    "ProfessionalService": {
+      "title": "Professional Service",
+      "description": "Service offered by a professional",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "providerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "hidden"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "providerId", "status", "createdAt"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "A lead or message sent to a listing owner",
+      "type": "object",
+      "properties": {
+        "listingId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["listingId", "senderId", "receiverId", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profile documents"
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "role": { "type": "string", "enum": ["admin"] }
+        }
+      },
+      "description": "Special collection to identify platform administrators"
+    },
+    "/listings/{listingId}": {
+      "schema": "Listing",
+      "description": "Collection of marketplace listings"
+    },
+    "/professionalServices/{serviceId}": {
+      "schema": "ProfessionalService",
+      "description": "Collection of professional services"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "Inquiry",
+      "description": "Collection of inquiries"
+    }
+  }
+}

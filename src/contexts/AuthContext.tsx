@@ -8,10 +8,50 @@ import {
   createUserWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, googleProvider, db } from '../lib/firebase';
+import { UserProfile, UserRole } from '../types';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -23,11 +63,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+
+  const syncUserProfile = async (firebaseUser: User) => {
+    if (syncing) return;
+    setSyncing(true);
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    try {
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        const newProfile: UserProfile = {
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName || 'Anonymous User',
+          email: firebaseUser.email || '',
+          role: 'buyer' as UserRole,
+          createdAt: serverTimestamp(),
+          photoURL: firebaseUser.photoURL,
+          isVerified: false, // Explicitly false at start
+        };
+        await setDoc(userRef, newProfile);
+        setProfile(newProfile);
+      } else {
+        const existingData = userDoc.data() as UserProfile;
+        setProfile(existingData);
+        
+        // Minor background update if displayName or photoURL changed in Firebase but not in profile
+        if (existingData.displayName !== firebaseUser.displayName || existingData.photoURL !== firebaseUser.photoURL) {
+          await setDoc(userRef, {
+            displayName: firebaseUser.displayName || existingData.displayName,
+            photoURL: firebaseUser.photoURL || existingData.photoURL,
+          }, { merge: true });
+        }
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        await syncUserProfile(user);
+      } else {
+        setProfile(null);
+      }
       setLoading(false);
     });
 
@@ -52,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, signInWithGoogle, signIn, signUp }}>
+    <AuthContext.Provider value={{ user, profile, loading, logout, signInWithGoogle, signIn, signUp }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,26 +1,29 @@
-import { useState } from 'react';
-import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, X, Gauge, Fuel, Calendar } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, SlidersHorizontal, MapPin, Loader2, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import VehicleCard from '@/components/VehicleCard';
 import EmptyState from '@/components/EmptyState';
 import { motion, AnimatePresence } from 'motion/react';
-import { Vehicle } from '@/types';
-import { Link } from 'react-router-dom';
-import { Car } from 'lucide-react';
-
-const MOCK_VEHICLES: Vehicle[] = [];
+import { useListings } from '@/hooks/useListings';
+import { ListingCategory, ListingType, VehicleListing } from '@/types';
 
 export default function Vehicles() {
   const [currentCategory, setCurrentCategory] = useState('All');
   const [currentType, setCurrentType] = useState('All');
-  
-  const filteredVehicles = MOCK_VEHICLES.filter(v => {
-    if (currentCategory !== 'All' && v.category !== currentCategory) return false;
-    if (currentType !== 'All' && v.type !== currentType) return false;
-    return true;
-  });
+
+  const filters = useMemo(() => ({
+    category: 'vehicle' as ListingCategory,
+    listingType: currentType !== 'All' ? currentType as ListingType : undefined,
+    limit: 12
+  }), [currentType]);
+
+  const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
+
+  const filteredVehicles = useMemo(() => {
+    if (currentCategory === 'All') return listings;
+    return listings.filter(v => v.subcategory === currentCategory);
+  }, [listings, currentCategory]);
 
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
@@ -45,10 +48,10 @@ export default function Vehicles() {
         <div className="glass-card p-4 md:p-8 rounded-[2rem] md:rounded-[2.5rem] mb-12 md:mb-20 shadow-2xl">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6 mb-6 md:mb-8">
             <div className="relative flex-1 group">
-              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} md:size={22} />
+              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
               <Input 
                 placeholder="Search the fleet... (e.g. Land Cruiser)" 
-                className="bg-white/5 border-white/5 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg border-0 w-full"
+                className="bg-white/5 border-0 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg w-full"
               />
             </div>
             
@@ -95,18 +98,40 @@ export default function Vehicles() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-          {filteredVehicles.length > 0 ? (
-            filteredVehicles.map(vehicle => (
-              <VehicleCard key={vehicle.id} vehicle={vehicle} />
-            ))
-          ) : (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3">
+          {loading && !listings.length ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+              <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+              <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Consulting Fleet Records...</p>
+            </div>
+          ) : filteredVehicles.length === 0 ? (
+            <div className="col-span-full">
               <EmptyState 
                 title="Fleet Expanding" 
-                description={MOCK_VEHICLES.length === 0 ? "Our automotive collection is currently under acquisition review. Verified masterpieces will appear here soon." : "No vehicles match your current specifications. Experience tells us that excellence is worth the search."} 
+                description={error ? "Our fleet database is currently experiencing an authentication anomaly." : "No vehicles match your current specifications. Experience tells us that excellence is worth the search."} 
                 icon={<Car size={48} />}
+                actionLabel={error ? "Retry Connection" : undefined}
+                onAction={error ? refresh : undefined}
               />
             </div>
+          ) : (
+            <>
+              {filteredVehicles.map(vehicle => (
+                <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
+              ))}
+              
+              {hasMore && (
+                <div className="col-span-full mt-20 flex justify-center">
+                  <Button 
+                    onClick={loadMore}
+                    disabled={loading}
+                    variant="outline"
+                    className="border-white/10 text-white/40 hover:text-luxury-gold hover:border-luxury-gold px-12 h-14 rounded-xl text-[10px] uppercase font-bold tracking-widest"
+                  >
+                    {loading ? 'Consulting Records...' : 'Load More Vehicles'}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

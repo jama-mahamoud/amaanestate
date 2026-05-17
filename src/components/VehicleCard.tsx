@@ -1,26 +1,19 @@
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Gauge, Fuel, Calendar, ArrowRight, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
+import { VehicleListing } from '@/types';
 
 interface VehicleCardProps {
-  key?: string | number;
-  vehicle: {
-    id: string;
-    title: string;
-    price: number | string;
-    city: string;
-    year: number;
-    mileage: string;
-    fuelType: string;
-    image: string;
-    type: 'sale' | 'rent';
-    category: string;
-  };
+  vehicle: VehicleListing;
 }
 
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
+  const mainImage = vehicle.images?.[0] || 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop';
+  const displayPrice = typeof vehicle.price === 'number' 
+    ? `$${vehicle.price.toLocaleString()}` 
+    : vehicle.price;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,17 +25,17 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
         <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
           <div className="aspect-[16/10] overflow-hidden relative">
             <img 
-              src={vehicle.image} 
+              src={mainImage} 
               alt={vehicle.title} 
-              className="w-full h-full object-cover transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60"></div>
             
             <div className="absolute top-6 left-6 flex gap-2">
               <Badge className={`uppercase text-[9px] tracking-widest font-bold px-3 py-1.5 border-0 rounded-lg ${
-                vehicle.type === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
+                vehicle.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
               }`}>
-                {vehicle.type === 'sale' ? 'For Sale' : 'For Rent'}
+                {vehicle.listingType === 'sale' ? 'For Sale' : 'For Rent'}
               </Badge>
             </div>
           </div>
@@ -50,7 +43,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           <div className="p-6 md:p-8 flex-1 flex flex-col">
             <div className="mb-6">
               <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
-                {vehicle.category}
+                {vehicle.subcategory || 'Elite Automotive'}
               </span>
               <h3 className="text-xl font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1 mb-2">
                 {vehicle.title}
@@ -65,30 +58,28 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
                 <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Year</span>
                 <div className="flex items-center gap-2">
                   <Calendar size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{vehicle.year}</span>
+                  <span className="text-sm font-bold text-white/80">{vehicle.year || '-'}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Mileage</span>
                 <div className="flex items-center gap-2">
                   <Gauge size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{vehicle.mileage}</span>
+                  <span className="text-sm font-bold text-white/80">{vehicle.mileage || '-'}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Fuel</span>
                 <div className="flex items-center gap-2">
                   <Fuel size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80 capitalize">{vehicle.fuelType}</span>
+                  <span className="text-sm font-bold text-white/80 capitalize">{vehicle.fuelType || '-'}</span>
                 </div>
               </div>
             </div>
             
             <div className="mt-auto flex items-center justify-between">
               <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">
-                {typeof vehicle.price === 'number' 
-                  ? `$${vehicle.price.toLocaleString()}` 
-                  : vehicle.price}
+                {displayPrice}
               </p>
               <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black transition-all duration-500">
                 <ArrowRight size={18} />

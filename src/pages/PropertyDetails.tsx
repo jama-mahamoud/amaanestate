@@ -3,31 +3,46 @@ import { motion } from 'motion/react';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
   Heart, Calendar, Check, ArrowLeft, Phone, 
-  Mail, MessageSquare, Info 
+  Mail, MessageSquare, Info, Loader2 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
+import { useListing } from '@/hooks/useListing';
+import { Property } from '@/types';
 import NotFoundState from '@/components/NotFoundState';
-
-const MOCK_PROPERTIES: Record<string, any> = {};
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const property = MOCK_PROPERTIES[id as string];
+  const { listing, loading, error } = useListing(id);
+  const property = listing as Property | null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex flex-col items-center justify-center">
+        <Loader2 className="w-16 h-16 text-luxury-gold animate-spin mb-6" />
+        <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.4em]">Retaining Asset Blueprint...</p>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
       <div className="min-h-screen bg-luxury-black">
         <NotFoundState 
           title="Asset Not Found" 
-          description="The requested estate record could not be retrieved from the central registry. It may have been archived or is awaiting listing validation."
+          description={error || "The requested estate record could not be retrieved from the central registry. It may have been archived or is awaiting listing validation."}
           backLink="/properties"
           backLabel="BACK TO MARKETPLACE"
         />
       </div>
     );
   }
+
+  const images = property.images?.length ? property.images : [
+    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070&auto=format&fit=crop'
+  ];
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">
@@ -47,25 +62,26 @@ export default function PropertyDetails() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:h-[600px]">
-          <div className="md:col-span-8 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-[16/10] md:aspect-auto">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:min-h-[600px]">
+          <div className="md:col-span-8 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-[16/10] md:aspect-auto bg-white/5">
             <img 
-              src={property.images[0]} 
+              src={images[0]} 
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
               alt={property.title} 
+              loading="eager"
             />
           </div>
           <div className="md:col-span-4 flex flex-row md:flex-col gap-4">
             <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-square md:aspect-auto">
               <img 
-                src={property.images[1]} 
+                src={images[1] || images[0]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 alt="View 2" 
               />
             </div>
             <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative group aspect-square md:aspect-auto">
               <img 
-                src={property.images[2]} 
+                src={images[2] || images[0]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 alt="View 3" 
               />
@@ -87,28 +103,28 @@ export default function PropertyDetails() {
             <div>
               <div className="flex flex-wrap items-center gap-4 mb-8">
                 <Badge className={`uppercase text-[10px] tracking-[0.3em] font-bold px-6 py-2 border-0 rounded-full ${
-                  property.type === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
+                  property.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
                 }`}>
-                  For {property.type}
+                  For {property.listingType}
                 </Badge>
                 <div className="bg-white/5 border border-white/5 text-white/40 uppercase text-[10px] tracking-[0.3em] px-6 py-2 rounded-full font-bold">
-                  {property.category}
+                  {property.subcategory || property.category}
                 </div>
               </div>
               <h1 className="text-4xl md:text-8xl font-display font-bold text-white mb-6 md:mb-8 tracking-tighter leading-[1.1] md:leading-[0.9]">
                 {property.title}
               </h1>
               <div className="flex items-center text-white/40 text-lg md:text-xl font-light">
-                <MapPin className="mr-3 text-luxury-gold" size={20} md:size={24} />
-                <span>{property.location}, {property.city}</span>
+                <MapPin className="mr-3 text-luxury-gold" size={24} />
+                <span>{property.city}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-12 border-y border-white/5">
               {[
-                { icon: <BedDouble size={26} />, label: 'Beds', value: property.beds },
-                { icon: <Bath size={26} />, label: 'Baths', value: property.baths },
-                { icon: <Square size={26} />, label: 'Area', value: property.size },
+                { icon: <BedDouble size={26} />, label: 'Beds', value: property.beds || '-' },
+                { icon: <Bath size={26} />, label: 'Baths', value: property.baths || '-' },
+                { icon: <Square size={26} />, label: 'Area', value: property.size || '-' },
                 { icon: <Calendar size={26} />, label: 'Built', value: '2023' },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center group">
@@ -128,21 +144,23 @@ export default function PropertyDetails() {
               </p>
             </div>
 
-            <div>
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
-                Exclusive Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {property.features.map((feature, i) => (
-                  <div key={i} className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
-                      <Check size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
+            {(property.features && property.features.length > 0) && (
+              <div>
+                <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                  Exclusive Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {property.features.map((feature, i) => (
+                    <div key={i} className="flex items-center gap-4 group">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
+                        <Check size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
+                      </div>
+                      <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{feature}</span>
                     </div>
-                    <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{feature}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Mock Map */}
             <div className="h-[400px] w-full rounded-[3rem] bg-luxury-charcoal/50 border border-white/10 flex items-center justify-center relative overflow-hidden">
@@ -169,16 +187,16 @@ export default function PropertyDetails() {
                 <div className="mb-8">
                   <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-widest font-bold mb-2">Request Price / Inquire</p>
                   <p className="text-3xl md:text-4xl font-display font-bold text-luxury-gold">
-                    ${property.price.toLocaleString()}
+                    {typeof property.price === 'number' ? `$${property.price.toLocaleString()}` : property.price}
                   </p>
                 </div>
 
                 <div className="space-y-6">
                    <div className="flex items-center gap-4 pb-6 border-b border-white/10">
-                      <img src={property.agent.image} className="w-16 h-16 rounded-2xl object-cover" alt={property.agent.name} />
+                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold font-bold">AS</div>
                       <div>
-                        <p className="text-white font-bold">{property.agent.name}</p>
-                        <p className="text-luxury-gold text-xs font-bold tracking-widest uppercase">Certified Prime Agent</p>
+                        <p className="text-white font-bold">Amaan Concierge</p>
+                        <p className="text-luxury-gold text-xs font-bold tracking-widest uppercase">Certified Portfolio Agent</p>
                       </div>
                    </div>
 

@@ -1,20 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, X, Star, Briefcase, CheckCircle2, Users } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, X, Star, Briefcase, CheckCircle2, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
 import { Professional, ServiceCategory } from '@/types';
-
-const MOCK_PROFESSIONALS: Professional[] = [];
+import { useProfessionalServices } from '@/hooks/useProfessionalServices';
 
 export default function ProfessionalServices() {
   const [currentCategory, setCurrentCategory] = useState<ServiceCategory | 'All'>('All');
   const [currentCity, setCurrentCity] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const { services, loading, error, refresh } = useProfessionalServices(currentCategory);
 
   const categories: (ServiceCategory | 'All')[] = [
     'All',
@@ -27,12 +27,33 @@ export default function ProfessionalServices() {
 
   const cities = ['All', 'Jigjiga', 'Dire Dawa', 'Addis Ababa', 'Godey', 'Berbera'];
 
-  const filteredPros = MOCK_PROFESSIONALS.filter(pro => {
-    if (currentCategory !== 'All' && pro.category !== currentCategory) return false;
-    if (currentCity !== 'All' && pro.city !== currentCity) return false;
-    if (searchQuery && !pro.name.toLowerCase().includes(searchQuery.toLowerCase()) && !pro.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  // Map ProfessionalService (backend) to Professional (frontend)
+  // In a real app, you might fetch the actual professional profile by providerId
+  const mappedPros: Professional[] = useMemo(() => {
+    return services.map(s => ({
+      id: s.id,
+      name: "Verified Specialist", // Placeholder until profile sync
+      title: s.title,
+      category: s.category,
+      skills: [s.category],
+      experienceYears: 5,
+      city: "Regionally Verified",
+      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
+      rating: 5.0,
+      reviewCount: 1,
+      availability: 'Available',
+      bio: s.description,
+      isVerified: true
+    }));
+  }, [services]);
+
+  const filteredPros = useMemo(() => {
+    return mappedPros.filter(pro => {
+      if (currentCity !== 'All' && pro.city !== currentCity) return false;
+      if (searchQuery && !pro.name.toLowerCase().includes(searchQuery.toLowerCase()) && !pro.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    });
+  }, [mappedPros, currentCity, searchQuery]);
 
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
@@ -57,18 +78,18 @@ export default function ProfessionalServices() {
         <div className="glass-card p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] mb-12 md:mb-20 shadow-2xl">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
             <div className="relative flex-1 group">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} md:size={22} />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
               <Input 
                 placeholder="Search experts by specialty..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border-white/5 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg border-0 w-full"
+                className="bg-white/5 border-0 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg w-full"
               />
             </div>
             
             <div className="flex flex-wrap gap-3 md:gap-4">
               <div className="relative flex-1 md:flex-none">
-                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-luxury-gold pointer-events-none" size={16} md:size={18} />
+                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-luxury-gold pointer-events-none" size={18} />
                 <select 
                   value={currentCity}
                   onChange={(e) => setCurrentCity(e.target.value)}
@@ -83,7 +104,7 @@ export default function ProfessionalServices() {
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="border-white/10 text-white h-14 md:h-16 px-6 md:px-8 rounded-xl md:rounded-2xl hover:bg-white/5 uppercase text-[9px] md:text-[10px] font-bold tracking-widest flex-1 md:flex-none"
               >
-                <SlidersHorizontal size={16} md:size={18} className="mr-2 md:mr-3" />
+                <SlidersHorizontal size={18} className="mr-3" />
                 Advanced
               </Button>
             </div>
@@ -114,25 +135,28 @@ export default function ProfessionalServices() {
           <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.2em]">
             Showing <span className="text-white">{filteredPros.length}</span> Verified Experts
           </p>
-          <div className="flex items-center gap-4">
-             <Button variant="ghost" size="icon" className="text-white/20 hover:text-white"><Grid size={20} /></Button>
-             <Button variant="ghost" size="icon" className="text-white/20 hover:text-white"><ListIcon size={20} /></Button>
-          </div>
         </div>
 
         {/* Professionals Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           <AnimatePresence mode="popLayout">
-            {filteredPros.length > 0 ? (
+            {loading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Registry Records...</p>
+              </div>
+            ) : filteredPros.length > 0 ? (
               filteredPros.map(pro => (
                 <ProfessionalCard key={pro.id} professional={pro} />
               ))
             ) : (
-              <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
+              <div className="col-span-full">
                 <EmptyState 
                   title="Registry Offline" 
-                  description={MOCK_PROFESSIONALS.length === 0 ? "Verified expert profiles are currently undergoing regional background checks. Access will be restored shortly." : "No experts match your current filters. Consider broadening your criteria."} 
+                  description={error ? "Our registry database is experiencing an authentication anomaly." : "No experts match your current filters. Consider broadening your criteria."} 
                   icon={<Users size={48} />}
+                  actionLabel={error ? "Retry Access" : undefined}
+                  onAction={error ? refresh : undefined}
                 />
               </div>
             )}

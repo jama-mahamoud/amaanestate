@@ -1,15 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, X } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import PropertyCard from '@/components/PropertyCard';
 import { motion, AnimatePresence } from 'motion/react';
 import EmptyState from '@/components/EmptyState';
-import { Property } from '@/types';
-
-const MOCK_PROPERTIES: Property[] = [];
+import { useListings } from '@/hooks/useListings';
+import { ListingCategory, ListingType, Property } from '@/types';
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,12 +18,20 @@ export default function Properties() {
   const currentType = searchParams.get('listingType') || 'All';
   const currentCity = searchParams.get('city') || 'All';
 
-  const filterProperties = MOCK_PROPERTIES.filter(p => {
-    if (currentCategory !== 'All' && p.category !== currentCategory) return false;
-    if (currentType !== 'All' && p.type !== currentType) return false;
-    if (currentCity !== 'All' && p.city !== currentCity) return false;
-    return true;
-  });
+  const filters = useMemo(() => ({
+    category: 'property' as ListingCategory,
+    listingType: currentType !== 'All' ? currentType as ListingType : undefined,
+    city: currentCity !== 'All' ? currentCity : undefined,
+    limit: 12
+  }), [currentType, currentCity]);
+
+  const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
+
+  // Client-side filtering for category (subcategory in our case or further specific filters)
+  const filteredListings = useMemo(() => {
+    if (currentCategory === 'All') return listings;
+    return listings.filter(l => l.subcategory === currentCategory);
+  }, [listings, currentCategory]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -90,7 +96,7 @@ export default function Properties() {
         {/* Quick Filter Bar */}
         <div className="glass-card mb-12 md:mb-16 p-2 md:p-4 rounded-3xl md:rounded-[2rem] flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
            <div className="flex-1 relative group border-0">
-              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={18} md:size={20} />
+              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
               <Input 
                 placeholder="Search database..." 
                 className="bg-white/5 border-0 h-12 md:h-14 pl-14 md:pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-sm md:text-base w-full"
@@ -121,7 +127,7 @@ export default function Properties() {
 
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           
-          {/* Filters Sidebar (Mobile Toggleable / Desktop Permanent) */}
+          {/* Filters Sidebar */}
           <aside className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-80 shrink-0 space-y-10 lg:space-y-12 mb-12 lg:mb-0`}>
             <div>
               <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.3em] mb-8 flex items-center">
@@ -179,12 +185,17 @@ export default function Properties() {
           {/* Main Grid */}
           <div className="flex-1">
             <AnimatePresence mode="wait">
-              {filterProperties.length === 0 ? (
+              {loading && !listings.length ? (
+                <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                  <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                  <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
+                </div>
+              ) : filteredListings.length === 0 ? (
                 <EmptyState 
                   title="No Estates Found" 
-                  description={MOCK_PROPERTIES.length === 0 ? "The regional portfolio is currently being updated with verified listings." : "No properties match your current filters. Experience tells us that excellence is worth the search."} 
-                  actionLabel={MOCK_PROPERTIES.length === 0 ? undefined : "View All Inventory"}
-                  onAction={MOCK_PROPERTIES.length === 0 ? undefined : clearFilters}
+                  description={error ? "Our servers are experiencing an authentication anomaly. Please verify your connection." : "No properties match your current filters. Experience tells us that excellence is worth the search."} 
+                  actionLabel={error ? "Retry Access" : "View All Inventory"}
+                  onAction={error ? refresh : clearFilters}
                   icon={<Search size={48} />}
                 />
               ) : (
@@ -193,33 +204,31 @@ export default function Properties() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}
-                  className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}
                 >
-                  {filterProperties.map((prop) => (
-                    <PropertyCard key={prop.id} property={prop} />
-                  ))}
+                  <div className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                    {filteredListings.map((prop) => (
+                      <PropertyCard key={prop.id} property={prop as Property} />
+                    ))}
+                  </div>
+
+                  {hasMore && (
+                    <div className="mt-20 flex justify-center">
+                      <Button 
+                        onClick={loadMore}
+                        disabled={loading}
+                        variant="outline"
+                        className="border-white/10 text-white/40 hover:text-luxury-gold hover:border-luxury-gold px-12 h-14 rounded-xl text-[10px] uppercase font-bold tracking-widest"
+                      >
+                        {loading ? 'Consulting Records...' : 'Load More Portfolio'}
+                      </Button>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <div className="mt-20 flex justify-center">
-              <div className="flex gap-2">
-                {[1, 2, 3].map((p) => (
-                  <Button 
-                    key={p} 
-                    variant={p === 1 ? 'default' : 'outline'}
-                    className={`w-12 h-12 rounded-xl scale-90 ${p === 1 ? 'bg-luxury-gold text-luxury-black' : 'border-white/10 text-white/40'}`}
-                  >
-                    {p}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Mobile Filters Drawer - Could be implemented if needed, current design is responsive enough with the header toggle */}
     </div>
   );
 }

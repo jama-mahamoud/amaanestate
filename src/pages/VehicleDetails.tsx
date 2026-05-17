@@ -3,32 +3,49 @@ import { motion } from 'motion/react';
 import { 
   MapPin, Gauge, Fuel, Calendar, Share2, 
   Heart, ArrowLeft, Phone, Mail, MessageSquare, 
-  Info, Settings2, Shield
+  Info, Settings2, Shield, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-
+import { useListing } from '@/hooks/useListing';
+import { VehicleListing } from '@/types';
 import NotFoundState from '@/components/NotFoundState';
-
-const MOCK_VEHICLES: Record<string, any> = {};
 
 export default function VehicleDetails() {
   const { id } = useParams();
-  const vehicle = MOCK_VEHICLES[id as string];
+  const { listing, loading, error } = useListing(id);
+  const vehicle = listing as VehicleListing | null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex flex-col items-center justify-center">
+        <Loader2 className="w-16 h-16 text-luxury-gold animate-spin mb-6" />
+        <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.4em]">Calibrating Technical Specs...</p>
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (
       <div className="min-h-screen bg-luxury-black">
         <NotFoundState 
           title="Vehicle Not Found" 
-          description="The requested mobility unit could not be retrieved from the central catalog. It may have been sold or is undergoing inventory maintenance."
+          description={error || "The requested mobility unit could not be retrieved from the central catalog. It may have been sold or is undergoing inventory maintenance."}
           backLink="/vehicles"
           backLabel="BACK TO CATALOG"
         />
       </div>
     );
   }
+
+  const images = vehicle.images?.length ? vehicle.images : [
+    'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop'
+  ];
+
+  const displayPrice = typeof vehicle.price === 'number' 
+    ? `$${vehicle.price.toLocaleString()}` 
+    : vehicle.price;
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">
@@ -48,11 +65,12 @@ export default function VehicleDetails() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 h-[500px] rounded-[3rem] overflow-hidden group relative">
+        <div className="container mx-auto px-4 h-auto md:min-h-[500px] aspect-[16/9] md:aspect-auto rounded-[3rem] overflow-hidden group relative bg-white/5">
           <img 
-            src={vehicle.images[0]} 
+            src={images[0]} 
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
             alt={vehicle.title} 
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60"></div>
           
@@ -60,10 +78,10 @@ export default function VehicleDetails() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <Badge className="bg-luxury-gold text-luxury-black border-0 uppercase text-[10px] tracking-widest font-bold px-3 py-1">
-                  For {vehicle.type}
+                  For {vehicle.listingType}
                 </Badge>
                 <Badge className="bg-white/20 backdrop-blur-md text-white border-0 uppercase text-[10px] tracking-widest font-bold px-3 py-1">
-                  {vehicle.category}
+                  {vehicle.subcategory || vehicle.category}
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tight">
@@ -72,7 +90,7 @@ export default function VehicleDetails() {
             </div>
             <div className="bg-luxury-black/60 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
                 <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-1">Elite Valuation</p>
-                <p className="text-3xl font-display font-bold text-luxury-gold">${vehicle.price.toLocaleString()}</p>
+                <p className="text-3xl font-display font-bold text-luxury-gold">{displayPrice}</p>
             </div>
           </div>
         </div>
@@ -86,10 +104,10 @@ export default function VehicleDetails() {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-12 border-y border-white/5">
               {[
-                { icon: <Calendar size={26} />, label: 'Year', value: vehicle.year },
-                { icon: <Gauge size={26} />, label: 'Mileage', value: vehicle.mileage },
-                { icon: <Fuel size={26} />, label: 'Fuel', value: vehicle.fuelType },
-                { icon: <Settings2 size={26} />, label: 'Shift', value: vehicle.transmission },
+                { icon: <Calendar size={26} />, label: 'Year', value: vehicle.year || '-' },
+                { icon: <Gauge size={26} />, label: 'Mileage', value: vehicle.mileage || '-' },
+                { icon: <Fuel size={26} />, label: 'Fuel', value: vehicle.fuelType || '-' },
+                { icon: <Settings2 size={26} />, label: 'Transmission', value: vehicle.transmission || '-' },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center group">
                   <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-4">{item.icon}</div>
@@ -108,27 +126,29 @@ export default function VehicleDetails() {
               </p>
             </div>
 
-            <div>
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
-                Masterpiece Features <div className="h-px flex-1 bg-white/5 ml-8"></div>
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                {vehicle.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
-                       <Shield size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
+            {(vehicle.features && vehicle.features.length > 0) && (
+              <div>
+                <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
+                  Masterpiece Features <div className="h-px flex-1 bg-white/5 ml-8"></div>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                  {vehicle.features.map((f, i) => (
+                    <div key={i} className="flex items-center gap-4 group">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
+                         <Shield size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
+                      </div>
+                      <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{f}</span>
                     </div>
-                    <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{f}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="pt-12 border-t border-white/10 flex items-center gap-8">
                <div className="flex items-center gap-4">
-                  <img src={vehicle.agent.image} className="w-16 h-16 rounded-2xl object-cover" alt="Agent" />
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold font-bold">AC</div>
                   <div>
-                    <p className="text-white font-bold">{vehicle.agent.name}</p>
+                    <p className="text-white font-bold">Amaan Concierge</p>
                     <p className="text-luxury-gold text-xs font-bold tracking-widest uppercase">Verified Broker</p>
                   </div>
                </div>
