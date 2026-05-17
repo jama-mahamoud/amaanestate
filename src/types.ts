@@ -29,3 +29,29 @@ export interface Vehicle {
   transmission: 'Automatic' | 'Manual';
   description?: string;
 }
+
+export type ServiceCategory = 
+  | 'Construction & Engineering' 
+  | 'Electrical & Technical' 
+  | 'Plumbing & Water' 
+  | 'Home & Maintenance' 
+  | 'Education & Teaching';
+
+export interface Professional {
+  id: string;
+  name: string;
+  title: string;
+  category: ServiceCategory;
+  skills: string[];
+  experienceYears: number;
+  city: string;
+  image: string;
+  rating: number;
+  reviewCount: number;
+  availability: 'Available' | 'Busy' | 'On Leave';
+  bio: string;
+  whatsapp?: string;
+  phone?: string;
+  email?: string;
+  isVerified: boolean;
+}

@@ -12,6 +12,9 @@ import Contact from './pages/Contact';
 import News from './pages/News';
 import ArticleDetails from './pages/ArticleDetails';
 import AgentRegistration from './pages/AgentRegistration';
+import ProfessionalServices from './pages/ProfessionalServices';
+import ProfessionalDetails from './pages/ProfessionalDetails';
+import ProfessionalRegistration from './pages/ProfessionalRegistration';
 
 // Auth Pages
 import Login from './pages/Login';
@@ -41,6 +44,9 @@ export default function App() {
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
         <Route path="become-agent" element={<AgentRegistration />} />
+        <Route path="services" element={<ProfessionalServices />} />
+        <Route path="professionals/:id" element={<ProfessionalDetails />} />
+        <Route path="become-pro" element={<ProfessionalRegistration />} />
         
         {/* Auth Routes */}
         <Route path="login" element={<Login />} />

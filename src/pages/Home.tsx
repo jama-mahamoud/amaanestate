@@ -1,12 +1,13 @@
 import { motion } from 'motion/react';
-import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star } from 'lucide-react';
+import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
-import { Property, Vehicle } from '@/types';
+import ProfessionalCard from '@/components/ProfessionalCard';
+import { Property, Vehicle, Professional } from '@/types';
 
 const featuredProperties: Property[] = [
   {
@@ -80,10 +81,58 @@ const latestVehicles: Vehicle[] = [
   }
 ];
 
+const topProfessionals: Professional[] = [
+  {
+    id: 'p1',
+    name: 'Eng. Ahmed Duale',
+    title: 'Senior Civil Engineer',
+    category: 'Construction & Engineering',
+    skills: ['Structural Design', 'Project Management'],
+    experienceYears: 12,
+    city: 'Jigjiga',
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400',
+    rating: 4.9,
+    reviewCount: 124,
+    availability: 'Available',
+    bio: 'Specializing in residential and commercial structural integrity.',
+    isVerified: true
+  },
+  {
+    id: 'p3',
+    name: 'Mustafa Omar',
+    title: 'Certified Electrician',
+    category: 'Electrical & Technical',
+    skills: ['Solar Installation', 'Smart Home Wiring'],
+    experienceYears: 15,
+    city: 'Addis Ababa',
+    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400',
+    rating: 5.0,
+    reviewCount: 210,
+    availability: 'Available',
+    bio: 'Lead technician for major solar projects.',
+    isVerified: true
+  },
+  {
+    id: 'p4',
+    name: 'Zahra Hassan',
+    title: 'Senior Quran Teacher',
+    category: 'Education & Teaching',
+    skills: ['Tajweed', 'Hifdh'],
+    experienceYears: 10,
+    city: 'Jigjiga',
+    image: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=400',
+    rating: 4.9,
+    reviewCount: 340,
+    availability: 'Available',
+    bio: 'Dedicated to excellence in teaching.',
+    isVerified: true
+  }
+];
+
 const cities = [
-  { name: 'Jigjiga', properties: 124, image: 'https://images.unsplash.com/photo-1548013146-72479768bbaa?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Jigjiga', properties: 124, image: '/src/assets/images/jigjiga_city_front_1779008989312.png' },
   { name: 'Dire Dawa', properties: 86, image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800' },
-  { name: 'Addis Ababa', properties: 245, image: 'https://images.unsplash.com/photo-1547932040-14309321e5bc?auto=format&fit=crop&q=80&w=800' },
+  { name: 'Addis Ababa', properties: 245, image: '/src/assets/images/addis_ababa_front_1779009010221.png' },
   { name: 'Godey', properties: 42, image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800' }
 ];
 
@@ -311,6 +360,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trusted Professionals */}
+      <section className="py-32 bg-luxury-black">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <div>
+              <p className="text-luxury-gold font-bold tracking-[0.2em] uppercase text-xs mb-4">Elite Human Capital</p>
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tight">
+                Trusted <span className="text-white/40">Professionals</span>
+              </h2>
+              <p className="text-white/40 mt-4 max-w-lg">Dedicated experts building the future of the Somali Region through engineering, technology, and specialized skills.</p>
+            </div>
+            <Link to="/services" className="text-luxury-gold flex items-center gap-2 font-semibold hover:gap-4 transition-all group">
+              Browse Professional Registry <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {topProfessionals.map((pro, i) => (
+              <ProfessionalCard key={pro.id} professional={pro} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Why Choose Us */}
       <section className="py-32 bg-luxury-black border-y border-white/5">
         <div className="container mx-auto px-4">
@@ -358,6 +431,27 @@ export default function Home() {
                 <p className="text-luxury-gold font-bold text-sm tracking-widest uppercase">Elite Investor</p>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Professional CTA Section */}
+      <section className="py-32 bg-luxury-gold/5 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto bg-luxury-black/40 backdrop-blur-2xl border border-white/10 rounded-[4rem] p-12 md:p-20 text-center">
+             <div className="w-20 h-20 bg-luxury-gold/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 text-luxury-gold">
+                <Briefcase size={40} />
+             </div>
+             <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">Are You a Skilled Professional?</h2>
+             <p className="text-white/40 text-lg mb-12 max-w-xl mx-auto">Join the region's elite professional network. Showcase your expertise to builders, investors, and homeowners in the Somali Region.</p>
+             <div className="flex flex-wrap justify-center gap-6">
+                <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 px-10 rounded-2xl font-bold">
+                   <Link to="/become-pro">Become a Professional</Link>
+                </Button>
+                <Link to="/services" className="h-16 px-10 rounded-2xl border border-white/10 flex items-center justify-center text-white font-bold hover:bg-white/5 transition-colors">
+                   View Registry
+                </Link>
+             </div>
           </div>
         </div>
       </section>

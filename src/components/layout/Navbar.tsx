@@ -19,8 +19,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
-    { name: 'Land', path: '/properties?category=land' },
-    { name: 'Rentals', path: '/properties?listingType=rent' },
+    { name: 'Expert Pros', path: '/services' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
