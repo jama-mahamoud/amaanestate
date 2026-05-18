@@ -89,6 +89,27 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["listingId", "senderId", "receiverId", "message", "createdAt"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Article/News/Report content",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "summary": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "language": { "type": "string", "enum": ["en", "so"] },
+        "featuredImage": { "type": "string" },
+        "authorId": { "type": "string" },
+        "isFeatured": { "type": "boolean" },
+        "published": { "type": "boolean" },
+        "views": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "content", "category", "language", "authorId", "published", "createdAt"]
     }
   },
   "firestore": {
@@ -116,6 +137,10 @@
     "/inquiries/{inquiryId}": {
       "schema": "Inquiry",
       "description": "Collection of inquiries"
+    },
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of articles, news, and reports"
     }
   }
 }

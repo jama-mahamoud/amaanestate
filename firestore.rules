@@ -86,6 +86,19 @@ service cloud.firestore {
         && data.keys().hasOnly(allowedFields);
     }
 
+    function isValidArticle(data) {
+      let allowedFields = ['title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'authorId', 'isFeatured', 'published', 'views', 'createdAt', 'updatedAt'];
+      return data.keys().hasAll(['title', 'slug', 'content', 'category', 'language', 'authorId', 'published', 'createdAt'])
+        && data.title is string && data.title.size() <= 200
+        && data.slug is string && data.slug.size() <= 100
+        && data.content is string
+        && data.category is string
+        && data.language in ['en', 'so']
+        && data.authorId == request.auth.uid
+        && data.published is bool
+        && data.keys().hasOnly(allowedFields);
+    }
+
     // Collection Security
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
@@ -146,6 +159,24 @@ service cloud.firestore {
       allow read: if isOwner(resource.data.senderId) || isOwner(resource.data.receiverId) || isAdmin();
       allow create: if isSignedIn() && isValidInquiry(incoming());
       allow update, delete: if isAdmin();
+    }
+
+    match /articles/{articleId} {
+      allow read: if resource.data.published == true || isOwner(resource.data.authorId) || isAdmin();
+      allow create: if isSignedIn() 
+        && isValidArticle(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if (
+        isOwner(existing().authorId) && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'isFeatured', 'published', 'updatedAt'
+          ])
+          && incoming().updatedAt == request.time
+          && incoming().createdAt == existing().createdAt
+          && incoming().authorId == existing().authorId
+        )
+      ) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /globalStats/{docId} {

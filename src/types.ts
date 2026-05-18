@@ -88,3 +88,20 @@ export interface UserProfile {
   photoURL: string | null;
   isVerified: boolean;
 }
+
+export interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string;
+  content: string;
+  category: string;
+  language: 'en' | 'so';
+  featuredImage?: string;
+  authorId: string;
+  isFeatured?: boolean;
+  published: boolean;
+  views: number;
+  createdAt: any;
+  updatedAt?: any;
+}
