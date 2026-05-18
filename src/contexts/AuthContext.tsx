@@ -6,7 +6,9 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
@@ -106,6 +108,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Force persistence to ensure session sticks
+    const initAuth = async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (error) {
+        console.error('Persistence error:', error);
+      }
+    };
+
+    initAuth();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         setUser(user);
@@ -113,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await syncUserProfile(user);
         } else {
           setProfile(null);
+          setSyncing(false);
         }
       } catch (error) {
         console.error('Auth state change error:', error);
