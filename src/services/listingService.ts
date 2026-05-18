@@ -7,6 +7,7 @@ import {
   getDocs, 
   addDoc, 
   updateDoc, 
+  setDoc,
   doc, 
   getDoc, 
   serverTimestamp,
@@ -160,6 +161,28 @@ export const listingService = {
       return docRef.id;
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'listings');
+      return null;
+    }
+  },
+
+  async createListingWithId(id: string, data: Omit<Listing, 'id' | 'status' | 'ownerId' | 'createdAt' | 'updatedAt'>) {
+    if (!auth.currentUser) throw new Error('Authentication required');
+
+    const listingRef = doc(db, 'listings', id);
+    const newListing = {
+      ...data,
+      ownerId: auth.currentUser.uid,
+      status: 'pending', 
+      isFeatured: false, 
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    try {
+      await setDoc(listingRef, newListing);
+      return id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `listings/${id}`);
       return null;
     }
   },

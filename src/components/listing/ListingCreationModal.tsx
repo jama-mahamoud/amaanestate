@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Plus, Info, CheckCircle2 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
+import { collection, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface ListingCreationModalProps {
   isOpen: boolean;
@@ -60,7 +62,20 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     setError(null);
 
     try {
-      // Create the listing with empty images first
+      // 1. Pre-generate ID
+      const newListingId = doc(collection(db, 'listings')).id;
+
+      // 2. Upload images in parallel
+      const uploadedImages = await storageService.uploadListingImages(
+        newListingId, 
+        selectedFiles,
+        (progressMap) => {
+          const totalProgress = Object.values(progressMap).reduce((a, b) => a + b, 0) / selectedFiles.length;
+          setUploadProgress(totalProgress);
+        }
+      );
+
+      // 3. Prepare listing data
       const listingData: any = {
         category,
         title: formData.title,
@@ -71,7 +86,10 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         location: formData.location || formData.city,
         listingType: formData.listingType,
         subcategory: formData.subcategory,
-        images: [], 
+        images: uploadedImages.map(img => img.url),
+        metadata: {
+          imageMetas: uploadedImages // Store rich metadata
+        }
       };
 
       if (category === 'vehicle') {
@@ -85,27 +103,10 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         listingData.size = formData.size;
       }
 
-      const newListingId = await listingService.createListing(listingData);
+      // 4. Create listing with all data in one go
+      const finalListingId = await listingService.createListingWithId(newListingId, listingData);
 
-      if (!newListingId) throw new Error('Failed to initialize asset record.');
-
-      // 2. Upload images
-      const uploadedImages = await storageService.uploadListingImages(
-        newListingId, 
-        selectedFiles,
-        (progressMap) => {
-          const totalProgress = Object.values(progressMap).reduce((a, b) => a + b, 0) / selectedFiles.length;
-          setUploadProgress(totalProgress);
-        }
-      );
-
-      // 3. Update listing with actual image URLs
-      await listingService.updateListing(newListingId, {
-        images: uploadedImages.map(img => img.url),
-        metadata: {
-          imageMetas: uploadedImages // Store rich metadata
-        }
-      });
+      if (!finalListingId) throw new Error('Failed to initialize asset record.');
 
       onSuccess?.();
       onClose();
