@@ -32,6 +32,8 @@ import DashboardVehicles from './pages/dashboard/DashboardVehicles';
 import DashboardUsers from './pages/dashboard/DashboardUsers';
 import DashboardSettings from './pages/dashboard/DashboardSettings';
 import DashboardArticles from './pages/dashboard/DashboardArticles';
+import CreateArticle from './pages/dashboard/CreateArticle';
+import EditArticle from './pages/dashboard/EditArticle';
 
 export default function App() {
   return (
@@ -67,6 +69,8 @@ export default function App() {
             <Route path="properties" element={<DashboardProperties />} />
             <Route path="vehicles" element={<DashboardVehicles />} />
             <Route path="articles" element={<DashboardArticles />} />
+            <Route path="articles/create" element={<CreateArticle />} />
+            <Route path="articles/edit/:id" element={<EditArticle />} />
             <Route path="users" element={<DashboardUsers />} />
             <Route path="settings" element={<DashboardSettings />} />
           </Route>
