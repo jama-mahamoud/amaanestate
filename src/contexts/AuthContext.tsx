@@ -111,7 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Force persistence to ensure session sticks
     const initAuth = async () => {
       try {
+        console.log('Initializing Auth Persistence...');
         await setPersistence(auth, browserLocalPersistence);
+        console.log('Auth Persistence set to local.');
       } catch (error) {
         console.error('Persistence error:', error);
       }
@@ -120,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth State Changed. User:', user ? user.uid : 'null');
       try {
         setUser(user);
         if (user) {
