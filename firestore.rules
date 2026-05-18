@@ -73,8 +73,7 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && isValidUser(incoming())
         && incoming().role == 'buyer'
-        && incoming().createdAt == request.time
-        && incoming().isVerified == false;
+        && incoming().createdAt == request.time;
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])
       ) || isAdmin();

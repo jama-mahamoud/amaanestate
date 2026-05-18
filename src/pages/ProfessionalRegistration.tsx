@@ -1,32 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Award, TrendingUp, Users, CheckCircle2, ChevronRight, Briefcase, Star, MapPin, Loader2, Info } from 'lucide-react';
+import { Shield, Award, TrendingUp, Users, CheckCircle2, ChevronRight, Briefcase, Star, MapPin, Loader2, Info, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { applicationService } from '@/services/applicationService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfessionalRegistration() {
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // We don't force redirect here yet, we show a nice login prompt inside the layout
+    }
+  }, [user, authLoading]);
+
   const [formData, setFormData] = useState({
-    fullName: '',
+    fullName: user?.displayName || '',
     designation: '',
     expertise: 'Construction & Engineering',
-    email: '',
+    email: user?.email || '',
     yearsInService: '',
     region: 'Jigjiga',
     narrative: '',
     agreedToCode: false
   });
 
+  // Pre-fill if user loads after initial mount
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.displayName || '',
+        email: prev.email || user.email || ''
+      }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setError('You must be signed in to submit an application.');
+      return;
+    }
     if (step < 3) {
       setStep(step + 1);
       return;
@@ -40,7 +63,7 @@ export default function ProfessionalRegistration() {
     setLoading(true);
     setError(null);
     try {
-      await applicationService.submitApplication('professional', formData);
+      await applicationService.submitApplication('professional', formData, user);
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err: any) {
@@ -49,6 +72,37 @@ export default function ProfessionalRegistration() {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-luxury-gold animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card p-16 rounded-[4rem] text-center max-w-xl"
+        >
+          <div className="w-24 h-24 bg-luxury-gold/20 rounded-full flex items-center justify-center mx-auto mb-10 text-luxury-gold">
+            <Lock size={48} />
+          </div>
+          <h2 className="text-4xl font-display font-bold text-white mb-6">Authentication Required</h2>
+          <p className="text-white/40 leading-relaxed mb-10">
+            Becoming a verified professional requires institutional vetting linked to a secure Amaan account. Please sign in to continue.
+          </p>
+          <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white px-12 h-16 rounded-2xl font-bold uppercase tracking-widest text-xs">
+            <Link to="/login">Sign In & Continue</Link>
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (success) {
     return (

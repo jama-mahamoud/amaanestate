@@ -129,7 +129,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      if (error.code === 'auth/unauthorized-domain') {
+        const domain = window.location.hostname;
+        throw new Error(`The domain "${domain}" is not authorized in your Firebase Project. Please go to Firebase Console > Authentication > Settings > Authorized Domains and add "${domain}".`);
+      }
+      throw error;
+    }
   };
 
   const signIn = async (email: string, pass: string) => {

@@ -13,6 +13,41 @@ import {
 import { db, auth } from '../lib/firebase';
 import { UserProfile, UserRole } from '../types';
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const userService = {
   async getAllUsers(limitCount = 50) {
     const usersRef = collection(db, 'users');
@@ -22,7 +57,7 @@ export const userService = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserProfile[];
     } catch (error) {
-      console.error('Error fetching users:', error);
+      handleFirestoreError(error, OperationType.LIST, 'users');
       return [];
     }
   },
@@ -33,7 +68,7 @@ export const userService = {
       await updateDoc(userRef, { role });
       return true;
     } catch (error) {
-      console.error('Error updating user role:', error);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
       return false;
     }
   },
@@ -47,7 +82,7 @@ export const userService = {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      handleFirestoreError(error, OperationType.GET, `users/${userId}`);
       return null;
     }
   },
@@ -75,7 +110,7 @@ export const userService = {
         users: totalUsersCount.data().count
       };
     } catch (error) {
-      console.error('Error fetching global stats:', error);
+      handleFirestoreError(error, OperationType.GET, 'multiple/counts');
       return { properties: 0, vehicles: 0, agents: 0, users: 0 };
     }
   }

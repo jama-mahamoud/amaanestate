@@ -23,14 +23,53 @@ export interface Application {
   updatedAt: any;
 }
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const applicationService = {
-  async submitApplication(type: ApplicationType, data: Record<string, any>) {
-    if (!auth.currentUser) throw new Error('Authentication required for institutional vetting.');
+  async submitApplication(type: ApplicationType, data: Record<string, any>, userOverride?: any) {
+    const user = userOverride || auth.currentUser;
+    if (!user) {
+      console.error('SubmitApplication failed: No authenticated user found in auth singleton or context override.');
+      throw new Error('Authentication required for institutional vetting. Please ensure you are signed in.');
+    }
 
     const applicationsRef = collection(db, 'applications');
     const newApplication = {
       type,
-      userId: auth.currentUser.uid,
+      userId: user.uid,
       status: 'pending',
       data,
       createdAt: serverTimestamp(),
@@ -41,7 +80,7 @@ export const applicationService = {
       const docRef = await addDoc(applicationsRef, newApplication);
       return docRef.id;
     } catch (error) {
-      console.error('Application Submission Error:', error);
+      handleFirestoreError(error, OperationType.WRITE, 'applications');
       throw error;
     }
   },
@@ -60,7 +99,7 @@ export const applicationService = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error('Error fetching applications:', error);
+      handleFirestoreError(error, OperationType.LIST, 'applications');
       return [];
     }
   }
