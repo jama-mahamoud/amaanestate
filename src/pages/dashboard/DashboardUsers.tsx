@@ -9,6 +9,7 @@ import DashboardEmptyState from '@/components/DashboardEmptyState';
 
 export default function DashboardUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +24,16 @@ export default function DashboardUsers() {
       setLoading(false);
     }
   };
+
+  const filteredUsers = React.useMemo(() => {
+    if (!searchQuery) return users;
+    const q = searchQuery.toLowerCase();
+    return users.filter(u => 
+      u.displayName.toLowerCase().includes(q) || 
+      u.email.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q)
+    );
+  }, [users, searchQuery]);
 
   useEffect(() => {
     loadUsers();
@@ -45,6 +56,8 @@ export default function DashboardUsers() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-luxury-gold transition-colors" size={20} />
           <Input 
             placeholder="Scan global identity database..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/10 text-lg focus-visible:ring-luxury-gold/30" 
           />
         </div>
@@ -71,7 +84,7 @@ export default function DashboardUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {users.map((user, i) => (
+                {filteredUsers.map((user, i) => (
                   <motion.tr 
                     key={user.uid}
                     initial={{ opacity: 0, y: 10 }}

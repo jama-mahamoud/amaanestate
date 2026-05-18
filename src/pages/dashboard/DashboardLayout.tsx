@@ -16,13 +16,15 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
+import ListingCreationModal from '@/components/listing/ListingCreationModal';
+import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 
-export default function DashboardLayout() {
+function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isListingModalOpen, closeListingModal, openListingModal, listingCategory } = useDashboard();
 
   const handleLogout = async () => {
     try {
@@ -44,6 +46,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-luxury-black text-white selection:bg-luxury-gold/30">
+      {/* Sidebar stays same ... */}
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-[#0a0a0a] border-r border-white/5 transform transition-transform duration-500 ease-luxury lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
@@ -134,7 +137,7 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-6">
              <Button 
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => openListingModal(location.pathname.includes('vehicles') ? 'vehicle' : 'property')}
                 className="hidden md:flex bg-luxury-gold text-luxury-black hover:bg-white h-12 rounded-[1rem] font-bold px-8 shadow-2xl shadow-luxury-gold/20 transition-all duration-500 scale-100 hover:scale-105 active:scale-95 text-[10px] uppercase tracking-widest"
              >
                 <Plus size={16} className="mr-3" /> New Asset
@@ -146,9 +149,9 @@ export default function DashboardLayout() {
         </header>
 
         <ListingCreationModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          category={location.pathname.includes('vehicles') ? 'vehicle' : 'property'}
+          isOpen={isListingModalOpen}
+          onClose={closeListingModal}
+          category={listingCategory}
         />
 
         <main className="p-8 lg:p-16 max-w-[1600px] mx-auto w-full">
@@ -156,5 +159,13 @@ export default function DashboardLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout() {
+  return (
+    <DashboardProvider>
+      <DashboardContent />
+    </DashboardProvider>
   );
 }

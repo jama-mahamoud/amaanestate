@@ -4,6 +4,7 @@ import {
   serverTimestamp,
   getDocs,
   query,
+  where,
   orderBy,
   limit
 } from 'firebase/firestore';
@@ -50,8 +51,9 @@ export const applicationService = {
     const applicationsRef = collection(db, 'applications');
     const q = query(
       applicationsRef, 
+      where('userId', '==', auth.currentUser.uid),
       orderBy('createdAt', 'desc'),
-      limit(10)
+      limit(20)
     );
     
     try {

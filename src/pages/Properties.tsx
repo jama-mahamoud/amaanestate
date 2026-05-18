@@ -14,6 +14,8 @@ export default function Properties() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const currentCategory = searchParams.get('category') || 'All';
   const currentType = searchParams.get('listingType') || 'All';
   const currentCity = searchParams.get('city') || 'All';
@@ -27,11 +29,22 @@ export default function Properties() {
 
   const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
 
-  // Client-side filtering for category (subcategory in our case or further specific filters)
+  // Client-side filtering for category and search
   const filteredListings = useMemo(() => {
-    if (currentCategory === 'All') return listings;
-    return listings.filter(l => l.subcategory === currentCategory);
-  }, [listings, currentCategory]);
+    let result = listings;
+    if (currentCategory !== 'All') {
+      result = result.filter(l => l.subcategory === currentCategory);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(l => 
+        l.title.toLowerCase().includes(q) || 
+        l.city.toLowerCase().includes(q) ||
+        l.location.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [listings, currentCategory, searchQuery]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -95,10 +108,12 @@ export default function Properties() {
       <div className="container mx-auto px-4">
         {/* Quick Filter Bar */}
         <div className="glass-card mb-12 md:mb-16 p-2 md:p-4 rounded-3xl md:rounded-[2rem] flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
-           <div className="flex-1 relative group border-0">
+            <div className="flex-1 relative group border-0">
               <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
               <Input 
                 placeholder="Search database..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-white/5 border-0 h-12 md:h-14 pl-14 md:pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-sm md:text-base w-full"
               />
            </div>

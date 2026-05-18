@@ -28,16 +28,15 @@ export default function ProfessionalServices() {
   const cities = ['All', 'Jigjiga', 'Dire Dawa', 'Addis Ababa', 'Godey', 'Berbera'];
 
   // Map ProfessionalService (backend) to Professional (frontend)
-  // In a real app, you might fetch the actual professional profile by providerId
   const mappedPros: Professional[] = useMemo(() => {
     return services.map(s => ({
       id: s.id,
-      name: "Verified Specialist", // Placeholder until profile sync
+      name: "Verified Specialist", 
       title: s.title,
       category: s.category,
       skills: [s.category],
       experienceYears: 5,
-      city: "Regionally Verified",
+      city: s.city || "Regionally Verified",
       image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
       rating: 5.0,
       reviewCount: 1,

@@ -1,21 +1,79 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase } from 'lucide-react';
+import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
-import { Property, VehicleListing, Professional } from '@/types';
-
-const featuredProperties: Property[] = [];
-const latestVehicles: VehicleListing[] = [];
-const topProfessionals: Professional[] = [];
-const cities: any[] = [];
+import { Property, VehicleListing, Professional, ListingCategory } from '@/types';
+import { listingService } from '@/services/listingService';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [latestVehicles, setLatestVehicles] = useState<VehicleListing[]>([]);
+  const [topProfessionals, setTopProfessionals] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCity, setSearchCity] = useState('All Cities');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [propsRes, vehiclesRes, prosRes] = await Promise.all([
+          listingService.getListings({ category: 'property', limit: 3 }),
+          listingService.getListings({ category: 'vehicle', limit: 2 }),
+          listingService.getProfessionalServices('All', 'active')
+        ]);
+        
+        setFeaturedProperties(propsRes.listings as Property[]);
+        setLatestVehicles(vehiclesRes.listings as VehicleListing[]);
+        
+        // Map services to professionals for display
+        const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
+          id: s.id,
+          name: "Verified Specialist",
+          title: s.title,
+          category: s.category,
+          skills: [s.category],
+          experienceYears: 5,
+          city: s.city,
+          image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
+          rating: 5.0,
+          reviewCount: 1,
+          availability: 'Available',
+          bio: s.description,
+          isVerified: true
+        }));
+        setTopProfessionals(mappedPros);
+      } catch (err) {
+        console.error("Home page data initialization failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSearch = () => {
+    if (searchQuery) {
+      navigate(`/properties?search=${searchQuery}&city=${searchCity}`);
+    }
+  };
+
+  const cities = [
+    { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Dire Dawa', properties: 28, image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Addis Ababa', properties: 156, image: 'https://images.unsplash.com/photo-1449156003141-3586624ad722?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Hargeisa', properties: 34, image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1200&auto=format&fit=crop' },
+  ];
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -67,19 +125,30 @@ export default function Home() {
                 <Search className="text-luxury-gold mr-3 md:mr-4 group-hover:scale-110 transition-transform" size={20} />
                 <Input 
                   placeholder="What are you looking for?" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   className="bg-transparent border-0 text-white placeholder:text-white/20 focus-visible:ring-0 px-0 h-auto text-base md:text-lg w-full"
                 />
               </div>
               <div className="flex-1 flex items-center bg-white/5 rounded-2xl px-4 md:px-6 py-3 md:py-4 group focus-within:bg-white/10 transition-all border border-white/5 focus-within:border-luxury-gold/50">
                 <MapPin className="text-luxury-gold mr-3 md:mr-4 group-hover:scale-110 transition-transform" size={20} />
-                <select className="bg-transparent border-0 text-white focus:outline-none w-full appearance-none text-base md:text-lg">
-                  <option className="bg-luxury-black">All Cities</option>
-                  <option className="bg-luxury-black">Jigjiga</option>
-                  <option className="bg-luxury-black">Dire Dawa</option>
-                  <option className="bg-luxury-black">Addis Ababa</option>
+                <select 
+                  className="bg-transparent border-0 text-white focus:outline-none w-full appearance-none text-base md:text-lg"
+                  value={searchCity}
+                  onChange={(e) => setSearchCity(e.target.value)}
+                >
+                  <option className="bg-luxury-black" value="All">All Cities</option>
+                  <option className="bg-luxury-black" value="Jigjiga">Jigjiga</option>
+                  <option className="bg-luxury-black" value="Dire Dawa">Dire Dawa</option>
+                  <option className="bg-luxury-black" value="Addis Ababa">Addis Ababa</option>
                 </select>
               </div>
-              <Button size="lg" className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-bold px-8 md:px-12 h-14 md:h-auto py-3 md:py-5 rounded-2xl shadow-xl shadow-luxury-gold/20 text-base md:text-lg uppercase tracking-widest w-full md:w-auto">
+              <Button 
+                size="lg" 
+                onClick={handleSearch}
+                className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-bold px-8 md:px-12 h-14 md:h-auto py-3 md:py-5 rounded-2xl shadow-xl shadow-luxury-gold/20 text-base md:text-lg uppercase tracking-widest w-full md:w-auto"
+              >
                 Search
               </Button>
             </div>
@@ -158,7 +227,12 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {featuredProperties.length > 0 ? (
+            {loading ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
+              </div>
+            ) : featuredProperties.length > 0 ? (
               featuredProperties.map((prop, i) => (
                 <motion.div
                   key={prop.id}
@@ -243,7 +317,12 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {latestVehicles.length > 0 ? (
+            {loading ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
+              </div>
+            ) : latestVehicles.length > 0 ? (
               latestVehicles.map((vehicle, i) => (
                 <motion.div
                   key={vehicle.id}
@@ -284,7 +363,12 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {topProfessionals.length > 0 ? (
+            {loading ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
+              </div>
+            ) : topProfessionals.length > 0 ? (
               topProfessionals.map((pro, i) => (
                 <ProfessionalCard key={pro.id} professional={pro} />
               ))
@@ -357,7 +441,7 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto bg-luxury-black/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] md:rounded-[4rem] p-10 md:p-20 text-center">
              <div className="w-16 h-16 md:w-20 md:h-20 bg-luxury-gold/10 rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 text-luxury-gold">
-                <Briefcase size={32} md:size={40} />
+                <Briefcase size={32} className="md:w-10 md:h-10" />
              </div>
              <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 md:mb-6">Are You a Skilled Professional?</h2>
              <p className="text-white/40 text-base md:text-lg mb-8 md:mb-12 max-w-xl mx-auto tracking-tight">Join the region's elite professional network. Showcase your expertise to builders, investors, and homeowners in the Somali Region.</p>

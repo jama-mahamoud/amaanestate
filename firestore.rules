@@ -34,7 +34,12 @@ service cloud.firestore {
         && data.listingType in ['sale', 'rent']
         && data.ownerId == request.auth.uid
         && data.status in ['pending', 'active', 'sold', 'rented', 'archived']
-        && (data.isFeatured == null || data.isFeatured == false || isAdmin());
+        && (data.isFeatured == null || data.isFeatured == false || isAdmin())
+        // Optional specialized fields
+        && (!('year' in data) || data.year is number)
+        && (!('mileage' in data) || data.mileage is string)
+        && (!('beds' in data) || data.beds is number)
+        && (!('baths' in data) || data.baths is number);
     }
 
     function isValidService(data) {
@@ -52,26 +57,27 @@ service cloud.firestore {
         && data.message is string && data.message.size() <= 2000;
     }
 
+    function isValidApplication(data) {
+      return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt', 'updatedAt'])
+        && data.type in ['agent', 'professional']
+        && data.userId == request.auth.uid
+        && data.status == 'pending'
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
     // Collection Security
     match /users/{userId} {
-      // 8. Secure List Queries
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-
       allow create: if isOwner(userId)
         && isValidUser(incoming())
         && incoming().role == 'buyer'
         && incoming().createdAt == request.time
         && incoming().isVerified == false;
-
       allow update: if isOwner(userId) && (
-        // Action: Update Profile
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])
-        && incoming().displayName is string && incoming().displayName.size() <= 100
-        && (incoming().photoURL == null || (incoming().photoURL is string && incoming().photoURL.size() <= 1000))
       ) || isAdmin();
-
-      // Deny deletion by users, only admins can delete
       allow delete: if isAdmin();
     }
 
@@ -81,14 +87,16 @@ service cloud.firestore {
         && isValidListing(incoming())
         && incoming().status == 'pending'
         && incoming().createdAt == request.time;
-      
       allow update: if (
         isOwner(existing().ownerId) && (
-          // Owners can only update basic details
-          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'price', 'currency', 'city', 'location', 'images', 'features', 'updatedAt', 'metadata', 'subcategory'])
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'description', 'price', 'currency', 'city', 'location', 
+            'images', 'features', 'updatedAt', 'metadata', 'subcategory',
+            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size'
+          ])
+          && incoming().updatedAt == request.time
         )
       ) || isAdmin();
-
       allow delete: if isAdmin();
     }
 
@@ -104,10 +112,21 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /applications/{appId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && isValidApplication(incoming());
+      allow update, delete: if isAdmin();
+    }
+
     match /inquiries/{inquiryId} {
       allow read: if isOwner(resource.data.senderId) || isOwner(resource.data.receiverId) || isAdmin();
       allow create: if isSignedIn() && isValidInquiry(incoming()) && incoming().createdAt == request.time;
       allow update, delete: if isAdmin();
+    }
+
+    match /globalStats/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /admins/{adminId} {

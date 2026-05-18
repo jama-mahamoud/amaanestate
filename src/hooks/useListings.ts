@@ -14,9 +14,10 @@ export function useListings(initialFilters: ListingFilter = {}) {
     setLoading(true);
     setError(null);
     try {
+      const currentLastDoc = isLoadMore ? lastDoc : undefined;
       const result = await listingService.getListings({
         ...filters,
-        lastDoc: isLoadMore ? lastDoc : undefined
+        lastDoc: currentLastDoc
       });
 
       if (isLoadMore) {
@@ -26,23 +27,48 @@ export function useListings(initialFilters: ListingFilter = {}) {
       }
 
       setLastDoc(result.lastDoc);
-      setHasMore(result.listings.length > 0 && result.listings.length === (filters.limit || 20));
+      // Check if we reached the end
+      const limitVal = filters.limit || 20;
+      setHasMore(result.listings.length === limitVal);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch listings');
     } finally {
       setLoading(false);
     }
-  }, [lastDoc]);
+  }, [lastDoc]); // Keep lastDoc as dependency so loadMore can use current value
 
-  // Initial fetch
+  // Initial fetch when core filters change
   useEffect(() => {
-    fetchListings(initialFilters);
+    // Reset state for new filter query
+    setListings([]);
+    setLastDoc(undefined);
+    setHasMore(true);
+    
+    // We can't call fetchListings directly because it depends on lastDoc
+    // and would trigger itself. So we call service directly for initial load.
+    const initialFetch = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await listingService.getListings(initialFilters);
+        setListings(result.listings);
+        setLastDoc(result.lastDoc);
+        setHasMore(result.listings.length === (initialFilters.limit || 20));
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch listings');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initialFetch();
   }, [
     initialFilters.category, 
     initialFilters.listingType, 
     initialFilters.city, 
     initialFilters.minPrice, 
-    initialFilters.maxPrice
+    initialFilters.maxPrice,
+    initialFilters.status
   ]);
 
   const loadMore = () => {

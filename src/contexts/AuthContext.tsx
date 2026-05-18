@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'buyer' as UserRole,
           createdAt: serverTimestamp(),
           photoURL: firebaseUser.photoURL,
-          isVerified: false, // Explicitly false at start
+          isVerified: firebaseUser.emailVerified,
         };
         await setDoc(userRef, newProfile);
         setProfile(newProfile);

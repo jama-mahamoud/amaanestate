@@ -35,6 +35,15 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     location: '',
     listingType: 'sale' as ListingType,
     subcategory: '',
+    // Vehicle specific
+    year: new Date().getFullYear().toString(),
+    mileage: '',
+    fuelType: 'Petrol' as any,
+    transmission: 'Automatic' as any,
+    // Property specific
+    beds: '',
+    baths: '',
+    size: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,18 +61,31 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
 
     try {
       // Create the listing with empty images first
-      const newListingId = await listingService.createListing({
+      const listingData: any = {
         category,
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
         currency: formData.currency,
         city: formData.city,
-        location: formData.location || formData.city, // Fallback to city
+        location: formData.location || formData.city,
         listingType: formData.listingType,
         subcategory: formData.subcategory,
         images: [], 
-      });
+      };
+
+      if (category === 'vehicle') {
+        listingData.year = Number(formData.year);
+        listingData.mileage = formData.mileage;
+        listingData.fuelType = formData.fuelType;
+        listingData.transmission = formData.transmission;
+      } else if (category === 'property') {
+        listingData.beds = Number(formData.beds) || 0;
+        listingData.baths = Number(formData.baths) || 0;
+        listingData.size = formData.size;
+      }
+
+      const newListingId = await listingService.createListing(listingData);
 
       if (!newListingId) throw new Error('Failed to initialize asset record.');
 
@@ -146,13 +168,33 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Sub-Category</label>
-                  <Input 
-                    required
-                    placeholder={category === 'property' ? 'e.g. Villa, Apartment' : 'e.g. SUV, Luxury'}
-                    value={formData.subcategory}
-                    onChange={e => setFormData({ ...formData, subcategory: e.target.value })}
-                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
-                  />
+                  <Select 
+                    value={formData.subcategory} 
+                    onValueChange={(val) => setFormData({ ...formData, subcategory: val })}
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-luxury-black border-white/5 text-white">
+                      {category === 'property' ? (
+                        <>
+                          <SelectItem value="Villa">Villa</SelectItem>
+                          <SelectItem value="Apartment">Apartment</SelectItem>
+                          <SelectItem value="Commercial">Commercial</SelectItem>
+                          <SelectItem value="Land">Land</SelectItem>
+                          <SelectItem value="House">House</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="SUV">SUV</SelectItem>
+                          <SelectItem value="Sedan">Sedan</SelectItem>
+                          <SelectItem value="Truck">Truck</SelectItem>
+                          <SelectItem value="Lux">Luxury</SelectItem>
+                          <SelectItem value="Bus">Bus</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -180,21 +222,105 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Listing Type</label>
-                <Select 
-                  value={formData.listingType} 
-                  onValueChange={(val: ListingType) => setFormData({ ...formData, listingType: val })}
-                >
-                  <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
-                    <SelectValue placeholder="Select intent" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-luxury-black border-white/5 text-white">
-                    <SelectItem value="sale">For Sale</SelectItem>
-                    <SelectItem value="rent">For Rent</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Listing Type</label>
+                  <Select 
+                    value={formData.listingType} 
+                    onValueChange={(val: ListingType) => setFormData({ ...formData, listingType: val })}
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
+                      <SelectValue placeholder="Select intent" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-luxury-black border-white/5 text-white">
+                      <SelectItem value="sale">For Sale</SelectItem>
+                      <SelectItem value="rent">For Rent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">
+                    {category === 'vehicle' ? 'Vehicle Year' : 'Asset Size (e.g. 200sqm)'}
+                  </label>
+                  <Input 
+                    required
+                    placeholder={category === 'vehicle' ? '2024' : '200sqm'}
+                    value={category === 'vehicle' ? formData.year : formData.size}
+                    onChange={e => setFormData({ ...formData, [category === 'vehicle' ? 'year' : 'size']: e.target.value })}
+                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                  />
+                </div>
               </div>
+
+              {category === 'vehicle' ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Mileage (km)</label>
+                    <Input 
+                      required
+                      placeholder="e.g. 12,000"
+                      value={formData.mileage}
+                      onChange={e => setFormData({ ...formData, mileage: e.target.value })}
+                      className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Fuel Type</label>
+                    <Select 
+                      value={formData.fuelType} 
+                      onValueChange={(val) => setFormData({ ...formData, fuelType: val })}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-luxury-black text-white">
+                        <SelectItem value="Petrol">Petrol</SelectItem>
+                        <SelectItem value="Diesel">Diesel</SelectItem>
+                        <SelectItem value="Electric">Electric</SelectItem>
+                        <SelectItem value="Hybrid">Hybrid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Transmission</label>
+                    <Select 
+                      value={formData.transmission} 
+                      onValueChange={(val) => setFormData({ ...formData, transmission: val })}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-luxury-black text-white">
+                        <SelectItem value="Automatic">Automatic</SelectItem>
+                        <SelectItem value="Manual">Manual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Bedrooms</label>
+                    <Input 
+                      type="number"
+                      placeholder="0"
+                      value={formData.beds}
+                      onChange={e => setFormData({ ...formData, beds: e.target.value })}
+                      className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Bathrooms</label>
+                    <Input 
+                      type="number"
+                      placeholder="0"
+                      value={formData.baths}
+                      onChange={e => setFormData({ ...formData, baths: e.target.value })}
+                      className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    />
+                  </div>
+                </div>
+              )}
 
               <ImageUpload 
                 onImagesChange={setSelectedFiles} 

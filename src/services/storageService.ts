@@ -49,6 +49,8 @@ export const storageService = {
     files: File[], 
     onProgress?: (progress: Record<string, number>) => void
   ): Promise<ListingImage[]> {
+    const progressMap: Record<string, number> = {};
+    
     const uploadPromises = files.map(async (file, index) => {
       const compressedFile = await this.compressImage(file);
       const timestamp = Date.now();
@@ -63,8 +65,10 @@ export const storageService = {
           'state_changed',
           (snapshot) => {
             const progressValue = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressMap[file.name] = progressValue;
             if (onProgress) {
-              onProgress({ [file.name]: progressValue });
+              // Create a copy to trigger state updates in React
+              onProgress({ ...progressMap });
             }
           },
           (error) => reject(error),

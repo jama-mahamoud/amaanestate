@@ -4,9 +4,11 @@ import { Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, Act
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/services/userService';
+import { useDashboard } from '@/contexts/DashboardContext';
 
 export default function DashboardHome() {
   const { user } = useAuth();
+  const { openListingModal } = useDashboard();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     properties: 0,
@@ -164,7 +166,10 @@ export default function DashboardHome() {
                 <p className="text-[10px] uppercase font-black tracking-[0.4em] mb-4 opacity-50">Strategic Expansion</p>
                 <h3 className="text-4xl font-display font-bold mb-8 leading-[0.9] tracking-tighter">Scale Your <br /> Digital Assets</h3>
                 <p className="text-luxury-black/60 text-base font-medium mb-12 max-w-[220px] leading-relaxed italic">Initiate new property protocols across the regional network.</p>
-                <Button className="w-full bg-luxury-black text-white hover:bg-luxury-black/90 h-20 rounded-[2rem] font-bold text-lg border-0 shadow-2xl shadow-luxury-gold/50 transition-all duration-500 hover:-translate-y-1">
+                <Button 
+                  onClick={() => openListingModal('property')}
+                  className="w-full bg-luxury-black text-white hover:bg-luxury-black/90 h-20 rounded-[2rem] font-bold text-lg border-0 shadow-2xl shadow-luxury-gold/50 transition-all duration-500 hover:-translate-y-1"
+                >
                   Initialize New Log
                 </Button>
               </div>

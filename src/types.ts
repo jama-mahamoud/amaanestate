@@ -52,6 +52,7 @@ export interface ProfessionalService {
   title: string;
   description: string;
   category: ServiceCategory;
+  city: string;
   providerId: string;
   status: ServiceStatus;
   createdAt: any;

@@ -11,6 +11,7 @@ import { ListingCategory, ListingType, VehicleListing } from '@/types';
 export default function Vehicles() {
   const [currentCategory, setCurrentCategory] = useState('All');
   const [currentType, setCurrentType] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filters = useMemo(() => ({
     category: 'vehicle' as ListingCategory,
@@ -21,9 +22,19 @@ export default function Vehicles() {
   const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
 
   const filteredVehicles = useMemo(() => {
-    if (currentCategory === 'All') return listings;
-    return listings.filter(v => v.subcategory === currentCategory);
-  }, [listings, currentCategory]);
+    let result = listings;
+    if (currentCategory !== 'All') {
+      result = result.filter(v => v.subcategory === currentCategory);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(v => 
+        v.title.toLowerCase().includes(q) || 
+        v.description.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [listings, currentCategory, searchQuery]);
 
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
@@ -51,6 +62,8 @@ export default function Vehicles() {
               <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
               <Input 
                 placeholder="Search the fleet... (e.g. Land Cruiser)" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-white/5 border-0 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg w-full"
               />
             </div>
