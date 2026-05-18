@@ -10,7 +10,8 @@ import {
   where, 
   orderBy, 
   serverTimestamp,
-  QueryConstraint
+  QueryConstraint,
+  limit
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/lib/utils';
@@ -47,6 +48,19 @@ export const articleService = {
       return { id: snapshot.id, ...snapshot.data() } as Article;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `${ARTICLES_COLLECTION}/${id}`);
+      return null;
+    }
+  },
+
+  async getArticleBySlug(slug: string) {
+    try {
+      const q = query(collection(db, ARTICLES_COLLECTION), where('slug', '==', slug), limit(1));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      const docData = snapshot.docs[0];
+      return { id: docData.id, ...docData.data() } as Article;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `${ARTICLES_COLLECTION}/slug/${slug}`);
       return null;
     }
   },

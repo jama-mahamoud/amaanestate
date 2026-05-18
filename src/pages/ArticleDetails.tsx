@@ -16,10 +16,15 @@ export default function ArticleDetails() {
 
   useEffect(() => {
     if (id) {
-      articleService.getArticleById(id).then(data => {
+      const fetchArticle = async () => {
+        let data = await articleService.getArticleById(id);
+        if (!data) {
+          data = await articleService.getArticleBySlug(id);
+        }
         setArticle(data);
         setLoading(false);
-      });
+      };
+      fetchArticle();
     }
   }, [id]);
 
@@ -88,9 +93,34 @@ export default function ArticleDetails() {
                className="prose prose-invert prose-luxury max-w-none 
                  prose-p:text-white/60 prose-p:text-lg prose-p:leading-relaxed prose-p:font-light prose-p:mb-8
                  prose-h3:text-white prose-h3:font-display prose-h3:text-3xl prose-h3:font-bold prose-h3:mb-6 prose-h3:mt-12 prose-h3:tracking-tight
-                 prose-strong:text-luxury-gold prose-strong:font-bold"
+                 prose-strong:text-luxury-gold prose-strong:font-bold
+                 prose-img:rounded-3xl prose-img:border prose-img:border-white/10 prose-img:mb-12 prose-img:mt-12
+                 prose-a:text-luxury-gold hover:prose-a:text-white prose-a:transition-colors"
                dangerouslySetInnerHTML={{ __html: article.content }} 
              />
+
+             {article.gallery && article.gallery.length > 0 && (
+               <div className="mt-16 pt-16 border-t border-white/5">
+                 <h3 className="text-2xl font-display font-bold text-white mb-8">Media Gallery</h3>
+                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                   {article.gallery.map((url, idx) => (
+                     <div key={idx} className="aspect-square rounded-2xl overflow-hidden border border-white/10">
+                       <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+             {article.tags && article.tags.length > 0 && (
+               <div className="mt-16 flex flex-wrap gap-3">
+                 {article.tags.map((tag) => (
+                   <span key={tag} className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white/60 text-[10px] uppercase font-bold tracking-widest hover:bg-luxury-gold hover:text-luxury-black transition-colors cursor-pointer">
+                     #{tag}
+                   </span>
+                 ))}
+               </div>
+             )}
           </div>
         </div>
       </div>

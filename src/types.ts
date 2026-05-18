@@ -98,6 +98,10 @@ export interface Article {
   category: string;
   language: 'en' | 'so';
   featuredImage?: string;
+  gallery?: string[];
+  tags?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
   authorId: string;
   isFeatured?: boolean;
   published: boolean;

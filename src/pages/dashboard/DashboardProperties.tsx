@@ -40,6 +40,14 @@ export default function DashboardProperties() {
     p.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const displayPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   return (
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">

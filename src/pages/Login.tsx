@@ -111,7 +111,7 @@ export default function Login() {
                 <input type="checkbox" className="w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
                 Preserve Session
               </label>
-              <Link to="/forgot-password" size="sm" className="text-luxury-gold/60 hover:text-luxury-gold transition-colors underline underline-offset-4 decoration-luxury-gold/20">
+              <Link to="/forgot-password" className="text-luxury-gold/60 hover:text-luxury-gold transition-colors underline underline-offset-4 decoration-luxury-gold/20">
                 Inquiry Assistance
               </Link>
             </div>

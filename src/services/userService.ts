@@ -55,7 +55,7 @@ export const userService = {
     
     try {
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserProfile[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as UserProfile[];
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'users');
       return [];
@@ -78,7 +78,7 @@ export const userService = {
     try {
       const snapshot = await getDoc(userRef);
       if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data() } as UserProfile;
+        return { id: snapshot.id, ...snapshot.data() } as unknown as UserProfile;
       }
       return null;
     } catch (error) {
