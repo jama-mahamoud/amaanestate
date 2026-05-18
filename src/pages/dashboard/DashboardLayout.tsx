@@ -41,11 +41,15 @@ function DashboardContent() {
     { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> },
   ];
 
-  if (profile?.role === 'admin' || profile?.role === 'editor') {
+  const currentRole = profile?.role?.toString().trim().toLowerCase();
+  const isAdmin = currentRole === 'admin' || currentRole === 'administrator';
+  const isEditor = isAdmin || currentRole === 'editor';
+
+  if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
   }
 
-  if (profile?.role === 'admin') {
+  if (isAdmin) {
     navItems.push({ name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> });
   }
 

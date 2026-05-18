@@ -104,9 +104,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isVerified: user.emailVerified,
             };
             await setDoc(userRef, newProfile);
+            setProfile(newProfile);
           } else {
             // Check for minor background updates
             const existingData = userDoc.data() as UserProfile;
+            
+            const normalizedRole = existingData.role 
+              ? (existingData.role.toString().toLowerCase().trim() as UserRole)
+              : 'normal_user';
+
+            setProfile({
+              ...existingData,
+              role: normalizedRole
+            });
 
             if (
               existingData.displayName !== user.displayName || 

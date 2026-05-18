@@ -91,13 +91,18 @@ export const applicationService = {
     const q = query(
       applicationsRef, 
       where('userId', '==', auth.currentUser.uid),
-      orderBy('createdAt', 'desc'),
       limit(20)
     );
     
     try {
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      apps.sort((a: any, b: any) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
+        return bTime - aTime;
+      });
+      return apps;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'applications');
       return [];

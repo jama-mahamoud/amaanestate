@@ -58,12 +58,7 @@ export const listingService = {
       if (filters.maxPrice !== undefined) {
         constraints.push(where('price', '<=', filters.maxPrice));
       }
-      // Firestore requires first orderBy to be the field used for inequality
-      constraints.push(orderBy('price', 'asc'));
     }
-
-    // Secondary ordering
-    constraints.push(orderBy('createdAt', 'desc'));
 
     // Pagination
     if (filters.limit) {
@@ -84,6 +79,13 @@ export const listingService = {
         id: doc.id,
         ...doc.data()
       })) as Listing[];
+
+      // Client-side sort
+      listings.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
+        return bTime - aTime;
+      });
 
       return {
         listings,
@@ -206,15 +208,20 @@ export const listingService = {
       constraints.push(where('category', '==', category));
     }
 
-    constraints.push(orderBy('createdAt', 'desc'));
-
     try {
       const q = query(servicesRef, ...constraints);
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const services = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as ProfessionalService[];
+      
+      services.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
+        return bTime - aTime;
+      });
+      return services;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'professionalServices');
       return [];
