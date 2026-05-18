@@ -1,0 +1,82 @@
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  limit, 
+  orderBy,
+  doc,
+  updateDoc,
+  where,
+  getDoc,
+  getCountFromServer
+} from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
+import { UserProfile, UserRole } from '../types';
+
+export const userService = {
+  async getAllUsers(limitCount = 50) {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('createdAt', 'desc'), limit(limitCount));
+    
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserProfile[];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  },
+
+  async updateUserRole(userId: string, role: UserRole) {
+    const userRef = doc(db, 'users', userId);
+    try {
+      await updateDoc(userRef, { role });
+      return true;
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      return false;
+    }
+  },
+
+  async getUserProfile(userId: string) {
+    const userRef = doc(db, 'users', userId);
+    try {
+      const snapshot = await getDoc(userRef);
+      if (snapshot.exists()) {
+        return { id: snapshot.id, ...snapshot.data() } as UserProfile;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  },
+
+  async getGlobalStats() {
+    try {
+      const listingsRef = collection(db, 'listings');
+      const usersRef = collection(db, 'users');
+      
+      const propertiesQuery = query(listingsRef, where('category', '==', 'property'));
+      const vehiclesQuery = query(listingsRef, where('category', '==', 'vehicle'));
+      const agentsQuery = query(usersRef, where('role', '==', 'agent'));
+
+      const [propertiesCount, vehiclesCount, agentsCount, totalUsersCount] = await Promise.all([
+        getCountFromServer(propertiesQuery),
+        getCountFromServer(vehiclesQuery),
+        getCountFromServer(agentsQuery),
+        getCountFromServer(usersRef),
+      ]);
+
+      return {
+        properties: propertiesCount.data().count,
+        vehicles: vehiclesCount.data().count,
+        agents: agentsCount.data().count,
+        users: totalUsersCount.data().count
+      };
+    } catch (error) {
+      console.error('Error fetching global stats:', error);
+      return { properties: 0, vehicles: 0, agents: 0, users: 0 };
+    }
+  }
+};

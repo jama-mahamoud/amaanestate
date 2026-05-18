@@ -1,10 +1,63 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Shield, Award, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
+import { Shield, Award, TrendingUp, Users, CheckCircle2, Loader2, Info } from 'lucide-react';
 import { motion } from 'motion/react';
+import { applicationService } from '@/services/applicationService';
+import { useNavigate } from 'react-router-dom';
 
 export default function AgentRegistration() {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    agencyName: '',
+    email: '',
+    region: 'Jigjiga HQ',
+    overview: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await applicationService.submitApplication('agent', formData);
+      setSuccess(true);
+      setTimeout(() => navigate('/dashboard'), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Institutional review initialization failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card p-16 rounded-[4rem] text-center max-w-xl"
+        >
+          <div className="w-24 h-24 bg-luxury-gold/20 rounded-full flex items-center justify-center mx-auto mb-10 text-luxury-gold">
+            <CheckCircle2 size={48} />
+          </div>
+          <h2 className="text-4xl font-display font-bold text-white mb-6">Inquiry Received</h2>
+          <p className="text-white/40 leading-relaxed mb-10">
+            Your credentials have been uploaded to the regional verification matrix. Our compliance board will review your application within 48 hours.
+          </p>
+          <Button onClick={() => navigate('/dashboard')} className="bg-luxury-gold text-luxury-black hover:bg-white px-12 h-16 rounded-2xl font-bold uppercase tracking-widest text-xs">
+            Return to Command Center
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
       <div className="container mx-auto px-4">
@@ -58,27 +111,56 @@ export default function AgentRegistration() {
                  <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Initialize your professional partnership</p>
                </div>
                
-               <form className="space-y-8 relative z-10" onSubmit={(e) => e.preventDefault()}>
+               <form className="space-y-8 relative z-10" onSubmit={handleSubmit}>
+                 {error && (
+                   <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-xs font-bold uppercase tracking-widest">
+                     <Info size={16} /> {error}
+                   </div>
+                 )}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-3">
                      <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Full Legal Name</label>
-                     <Input placeholder="Ahmed Mohamud" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                     <Input 
+                        required
+                        placeholder="Ahmed Mohamud" 
+                        value={formData.fullName}
+                        onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                        className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                      />
                    </div>
                    <div className="space-y-3">
                      <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Agency Institution</label>
-                     <Input placeholder="Prime Realty Ltd" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                     <Input 
+                        required
+                        placeholder="Prime Realty Ltd" 
+                        value={formData.agencyName}
+                        onChange={e => setFormData({ ...formData, agencyName: e.target.value })}
+                        className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                      />
                    </div>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-3">
                      <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Professional Email</label>
-                     <Input type="email" placeholder="ahmed@agency.com" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                     <Input 
+                        required
+                        type="email" 
+                        placeholder="ahmed@agency.com" 
+                        value={formData.email}
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                      />
                    </div>
                    <div className="space-y-3">
                      <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Operating Region</label>
                      <div className="relative">
-                       <select className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer">
+                       <select 
+                        required
+                        value={formData.region}
+                        onChange={e => setFormData({ ...formData, region: e.target.value })}
+                        className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer"
+                       >
                          <option className="bg-luxury-black">Jigjiga HQ</option>
                          <option className="bg-luxury-black">Addis Ababa Cluster</option>
                          <option className="bg-luxury-black">Dire Dawa Hub</option>
@@ -94,13 +176,24 @@ export default function AgentRegistration() {
                  <div className="space-y-3">
                    <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Career Overview</label>
                    <Textarea 
+                    required
                     placeholder="Brief architectural history or brokerage volume..." 
+                    value={formData.overview}
+                    onChange={e => setFormData({ ...formData, overview: e.target.value })}
                     className="bg-white/5 border-0 min-h-[160px] rounded-2xl text-white placeholder:text-white/10 text-lg px-6 py-6 focus-visible:ring-luxury-gold/30 resize-none" 
                    />
                  </div>
 
-                 <Button className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/20">
-                   Submit For Institutional Review
+                 <Button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/20"
+                 >
+                   {loading ? (
+                     <div className="flex items-center gap-3">
+                        <Loader2 className="animate-spin" /> Informing Regional Registry...
+                     </div>
+                   ) : 'Submit For Institutional Review'}
                  </Button>
 
                  <div className="flex items-center justify-center gap-3 text-white/10 text-[10px] font-bold uppercase tracking-[0.3em] pt-4">

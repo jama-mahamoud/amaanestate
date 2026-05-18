@@ -15,6 +15,7 @@ export default function DashboardProperties() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadUserProperties = async () => {
     if (!user) return;
@@ -33,9 +34,11 @@ export default function DashboardProperties() {
     loadUserProperties();
   }, [user]);
 
-  const displayPrice = (price: number | string) => {
-    return typeof price === 'number' ? `$${price.toLocaleString()}` : price;
-  };
+  const filteredProperties = properties.filter(p => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-12">
@@ -64,6 +67,8 @@ export default function DashboardProperties() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-luxury-gold transition-colors" size={20} />
           <Input 
             placeholder="Query portfolio database..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/10 text-lg focus-visible:ring-luxury-gold/30" 
           />
         </div>
@@ -90,7 +95,7 @@ export default function DashboardProperties() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {properties.map((property, i) => (
+                {filteredProperties.map((property, i) => (
                   <motion.tr 
                     key={property.id}
                     initial={{ opacity: 0, y: 10 }}

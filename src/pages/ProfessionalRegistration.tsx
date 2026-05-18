@@ -1,12 +1,77 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Award, TrendingUp, Users, CheckCircle2, ChevronRight, Briefcase, Star, MapPin } from 'lucide-react';
+import { Shield, Award, TrendingUp, Users, CheckCircle2, ChevronRight, Briefcase, Star, MapPin, Loader2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { applicationService } from '@/services/applicationService';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfessionalRegistration() {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    designation: '',
+    expertise: 'Construction & Engineering',
+    email: '',
+    yearsInService: '',
+    region: 'Jigjiga',
+    narrative: '',
+    agreedToCode: false
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < 3) {
+      setStep(step + 1);
+      return;
+    }
+
+    if (!formData.agreedToCode) {
+      setError('You must adhere to the professional code of conduct.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      await applicationService.submitApplication('professional', formData);
+      setSuccess(true);
+      setTimeout(() => navigate('/dashboard'), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Service onboarding failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card p-16 rounded-[4rem] text-center max-w-xl"
+        >
+          <div className="w-24 h-24 bg-luxury-gold/20 rounded-full flex items-center justify-center mx-auto mb-10 text-luxury-gold">
+            <CheckCircle2 size={48} />
+          </div>
+          <h2 className="text-4xl font-display font-bold text-white mb-6">Inquiry Logged</h2>
+          <p className="text-white/40 leading-relaxed mb-10">
+            Professional onboarding is currently under review. Registry verification will be finalized following structural data auditing.
+          </p>
+          <Button onClick={() => navigate('/dashboard')} className="bg-luxury-gold text-luxury-black hover:bg-white px-12 h-16 rounded-2xl font-bold uppercase tracking-widest text-xs">
+            Return to Command Center
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20 overflow-hidden">
@@ -76,7 +141,12 @@ export default function ProfessionalRegistration() {
                 <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Phase {step}: {step === 1 ? 'Academic & Title' : step === 2 ? 'Experience' : 'Credentials Verification'}</p>
               </div>
 
-              <form className="space-y-8 relative z-10" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-8 relative z-10" onSubmit={handleSubmit}>
+                 {error && (
+                   <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-xs font-bold uppercase tracking-widest">
+                     <Info size={16} /> {error}
+                   </div>
+                 )}
                  <AnimatePresence mode="wait">
                    {step === 1 && (
                      <motion.div 
@@ -89,17 +159,34 @@ export default function ProfessionalRegistration() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Full Legal Name</label>
-                            <Input placeholder="Ahmed Mohamud" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                            <Input 
+                                required
+                                placeholder="Ahmed Mohamud" 
+                                value={formData.fullName}
+                                onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                                className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                            />
                           </div>
                           <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Professional Designation</label>
-                            <Input placeholder="Senior Civil Engineer" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                            <Input 
+                                required
+                                placeholder="Senior Civil Engineer" 
+                                value={formData.designation}
+                                onChange={e => setFormData({ ...formData, designation: e.target.value })}
+                                className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                            />
                           </div>
                         </div>
                         <div className="space-y-3">
                           <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Domain Expertise</label>
                           <div className="relative">
-                            <select className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer">
+                            <select 
+                                required
+                                value={formData.expertise}
+                                onChange={e => setFormData({ ...formData, expertise: e.target.value })}
+                                className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer"
+                            >
                               <option className="bg-luxury-black">Construction & Engineering</option>
                               <option className="bg-luxury-black">Electrical & Technical</option>
                               <option className="bg-luxury-black">Architecture & Interior Design</option>
@@ -111,7 +198,14 @@ export default function ProfessionalRegistration() {
                         </div>
                         <div className="space-y-3">
                           <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Secure Email Address</label>
-                          <Input type="email" placeholder="ahmed@pro-registry.com" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                          <Input 
+                            required
+                            type="email" 
+                            placeholder="ahmed@pro-registry.com" 
+                            value={formData.email}
+                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                          />
                         </div>
                      </motion.div>
                    )}
@@ -127,12 +221,24 @@ export default function ProfessionalRegistration() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Years In Service</label>
-                            <Input type="number" placeholder="10" className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" />
+                            <Input 
+                                required
+                                type="number" 
+                                placeholder="10" 
+                                value={formData.yearsInService}
+                                onChange={e => setFormData({ ...formData, yearsInService: e.target.value })}
+                                className="bg-white/5 border-0 h-16 rounded-2xl text-white placeholder:text-white/10 text-lg px-6 focus-visible:ring-luxury-gold/30" 
+                            />
                           </div>
                           <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Primary Region</label>
                             <div className="relative">
-                              <select className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer">
+                              <select 
+                                required
+                                value={formData.region}
+                                onChange={e => setFormData({ ...formData, region: e.target.value })}
+                                className="flex h-16 w-full rounded-2xl border-0 bg-white/5 px-6 text-lg text-white focus:outline-none appearance-none cursor-pointer"
+                              >
                                 <option className="bg-luxury-black">Jigjiga</option>
                                 <option className="bg-luxury-black">Addis Ababa</option>
                                 <option className="bg-luxury-black">Dire Dawa</option>
@@ -145,7 +251,10 @@ export default function ProfessionalRegistration() {
                         <div className="space-y-3">
                           <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Expert Narrative</label>
                           <Textarea 
+                            required
                             placeholder="Describe your significant regional successes and projects..." 
+                            value={formData.narrative}
+                            onChange={e => setFormData({ ...formData, narrative: e.target.value })}
                             className="bg-white/5 border-0 min-h-[160px] rounded-2xl text-white placeholder:text-white/10 text-lg px-6 py-6 focus-visible:ring-luxury-gold/30 resize-none" 
                           />
                         </div>
@@ -171,9 +280,14 @@ export default function ProfessionalRegistration() {
                         </div>
                         
                         <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
-                           <input type="checkbox" className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
+                           <input 
+                            type="checkbox" 
+                            checked={formData.agreedToCode}
+                            onChange={e => setFormData({ ...formData, agreedToCode: e.target.checked })}
+                            className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" 
+                           />
                            <p className="text-[11px] text-white/20 uppercase tracking-[0.1em] font-bold leading-relaxed">
-                              I confirm adherence to AmaanEstate's professional code. Account remains pending until formal registry validation.
+                               I confirm adherence to AmaanEstate's professional code. Account remains pending until formal registry validation.
                            </p>
                         </div>
                      </motion.div>
@@ -183,6 +297,7 @@ export default function ProfessionalRegistration() {
                  <div className="flex gap-6 pt-10 border-t border-white/5">
                     {step > 1 && (
                       <Button 
+                        type="button"
                         variant="outline" 
                         onClick={() => setStep(step - 1)}
                         className="bg-white/5 border-white/5 text-white h-20 px-10 rounded-[2rem] hover:bg-white/10"
@@ -190,18 +305,21 @@ export default function ProfessionalRegistration() {
                         Back
                       </Button>
                     )}
-                    {step < 3 ? (
-                      <Button 
-                        onClick={() => setStep(step + 1)}
-                        className="flex-1 bg-white/5 text-white hover:bg-white/10 h-20 rounded-[2rem] font-bold text-xl border border-white/5"
-                      >
-                        Proceed <ChevronRight size={22} className="ml-3" />
-                      </Button>
-                    ) : (
-                      <Button className="flex-1 bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10">
-                        Submit Registry Inquiry
-                      </Button>
-                    )}
+                    <Button 
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10"
+                    >
+                      {step < 3 ? (
+                        <div className="flex items-center">Proceed <ChevronRight size={22} className="ml-3" /></div>
+                      ) : (
+                        loading ? (
+                          <div className="flex items-center gap-3">
+                            <Loader2 className="animate-spin" /> Informing Regional Registry...
+                          </div>
+                        ) : 'Submit Registry Inquiry'
+                      )}
+                    </Button>
                  </div>
 
                  <div className="flex items-center justify-center gap-3 text-white/10 text-[9px] font-bold uppercase tracking-[0.4em] pt-6">

@@ -1,14 +1,33 @@
-import { Plus, Search, Filter, Edit3, Trash2, ShieldCheck, User, Mail, ShieldAlert, Users } from 'lucide-react';
+import { Plus, Search, Filter, Edit3, Trash2, ShieldCheck, User, Mail, ShieldAlert, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-
+import { userService } from '@/services/userService';
+import { UserProfile } from '@/types';
 import DashboardEmptyState from '@/components/DashboardEmptyState';
 
-const MOCK_USERS: any[] = [];
-
 export default function DashboardUsers() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await userService.getAllUsers();
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load user registry.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
   return (
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -34,8 +53,13 @@ export default function DashboardUsers() {
         </Button>
       </div>
 
-      <div className="glass-card rounded-[3.5rem] overflow-hidden relative shadow-2xl">
-        {MOCK_USERS.length > 0 ? (
+      <div className="glass-card rounded-[3.5rem] overflow-hidden relative shadow-2xl min-h-[400px]">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40">
+             <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+             <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Authenticating Registry Connection...</p>
+          </div>
+        ) : users.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -43,14 +67,13 @@ export default function DashboardUsers() {
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Identified User</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Authority Role</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">System Status</th>
-                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Load</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {MOCK_USERS.map((user, i) => (
+                {users.map((user, i) => (
                   <motion.tr 
-                    key={user.id}
+                    key={user.uid}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
@@ -58,12 +81,16 @@ export default function DashboardUsers() {
                   >
                     <td className="p-8">
                       <div className="flex items-center gap-6">
-                         <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500 relative">
-                            {user.role === 'Super Admin' ? <ShieldCheck size={20} className="text-luxury-gold" /> : <User size={20} className="text-white/20 group-hover:text-luxury-gold transition-colors" />}
-                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0a0a] ${user.status === 'Active' ? 'bg-green-500' : 'bg-luxury-gold'}`} />
+                         <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500 relative overflow-hidden">
+                            {user.photoURL ? (
+                              <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              user.role === 'admin' ? <ShieldCheck size={20} className="text-luxury-gold" /> : <User size={20} className="text-white/20 group-hover:text-luxury-gold transition-colors" />
+                            )}
+                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0a0a] ${user.isVerified ? 'bg-green-500' : 'bg-luxury-gold'}`} />
                          </div>
                          <div>
-                            <p className="text-lg font-display font-bold text-white mb-1 group-hover:text-luxury-gold transition-colors">{user.name}</p>
+                            <p className="text-lg font-display font-bold text-white mb-1 group-hover:text-luxury-gold transition-colors">{user.displayName}</p>
                             <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
                                <Mail size={10} className="text-luxury-gold/50" /> {user.email}
                             </div>
@@ -72,7 +99,7 @@ export default function DashboardUsers() {
                     </td>
                     <td className="p-8">
                       <span className={`text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border ${
-                        user.role === 'Super Admin' ? 'bg-luxury-gold/10 border-luxury-gold/30 text-luxury-gold' : 'bg-white/5 border-white/10 text-white/40'
+                        user.role === 'admin' ? 'bg-luxury-gold/10 border-luxury-gold/30 text-luxury-gold' : 'bg-white/5 border-white/10 text-white/40'
                       }`}>
                         {user.role}
                       </span>
@@ -80,14 +107,10 @@ export default function DashboardUsers() {
                     <td className="p-8">
                       <div className="flex items-center gap-3">
                          <div className={`w-1.5 h-1.5 rounded-full ${
-                           user.status === 'Active' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]'
+                           user.isVerified ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]'
                          }`} />
-                         <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{user.status}</span>
+                         <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{user.isVerified ? 'Verified' : 'Pending'}</span>
                       </div>
-                    </td>
-                    <td className="p-8">
-                       <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1">Managed Assets</p>
-                       <p className="text-sm font-bold text-white tabular-nums">{user.listings} UNITS</p>
                     </td>
                     <td className="p-8 text-right">
                       <div className="flex items-center justify-end gap-3 opacity-20 group-hover:opacity-100 transition-opacity">
@@ -104,7 +127,7 @@ export default function DashboardUsers() {
         ) : (
           <DashboardEmptyState 
             title="Registry Empty" 
-            description="The identity database is currently offline. No institutional entities have been authorized for network access." 
+            description={error || "The identity database is currently offline. No institutional entities have been authorized for network access."} 
             actionLabel="Authorize New Entity"
             onAction={() => console.log('Init User')}
             icon={<Users size={48} />}

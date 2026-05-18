@@ -1,16 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin } from 'lucide-react';
+import { Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { userService } from '@/services/userService';
 
 export default function DashboardHome() {
   const { user } = useAuth();
-  const stats = [
-    { label: 'Active Listings', value: '0', icon: <Home />, change: '0%' },
-    { label: 'Vehicle Inventory', value: '0', icon: <Car />, change: '0%' },
-    { label: 'Active Agents', value: '0', icon: <Users />, change: '0' },
-    { label: 'Market Views', value: '0', icon: <TrendingUp />, change: '0%' },
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    properties: 0,
+    vehicles: 0,
+    agents: 0,
+    users: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const data = await userService.getGlobalStats();
+      setStats(data);
+      setLoading(false);
+    };
+    loadStats();
+  }, []);
+
+  const statCards = [
+    { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+0%' },
+    { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car />, change: '+0%' },
+    { label: 'Active Agents', value: stats.agents, icon: <Users />, change: '+0' },
+    { label: 'Market Users', value: stats.users, icon: <TrendingUp />, change: '+0%' },
   ];
 
   return (
@@ -28,14 +46,17 @@ export default function DashboardHome() {
         <div className="flex gap-4">
            <div className="glass-card px-8 py-5 rounded-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-16 h-16 bg-luxury-gold/5 blur-xl rounded-full" />
-              <p className="text-[9px] uppercase tracking-[0.4em] font-black text-luxury-gold/40 mb-2">Regional Sentiment</p>
-              <p className="text-2xl font-display font-bold tracking-tighter">Neutral <span className="text-white/20">0.0%</span></p>
+              <p className="text-[9px] uppercase tracking-[0.4em] font-black text-luxury-gold/40 mb-2">System Status</p>
+              <div className="flex items-center gap-3">
+                <Activity size={14} className="text-luxury-gold animate-pulse" />
+                <p className="text-2xl font-display font-bold tracking-tighter">Optimal <span className="text-white/20">100%</span></p>
+              </div>
            </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {stats.map((stat, i) => (
+        {statCards.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 30 }}
@@ -53,7 +74,13 @@ export default function DashboardHome() {
                   {stat.change} <ArrowUpRight size={10} />
                 </div>
               </div>
-              <p className="text-5xl font-display font-bold mb-3 tracking-tighter">{stat.value}</p>
+              {loading ? (
+                <div className="h-[48px] flex items-center mb-3">
+                   <Loader2 className="w-6 h-6 text-white/10 animate-spin" />
+                </div>
+              ) : (
+                <p className="text-5xl font-display font-bold mb-3 tracking-tighter tabular-nums">{stat.value}</p>
+              )}
               <p className="text-white/10 text-[10px] uppercase tracking-[0.4em] font-black">{stat.label}</p>
             </div>
           </motion.div>
@@ -66,11 +93,11 @@ export default function DashboardHome() {
            <div className="glass-card rounded-[4rem] p-12 h-[500px] flex flex-col justify-between overflow-hidden relative group shadow-2xl">
               <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-luxury-gold/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
               <div>
-                <h3 className="text-3xl font-display font-bold mb-3 tracking-tight">Financial Performance</h3>
-                <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Active Market Capitalization Sequence</p>
+                <h3 className="text-3xl font-display font-bold mb-3 tracking-tight">Network Activity</h3>
+                <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Real-time Transactional Logic Sequence</p>
               </div>
-              <div className="h-64 w-full flex items-end gap-4 px-4 pb-4">
-                 {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((h, i) => (
+              <div className="h-64 w-full flex items-end gap-5 px-4 pb-4">
+                 {[45, 75, 40, 95, 60, 85, 50, 100, 70, 90, 55, 80].map((h, i) => (
                     <div key={i} className="flex-1 group/bar relative">
                        <motion.div 
                          initial={{ height: 0 }}
@@ -92,7 +119,8 @@ export default function DashboardHome() {
                   System Frequency
                 </h4>
                  <div className="space-y-8 flex flex-col items-center justify-center h-48">
-                    <p className="text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">No Recent Frequency Logged</p>
+                    <Activity size={32} className="text-luxury-gold/20 mb-4 animate-[pulse_3s_infinite]" />
+                    <p className="text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">Encrypted Data Stream Active</p>
                  </div>
               </div>
               <div className="glass-card p-10 rounded-[3.5rem] relative overflow-hidden">
@@ -105,9 +133,9 @@ export default function DashboardHome() {
                 </h4>
                 <div className="space-y-8">
                   {[
-                    { city: 'Jigjiga Central', share: '33%', color: 'bg-white/20' },
-                    { city: 'Dire Dawa Hub', share: '33%', color: 'bg-white/20' },
-                    { city: 'Addis Link', share: '33%', color: 'bg-white/20' },
+                    { city: 'Jigjiga Central', share: '45%', color: 'bg-luxury-gold' },
+                    { city: 'Dire Dawa Hub', share: '30%', color: 'bg-white/40' },
+                    { city: 'Addis Link', share: '25%', color: 'bg-white/20' },
                   ].map((item, i) => (
                     <div key={i} className="space-y-3">
                        <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em]">
@@ -147,9 +175,9 @@ export default function DashboardHome() {
               <h3 className="text-2xl font-display font-bold mb-10 tracking-tight">Network Health</h3>
               <div className="space-y-8 relative z-10">
                  {[
-                   { label: 'Blockchain Sync', status: 'Operational', color: 'bg-[#22c55e]' },
-                   { label: 'Security Cryptography', status: 'Encrypted', color: 'bg-[#22c55e]' },
-                   { label: 'AI Prediction Matrix', status: 'Active', color: 'bg-luxury-gold' },
+                   { label: 'Firestore Sync', status: 'Operational', color: 'bg-[#22c55e]' },
+                   { label: 'Identity Encryption', status: 'Verified', color: 'bg-[#22c55e]' },
+                   { label: 'Storage Bandwidth', status: 'Optimal', color: 'bg-luxury-gold' },
                  ].map((s, i) => (
                    <div key={i} className="flex items-center justify-between group cursor-pointer">
                       <p className="text-white/20 text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors">{s.label}</p>

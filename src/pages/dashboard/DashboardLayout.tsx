@@ -22,6 +22,7 @@ export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -132,7 +133,10 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-6">
-             <Button className="hidden md:flex bg-luxury-gold text-luxury-black hover:bg-white h-12 rounded-[1rem] font-bold px-8 shadow-2xl shadow-luxury-gold/20 transition-all duration-500 scale-100 hover:scale-105 active:scale-95 text-[10px] uppercase tracking-widest">
+             <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="hidden md:flex bg-luxury-gold text-luxury-black hover:bg-white h-12 rounded-[1rem] font-bold px-8 shadow-2xl shadow-luxury-gold/20 transition-all duration-500 scale-100 hover:scale-105 active:scale-95 text-[10px] uppercase tracking-widest"
+             >
                 <Plus size={16} className="mr-3" /> New Asset
              </Button>
              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:border-luxury-gold hover:bg-white/10 transition-all duration-500 cursor-pointer group">
@@ -140,6 +144,12 @@ export default function DashboardLayout() {
              </div>
           </div>
         </header>
+
+        <ListingCreationModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          category={location.pathname.includes('vehicles') ? 'vehicle' : 'property'}
+        />
 
         <main className="p-8 lg:p-16 max-w-[1600px] mx-auto w-full">
           <Outlet />

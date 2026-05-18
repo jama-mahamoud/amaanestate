@@ -21,9 +21,9 @@ export default function ImageUpload({ onImagesChange, maxFiles = 10, existingIma
 
   useEffect(() => {
     return () => {
-      previews.forEach(p => URL.createObjectURL(p.previewUrl) && URL.revokeObjectURL(p.previewUrl));
+      previews.forEach(p => URL.revokeObjectURL(p.previewUrl));
     };
-  }, []);
+  }, [previews]);
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
