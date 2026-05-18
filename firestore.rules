@@ -28,11 +28,11 @@ service cloud.firestore {
     function isValidListing(data) {
       // Define all allowed fields
       let allowedFields = ['title', 'description', 'category', 'price', 'currency', 'city', 'location', 
-                           'listingType', 'ownerId', 'status', 'createdAt', 'images', 'features', 
+                           'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images', 'features', 
                            'isFeatured', 'metadata', 'subcategory', 'year', 'mileage', 
                            'fuelType', 'transmission', 'beds', 'baths', 'size'];
                            
-      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
+      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images'])
         && data.title is string && data.title.size() <= 200
         && data.category in ['property', 'rental', 'land', 'vehicle']
         && data.price is number && data.price >= 0
