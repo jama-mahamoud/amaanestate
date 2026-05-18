@@ -14,7 +14,7 @@ export default function DashboardArticles() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    articleService.getArticles().then(data => {
+    articleService.getArticles(undefined, undefined, false).then(data => {
       setArticles(data);
       setLoading(false);
     });

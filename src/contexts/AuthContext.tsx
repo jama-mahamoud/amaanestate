@@ -10,7 +10,7 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { UserProfile, UserRole } from '../types';
 
@@ -67,45 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-
-  const syncUserProfile = async (firebaseUser: User) => {
-    if (syncing) return;
-    setSyncing(true);
-    const userRef = doc(db, 'users', firebaseUser.uid);
-    try {
-      const userDoc = await getDoc(userRef);
-      
-      if (!userDoc.exists()) {
-        const newProfile: UserProfile = {
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName || 'Anonymous User',
-          email: firebaseUser.email || '',
-          role: 'normal_user' as UserRole,
-          createdAt: serverTimestamp(),
-          photoURL: firebaseUser.photoURL,
-          isVerified: firebaseUser.emailVerified,
-        };
-        await setDoc(userRef, newProfile);
-        setProfile(newProfile);
-      } else {
-        const existingData = userDoc.data() as UserProfile;
-        setProfile(existingData);
-        
-        // Minor background update if displayName or photoURL changed in Firebase but not in profile
-        if (existingData.displayName !== firebaseUser.displayName || existingData.photoURL !== firebaseUser.photoURL) {
-          await setDoc(userRef, {
-            displayName: firebaseUser.displayName || existingData.displayName,
-            photoURL: firebaseUser.photoURL || existingData.photoURL,
-          }, { merge: true });
-        }
-      }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   useEffect(() => {
     // Force persistence to ensure session sticks
@@ -121,15 +82,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
+    let profileUnsubscribe: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth State Changed. User:', user ? user.uid : 'null');
       try {
         setUser(user);
         if (user) {
-          await syncUserProfile(user);
+          // Ensure profile exists first
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (!userDoc.exists()) {
+            const newProfile: UserProfile = {
+              uid: user.uid,
+              displayName: user.displayName || 'Anonymous User',
+              email: user.email || '',
+              role: 'normal_user' as UserRole,
+              createdAt: serverTimestamp(),
+              photoURL: user.photoURL,
+              isVerified: user.emailVerified,
+            };
+            await setDoc(userRef, newProfile);
+          } else {
+            // Check for minor background updates
+            const existingData = userDoc.data() as UserProfile;
+
+            if (
+              existingData.displayName !== user.displayName || 
+              existingData.photoURL !== user.photoURL
+            ) {
+              await setDoc(userRef, {
+                displayName: user.displayName || existingData.displayName,
+                photoURL: user.photoURL || existingData.photoURL
+              }, { merge: true });
+            }
+          }
+
+          // Set up real-time listener for the user profile
+          if (profileUnsubscribe) profileUnsubscribe();
+          
+          profileUnsubscribe = onSnapshot(userRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.data() as UserProfile;
+              setProfile({
+                ...data,
+                role: data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user'
+              });
+            } else {
+              setProfile(null);
+            }
+          }, (error) => {
+            console.error("Profile snapshot listener error:", error);
+          });
+          
         } else {
           setProfile(null);
-          setSyncing(false);
+          if (profileUnsubscribe) {
+            profileUnsubscribe();
+            profileUnsubscribe = null;
+          }
         }
       } catch (error) {
         console.error('Auth state change error:', error);
@@ -138,7 +150,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (profileUnsubscribe) profileUnsubscribe();
+    };
   }, []);
 
   const logout = async () => {

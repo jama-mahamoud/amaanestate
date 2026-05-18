@@ -171,7 +171,6 @@ export const listingService = {
     const listingsRef = collection(db, 'listings');
     const constraints: QueryConstraint[] = [
       where('ownerId', '==', userId),
-      orderBy('createdAt', 'desc'),
       limit(limitCount)
     ];
 
@@ -183,10 +182,16 @@ export const listingService = {
 
     try {
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const docs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Listing[];
+      // Client-side sort by createdAt descending since we removed orderBy clause to avoid index issues
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
+        return bTime - aTime;
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'listings');
       return [];

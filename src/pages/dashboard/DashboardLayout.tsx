@@ -110,7 +110,7 @@ function DashboardContent() {
                   <p className="text-xs font-bold text-white truncate tracking-tight uppercase">
                     {user?.displayName || 'System Operator'}
                   </p>
-                  <p className="text-[9px] text-white/20 uppercase font-black tracking-widest leading-none mt-1">Status: {user?.emailVerified ? 'Verified' : 'Member'}</p>
+                  <p className="text-[9px] text-white/20 uppercase font-black tracking-widest leading-none mt-1">Role: {profile?.role?.replace('_', ' ') || 'Pending'}</p>
                 </div>
               </div>
             </div>

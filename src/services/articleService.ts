@@ -20,9 +20,13 @@ import { Article } from '@/types';
 const ARTICLES_COLLECTION = 'articles';
 
 export const articleService = {
-  async getArticles(category?: string, language?: string) {
+  async getArticles(category?: string, language?: string, publishedOnly: boolean = true) {
     try {
-      const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
+      const constraints: QueryConstraint[] = [];
+      
+      if (publishedOnly) {
+        constraints.push(where('published', '==', true));
+      }
       
       if (category) constraints.push(where('category', '==', category));
       if (language) constraints.push(where('language', '==', language));
@@ -30,10 +34,16 @@ export const articleService = {
       const q = query(collection(db, ARTICLES_COLLECTION), ...constraints);
       const snapshot = await getDocs(q);
       
-      return snapshot.docs.map(doc => ({
+      const docs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Article[];
+      // Client-side sort to avoid composite index requirements
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, ARTICLES_COLLECTION);
       return [];
