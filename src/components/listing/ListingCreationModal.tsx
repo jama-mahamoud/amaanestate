@@ -153,29 +153,29 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
             </div>
           </div>
 
-          <div className="flex-1 p-10 overflow-y-auto custom-scrollbar">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Asset Designation</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Asset Designation</label>
                   <Input 
                     required
                     placeholder="e.g. Modern Villa in Jigjiga"
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus-visible:ring-luxury-gold/30"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Sub-Category</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Sub-Category</label>
                   <Select 
                     value={formData.subcategory} 
                     onValueChange={(val) => setFormData({ ...formData, subcategory: val })}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
+                    <SelectTrigger className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-luxury-black border-white/5 text-white">
+                    <SelectContent className="bg-luxury-black border-white/10 text-white">
                       {category === 'property' ? (
                         <>
                           <SelectItem value="Villa">Villa</SelectItem>
@@ -200,46 +200,46 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Market Valuation ($)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Market Valuation ($)</label>
                   <Input 
                     required
                     type="number"
                     placeholder="0"
                     value={formData.price}
                     onChange={e => setFormData({ ...formData, price: e.target.value })}
-                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus-visible:ring-luxury-gold/30"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Primary Region</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Primary Region</label>
                   <Input 
                     required
                     placeholder="e.g. Jigjiga"
                     value={formData.city}
                     onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus-visible:ring-luxury-gold/30"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Listing Type</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Listing Type</label>
                   <Select 
                     value={formData.listingType} 
                     onValueChange={(val: ListingType) => setFormData({ ...formData, listingType: val })}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
+                    <SelectTrigger className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus:ring-luxury-gold/30 text-white">
                       <SelectValue placeholder="Select intent" />
                     </SelectTrigger>
-                    <SelectContent className="bg-luxury-black border-white/5 text-white">
+                    <SelectContent className="bg-luxury-black border-white/10 text-white">
                       <SelectItem value="sale">For Sale</SelectItem>
                       <SelectItem value="rent">For Rent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">
                     {category === 'vehicle' ? 'Vehicle Year' : 'Asset Size (e.g. 200sqm)'}
                   </label>
                   <Input 
@@ -247,7 +247,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                     placeholder={category === 'vehicle' ? '2024' : '200sqm'}
                     value={category === 'vehicle' ? formData.year : formData.size}
                     onChange={e => setFormData({ ...formData, [category === 'vehicle' ? 'year' : 'size']: e.target.value })}
-                    className="bg-white/5 border-white/5 h-14 rounded-xl focus-visible:ring-luxury-gold/30"
+                    className="bg-white/5 border-white/10 h-12 md:h-14 rounded-xl focus-visible:ring-luxury-gold/30"
                   />
                 </div>
               </div>
