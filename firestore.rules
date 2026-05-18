@@ -47,8 +47,7 @@ service cloud.firestore {
         && data.title is string && data.title.size() <= 200
         && data.category in ['Construction & Engineering', 'Interior Design & Renovation', 'Legal & Financial Advisory', 'Logistics & Supply Chain']
         && data.providerId == request.auth.uid
-        && data.status in ['active', 'pending', 'inactive']
-        && data.createdAt == request.time;
+        && data.status in ['active', 'pending', 'inactive'];
     }
 
     function isValidInquiry(data) {
@@ -61,9 +60,7 @@ service cloud.firestore {
       return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt', 'updatedAt'])
         && data.type in ['agent', 'professional']
         && data.userId == request.auth.uid
-        && data.status == 'pending'
-        && data.createdAt == request.time
-        && data.updatedAt == request.time;
+        && data.status == 'pending';
     }
 
     // Collection Security
@@ -72,8 +69,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId)
         && isValidUser(incoming())
-        && incoming().role == 'buyer'
-        && incoming().createdAt == request.time;
+        && incoming().role == 'buyer';
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])
       ) || isAdmin();
@@ -84,8 +80,7 @@ service cloud.firestore {
       allow read: if resource.data.status == 'active' || isOwner(resource.data.ownerId) || isAdmin();
       allow create: if isSignedIn() 
         && isValidListing(incoming())
-        && incoming().status == 'pending'
-        && incoming().createdAt == request.time;
+        && incoming().status == 'pending';
       allow update: if (
         isOwner(existing().ownerId) && (
           incoming().diff(existing()).affectedKeys().hasOnly([
@@ -119,7 +114,7 @@ service cloud.firestore {
 
     match /inquiries/{inquiryId} {
       allow read: if isOwner(resource.data.senderId) || isOwner(resource.data.receiverId) || isAdmin();
-      allow create: if isSignedIn() && isValidInquiry(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidInquiry(incoming());
       allow update, delete: if isAdmin();
     }
 
