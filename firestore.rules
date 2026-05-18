@@ -26,7 +26,7 @@ service cloud.firestore {
     }
 
     function isValidListing(data) {
-      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt'])
+      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
         && data.title is string && data.title.size() <= 200
         && data.category in ['property', 'rental', 'land', 'vehicle']
         && data.price is number && data.price >= 0
@@ -34,6 +34,7 @@ service cloud.firestore {
         && data.listingType in ['sale', 'rent']
         && data.ownerId == request.auth.uid
         && data.status in ['pending', 'active', 'sold', 'rented', 'archived']
+        && data.images is list
         && (data.isFeatured == null || data.isFeatured == false || isAdmin())
         // Optional specialized fields
         && (!('year' in data) || data.year is number)
@@ -41,7 +42,7 @@ service cloud.firestore {
         && (!('beds' in data) || data.beds is number)
         && (!('baths' in data) || data.baths is number);
     }
-
+    
     function isValidService(data) {
       return data.keys().hasAll(['title', 'category', 'description', 'providerId', 'status', 'createdAt'])
         && data.title is string && data.title.size() <= 200
@@ -62,6 +63,17 @@ service cloud.firestore {
         && data.userId == request.auth.uid
         && data.status == 'pending';
     }
+    
+    function isValidProfessional(data) {
+      return data.keys().hasAll(['name', 'title', 'category', 'city', 'image', 'isVerified', 'uid'])
+        && data.uid == request.auth.uid
+        && data.name is string && data.name.size() <= 100
+        && data.title is string && data.title.size() <= 100
+        && data.category in ['Construction & Engineering', 'Electrical & Technical', 'Plumbing & Water', 'Home & Maintenance', 'Education & Teaching']
+        && data.city is string && data.city.size() <= 100
+        && data.image is string
+        && data.isVerified is bool;
+    }
 
     // Collection Security
     match /users/{userId} {
@@ -73,6 +85,13 @@ service cloud.firestore {
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])
       ) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /professionals/{profileId} {
+      allow read: if true;
+      allow create: if isOwner(profileId) && isValidProfessional(incoming());
+      allow update: if isOwner(profileId) && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'title', 'skills', 'experienceYears', 'city', 'image', 'bio', 'whatsapp', 'phone', 'email', 'availability']);
       allow delete: if isAdmin();
     }
 

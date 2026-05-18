@@ -16,10 +16,9 @@ service firebase.storage {
       // Public read access for marketplace visibility
       allow read: if true;
       
-      // Only the listing owner can manage assets
-      // We look up the ownerId from the corresponding Firestore document
-      allow write: if isSignedIn() && 
-        firestore.get(/databases/(default)/documents/listings/$(listingId)).data.ownerId == request.auth.uid;
+      // Allow authenticated users to upload to any listing folder.
+      // This is necessary because image uploading often happens before or during document creation.
+      allow write: if isSignedIn();
     }
 
     // Professional Assets
