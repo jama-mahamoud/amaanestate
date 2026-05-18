@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, X, Image as ImageIcon, Loader2, Plus, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,12 @@ export default function ImageUpload({ onImagesChange, maxFiles = 10, existingIma
   const [previews, setPreviews] = useState<ImagePreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      previews.forEach(p => URL.createObjectURL(p.previewUrl) && URL.revokeObjectURL(p.previewUrl));
+    };
+  }, []);
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;

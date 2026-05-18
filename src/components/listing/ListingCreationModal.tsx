@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
 import { storageService } from '@/services/storageService';
@@ -30,7 +30,9 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     title: '',
     description: '',
     price: '',
+    currency: 'USD',
     city: '',
+    location: '',
     listingType: 'sale' as ListingType,
     subcategory: '',
   });
@@ -55,12 +57,12 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
+        currency: formData.currency,
         city: formData.city,
+        location: formData.location || formData.city, // Fallback to city
         listingType: formData.listingType,
         subcategory: formData.subcategory,
-        ownerId: user.uid,
         images: [], 
-        metadata: {},
       });
 
       if (!newListingId) throw new Error('Failed to initialize asset record.');

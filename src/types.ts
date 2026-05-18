@@ -18,6 +18,7 @@ export interface Listing {
   isFeatured?: boolean;
   images: string[];
   features?: Record<string, any>;
+  metadata?: Record<string, any>;
   createdAt: any;
   updatedAt?: any;
 }

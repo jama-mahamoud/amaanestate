@@ -8,10 +8,10 @@ import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
-import { Property, Vehicle, Professional } from '@/types';
+import { Property, VehicleListing, Professional } from '@/types';
 
 const featuredProperties: Property[] = [];
-const latestVehicles: Vehicle[] = [];
+const latestVehicles: VehicleListing[] = [];
 const topProfessionals: Professional[] = [];
 const cities: any[] = [];
 
