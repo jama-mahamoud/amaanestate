@@ -28,6 +28,11 @@ export default function DashboardArticles() {
     }
   };
 
+  const formatDate = (dateValue: any) => {
+    if (!dateValue || !dateValue.seconds) return 'Pending';
+    return new Date(dateValue.seconds * 1000).toLocaleDateString();
+  };
+
   return (
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12">
@@ -80,7 +85,7 @@ export default function DashboardArticles() {
                     <td className="p-8">
                        <p className="text-xl font-display font-bold text-white mb-2 group-hover:text-luxury-gold transition-colors">{article.title}</p>
                        <div className="flex items-center gap-2 text-white/30 text-[10px] font-bold uppercase tracking-widest">
-                          <Calendar size={10} className="text-luxury-gold" /> {new Date(article.createdAt.seconds * 1000).toLocaleDateString()}
+                          <Calendar size={10} className="text-luxury-gold" /> {formatDate(article.createdAt)}
                        </div>
                     </td>
                     <td className="p-8">

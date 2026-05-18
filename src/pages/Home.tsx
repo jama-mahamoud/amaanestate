@@ -88,6 +88,11 @@ export default function Home() {
     visible: { opacity: 1, y: 0 }
   };
 
+  const formatDate = (dateValue: any) => {
+    if (!dateValue || !dateValue.seconds) return 'Recently Published';
+    return new Date(dateValue.seconds * 1000).toLocaleDateString();
+  };
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -300,7 +305,7 @@ export default function Home() {
                       <div className="p-8 flex flex-col flex-grow">
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-luxury-gold text-[10px] uppercase tracking-[0.2em] font-bold">{article.category}</span>
-                          <span className="text-white/30 text-[10px] uppercase font-bold tracking-widest">{new Date(article.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                          <span className="text-white/30 text-[10px] uppercase font-bold tracking-widest">{formatDate(article.createdAt)}</span>
                         </div>
                         <h3 className="text-xl font-display font-bold text-white mb-3 group-hover:text-luxury-gold transition-colors tracking-tight leading-snug flex-grow">{article.title}</h3>
                         <p className="text-white/40 text-sm font-light leading-relaxed line-clamp-2">{article.summary}</p>

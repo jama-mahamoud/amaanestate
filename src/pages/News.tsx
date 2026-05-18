@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { Helmet } from 'react-helmet-async';
 import { Calendar, ArrowRight, Clock, Newspaper } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,8 +25,18 @@ export default function News() {
   const featuredArticle = articles.find(a => a.isFeatured && a.published);
   const regularArticles = articles.filter(a => a.published && a.id !== featuredArticle?.id);
 
+  const formatDate = (dateValue: any) => {
+    if (!dateValue || !dateValue.seconds) return 'Recently Published';
+    return new Date(dateValue.seconds * 1000).toLocaleDateString();
+  };
+
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20">
+      <Helmet>
+        <title>News & Intelligence | AmaanEstate</title>
+        <meta name="description" content="Institutional insights into the Somali Region's evolving real estate and luxury sectors." />
+        <link rel="canonical" href="https://somali-real-estate.com/news" />
+      </Helmet>
       <div className="container mx-auto px-4 relative z-10">
         
         <div className="max-w-4xl mb-16 md:mb-24">
@@ -63,7 +74,7 @@ export default function News() {
                     {featuredArticle.title}
                   </h2>
                   <div className="text-white/40text-[10px] uppercase font-bold tracking-[0.3em]">
-                    {new Date(featuredArticle.createdAt.seconds * 1000).toLocaleDateString()}
+                    {formatDate(featuredArticle.createdAt)}
                   </div>
                 </div>
               </div>
@@ -94,7 +105,7 @@ export default function News() {
                       <span className="text-luxury-gold text-[10px] uppercase tracking-[0.2em] font-bold">
                         {item.category}
                       </span>
-                      <span className="text-white/20 text-[10px] uppercase font-bold tracking-widest">{new Date(item.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                      <span className="text-white/20 text-[10px] uppercase font-bold tracking-widest">{formatDate(item.createdAt)}</span>
                     </div>
                     <h3 className="text-2xl font-display font-bold text-white mb-4 group-hover:text-luxury-gold transition-colors tracking-tight leading-snug flex-grow">
                       {item.title}

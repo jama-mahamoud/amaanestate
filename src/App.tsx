@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import { AuthProvider } from './contexts/AuthContext';
+import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 
@@ -37,11 +38,12 @@ import EditArticle from './pages/dashboard/EditArticle';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<RootLayout />}>
-          {/* Public Routes */}
-          <Route index element={<Home />} />
+    <HelmetProvider>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<RootLayout />}>
+            {/* Public Routes */}
+            <Route index element={<Home />} />
           <Route path="properties" element={<Properties />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
           <Route path="vehicles" element={<Vehicles />} />
@@ -77,5 +79,6 @@ export default function App() {
         </Route>
       </Routes>
     </AuthProvider>
+    </HelmetProvider>
   );
 }
