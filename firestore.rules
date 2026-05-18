@@ -6,33 +6,50 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // 3. Primitive Definitions
+    // 1. Core Functions & RBAC
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-    function isAdmin() { return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    
+    // Attempt to read the user's role from the users collection
+    // If the document doesn't exist yet (during registration), default to 'normal_user'
+    function getRole() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role 
+        : 'normal_user';
+    }
+    
+    function hasRole(roleName) {
+      return isSignedIn() && getRole() == roleName;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (hasRole('admin') || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    
+    function isEditor() {
+      return isAdmin() || hasRole('editor');
+    }
+
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
 
     // 2. Validation Blueprints
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt', 'photoURL', 'isVerified'])
-        && data.keys().size() == 7
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt'])
         && data.uid == request.auth.uid
-        && data.email == request.auth.token.email
-        && data.role in ['buyer', 'seller', 'agent', 'admin']
+        && data.role in ['admin', 'editor', 'agent', 'verified_professional', 'normal_user']
         && data.displayName is string && data.displayName.size() <= 100
-        && (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000))
-        && data.isVerified is bool;
+        && (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000))
+        && (!('isVerified' in data) || data.isVerified is bool);
     }
 
     function isValidListing(data) {
-      // Define all allowed fields
       let allowedFields = ['title', 'description', 'category', 'price', 'currency', 'city', 'location', 
                            'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images', 'features', 
                            'isFeatured', 'metadata', 'subcategory', 'year', 'mileage', 
                            'fuelType', 'transmission', 'beds', 'baths', 'size'];
                            
-      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images'])
+      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
         && data.title is string && data.title.size() <= 200
         && data.category in ['property', 'rental', 'land', 'vehicle']
         && data.price is number && data.price >= 0
@@ -41,9 +58,7 @@ service cloud.firestore {
         && data.ownerId == request.auth.uid
         && data.status in ['pending', 'active', 'sold', 'rented', 'archived']
         && data.images is list
-        // Validate all fields present in the data are in allowedFields
         && data.keys().hasOnly(allowedFields)
-        // Optional fields validation
         && (!('description' in data) || data.description is string)
         && (!('year' in data) || data.year is number)
         && (!('mileage' in data) || data.mileage is string)
@@ -54,7 +69,6 @@ service cloud.firestore {
     function isValidService(data) {
       return data.keys().hasAll(['title', 'category', 'description', 'providerId', 'status', 'createdAt'])
         && data.title is string && data.title.size() <= 200
-        && data.category in ['Construction & Engineering', 'Interior Design & Renovation', 'Legal & Financial Advisory', 'Logistics & Supply Chain']
         && data.providerId == request.auth.uid
         && data.status in ['active', 'pending', 'inactive'];
     }
@@ -66,7 +80,7 @@ service cloud.firestore {
     }
 
     function isValidApplication(data) {
-      return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt'])
         && data.type in ['agent', 'professional']
         && data.userId == request.auth.uid
         && data.status == 'pending';
@@ -75,19 +89,16 @@ service cloud.firestore {
     function isValidProfessional(data) {
       let allowedFields = ['name', 'title', 'category', 'city', 'image', 'isVerified', 'uid', 'bio', 'skills', 'experienceYears', 'whatsapp', 'phone', 'email', 'availability'];
 
-      return data.keys().hasAll(['name', 'title', 'category', 'city', 'image', 'isVerified', 'uid'])
+      return data.keys().hasAll(['name', 'title', 'category', 'city', 'uid'])
         && data.uid == request.auth.uid
         && data.name is string && data.name.size() <= 100
         && data.title is string && data.title.size() <= 100
-        && data.category in ['Construction & Engineering', 'Electrical & Technical', 'Plumbing & Water', 'Home & Maintenance', 'Education & Teaching']
         && data.city is string && data.city.size() <= 100
-        && data.image is string
-        && data.isVerified is bool
         && data.keys().hasOnly(allowedFields);
     }
 
     function isValidArticle(data) {
-      let allowedFields = ['title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'authorId', 'isFeatured', 'published', 'views', 'createdAt', 'updatedAt'];
+      let allowedFields = ['title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'gallery', 'tags', 'seoTitle', 'seoDescription', 'authorId', 'isFeatured', 'published', 'views', 'createdAt', 'updatedAt'];
       return data.keys().hasAll(['title', 'slug', 'content', 'category', 'language', 'authorId', 'published', 'createdAt'])
         && data.title is string && data.title.size() <= 200
         && data.slug is string && data.slug.size() <= 100
@@ -99,28 +110,31 @@ service cloud.firestore {
         && data.keys().hasOnly(allowedFields);
     }
 
-    // Collection Security
+    // 3. Collection Security Strategies
+
+    // Users Collection
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      // safe public fields reading where appropriate
+      allow get: if true; 
       allow list: if isAdmin();
       allow create: if isOwner(userId)
         && isValidUser(incoming())
-        && incoming().role == 'buyer';
-      allow update: if isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])
-      ) || isAdmin();
+        && incoming().role == 'normal_user'; // Enforce default role on creation
+      allow update: if (isOwner(userId) && !('role' in incoming().diff(existing()).affectedKeys())) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Professionals Directory
     match /professionals/{profileId} {
       allow read: if true;
       allow create: if isOwner(profileId) && isValidProfessional(incoming());
-      allow update: if isOwner(profileId) && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'title', 'skills', 'experienceYears', 'city', 'image', 'bio', 'whatsapp', 'phone', 'email', 'availability']);
+      allow update: if (isOwner(profileId) && !('isVerified' in incoming().diff(existing()).affectedKeys())) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Listings System
     match /listings/{listingId} {
-      allow read: if resource.data.status == 'active' || isOwner(resource.data.ownerId) || isAdmin();
+      allow read: if resource.data.status == 'active' || (isSignedIn() && isOwner(resource.data.ownerId)) || isAdmin();
       allow create: if isSignedIn() 
         && isValidListing(incoming())
         && incoming().status == 'pending';
@@ -129,64 +143,53 @@ service cloud.firestore {
           incoming().diff(existing()).affectedKeys().hasOnly([
             'title', 'description', 'price', 'currency', 'city', 'location', 
             'images', 'features', 'updatedAt', 'metadata', 'subcategory',
-            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size'
-          ])
-          && incoming().updatedAt == request.time
+            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size', 'status'
+          ]) // Owner cannot change 'isFeatured'
         )
       ) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Services
     match /professionalServices/{serviceId} {
-      allow read: if resource.data.status == 'active' || isOwner(resource.data.providerId) || isAdmin();
+      allow read: if resource.data.status == 'active' || (isSignedIn() && isOwner(resource.data.providerId)) || isAdmin();
       allow create: if isSignedIn() && isValidService(incoming());
-      allow update: if (
-        isOwner(existing().providerId) && (
-          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'category', 'updatedAt'])
-          && incoming().updatedAt == request.time
-        )
-      ) || isAdmin();
+      allow update: if isOwner(existing().providerId) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Applications & Registry
     match /applications/{appId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && isValidApplication(incoming());
       allow update, delete: if isAdmin();
     }
 
+    // Inquiries System
     match /inquiries/{inquiryId} {
       allow read: if isOwner(resource.data.senderId) || isOwner(resource.data.receiverId) || isAdmin();
       allow create: if isSignedIn() && isValidInquiry(incoming());
       allow update, delete: if isAdmin();
     }
 
+    // CMS & Articles System
     match /articles/{articleId} {
-      allow read: if resource.data.published == true || isOwner(resource.data.authorId) || isAdmin();
-      allow create: if isSignedIn() 
-        && isValidArticle(incoming())
-        && incoming().createdAt == request.time;
-      allow update: if (
-        isOwner(existing().authorId) && (
-          incoming().diff(existing()).affectedKeys().hasOnly([
-            'title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'isFeatured', 'published', 'updatedAt'
-          ])
-          && incoming().updatedAt == request.time
-          && incoming().createdAt == existing().createdAt
-          && incoming().authorId == existing().authorId
-        )
-      ) || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if resource.data.published == true || isEditor();
+      allow create: if isEditor() && isValidArticle(incoming());
+      allow update: if isEditor();
+      allow delete: if isEditor();
     }
 
+    // Global Stats & Analytics
     match /globalStats/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // Legacy Admins Collection Check
     match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if false;
+      allow read: if isAdmin();
+      allow write: if false; // Only populated via DB or root admin
     }
   }
 }

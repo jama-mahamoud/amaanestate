@@ -23,7 +23,7 @@ function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const { isListingModalOpen, closeListingModal, openListingModal, listingCategory } = useDashboard();
 
   const handleLogout = async () => {
@@ -39,10 +39,17 @@ function DashboardContent() {
     { name: 'Portfolio', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
     { name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> },
     { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> },
-    { name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> },
-    { name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> },
-    { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> },
   ];
+
+  if (profile?.role === 'admin' || profile?.role === 'editor') {
+    navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
+  }
+
+  if (profile?.role === 'admin') {
+    navItems.push({ name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> });
+  }
+
+  navItems.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> });
 
   return (
     <div className="flex min-h-screen bg-luxury-black text-white selection:bg-luxury-gold/30">

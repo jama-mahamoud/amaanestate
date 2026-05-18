@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           uid: firebaseUser.uid,
           displayName: firebaseUser.displayName || 'Anonymous User',
           email: firebaseUser.email || '',
-          role: 'buyer' as UserRole,
+          role: 'normal_user' as UserRole,
           createdAt: serverTimestamp(),
           photoURL: firebaseUser.photoURL,
           isVerified: firebaseUser.emailVerified,

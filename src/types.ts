@@ -77,7 +77,7 @@ export interface Professional {
   isVerified: boolean;
 }
 
-export type UserRole = 'buyer' | 'seller' | 'agent' | 'admin';
+export type UserRole = 'admin' | 'editor' | 'agent' | 'verified_professional' | 'normal_user';
 
 export interface UserProfile {
   uid: string;
