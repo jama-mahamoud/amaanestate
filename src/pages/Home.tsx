@@ -9,14 +9,16 @@ import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
-import { Property, VehicleListing, Professional, ListingCategory } from '@/types';
+import { Property, VehicleListing, Professional, ListingCategory, Article } from '@/types';
 import { listingService } from '@/services/listingService';
+import { articleService } from '@/services/articleService';
 
 export default function Home() {
   const navigate = useNavigate();
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [latestVehicles, setLatestVehicles] = useState<VehicleListing[]>([]);
   const [topProfessionals, setTopProfessionals] = useState<Professional[]>([]);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,14 +28,16 @@ export default function Home() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [propsRes, vehiclesRes, prosRes] = await Promise.all([
+        const [propsRes, vehiclesRes, prosRes, articlesRes] = await Promise.all([
           listingService.getListings({ category: 'property', limit: 3 }),
           listingService.getListings({ category: 'vehicle', limit: 2 }),
-          listingService.getProfessionalServices('All', 'active')
+          listingService.getProfessionalServices('All', 'active'),
+          articleService.getArticles()
         ]);
         
         setFeaturedProperties(propsRes.listings as Property[]);
         setLatestVehicles(vehiclesRes.listings as VehicleListing[]);
+        setLatestArticles(articlesRes.slice(0, 3));
         
         // Map services to professionals for display
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
@@ -192,7 +196,7 @@ export default function Home() {
               { icon: <HomeIcon />, title: 'Exclusive Properties', desc: 'Modern villas, townhouses, and luxury apartments.', path: '/properties', color: 'luxury-gold' },
               { icon: <Car />, title: 'Luxury Vehicles', desc: 'Premium SUVs, trucks, and city cars for elite travel.', path: '/vehicles', color: 'white' },
               { icon: <Landmark />, title: 'Strategic Land', desc: 'Secure prime land for commercial and residential growth.', path: '/properties?category=land', color: 'luxury-gold' },
-              { icon: <Users />, title: 'Professional Rentals', desc: 'Short-term and corporate rentals across the region.', path: '/properties?listingType=rent', color: 'white' },
+              { icon: <Users />, title: 'News & Reports', desc: 'Regional market updates, investment briefs, and industry intelligence.', path: '/news', color: 'white' },
             ].map((cat, i) => (
               <motion.div key={i} variants={itemVariants}>
                 <Link to={cat.path} className="group">
@@ -252,6 +256,61 @@ export default function Home() {
                   icon={<HomeIcon size={48} />}
                 />
               </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Latest News */}
+      <section className="py-16 md:py-32 bg-luxury-black">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
+            <div>
+              <p className="text-luxury-gold font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs mb-3 md:mb-4">Intelligence Briefs</p>
+              <h2 className="text-3xl md:text-6xl font-display font-bold text-white tracking-tight">
+                Latest <span className="text-white/40">Insights</span>
+              </h2>
+            </div>
+            <Link to="/news" className="text-luxury-gold flex items-center gap-2 font-semibold hover:gap-4 transition-all group text-sm md:text-base">
+              View All Reports <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {loading ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse text-white/20 uppercase font-bold tracking-[0.3em]">Accessing Intel...</div>
+            ) : latestArticles.length > 0 ? (
+              latestArticles.map((article, i) => (
+                <motion.div
+                  key={article.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Link to={`/news/${article.id}`} className="group block h-full">
+                    <div className="glass-card h-full flex flex-col rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-luxury-gold/30 transition-all duration-500">
+                      <div className="aspect-[16/9] overflow-hidden">
+                        <img 
+                          src={article.featuredImage || '/placeholder-news.jpg'} 
+                          className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" 
+                          alt={article.title} 
+                        />
+                      </div>
+                      <div className="p-8 flex flex-col flex-grow">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-luxury-gold text-[10px] uppercase tracking-[0.2em] font-bold">{article.category}</span>
+                          <span className="text-white/30 text-[10px] uppercase font-bold tracking-widest">{new Date(article.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                        </div>
+                        <h3 className="text-xl font-display font-bold text-white mb-3 group-hover:text-luxury-gold transition-colors tracking-tight leading-snug flex-grow">{article.title}</h3>
+                        <p className="text-white/40 text-sm font-light leading-relaxed line-clamp-2">{article.summary}</p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center glass-card rounded-[3rem] border-white/5 text-white/40">No reports available.</div>
             )}
           </div>
         </div>
