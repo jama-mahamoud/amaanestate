@@ -16,6 +16,10 @@ export interface Listing {
   ownerId: string;
   status: ListingStatus;
   isFeatured?: boolean;
+  isVerified?: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  legalChecked?: boolean;
+  ownershipVerified?: boolean;
   images: string[];
   features?: Record<string, any>;
   metadata?: Record<string, any>;

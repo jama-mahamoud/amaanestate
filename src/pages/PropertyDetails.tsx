@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
   Heart, Calendar, Check, ArrowLeft, Phone, 
-  Mail, MessageSquare, Info, Loader2 
+  Mail, MessageSquare, Info, Loader2, ShieldCheck, FileCheck2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -161,6 +161,29 @@ export default function PropertyDetails() {
                 </div>
               </div>
             )}
+            
+            {/* Trust Section */}
+            <div className="bg-white/5 p-8 rounded-[2rem] border border-white/5">
+                <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-8 flex items-center">
+                    Verification & Legal <div className="h-px flex-1 bg-white/5 ml-8"></div>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${property.isVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
+                        <ShieldCheck className={property.isVerified ? 'text-emerald-500' : 'text-white/20'} size={24} />
+                        <div>
+                            <p className="text-white font-bold">{property.isVerified ? 'Verified Listing' : 'Verification Pending'}</p>
+                            <p className="text-white/40 text-xs">Authenticity secured.</p>
+                        </div>
+                    </div>
+                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${property.legalChecked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
+                        <FileCheck2 className={property.legalChecked ? 'text-emerald-500' : 'text-white/20'} size={24} />
+                        <div>
+                            <p className="text-white font-bold">{property.legalChecked ? 'Legal Checked' : 'Legal Check Pending'}</p>
+                            <p className="text-white/40 text-xs">Documents verified.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Mock Map */}
             <div className="h-[400px] w-full rounded-[3rem] bg-luxury-charcoal/50 border border-white/10 flex items-center justify-center relative overflow-hidden">

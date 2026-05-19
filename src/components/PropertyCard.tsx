@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, BedDouble, Bath, Square, ArrowRight } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Property } from '@/types';
 
@@ -37,6 +37,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               }`}>
                 {property.listingType === 'sale' ? 'For Sale' : 'For Rent'}
               </Badge>
+              {property.isVerified && (
+                <Badge className="bg-emerald-500 text-white border-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-[9px] uppercase tracking-widest font-bold">
+                  <ShieldCheck size={10} /> Verified
+                </Badge>
+              )}
             </div>
           </div>
           

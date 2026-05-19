@@ -49,6 +49,12 @@ export default function Home() {
       const matchesVerified = !verifiedOnly || l.isVerified;
       
       return matchesQuery && matchesCity && matchesType && matchesStatus && matchesVerified;
+    }).sort((a, b) => {
+        // Verified first
+        if (a.isVerified && !b.isVerified) return -1;
+        if (!a.isVerified && b.isVerified) return 1;
+        // Then by date (desc)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });                
     
     setFilteredListings(filtered);
