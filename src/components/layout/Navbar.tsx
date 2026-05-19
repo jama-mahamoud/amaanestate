@@ -72,7 +72,7 @@ export default function Navbar() {
             </Link>
           )}
           <Button asChild className="luxury-button shadow-luxury-gold/10">
-            <Link to="/become-agent">List Property</Link>
+            <Link to="/become-pro">Join Us</Link>
           </Button>
         </div>
 
@@ -137,7 +137,7 @@ export default function Navbar() {
                   </Button>
                 )}
                 <Button asChild className="w-full bg-luxury-gold text-luxury-black h-16 rounded-[1.5rem] font-bold text-base shadow-2xl shadow-luxury-gold/10">
-                  <Link to="/become-agent" onClick={() => setMobileMenuOpen(false)}>List Property</Link>
+                  <Link to="/become-pro" onClick={() => setMobileMenuOpen(false)}>Join Us</Link>
                 </Button>
               </motion.div>
 

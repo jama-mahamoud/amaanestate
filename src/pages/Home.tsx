@@ -196,8 +196,7 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-wrap justify-center gap-4 pt-4">
               <Button onClick={() => navigate('/properties')} className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">Browse Properties</Button>
-              <Button onClick={() => navigate('/services')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">Find Professionals</Button>
-              <Button onClick={() => navigate('/properties/list')} className="bg-white/10 text-white hover:bg-white/20 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
+              <Button onClick={() => navigate('/properties/create')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
             </div>
 
             {/* Advanced Search Bar */}

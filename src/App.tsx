@@ -20,6 +20,7 @@ import AgentRegistration from './pages/AgentRegistration';
 import ProfessionalServices from './pages/ProfessionalServices';
 import ProfessionalDetails from './pages/ProfessionalDetails';
 import ProfessionalRegistration from './pages/ProfessionalRegistration';
+import CreateProperty from './pages/CreateProperty';
 
 // Auth Pages
 import Login from './pages/Login';
@@ -46,6 +47,7 @@ export default function App() {
             <Route index element={<Home />} />
           <Route path="properties" element={<Properties />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
+          <Route path="properties/create" element={<CreateProperty />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="vehicles/:id" element={<VehicleDetails />} />
           <Route path="news" element={<News />} />
