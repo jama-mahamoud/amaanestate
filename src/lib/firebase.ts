@@ -1,11 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+
+// Use initializeFirestore with settings to mitigate WebChannel connection issues in AI Studio preview
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+  // This helps when running inside nested iframes/proxies
+}, (firebaseConfig as any).firestoreDatabaseId);
+
 export const googleProvider = new GoogleAuthProvider();
 
 export default app;
