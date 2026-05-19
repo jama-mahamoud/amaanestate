@@ -102,42 +102,60 @@ export default function ProfessionalRegistration() {
           setUploadStatus('Uploading Profile Photo...');
           const [profilePhotoAsset] = await storageService.uploadProfessionalAssets(
               professionalId, 
-              [formData.personalInfo.profilePhoto]
+              [formData.personalInfo.profilePhoto],
+              (prog) => {
+                  const values = Object.values(prog);
+                  const p = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / 1) : 0;
+                  setUploadProgress(Math.round(p * 0.2)); 
+              }
           );
           submissionData.personalInfo.profilePhotoUrl = profilePhotoAsset.url;
-          setUploadProgress(10);
+          setUploadProgress(20);
       }
 
       // 2. Upload Portfolio Images
       if (formData.experiencePortfolio.portfolioImages.length > 0) {
-          setUploadStatus('Uploading Portfolio...');
+          setUploadStatus('Uploading Portfolio Assets...');
           const portfolioAssets = await storageService.uploadProfessionalAssets(
-              `portfolio_${professionalId}`, 
-              formData.experiencePortfolio.portfolioImages
+              `${professionalId}/portfolio`, 
+              formData.experiencePortfolio.portfolioImages,
+              (prog) => {
+                  const values = Object.values(prog);
+                  const p = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / formData.experiencePortfolio.portfolioImages.length) : 0;
+                  setUploadProgress(20 + Math.round(p * 0.4)); // 20% to 60%
+              }
           );
           submissionData.experiencePortfolio.portfolioImageUrls = portfolioAssets.map(a => a.url);
-          setUploadProgress(40);
+          setUploadProgress(60);
       }
 
       // 3. Upload Verification Documents
-      const docUploads = [];
       const docFields = ['cv', 'certs', 'license', 'idCard'] as const;
+      const filesToUpload = docFields
+          .map(field => ({ field, file: formData.verificationDocs[field] }))
+          .filter(item => item.file !== null) as { field: string, file: File }[];
       
-      setUploadStatus('Securing Documents...');
-      for (const field of docFields) {
-          const file = formData.verificationDocs[field];
-          if (file) {
-              const [asset] = await storageService.uploadProfessionalAssets(
-                  `docs_${professionalId}`, 
-                  [file]
-              );
-              submissionData.verificationDocs[`${field}Url`] = asset.url;
-          }
+      if (filesToUpload.length > 0) {
+          setUploadStatus('Securing Verification Documents...');
+          const uploadedDocs = await storageService.uploadProfessionalAssets(
+              `${professionalId}/documents`,
+              filesToUpload.map(i => i.file),
+              (prog) => {
+                  const values = Object.values(prog);
+                  const p = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / filesToUpload.length) : 0;
+                  setUploadProgress(60 + Math.round(p * 0.3)); // 60% to 90%
+              }
+          );
+
+          // Map URLs back to fields
+          filesToUpload.forEach((item, index) => {
+              submissionData.verificationDocs[`${item.field}Url`] = uploadedDocs[index].url;
+          });
       }
-      setUploadProgress(80);
+      setUploadProgress(90);
 
       // 4. Submit to Firestore
-      setUploadStatus('Finalizing Identity Log...');
+      setUploadStatus('Finalizing Professional Identity...');
       // Remove raw files before submission
       delete submissionData.personalInfo.profilePhoto;
       delete submissionData.experiencePortfolio.portfolioImages;
@@ -156,8 +174,9 @@ export default function ProfessionalRegistration() {
       setSuccess(true);
       toast.success('Professional identity registered');
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Submission failed. Please check your connection.');
+      console.error('Submission Error:', err);
+      toast.error(err.message || 'Submission failed. Please check your network connection.');
+      setUploadStatus('Error: ' + (err.message || 'Upload failed'));
     } finally {
       setLoading(false);
     }
