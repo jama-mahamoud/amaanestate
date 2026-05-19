@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Helmet } from 'react-helmet-async';
-import { Calendar, ArrowRight, Clock, Newspaper } from 'lucide-react';
+import { TrendingUp, Newspaper, Clock, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
-import EmptyState from '@/components/EmptyState';
+
+const CATEGORIES = [
+  'All', 'Real Estate', 'Investment', 'Construction', 
+  'Regional Development', 'Economy', 'Infrastructure', 'Land & Urban Growth'
+];
 
 export default function News() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
     articleService.getArticles().then(data => {
@@ -20,120 +25,113 @@ export default function News() {
     });
   }, []);
 
-  if (loading) return <div className="text-white text-center pt-40">Loading journal...</div>;
+  const filteredArticles = useMemo(() => {
+    if (activeCategory === 'All') return articles;
+    return articles.filter(a => a.category === activeCategory);
+  }, [articles, activeCategory]);
 
-  const featuredArticle = articles.find(a => a.isFeatured && a.published);
-  const regularArticles = articles.filter(a => a.published && a.id !== featuredArticle?.id);
+  const featuredArticle = featuredArticleFrom(filteredArticles);
+  const regularArticles = filteredArticles.filter(a => a.published && a.id !== featuredArticle?.id);
+
+  function featuredArticleFrom(items: Article[]) {
+    return items.find(a => a.isFeatured && a.published) || items.find(a => a.published);
+  }
 
   const formatDate = (dateValue: any) => {
-    if (!dateValue || !dateValue.seconds) return 'Recently Published';
-    return new Date(dateValue.seconds * 1000).toLocaleDateString();
+    if (!dateValue || !dateValue.seconds) return 'Recently';
+    return new Date(dateValue.seconds * 1000).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
   };
 
+  if (loading) return <div className="text-white text-center pt-40 min-h-screen bg-black">Loading market intelligence...</div>;
+
   return (
-    <div className="min-h-screen bg-luxury-black pt-28 pb-20">
+    <div className="min-h-screen bg-black text-white pt-20 pb-20">
       <Helmet>
-        <title>News & Intelligence | AmaanEstate</title>
-        <meta name="description" content="Institutional insights into the Somali Region's evolving real estate and luxury sectors." />
-        <link rel="canonical" href="https://somali-real-estate.com/news" />
+        <title>Market Insights & Intelligence | AmaanEstate</title>
+        <meta name="description" content="Institutional insights into the Somali Region's evolving real estate and economic landscape." />
       </Helmet>
-      <div className="container mx-auto px-4 relative z-10">
-        
-        <div className="max-w-4xl mb-16 md:mb-24">
-          <p className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-6 underline underline-offset-8 decoration-luxury-gold/50">Regional Intelligence</p>
-          <h1 className="text-5xl md:text-9xl font-display font-bold text-white mb-10 tracking-tighter leading-[0.9]">
-            Market <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">Journal</span>
+      
+      <div className="container mx-auto px-4 max-w-7xl">
+        {/* Editorial Header */}
+        <div className="py-20">
+          <span className="text-luxury-gold font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Market Intelligence</span>
+          <h1 className="text-5xl md:text-8xl font-display font-bold tracking-tighter mb-8 leading-none">
+            AmaanEstate <span className="text-white/30">Insights</span>
           </h1>
-          <p className="text-white/50 text-lg md:text-xl font-light leading-relaxed max-w-2xl">
-            Institutional insights into the Somali Region's evolving real estate and luxury sectors.
+          <p className="text-white/60 text-xl font-light max-w-2xl">
+            Credible intelligence on real estate, infrastructure, and regional investment opportunities.
           </p>
         </div>
 
-        {/* Featured Article */}
+        {/* Categories */}
+        <div className="sticky top-20 z-30 bg-black/80 backdrop-blur-md py-4 mb-12 flex gap-2 overflow-x-auto no-scrollbar border-y border-white/5">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-6 py-2 rounded-full text-xs uppercase font-bold tracking-widest whitespace-nowrap transition-all ${
+                activeCategory === cat 
+                  ? 'bg-luxury-gold text-black' 
+                  : 'bg-white/5 text-white/50 hover:bg-white/10'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Featured Section */}
         {featuredArticle ? (
-          <div className="mb-24 md:mb-40">
-            <Link to={`/news/${featuredArticle.id}`}>
-              <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl">
-                <div className="aspect-[4/3] md:aspect-[21/9]">
-                  <img 
-                    src={featuredArticle.featuredImage || '/placeholder-news.jpg'} 
-                    className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2000ms] scale-105 group-hover:scale-100" 
-                    alt="Featured" 
-                  />
+          <div className="mb-20">
+            <Link to={`/news/${featuredArticle.id}`} className="group block">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="aspect-[3/2] rounded-[2rem] overflow-hidden">
+                   <img src={featuredArticle.featuredImage || '/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={featuredArticle.title} />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-10 md:p-20 max-w-4xl">
-                  <div className="flex items-center gap-4 mb-6">
-                    <Badge className="bg-luxury-gold text-luxury-black border-0 px-6 py-2 uppercase tracking-[0.2em] font-bold text-[10px]">
-                      Featured Report
-                    </Badge>
-                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-[0.2em]">{featuredArticle.category}</span>
-                  </div>
-                  <h2 className="text-3xl md:text-7xl font-display font-bold text-white mb-8 group-hover:text-luxury-gold transition-colors duration-500 tracking-tighter leading-[0.9]">
-                    {featuredArticle.title}
-                  </h2>
-                  <div className="text-white/40text-[10px] uppercase font-bold tracking-[0.3em]">
-                    {formatDate(featuredArticle.createdAt)}
-                  </div>
+                <div className="space-y-6">
+                    <Badge className="bg-luxury-gold/10 text-luxury-gold border-0">Featured Insights</Badge>
+                    <h2 className="text-4xl md:text-6xl font-display font-bold leading-tight group-hover:text-luxury-gold transition-colors">{featuredArticle.title}</h2>
+                    <p className="text-white/60 text-lg">{featuredArticle.summary}</p>
+                    <div className="flex items-center gap-4 text-white/40 text-sm font-bold">
+                        <span>{formatDate(featuredArticle.createdAt)}</span>
+                        <span>•</span>
+                        <span>{Math.ceil(featuredArticle.content.length / 1000)} min read</span>
+                    </div>
                 </div>
               </div>
             </Link>
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
-          {regularArticles.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <Link to={`/news/${item.id}`} className="group block h-full">
-                <div className="glass-card h-full flex flex-col rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-luxury-gold/30 transition-all duration-500">
-                  <div className="aspect-[16/9] overflow-hidden">
-                    <img 
-                      src={item.featuredImage || '/placeholder-news.jpg'} 
-                      className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" 
-                      alt={item.title} 
-                    />
-                  </div>
-                  <div className="p-8 md:p-10 flex flex-col flex-grow">
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="text-luxury-gold text-[10px] uppercase tracking-[0.2em] font-bold">
-                        {item.category}
-                      </span>
-                      <span className="text-white/20 text-[10px] uppercase font-bold tracking-widest">{formatDate(item.createdAt)}</span>
-                    </div>
-                    <h3 className="text-2xl font-display font-bold text-white mb-4 group-hover:text-luxury-gold transition-colors tracking-tight leading-snug flex-grow">
-                      {item.title}
-                    </h3>
-                    <p className="text-white/40 text-sm font-light leading-relaxed line-clamp-3">
-                      {item.summary}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-
-        {articles.length === 0 && (
-          <EmptyState 
-            title="Journal Empty" 
-            description="Our editorial team is currently drafting institutional reports and regional intelligence briefs." 
-            icon={<Newspaper size={48} />}
-          />
-        )}
-
-        <div className="mt-32 text-center">
-            <Button variant="outline" className="border-white/5 bg-white/5 text-white hover:bg-luxury-gold hover:text-luxury-black transition-all duration-500 h-20 px-16 rounded-[2rem] font-bold uppercase tracking-[0.2em] text-xs">
-              Archive Directory
-            </Button>
+        {/* Regular Articles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence mode="popLayout">
+                {regularArticles.map((item, i) => (
+                    <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                    >
+                        <Link to={`/news/${item.id}`} className="block h-full group bg-white/5 rounded-[2rem] p-6 hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
+                            <div className="aspect-[16/9] rounded-2xl overflow-hidden mb-6">
+                                <img src={item.featuredImage || '/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={item.title} />
+                            </div>
+                            <div className="space-y-4">
+                                <span className="text-luxury-gold text-xs font-bold uppercase tracking-widest">{item.category}</span>
+                                <h3 className="text-2xl font-bold font-display leading-snug group-hover:text-luxury-gold transition-colors">{item.title}</h3>
+                                <div className="flex items-center gap-2 text-white/30 text-xs font-bold">
+                                    <Clock size={14} />
+                                    <span>{formatDate(item.createdAt)}</span>
+                                </div>
+                            </div>
+                        </Link>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
         </div>
       </div>
     </div>
   );
 }
+

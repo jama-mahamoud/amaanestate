@@ -47,9 +47,6 @@ function DashboardContent() {
   const isAdmin = currentRole === 'admin' || currentRole === 'administrator';
   const isEditor = isAdmin || currentRole === 'editor';
 
-  console.log("PROFILE ROLE:", profile?.role);
-  console.log("IS ADMIN:", isAdmin);
-  console.log("IS EDITOR:", isEditor);
 
   if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });

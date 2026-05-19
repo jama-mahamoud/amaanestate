@@ -65,58 +65,45 @@ export default function ArticleDetails() {
         <link rel="canonical" href={`https://somali-real-estate.com/news/${article.slug || article.id}`} />
       </Helmet>
       {/* Article Hero */}
-      <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
-        <motion.img 
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5 }}
-          src={article.featuredImage || '/placeholder-news.jpg'} 
-          className="w-full h-full object-cover grayscale opacity-40" 
-          alt={article.title} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/60 to-transparent"></div>
+      <div className="relative min-h-[60vh] flex items-center justify-center pt-24 pb-16">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={article.featuredImage || '/placeholder.jpg'} 
+            className="w-full h-full object-cover" 
+            alt={article.title} 
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
         
-        <div className="absolute inset-x-0 bottom-0 pb-20">
-          <div className="container mx-auto px-4 text-center max-w-5xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-               <div className="flex justify-center mb-8">
-                 <Badge className="bg-luxury-gold text-luxury-black border-0 px-6 py-2 uppercase tracking-[0.2em] font-bold text-[10px]">
-                    {article.category} Report
-                 </Badge>
-               </div>
-              <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-8 tracking-tighter leading-[0.9]">
+        <div className="container mx-auto px-4 relative z-10 text-center max-w-4xl">
+            <Badge className="bg-luxury-gold/10 text-luxury-gold border-0 mb-6 px-6 py-2 uppercase tracking-[0.2em] font-bold text-[10px]">
+                {article.category} Report
+            </Badge>
+            <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-8 tracking-tighter leading-tight">
                 {article.title}
-              </h1>
-              <div className="text-white/50 text-[10px] font-bold uppercase tracking-[0.3em]">
-                {formatDate(article.createdAt)}
-              </div>
-            </motion.div>
-          </div>
+            </h1>
+            <div className="flex justify-center items-center gap-6 text-white/50 text-xs font-bold uppercase tracking-[0.2em]">
+                <span className="flex items-center gap-2"><Calendar size={14} /> {formatDate(article.createdAt)}</span>
+                <span className="flex items-center gap-2"><Clock size={14} /> {Math.ceil(article.content.length / 1000)} min read</span>
+            </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-16 relative z-20">
+      <div className="container mx-auto px-4 -mt-20 relative z-20">
         <div className="max-w-3xl mx-auto">
-          <div className="glass-card p-10 md:p-16 rounded-[2.5rem] shadow-2xl relative overflow-hidden mb-16 border border-white/5">
-             <div className="mb-12">
-                <Link to="/news" className="inline-flex items-center gap-3 text-white/30 hover:text-luxury-gold transition-all duration-300 text-[10px] font-bold tracking-[0.3em] uppercase">
-                   <ArrowLeft size={16} /> Directory Archive
-                </Link>
-             </div>
-
-             <div 
-               className="prose prose-invert prose-luxury max-w-none 
-                 prose-p:text-white/60 prose-p:text-lg prose-p:leading-relaxed prose-p:font-light prose-p:mb-8
-                 prose-h3:text-white prose-h3:font-display prose-h3:text-3xl prose-h3:font-bold prose-h3:mb-6 prose-h3:mt-12 prose-h3:tracking-tight
+          <div className="bg-black border border-white/10 p-8 md:p-16 rounded-[2.5rem] shadow-2xl">
+             
+             <div className="prose prose-invert prose-lg max-w-none 
+                 prose-p:text-white/70 prose-p:leading-relaxed prose-p:font-light prose-p:mb-6
+                 prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-10
+                 prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8
                  prose-strong:text-luxury-gold prose-strong:font-bold
-                 prose-img:rounded-3xl prose-img:border prose-img:border-white/10 prose-img:mb-12 prose-img:mt-12
-                 prose-a:text-luxury-gold hover:prose-a:text-white prose-a:transition-colors"
+                 prose-img:rounded-3xl prose-img:border prose-img:border-white/10
+                 prose-a:text-luxury-gold hover:prose-a:text-white prose-a:transition-colors
+                 prose-blockquote:border-l-luxury-gold prose-blockquote:bg-white/5 prose-blockquote:p-6 prose-blockquote:rounded-r-2xl"
                dangerouslySetInnerHTML={{ __html: article.content }} 
              />
+
 
              {article.gallery && article.gallery.length > 0 && (
                <div className="mt-16 pt-16 border-t border-white/5">
