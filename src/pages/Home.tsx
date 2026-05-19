@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,23 +26,34 @@ export default function Home() {
   const [searchPropertyType, setSearchPropertyType] = useState('Houses');
   const [searchBuyRent, setSearchBuyRent] = useState('Sell');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
+
+  const filteredProperties = useMemo(() => {
+    return filteredListings.filter(l => l.category === 'property') as Property[];
+  }, [filteredListings]);
+
+  const filteredVehicles = useMemo(() => {
+    return filteredListings.filter(l => l.category === 'vehicle') as VehicleListing[];
+  }, [filteredListings]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [propsRes, vehiclesRes, prosRes, articlesRes] = await Promise.all([
-          listingService.getListings({ category: 'property', limit: 3 }),
-          listingService.getListings({ category: 'vehicle', limit: 2 }),
+        const [listingsRes, prosRes, articlesRes] = await Promise.all([
+          listingService.getListings({ limit: 100 }), // Fetch more for client-side filtering
           listingService.getProfessionalServices('All', 'active'),
           articleService.getArticles()
         ]);
         
-        setFeaturedProperties(propsRes.listings as Property[]);
-        setLatestVehicles(vehiclesRes.listings as VehicleListing[]);
+        setAllListings(listingsRes.listings);
+        setFilteredListings(listingsRes.listings); // Initially, show all
+        setFeaturedProperties(listingsRes.listings.filter(l => l.category === 'property' && l.isFeatured).slice(0, 3) as Property[]);
+        setLatestVehicles(listingsRes.listings.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
         setLatestArticles(articlesRes.slice(0, 3));
         
-        // Map services to professionals for display
+        // ... (rest of mapping professional services)
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
           id: s.id,
           name: "Verified Specialist",
@@ -69,9 +80,23 @@ export default function Home() {
   }, []);
 
   const handleSearch = () => {
-    if (searchQuery) {
-      navigate(`/properties?search=${searchQuery}&city=${searchCity}`);
-    }
+    const filtered = allListings.filter(l => {
+        const matchesQuery = l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             l.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCity = searchCity === 'All Cities' || l.city === searchCity;
+        // Map UI types to listing subcategories or category
+        const matchesType = searchPropertyType === 'All Types' || (
+            (searchPropertyType === 'Houses' && l.category === 'property') ||
+            (searchPropertyType === 'Land' && l.category === 'land') ||
+            (searchPropertyType === 'Vehicles' && l.category === 'vehicle')
+        );
+        const matchesStatus = l.listingType === searchBuyRent.toLowerCase();
+        
+        return matchesQuery && matchesCity && matchesType && matchesStatus;
+    });                
+    
+    setFilteredListings(filtered);
+    console.log('DEBUG: Filtered Results Count:', filtered.length);
   };
 
   const cities = [
@@ -258,8 +283,8 @@ export default function Home() {
                 <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
                 <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
               </div>
-            ) : featuredProperties.length > 0 ? (
-              featuredProperties.map((prop, i) => (
+            ) : filteredProperties.length > 0 ? (
+              filteredProperties.map((prop, i) => (
                 <motion.div
                   key={prop.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -403,8 +428,8 @@ export default function Home() {
                 <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
                 <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Accessing Database...</p>
               </div>
-            ) : latestVehicles.length > 0 ? (
-              latestVehicles.map((vehicle, i) => (
+            ) : filteredVehicles.length > 0 ? (
+              filteredVehicles.map((vehicle, i) => (
                 <motion.div
                   key={vehicle.id}
                   initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
