@@ -197,6 +197,7 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-4 pt-4">
               <Button onClick={() => navigate('/properties')} className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">Browse Properties</Button>
               <Button onClick={() => navigate('/properties/create')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
+              <Button onClick={() => navigate('/services')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">Find Professionals</Button>
             </div>
 
             {/* Advanced Search Bar */}
@@ -603,13 +604,13 @@ export default function Home() {
                 <Briefcase size={32} className="md:w-10 md:h-10" />
              </div>
              <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 md:mb-6">Are You a Skilled Professional?</h2>
-             <p className="text-white/40 text-base md:text-lg mb-8 md:mb-12 max-w-xl mx-auto tracking-tight">Join the region's elite professional network. Showcase your expertise to builders, investors, and homeowners in the Somali Region.</p>
+             <p className="text-white/40 text-base md:text-lg mb-8 md:mb-12 max-w-xl mx-auto tracking-tight">Create your professional profile and connect with clients, investors, developers, and businesses across the Somali Region.</p>
              <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
                 <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white transition-all h-14 md:h-16 px-8 md:px-10 rounded-xl md:rounded-2xl font-bold">
-                   <Link to="/become-pro">Become a Professional</Link>
+                   <Link to="/become-pro">Join The Network</Link>
                 </Button>
                 <Link to="/services" className="h-14 md:h-16 px-8 md:px-10 rounded-xl md:rounded-2xl border border-white/10 flex items-center justify-center text-white font-bold hover:bg-white/5 transition-colors">
-                   View Registry
+                   Browse Professionals
                 </Link>
              </div>
           </div>

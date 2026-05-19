@@ -66,11 +66,12 @@ export const applicationService = {
       throw new Error('Authentication required for institutional vetting. Please ensure you are signed in.');
     }
 
-    const applicationsRef = collection(db, 'applications');
+    const collectionName = type === 'professional' ? 'professionalApplications' : 'applications';
+    const applicationsRef = collection(db, collectionName);
     const newApplication = {
       type,
       userId: user.uid,
-      status: 'pending',
+      status: 'pending_review',
       data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -80,7 +81,7 @@ export const applicationService = {
       const docRef = await addDoc(applicationsRef, newApplication);
       return docRef.id;
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'applications');
+      handleFirestoreError(error, OperationType.WRITE, collectionName);
       throw error;
     }
   },

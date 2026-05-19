@@ -91,7 +91,7 @@ service cloud.firestore {
       return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt'])
         && data.type in ['agent', 'professional']
         && data.userId == request.auth.uid
-        && data.status == 'pending';
+        && data.status in ['pending', 'pending_review'];
     }
     
     function isValidProfessional(data) {
@@ -172,6 +172,12 @@ service cloud.firestore {
 
     // Applications & Registry
     match /applications/{appId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && isValidApplication(incoming());
+      allow update, delete: if isAdmin();
+    }
+    
+    match /professionalApplications/{appId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && isValidApplication(incoming());
       allow update, delete: if isAdmin();
