@@ -14,6 +14,7 @@ export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
+  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -342,16 +343,59 @@ export default function Properties() {
             </Button>
           </aside>
 
-          {/* Main Grid */}
+          {/* Main Grid / Split View mapping */}
           <div className="flex-1">
             {viewMode === 'map' ? (
               <motion.div
                 key="map-view"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <MapDiscovery properties={filteredListings as unknown as Property[]} selectedCity={currentCity} />
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+                  {/* Listings Left Pane */}
+                  <div className="w-full lg:w-[45%] xl:w-[42%] flex flex-col gap-6 lg:max-h-[750px] lg:overflow-y-auto pr-2 no-scrollbar scroll-smooth">
+                    <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-4 rounded-2xl mb-1 shrink-0">
+                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Synchronized Map Grid</span>
+                      <span className="text-[10px] text-luxury-gold uppercase tracking-widest font-black">{filteredListings.length} Estates Found</span>
+                    </div>
+                    
+                    {filteredListings.length === 0 ? (
+                      <div className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-3xl">
+                        <p className="text-white/40 text-xs">No active estates found matching criteria.</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-6">
+                        {filteredListings.map((prop) => (
+                          <PropertyCard 
+                            key={prop.id} 
+                            property={prop as Property}
+                            isHovered={hoveredPropertyId === prop.id}
+                            onMouseEnter={() => setHoveredPropertyId(prop.id)}
+                            onMouseLeave={() => setHoveredPropertyId(null)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Map Right Sticky Pane */}
+                  <div className="w-full lg:w-[55%] xl:w-[58%] lg:sticky lg:top-32 h-[500px] lg:h-[750px] rounded-[2.5rem] overflow-hidden">
+                    <MapDiscovery 
+                      properties={filteredListings as unknown as Property[]} 
+                      selectedCity={currentCity}
+                      hoveredPropertyId={hoveredPropertyId}
+                      onHoverMarker={setHoveredPropertyId}
+                      onCardHighlight={(id) => {
+                        setHoveredPropertyId(id);
+                        const el = document.getElementById('property-card-' + id);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </motion.div>
             ) : (
               <AnimatePresence mode="wait">
@@ -377,7 +421,13 @@ export default function Properties() {
                   >
                     <div className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                       {filteredListings.map((prop) => (
-                        <PropertyCard key={prop.id} property={prop as Property} />
+                        <PropertyCard 
+                          key={prop.id} 
+                          property={prop as Property} 
+                          isHovered={hoveredPropertyId === prop.id}
+                          onMouseEnter={() => setHoveredPropertyId(prop.id)}
+                          onMouseLeave={() => setHoveredPropertyId(null)}
+                        />
                       ))}
                     </div>
 

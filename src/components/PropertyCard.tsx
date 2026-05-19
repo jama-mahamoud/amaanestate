@@ -6,9 +6,12 @@ import { Property } from '@/types';
 
 interface PropertyCardProps {
   property: Property;
+  isHovered?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) {
   const mainImage = property.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop';
   const displayPrice = typeof property.price === 'number' 
     ? `$${property.price.toLocaleString()}` 
@@ -16,13 +19,18 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <motion.div
+      id={`property-card-${property.id}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="group"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <Link to={`/properties/${property.id}`}>
-        <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
+        <div className={`glass-card rounded-[2rem] overflow-hidden flex flex-col h-full transition-all duration-350 border-1 ${
+          isHovered ? 'border-[#C5A059] ring-2 ring-[#C5A059]/30 translate-y-[-4px] shadow-[#C5A059]/10' : 'border-white/5 shadow-none'
+        }`}>
           <div className="aspect-[16/10] overflow-hidden relative">
             <img 
               src={mainImage} 

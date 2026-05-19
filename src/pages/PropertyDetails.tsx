@@ -16,6 +16,7 @@ import { Property } from '@/types';
 import NotFoundState from '@/components/NotFoundState';
 import MapDiscovery from '@/components/MapDiscovery';
 import PropertyCard from '@/components/PropertyCard';
+import PropertyDetailMap from '@/components/location/PropertyDetailMap';
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -393,12 +394,12 @@ export default function PropertyDetails() {
               </div>
             </div>
 
-            {/* 2. TRUE INTERACTIVE MAP LOCATION PREVIEW */}
+            {/* 2. TRUE INTERACTIVE MAP LOCATION PREVIEW - Property Location */}
             <div>
               <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
-                Physical Coordinate Positioning <div className="h-px flex-1 bg-white/5 ml-8"></div>
+                Property Location <div className="h-px flex-1 bg-white/5 ml-8"></div>
               </h3>
-              <MapDiscovery properties={[property]} selectedCity={property.city} />
+              <PropertyDetailMap property={property} />
               <p className="text-white/30 text-[11px] mt-4 leading-normal flex items-start gap-2">
                 <AlertCircle size={14} className="shrink-0 text-luxury-gold mt-0.5" />
                 Detailed architectural layout blueprints, boundary markings, and specific cadastral plots are made accessible under verified professional escrow requests.

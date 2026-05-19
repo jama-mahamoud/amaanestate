@@ -9,6 +9,9 @@ import L from 'leaflet';
 interface MapDiscoveryProps {
   properties: Property[];
   selectedCity?: string;
+  hoveredPropertyId?: string | null;
+  onHoverMarker?: (id: string | null) => void;
+  onCardHighlight?: (id: string) => void;
 }
 
 const CITY_COORDINATES: Record<string, [number, number]> = {
@@ -22,11 +25,29 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 
 const DEFAULT_COORDS: [number, number] = [9.35, 42.8]; // Jigjiga
 
-export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDiscoveryProps) {
+const getPropertyCoords = (prop: Property, index: number): [number, number] => {
+  if (prop.latitude !== undefined && prop.longitude !== undefined) {
+    return [prop.latitude, prop.longitude];
+  }
+  const cityC = CITY_COORDINATES[prop.city] || DEFAULT_COORDS;
+  const scatterOffsetLat = ((index % 8) - 4) * 0.004;
+  const scatterOffsetLng = (((index + 2) % 8) - 4) * 0.004;
+  return [cityC[0] + scatterOffsetLat, cityC[1] + scatterOffsetLng];
+};
+
+export default function MapDiscovery({ 
+  properties, 
+  selectedCity = 'All', 
+  hoveredPropertyId = null,
+  onHoverMarker,
+  onCardHighlight
+}: MapDiscoveryProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(12);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -85,7 +106,7 @@ export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDi
       });
 
       // Ultra premium Dark/Muted Minimalist Map Tile Layer (CartoDB Dark Matter)
-      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
       }).addTo(map);
 
@@ -93,6 +114,10 @@ export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDi
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
+
+      map.on('zoomend', () => {
+        setZoomLevel(map.getZoom());
+      });
 
       mapInstanceRef.current = map;
       markersLayerRef.current = L.layerGroup().addTo(map);
@@ -108,7 +133,7 @@ export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDi
     }
   }, [centerCoords, selectedCity]);
 
-  // Update listing markers
+  // Custom visual clustering and individual pins positioning effect
   useEffect(() => {
     const map = mapInstanceRef.current;
     const markersLayer = markersLayerRef.current;
@@ -117,46 +142,155 @@ export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDi
     // Clear previous markers
     markersLayer.clearLayers();
 
-    // Map each property to clean coordinates
+    // Determine custom clustering spatial thresholds based on zoom
+    let threshold = 0;
+    if (zoomLevel < 11) {
+      threshold = 0.08;
+    } else if (zoomLevel === 11) {
+      threshold = 0.04;
+    } else if (zoomLevel === 12) {
+      threshold = 0.015;
+    } else if (zoomLevel === 13) {
+      threshold = 0.007;
+    } // Zoom >= 14 gets 0 threshold: raw coordinate dispersion
+
+    interface MapCluster {
+      center: [number, number];
+      items: Property[];
+    }
+
+    const clusters: MapCluster[] = [];
+
     properties.forEach((prop, index) => {
-      const cityC = CITY_COORDINATES[prop.city] || DEFAULT_COORDS;
-      // Add subtle scattering offset to avoid overlapping identical cities
-      const scatterOffsetLat = ((index % 5) - 2) * 0.006;
-      const scatterOffsetLng = (((index + 3) % 5) - 2) * 0.006;
-      const finalCoords: [number, number] = [
-        cityC[0] + scatterOffsetLat,
-        cityC[1] + scatterOffsetLng
-      ];
+      const coords = getPropertyCoords(prop, index);
 
-      // Custom styled HTML Div Marker with luxury look
-      const customIcon = L.divIcon({
-        className: 'custom-map-price-marker',
-        html: `
-          <div class="relative group flex flex-col items-center">
-            <!-- Pulsing outer luxury gold glow circle -->
-            <div class="absolute -inset-1.5 rounded-full bg-[#C5A059]/30 blur-sm group-hover:bg-[#C5A059]/50 transition-all duration-300 animate-ping" style="animation-duration: 2s"></div>
-            <!-- Elegant Price tag box -->
-            <div class="relative px-3 py-1.5 rounded-lg bg-[#171717] border border-[#C5A059]/40 group-hover:border-[#C5A059] flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:-translate-y-1">
-              <span class="text-[10px] font-bold tracking-tight text-[#C5A059]">$${(prop.price / 1000).toFixed(0)}k</span>
-            </div>
-            <!-- Little pointer arrow bottom -->
-            <div class="w-2 h-2 bg-[#171717] border-r border-b border-[#C5A059]/40 transform rotate-45 -mt-1 group-hover:border-[#C5A059] transition-all"></div>
-          </div>
-        `,
-        iconSize: [50, 36],
-        iconAnchor: [25, 36],
-      });
+      if (threshold > 0) {
+        // Find existing cluster within distance threshold
+        const closeCluster = clusters.find(c => {
+          const latDiff = Math.abs(c.center[0] - coords[0]);
+          const lngDiff = Math.abs(c.center[1] - coords[1]);
+          return latDiff < threshold && lngDiff < threshold;
+        });
 
-      const marker = L.marker(finalCoords, { icon: customIcon });
-      
-      marker.on('click', () => {
-        setSelectedProperty(prop);
-        map.setView(finalCoords, 13, { animate: true });
-      });
-
-      marker.addTo(markersLayer);
+        if (closeCluster) {
+          closeCluster.items.push(prop);
+          // Recalculate barycenter
+          const size = closeCluster.items.length;
+          closeCluster.center = [
+            (closeCluster.center[0] * (size - 1) + coords[0]) / size,
+            (closeCluster.center[1] * (size - 1) + coords[1]) / size
+          ];
+        } else {
+          clusters.push({
+            center: coords,
+            items: [prop]
+          });
+        }
+      } else {
+        // Individual coordinate presentation
+        clusters.push({
+          center: coords,
+          items: [prop]
+        });
+      }
     });
-  }, [properties]);
+
+    // Render clusters/items to map layer
+    clusters.forEach((clust, idx) => {
+      if (clust.items.length > 1) {
+        // Render Cluster Marker
+        const clusterHtml = `
+          <div class="relative flex items-center justify-center">
+            <div class="absolute -inset-3.5 rounded-full bg-[#C5A059]/15 blur-sm animate-pulse" style="animation-duration: 3s"></div>
+            <div class="absolute -inset-1.5 rounded-full bg-[#C5A059]/10 animate-ping" style="animation-duration: 2s"></div>
+            <div class="relative px-4 py-2 rounded-full bg-black border-2 border-[#C5A059] flex items-center gap-2 shadow-2xl transition-transform duration-200 hover:scale-110">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-[10px] uppercase font-bold tracking-widest text-[#C5A059] whitespace-nowrap">
+                ${clust.items.length} Assets
+              </span>
+            </div>
+          </div>
+        `;
+
+        const clusterIcon = L.divIcon({
+          className: 'custom-map-cluster-marker',
+          html: clusterHtml,
+          iconSize: [80, 44],
+          iconAnchor: [40, 22]
+        });
+
+        const clusterMarker = L.marker(clust.center, { icon: clusterIcon });
+        
+        clusterMarker.on('click', () => {
+          map.setView(clust.center, Math.min(18, zoomLevel + 2), { animate: true });
+        });
+
+        clusterMarker.addTo(markersLayer);
+
+      } else {
+        // Render Single Property Pin
+        const prop = clust.items[0];
+        const isHovered = hoveredPropertyId === prop.id;
+
+        const pinHtml = `
+          <div class="relative flex flex-col items-center">
+            ${isHovered ? `
+              <div class="absolute -inset-4 rounded-full bg-luxury-gold/30 blur-md animate-ping"></div>
+              <div class="absolute -inset-2.5 rounded-full bg-luxury-gold/25 blur-sm"></div>
+            ` : `
+              <div class="absolute -inset-2 rounded-full bg-[#C5A059]/15 blur-sm group-hover:bg-[#C5A059]/35 transition-all duration-350"></div>
+            `}
+            
+            <div class="relative px-3.5 py-2 rounded-xl border flex items-center justify-center shadow-2xl transition-all duration-350 ${
+              isHovered 
+                ? 'bg-[#C5A059] border-white text-black scale-110 z-50 -translate-y-1.5 shadow-luxury-gold/30' 
+                : 'bg-neutral-900/95 border-[#C5A059]/30 text-[#C5A059] hover:border-[#C5A059] hover:-translate-y-1'
+            }">
+              <span class="text-[10px] font-mono leading-none font-bold tracking-tight">
+                $${(prop.price / 1000).toFixed(0)}k
+              </span>
+            </div>
+            <div class="w-2.5 h-2.5 transform rotate-45 -mt-1.5 border-r border-b shadow-md transition-all duration-350 ${
+              isHovered 
+                ? 'bg-[#C5A059] border-white text-black scale-110' 
+                : 'bg-neutral-900/95 border-[#C5A059]/30'
+            }"></div>
+          </div>
+        `;
+
+        const pinIcon = L.divIcon({
+          className: `custom-map-price-marker ${isHovered ? 'z-50' : 'z-20'}`,
+          html: pinHtml,
+          iconSize: [54, 38],
+          iconAnchor: [27, 38]
+        });
+
+        const marker = L.marker(clust.center, { 
+          icon: pinIcon,
+          zIndexOffset: isHovered ? 1000 : 0
+        });
+
+        marker.on('click', () => {
+          setSelectedProperty(prop);
+          map.setView(clust.center, Math.max(14, zoomLevel), { animate: true });
+          if (onCardHighlight) {
+            onCardHighlight(prop.id);
+          }
+        });
+
+        marker.on('mouseover', () => {
+          onHoverMarker?.(prop.id);
+        });
+
+        marker.on('mouseout', () => {
+          onHoverMarker?.(null);
+        });
+
+        marker.addTo(markersLayer);
+      }
+    });
+
+  }, [properties, zoomLevel, hoveredPropertyId]);
 
   return (
     <div className="w-full h-[600px] rounded-[2.5rem] bg-luxury-charcoal/30 overflow-hidden border border-white/5 relative flex flex-col lg:flex-row shadow-2xl">
@@ -169,7 +303,7 @@ export default function MapDiscovery({ properties, selectedCity = 'All' }: MapDi
       />
 
       {/* FLOATING LEFT AI GEO INSIGHT LAYER */}
-      <div className="absolute top-6 left-6 z-10 w-80 max-w-[calc(100%-3rem)] pointer-events-none">
+      <div className="absolute top-6 left-6 z-[400] w-80 max-w-[calc(100%-3rem)] pointer-events-none">
         <AnimatePresence>
           {aiAnalysis && (
             <motion.div
