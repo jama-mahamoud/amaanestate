@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, MapPin, Grid, List as ListIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ export default function Properties() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const navigate = useNavigate();
   
   const currentCategory = searchParams.get('category') || 'All';
   const currentType = searchParams.get('listingType') || 'All';
@@ -152,7 +154,14 @@ export default function Properties() {
                 {['All', 'Houses', 'Land', 'Vehicles'].map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => updateFilter('category', cat)}
+                    onClick={() => {
+                      if (cat === 'Vehicles') {
+                        // Redirect to vehicles page
+                        navigate('/vehicles');
+                        return;
+                      }
+                      updateFilter('category', cat);
+                    }}
                     className={`flex items-center justify-between px-6 py-4 rounded-xl text-sm font-medium transition-all group ${
                       currentCategory === cat 
                         ? 'bg-luxury-gold text-luxury-black font-bold shadow-lg shadow-luxury-gold/10' 

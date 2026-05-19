@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           
           <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-2 group">
+            <Link to="/" className="flex items-center space-x-2 group outline-none">
               <div className="bg-luxury-gold text-luxury-black w-10 h-10 flex items-center justify-center font-bold text-xl rounded-lg shadow-lg shadow-luxury-gold/20">
                 A
               </div>
@@ -22,8 +22,13 @@ export default function Footer() {
               Redefining luxury real estate in the Somali Region of Ethiopia. Discover premium properties and vehicles with unmatched transparency and professional service.
             </p>
             <div className="flex gap-4 pt-4">
-              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-luxury-gold hover:text-luxury-black transition-all duration-300">
+              {[
+                { Icon: Facebook, url: 'https://facebook.com/amaanestate' },
+                { Icon: Twitter, url: 'https://twitter.com/amaanestate' },
+                { Icon: Instagram, url: 'https://instagram.com/amaanestate' },
+                { Icon: Linkedin, url: 'https://linkedin.com/company/amaanestate' }
+              ].map(({ Icon, url }, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-luxury-gold hover:text-luxury-black transition-all duration-300">
                   <Icon size={18} />
                 </a>
               ))}
@@ -36,9 +41,10 @@ export default function Footer() {
               {[
                 { name: 'Featured Properties', path: '/properties' },
                 { name: 'Luxury Vehicles', path: '/vehicles' },
-                { name: 'Prime Land', path: '/properties' },
+                { name: 'Professional Expertise', path: '/services' },
+                { name: 'Intelligence Briefs', path: '/news' },
                 { name: 'About the Platform', path: '/about' },
-                { name: 'Professional Services', path: '/contact' }
+                { name: 'Direct Inquiries', path: '/contact' }
               ].map((link) => (
                 <li key={link.name}>
                   <Link to={link.path} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group">
@@ -103,8 +109,8 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} AmaanEstate. Global Real Estate Excellence.
           </p>
           <div className="flex gap-8">
-            <Link to="/privacy" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy</Link>
-            <Link to="/terms" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Terms</Link>
+            <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy Policy</Link>
+            <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Terms & Conditions</Link>
           </div>
         </div>
       </div>

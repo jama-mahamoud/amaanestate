@@ -74,7 +74,7 @@ export default function ProfessionalServices() {
                 <Button onClick={() => registryRef.current?.scrollIntoView({ behavior: 'smooth' })} size="lg" className="bg-luxury-gold text-black rounded-2xl hover:bg-white text-lg font-bold">
                   Explore Experts
                 </Button>
-                <Link to="/professional-registration">
+                <Link to="/become-pro">
                     <Button size="lg" variant="outline" className="rounded-2xl border-white/10 hover:bg-white/5 text-lg">
                       Join as Expert
                     </Button>
@@ -167,7 +167,7 @@ export default function ProfessionalServices() {
             <div className="container mx-auto px-4 text-center max-w-2xl">
                 <h2 className="text-3xl md:text-5xl font-bold mb-6">Are You a Skilled Professional?</h2>
                 <p className="text-white/60 mb-8 text-lg">Join AmaanEstate's exclusive registry and connect with verified clients across the Somali Region. Elevate your brand today.</p>
-                <Link to="/professional-registration">
+                <Link to="/become-pro">
                     <Button size="lg" className="bg-luxury-gold text-black rounded-2xl text-lg font-bold">Apply to Join Network <ArrowRight className="ml-2" size={20}/></Button>
                 </Link>
             </div>

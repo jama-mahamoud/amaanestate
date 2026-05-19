@@ -195,9 +195,15 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap justify-center gap-4 pt-4">
-              <Button onClick={() => navigate('/properties')} className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">Browse Properties</Button>
-              <Button onClick={() => navigate('/properties/create')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
-              <Button onClick={() => navigate('/services')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">Find Professionals</Button>
+              <Button asChild className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">
+                <Link to="/properties">Browse Properties</Link>
+              </Button>
+              <Button asChild variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">
+                <Link to="/properties/create">List Property</Link>
+              </Button>
+              <Button asChild variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">
+                <Link to="/services">Find Professionals</Link>
+              </Button>
             </div>
 
             {/* Advanced Search Bar */}
@@ -633,14 +639,14 @@ export default function Home() {
               </h2>
               <p className="text-white/50 text-lg md:text-xl font-light">Join the region's most exclusive real estate and vehicle marketplace today.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 md:gap-6 w-full lg:w-auto">
-              <Button size="lg" className="bg-white text-luxury-black hover:bg-luxury-gold transition-all font-bold px-12 h-14 md:h-16 rounded-xl md:rounded-2xl text-base md:text-lg shadow-xl shadow-white/5 w-full sm:w-auto">
-                Get Started
-              </Button>
-              <Button size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 h-14 md:h-16 px-12 rounded-xl md:rounded-2xl font-bold text-base md:text-lg w-full sm:w-auto">
-                Contact Concierge
-              </Button>
-            </div>
+              <div className="flex flex-col sm:flex-row gap-4 md:gap-6 w-full lg:w-auto">
+                <Button asChild size="lg" className="bg-white text-luxury-black hover:bg-luxury-gold transition-all font-bold px-12 h-14 md:h-16 rounded-xl md:rounded-2xl text-base md:text-lg shadow-xl shadow-white/5 w-full sm:w-auto">
+                  <Link to="/register">Get Started</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 h-14 md:h-16 px-12 rounded-xl md:rounded-2xl font-bold text-base md:text-lg w-full sm:w-auto">
+                  <Link to="/contact">Contact Concierge</Link>
+                </Button>
+              </div>
           </div>
         </div>
       </section>
