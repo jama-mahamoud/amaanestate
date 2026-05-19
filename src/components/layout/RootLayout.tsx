@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { Toaster } from '@/components/ui/sonner';
+import AmaanAIAssistant from '../AmaanAIAssistant';
 
 export default function RootLayout() {
   return (
@@ -11,6 +12,7 @@ export default function RootLayout() {
         <Outlet />
       </main>
       <Footer />
+      <AmaanAIAssistant />
       <Toaster position="top-center" richColors />
     </div>
   );

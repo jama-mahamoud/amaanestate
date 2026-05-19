@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
-import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Search, MapPin, Home as HomeIcon, Car, Landmark, ArrowRight, Shield, Award, Users, Star, Briefcase, Loader2, GraduationCap, Coins, TrendingUp, Sparkles, BookOpen, Clock, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,171 @@ import { Property, VehicleListing, Professional, Article, Listing } from '@/type
 import { listingService } from '@/services/listingService';
 import { listingRepository } from '@/services/listingRepository';
 import { articleService } from '@/services/articleService';
+
+interface Opportunity {
+  id: string;
+  category: 'jobs' | 'learn' | 'earn';
+  title: string;
+  provider: string;
+  location?: string;
+  type?: string;        // For Gigs: Full-Time, Gig, Commission
+  earnDetail?: string;  // For Earn: Commission rate, bonus amount
+  duration?: string;    // For Learn: length/pace
+  description: string;
+  learningCategory?: string; // For Learn
+  bulletPoints: string[];
+  actionText: string;
+}
+
+const OPPORTUNITIES_DATA: Opportunity[] = [
+  {
+    id: 'gig-1',
+    category: 'jobs',
+    title: 'Somaliland/Somali Region Broker Lead',
+    provider: 'AmaanEstate Elite',
+    location: 'Jigjiga & Environs',
+    type: 'Commission-Based',
+    description: 'Join our elite broker circle representing premier regional residential structures and office buildings. Directly coordinate high-value acquisitions with premium payout structure.',
+    bulletPoints: [
+      'High-tier commission split of up to 3.0% per completed deal',
+      'Exclusive access to our off-market certified catalog of properties',
+      'Professional digital tools, digital mapping, and legal paperwork assistance'
+    ],
+    actionText: 'Apply as Broker'
+  },
+  {
+    id: 'gig-2',
+    category: 'jobs',
+    title: 'Elite Real Estate Valuator & Appraiser',
+    provider: 'AmaanEstate Appraisals',
+    location: 'Garowe / Hargeisa / Jigjiga',
+    type: 'Contract / Gig',
+    description: 'Perform rigorous digital on-site surveys, photographic audits, and verify ownership deeds for elite housing properties on behalf of regional buyers.',
+    bulletPoints: [
+      'Highly flexible hours - get assigned per asset mapping request',
+      'Paid $60-$150 flat-rate fee per verified and submitted evaluation report',
+      'AmaanEstate Appraiser toolkit and training materials provided free of cost'
+    ],
+    actionText: 'Apply for Gig'
+  },
+  {
+    id: 'gig-3',
+    category: 'jobs',
+    title: 'VIP Chauffeur & Logistics Consultant',
+    provider: 'AmaanEstate Logistics',
+    location: 'Jigjiga HQ',
+    type: 'Temporary Gig',
+    description: 'Ensure a smooth first-class experience for international Somali investors, developers, and diplomats visiting premium project sites and developments.',
+    bulletPoints: [
+      'Represent AmaanEstate with pristine brand-aligned elite transport vehicles',
+      'Requires clean local license, outstanding regional knowledge, and fluent communication',
+      'Competitive premium hourly billing + hotel/logistics reimbursement benefits'
+    ],
+    actionText: 'Apply for Gig'
+  },
+  {
+    id: 'gig-4',
+    category: 'jobs',
+    title: 'Field Land Digitization Surveyor',
+    provider: 'AmaanEstate Digital Registry',
+    location: 'Jigjiga & Regional Suburbs',
+    type: 'Full-Time / Contract',
+    description: 'Navigate regional suburbs to identify hot growth zones, meet landowners, map plots, and help them gain legal trust and visibility on our map.',
+    bulletPoints: [
+      'Ideal for engineering/geography students or tech-savvy regional youths',
+      'Base monthly stipend + strong commission for every active, high-intent land onboarding',
+      'Hands-on field training in GIS coordinate mapping and title deed validation'
+    ],
+    actionText: 'Apply for Job'
+  },
+  {
+    id: 'learn-1',
+    category: 'learn',
+    title: 'Digital Real Estate Valuation & Sales Certified (DREVC)',
+    provider: 'AmaanEstate Academy',
+    duration: '4-Week Intensive Bundle',
+    learningCategory: 'Professional Certification',
+    description: 'A premium, modern course specifically tailored to East African and Somali Region lands. Learn how to accurately evaluate structural materials, read masterplans, and project land values.',
+    bulletPoints: [
+      'Become a certified real estate appraiser recognised by AmaanEstate',
+      'Live weekly interactive masterclasses + practical on-field evaluation tasks',
+      'Graduates get direct automatic placement in our verified surveyor registry'
+    ],
+    actionText: 'Enroll in Program'
+  },
+  {
+    id: 'learn-2',
+    category: 'learn',
+    title: 'Modern Architectural Integrity & Safe Construction Standards',
+    provider: 'AmaanEstate Engineering Dept',
+    duration: 'Self-Paced Learning Track',
+    learningCategory: 'Technical Skills Training',
+    description: 'Empower yourself with fundamental architectural reading, CAD software basics, structural concrete testing, and local soil expansion characteristics.',
+    bulletPoints: [
+      'Led by renowned certified engineers from Jigjiga and Hargeisa University',
+      'Ideal for amateur contractors, field technicians, and aspiring draftsmen',
+      '100% online with bite-sized video walkthroughs and interactive quiz segments'
+    ],
+    actionText: 'Start Learning'
+  },
+  {
+    id: 'learn-3',
+    category: 'learn',
+    title: 'Young Developers & Civil Engineers Scholarship 2026',
+    provider: 'Amaan Capital Founders',
+    duration: 'Full Academic Year',
+    learningCategory: 'Scholarships & Grants',
+    description: 'A flagship charity program sponsoring prospective civil engineering, architecture, and real estate finance students at accredited regional universities.',
+    bulletPoints: [
+      'Full tuition coverage, monthly study stipend, and custom high-performance laptop',
+      'Guaranteed summer paid internship with top regional development builders',
+      'Requires high-school GPA of 3.5+ or university enrollment transcript'
+    ],
+    actionText: 'Apply for Scholarship'
+  },
+  {
+    id: 'earn-1',
+    category: 'earn',
+    title: 'Become an Authorized Commercial Property Agent',
+    provider: 'AmaanEstate Partner Program',
+    earnDetail: 'Up to 3.0% commission per real estate transaction',
+    description: 'Start your professional commercial agent career. List office spaces, shopping plazas, and large development lands, and receive fully verified client inquiries.',
+    bulletPoints: [
+      'Unlocks the exclusive "Amaan Verified Agent" shiny golden profile badge',
+      'Real-time lead alerts via SMS & automated email dashboard',
+      'Dedicated listing booster slots (up to 5 free concurrent featured ads)'
+    ],
+    actionText: 'Join as Agent'
+  },
+  {
+    id: 'earn-2',
+    category: 'earn',
+    title: 'AmaanEstate Digital Land Referral Agent',
+    provider: 'AmaanEstate Referrals',
+    earnDetail: 'Earn $200 securely per verified plot or villa listed',
+    description: 'Promote trust and growth in your community. Recommend developers, builders, and raw landowners to onboard, secure, and map their plots on our premium directory.',
+    bulletPoints: [
+      'Instantly paid upon listing validation by our regional legal team',
+      'Track your earnings and pending referrers live inside your Amaan dashboard',
+      'No property selling required - you get paid solely for onboarding quality files'
+    ],
+    actionText: 'Start Earning'
+  },
+  {
+    id: 'earn-3',
+    category: 'earn',
+    title: 'Freelance Listing & Digitization Consultant',
+    provider: 'Youth Economic Independence',
+    earnDetail: 'Variable service charge determined by you ($50-$200/file)',
+    description: 'Provide end-to-end premium digitisation for elders or non-literate landowners in Jigjiga who cannot navigate software platforms. Draft their profiles, take photos, and publish listings.',
+    bulletPoints: [
+      'Flexible, community-centred role where you operate as an independent digitiser',
+      'Charge custom fees for site photography and copywriting services',
+      'Earn an extra bonus of $20 from AmaanEstate for compiling zero-defect profiles'
+    ],
+    actionText: 'Become Consultant'
+  }
+];
 
 export default function Home() {
   const navigate = useNavigate();
@@ -28,6 +193,40 @@ export default function Home() {
   const [searchPropertyType, setSearchPropertyType] = useState('Houses');
   const [searchBuyRent, setSearchBuyRent] = useState('Sell');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+
+  // Opportunities Hub States & Forms
+  const [activeTab, setActiveTab] = useState<'all' | 'jobs' | 'learn' | 'earn'>('all');
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [applicantName, setApplicantName] = useState('');
+  const [applicantPhone, setApplicantPhone] = useState('');
+  const [applicantCity, setApplicantCity] = useState('');
+  const [applicantNote, setApplicantNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleApplySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applicantName || !applicantPhone || !applicantCity) return;
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitSuccess(true);
+      // Clean up fields after a bit of feedback
+      setTimeout(() => {
+        setSelectedOpportunity(null);
+        setSubmitSuccess(false);
+        setApplicantName('');
+        setApplicantPhone('');
+        setApplicantCity('');
+        setApplicantNote('');
+      }, 3500);
+    }, 1500);
+  };
+
+  const filteredOpportunities = useMemo(() => {
+    if (activeTab === 'all') return OPPORTUNITIES_DATA;
+    return OPPORTUNITIES_DATA.filter(opp => opp.category === activeTab);
+  }, [activeTab]);
 
   // Load listings whenever filters change
   const loadListings = async () => {
@@ -563,6 +762,340 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Opportunities Hub Section */}
+      <section className="py-16 md:py-32 bg-gradient-to-b from-luxury-black via-luxury-black to-luxury-black border-t border-white/5 relative overflow-hidden">
+        {/* Abstract luxury ambient glow background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-luxury-gold/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 mb-4 animate-fade-in">
+                <Sparkles size={14} className="text-luxury-gold animate-pulse" />
+                <p className="text-luxury-gold font-bold tracking-[0.15em] uppercase text-[10px] md:text-xs">
+                  AmaanEstate Opportunities Hub
+                </p>
+              </div>
+              <h2 className="text-3xl md:text-6xl font-display font-bold text-white tracking-tight">
+                Empowering Youth <span className="text-white/40">& Economic Gigs</span>
+              </h2>
+              <p className="text-white/40 mt-4 text-sm md:text-base leading-relaxed">
+                Transforming the Somali Region into a vibrant digital job network. Learn premium skills, find lucrative gigs, and monetize connections directly with AmaanEstate.
+              </p>
+            </div>
+          </div>
+
+          {/* Interactive Categories Tabs */}
+          <div className="flex flex-wrap gap-2 md:gap-3 mb-10 pb-2 border-b border-white/10">
+            {[
+              { id: 'all', label: 'All Opportunities', icon: <Sparkles size={16} /> },
+              { id: 'jobs', label: '💼 Gigs & Jobs', icon: <Briefcase size={16} /> },
+              { id: 'learn', label: '🧠 Learn & Grow', icon: <GraduationCap size={16} /> },
+              { id: 'earn', label: '💰 Earn Commission', icon: <Coins size={16} /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`relative px-4 md:px-6 py-3 rounded-xl text-xs md:text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 border ${
+                  activeTab === tab.id
+                    ? 'bg-luxury-gold text-luxury-black border-luxury-gold shadow-lg shadow-luxury-gold/15'
+                    : 'bg-white/5 text-white/60 border-white/5 hover:bg-white/10 hover:text-white hover:border-white/10'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Opportunities Cards Grid */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+            }}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+          >
+            {filteredOpportunities.map((opp) => (
+              <motion.div
+                key={opp.id}
+                variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: { y: 0, opacity: 1 }
+                }}
+                className="group relative flex flex-col justify-between bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 transition-all duration-300 hover:scale-[1.02] hover:border-luxury-gold/40 shadow-xl hover:shadow-2xl hover:shadow-luxury-gold/5"
+              >
+                {/* Visual badge top right */}
+                <span className="absolute top-6 right-6 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest rounded bg-luxury-gold/10 text-luxury-gold border border-luxury-gold/20">
+                  {opp.category === 'jobs' ? opp.type : opp.category === 'learn' ? opp.learningCategory : 'monetization'}
+                </span>
+
+                <div>
+                  {/* Icon and Provider header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-luxury-gold/10 border border-luxury-gold/20 flex items-center justify-center text-luxury-gold">
+                      {opp.category === 'jobs' && <Briefcase size={18} />}
+                      {opp.category === 'learn' && <GraduationCap size={18} />}
+                      {opp.category === 'earn' && <Coins size={18} />}
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{opp.provider}</p>
+                      {opp.location && (
+                        <p className="text-white/40 text-xs flex items-center gap-1 mt-0.5">
+                          <MapPin size={10} className="text-luxury-gold" /> {opp.location}
+                        </p>
+                      )}
+                      {opp.duration && (
+                        <p className="text-white/40 text-xs flex items-center gap-1 mt-0.5">
+                          <Clock size={10} className="text-luxury-gold" /> {opp.duration}
+                        </p>
+                      )}
+                      {opp.earnDetail && (
+                        <p className="text-luxury-gold text-xs font-bold tracking-tight mt-0.5">
+                          💰 {opp.earnDetail}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <h3 className="text-lg md:text-xl font-display font-bold text-white mb-3 group-hover:text-luxury-gold transition-colors leading-snug">
+                    {opp.title}
+                  </h3>
+                  <p className="text-white/50 text-xs md:text-sm leading-relaxed mb-6">
+                    {opp.description}
+                  </p>
+
+                  {/* Bullet points summary checkmarks */}
+                  <ul className="space-y-2 mb-8 border-t border-white/5 pt-4">
+                    {opp.bulletPoints.map((pt, index) => (
+                      <li key={index} className="flex gap-2 text-xs text-white/40 leading-tight">
+                        <CheckCircle2 size={14} className="text-luxury-gold shrink-0 mt-0.5" />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Primary Action Button */}
+                <Button
+                  onClick={() => setSelectedOpportunity(opp)}
+                  className="w-full bg-white/5 text-white hover:bg-luxury-gold hover:text-luxury-black transition-all border border-white/10 hover:border-luxury-gold h-12 rounded-xl text-xs font-bold tracking-wide flex items-center justify-center gap-2 group/btn"
+                >
+                  <span>{opp.actionText}</span>
+                  <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Modern Dialog/Modal for Applying & Registering */}
+      <AnimatePresence>
+        {selectedOpportunity && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Dark glassmorphic overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedOpportunity(null)}
+              className="absolute inset-0 bg-luxury-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Sheet Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="relative w-full max-w-lg bg-zinc-950/90 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-luxury-gold/5 max-h-[90vh] flex flex-col"
+            >
+              {/* Header Visual Stripe */}
+              <div className="bg-luxury-gold/10 p-6 border-b border-white/5 flex justify-between items-start gap-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold border border-luxury-gold/20 shrink-0">
+                    {selectedOpportunity.category === 'jobs' && <Briefcase size={18} />}
+                    {selectedOpportunity.category === 'learn' && <GraduationCap size={18} />}
+                    {selectedOpportunity.category === 'earn' && <Coins size={18} />}
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold tracking-widest text-[#d4af37] uppercase bg-luxury-gold/20 border border-luxury-gold/30 px-2 py-0.5 rounded">
+                      {selectedOpportunity.category}
+                    </span>
+                    <h4 className="text-white font-display font-medium text-xs mt-1 uppercase tracking-wider">{selectedOpportunity.provider}</h4>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedOpportunity(null)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-white/60 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Scrollable Modal Content */}
+              <div className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1">
+                {submitSuccess ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center text-center py-10 space-y-4"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-center mx-auto mb-2 animate-bounce">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-2xl font-display font-bold text-white tracking-tight">Codsigaaga waa la Gudbiyay!</h3>
+                    <p className="text-green-400 font-bold text-sm tracking-wide">Application Submitted Successfully!</p>
+                    <p className="text-white/40 text-xs max-w-xs mx-auto leading-relaxed mt-2">
+                      Ku soo dhawaada AmaanEstate! Maamulkayaga takhasuska ah ayaa kugu soo xiriiri doona taleefankaaga dhowaan si loo dhameystiro adeegga.
+                    </p>
+                  </motion.div>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
+                        {selectedOpportunity.title}
+                      </h3>
+                      <p className="text-white/55 text-xs md:text-sm leading-relaxed">
+                        {selectedOpportunity.description}
+                      </p>
+                    </div>
+
+                    {/* Meta values */}
+                    <div className="grid grid-cols-2 gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-white/50">
+                      <div>
+                        <p className="text-white/30 font-bold uppercase tracking-wider text-[9px] mb-1">Onboarding Agency</p>
+                        <p className="font-semibold text-white">{selectedOpportunity.provider}</p>
+                      </div>
+                      {selectedOpportunity.location && (
+                        <div>
+                          <p className="text-white/30 font-bold uppercase tracking-wider text-[9px] mb-1">Target Location</p>
+                          <p className="font-semibold text-luxury-gold">{selectedOpportunity.location}</p>
+                        </div>
+                      )}
+                      {selectedOpportunity.type && (
+                        <div>
+                          <p className="text-white/30 font-bold uppercase tracking-wider text-[9px] mb-1">Opportunity Type</p>
+                          <p className="font-semibold text-luxury-gold">{selectedOpportunity.type}</p>
+                        </div>
+                      )}
+                      {selectedOpportunity.duration && (
+                        <div>
+                          <p className="text-white/30 font-bold uppercase tracking-wider text-[9px] mb-1">Duration & Pace</p>
+                          <p className="font-semibold text-luxury-gold">{selectedOpportunity.duration}</p>
+                        </div>
+                      )}
+                      {selectedOpportunity.earnDetail && (
+                        <div className="col-span-2">
+                          <p className="text-white/30 font-bold uppercase tracking-wider text-[9px] mb-1">Direct Profit Reward</p>
+                          <p className="font-semibold text-green-400 flex items-center gap-1.5 mt-0.5">
+                            <Coins size={12} /> {selectedOpportunity.earnDetail}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Requirements Checkmarks list */}
+                    <div className="space-y-2">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Key Terms & Requirements</p>
+                      <ul className="space-y-2 border-l-2 border-luxury-gold/30 pl-3">
+                        {selectedOpportunity.bulletPoints.map((pt, idx) => (
+                          <li key={idx} className="text-xs text-white/50 flex gap-1 items-start leading-relaxed">
+                            <span className="text-luxury-gold font-bold">✓</span> {pt}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Form block */}
+                    <form onSubmit={handleApplySubmit} className="space-y-4 border-t border-white/5 pt-6">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest font-mono">Register Details Now / Codso Hadda</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider">Full Name (Magacaaga Oo Buuxa)</label>
+                          <Input
+                            placeholder="e.g., Maxamed Cali"
+                            value={applicantName}
+                            onChange={(e) => setApplicantName(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-11 rounded-xl"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider">Phone (Taleefankaaga)</label>
+                          <Input
+                            placeholder="e.g., +252 61 XXXXXXX"
+                            value={applicantPhone}
+                            onChange={(e) => setApplicantPhone(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-11 rounded-xl"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider">Your City / Region (Magaaladaada)</label>
+                        <Input
+                          placeholder="e.g., Jigjiga, Hargeisa, Garowe"
+                          value={applicantCity}
+                          onChange={(e) => setApplicantCity(e.target.value)}
+                          className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-11 rounded-xl"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider">Brief Cover Note / Sideed u Caawin Kartaa (Optional)</label>
+                        <textarea
+                          placeholder="Include references, skills, or questions here..."
+                          value={applicantNote}
+                          onChange={(e) => setApplicantNote(e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder:text-white/20 text-xs min-h-[70px] focus:outline-none focus:border-luxury-gold transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex gap-3 justify-end pt-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setSelectedOpportunity(null)}
+                          className="h-11 rounded-xl text-white/60 hover:text-white hover:bg-white/5 text-xs font-bold"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="bg-luxury-gold text-luxury-black font-bold h-11 px-6 rounded-xl text-xs tracking-wider shadow-lg shadow-luxury-gold/10 hover:bg-white transition-all flex items-center gap-2"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Submit Application</span>
+                              <ArrowRight size={14} />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Why Choose Us (Premium Standards) */}
       <section className="py-16 md:py-32 bg-luxury-black border-y border-white/5">
