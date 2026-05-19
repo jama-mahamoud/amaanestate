@@ -42,7 +42,7 @@ export default function About() {
               <img 
                 src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=1200" 
                 alt="Somali Region Development" 
-                className="w-full aspect-[1/1] md:aspect-[4/5] object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100" 
+                className="w-full aspect-[1/1] md:aspect-[4/5] object-cover transition-all duration-1000 scale-105 hover:scale-100" 
               />
               <div className="absolute inset-x-0 bottom-0 p-8 glass-card border-x-0 border-b-0 border-white/5 rounded-none backdrop-blur-2xl">
                  <div className="text-luxury-gold font-display font-bold text-4xl mb-1 tracking-tighter">Established</div>

@@ -139,7 +139,7 @@ export default function ArticleDetails() {
               {relatedArticles.map((rel) => (
                 <Link to={`/news/${rel.slug || rel.id}`} key={rel.id} className="group block">
                   <div className="aspect-[16/9] rounded-2xl overflow-hidden mb-4 border border-white/5 relative">
-                    <img src={rel.featuredImage || '/placeholder-news.jpg'} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" alt={rel.title} />
+                    <img src={rel.featuredImage || '/placeholder-news.jpg'} className="w-full h-full object-cover opacity-100 transition-all duration-700 group-hover:scale-105" alt={rel.title} />
                     <div className="absolute inset-0 bg-gradient-to-t from-luxury-black/80 to-transparent"></div>
                   </div>
                   <h4 className="text-white font-display font-bold text-xl mb-2 group-hover:text-luxury-gold transition-colors tracking-tight line-clamp-2">{rel.title}</h4>

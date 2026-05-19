@@ -189,7 +189,7 @@ export default function PropertyDetails() {
             <div className="h-[400px] w-full rounded-[3rem] bg-luxury-charcoal/50 border border-white/10 flex items-center justify-center relative overflow-hidden">
                <img 
                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1200" 
-                className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" 
+                className="absolute inset-0 w-full h-full object-cover opacity-30" 
                 alt="Map Placeholder" 
                />
                <div className="relative z-10 flex flex-col items-center text-center px-10">

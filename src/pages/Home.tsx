@@ -166,7 +166,7 @@ export default function Home() {
       <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-luxury-black pt-40 pb-20">
         <motion.div 
           initial={{ scale: 1.1, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.6 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5 }}
           className="absolute inset-0"
         >
@@ -400,7 +400,7 @@ export default function Home() {
                       <div className="aspect-[16/9] overflow-hidden">
                         <img 
                           src={article.featuredImage || '/placeholder-news.jpg'} 
-                          className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" 
+                          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" 
                           alt={article.title} 
                         />
                       </div>
@@ -589,7 +589,7 @@ export default function Home() {
               className="relative rounded-[3rem] overflow-hidden group shadow-2xl shadow-luxury-gold/5"
             >
               <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1200" alt="Luxury Interior" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-luxury-black/20 mix-blend-overlay"></div>
+              <div className="absolute inset-0 bg-luxury-black/10"></div>
               <div className="absolute bottom-10 left-10 p-10 bg-luxury-black/60 backdrop-blur-xl border border-white/10 rounded-3xl max-w-sm">
                 <div className="flex gap-1 text-luxury-gold mb-4">
                   {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
