@@ -23,8 +23,10 @@ function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, loading } = useAuth();
   const { isListingModalOpen, closeListingModal, openListingModal, listingCategory } = useDashboard();
+
+  if (loading) return null; // Or a loading spinner
 
   const handleLogout = async () => {
     try {
@@ -44,6 +46,10 @@ function DashboardContent() {
   const currentRole = profile?.role?.toString().trim().toLowerCase();
   const isAdmin = currentRole === 'admin' || currentRole === 'administrator';
   const isEditor = isAdmin || currentRole === 'editor';
+
+  console.log("PROFILE ROLE:", profile?.role);
+  console.log("IS ADMIN:", isAdmin);
+  console.log("IS EDITOR:", isEditor);
 
   if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
