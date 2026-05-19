@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 export default function InquiryModeratedList() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'new' | 'archived'>('new');
   const [actioningId, setActioningId] = useState<string | null>(null);
 
@@ -30,14 +31,18 @@ export default function InquiryModeratedList() {
 
   const loadMessages = async () => {
     setLoading(true);
-    const data = await moderationService.getContactMessages();
-    // For now, filtering locally as the service doesn't have status filter for messages yet
-    // In production we'd add it to Firestore query
-    const filtered = statusFilter === 'new' 
-      ? data.filter(m => !m.archived)
-      : data.filter(m => m.archived);
-    setMessages(filtered);
-    setLoading(false);
+    setError(null);
+    try {
+      const data = await moderationService.getContactMessages();
+      const filtered = statusFilter === 'new' 
+        ? data.filter(m => !m.archived)
+        : data.filter(m => m.archived);
+      setMessages(filtered);
+    } catch (err: any) {
+      setError(err.message || 'Communication network offline');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleArchive = async (id: string, currentStatus: boolean) => {

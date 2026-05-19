@@ -88,9 +88,9 @@ export const moderationService = {
   /**
    * Fetch listings pending approval
    */
-  async getPendingListings(category?: ListingCategory) {
+  async getPendingListings(category?: ListingCategory, status: ListingStatus = 'pending') {
     const listingsRef = collection(db, 'listings');
-    const constraints = [where('status', '==', 'pending'), orderBy('createdAt', 'desc')];
+    const constraints = [where('status', '==', status)];
     
     if (category) {
       constraints.push(where('category', '==', category));
@@ -99,10 +99,25 @@ export const moderationService = {
     try {
       const q = query(listingsRef, ...constraints);
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Listing[];
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Listing[];
+      
+      // Client-side sort to bypass index requirements
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'listings/pending');
-      return [];
+      // If the query failed, try an even simpler fallback
+      try {
+        const snapshot = await getDocs(listingsRef);
+        return snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() as any }))
+          .filter(l => l.status === status) as Listing[];
+      } catch (e) {
+        return [];
+      }
     }
   },
 
@@ -261,20 +276,29 @@ export const moderationService = {
    */
   async getProfessionalApplications(status: ApplicationStatus = 'pending') {
     const appsRef = collection(db, 'professionalApplications');
-    const q = query(
-      appsRef, 
-      where('status', '==', status === 'pending' ? 'pending_review' : status),
-      orderBy('createdAt', 'desc')
-    );
+    const statusToQuery = status === 'pending' ? 'pending_review' : status;
     
     try {
+      const q = query(appsRef, where('status', '==', statusToQuery));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      
+      // Client-side sort
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
-       // Index might be missing for orderBy, fallback to simple query
-       const fallbackQ = query(appsRef, where('status', '==', status === 'pending' ? 'pending_review' : status));
-       const fallbackSnapshot = await getDocs(fallbackQ);
-       return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+       handleFirestoreError(error, OperationType.LIST, 'professionalApplications');
+       try {
+         const snapshot = await getDocs(appsRef);
+         return snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() as any }))
+          .filter(a => a.status === statusToQuery);
+       } catch (e) {
+         return [];
+       }
     }
   },
 
@@ -283,19 +307,35 @@ export const moderationService = {
    */
   async getAllArticles(publishedOnly?: boolean) {
     const articlesRef = collection(db, 'articles');
-    let q;
-    if (publishedOnly !== undefined) {
-      q = query(articlesRef, where('published', '==', publishedOnly), orderBy('createdAt', 'desc'));
-    } else {
-      q = query(articlesRef, orderBy('createdAt', 'desc'));
-    }
-
+    
     try {
+      let q;
+      if (publishedOnly !== undefined) {
+        q = query(articlesRef, where('published', '==', publishedOnly));
+      } else {
+        q = query(articlesRef);
+      }
+
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+      
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
-      const fallbackSnapshot = await getDocs(articlesRef);
-      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+      handleFirestoreError(error, OperationType.LIST, 'articles');
+      try {
+        const fallbackSnapshot = await getDocs(articlesRef);
+        let docs = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+        if (publishedOnly !== undefined) {
+          docs = docs.filter(a => a.published === publishedOnly);
+        }
+        return docs;
+      } catch (e) {
+        return [];
+      }
     }
   },
 
@@ -304,14 +344,19 @@ export const moderationService = {
    */
   async getContactMessages() {
     const messagesRef = collection(db, 'contactMessages');
-    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(100));
     
     try {
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      const snapshot = await getDocs(messagesRef);
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      
+      return docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      }).slice(0, 100);
     } catch (error) {
-      const fallbackSnapshot = await getDocs(messagesRef);
-      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      handleFirestoreError(error, OperationType.LIST, 'contactMessages');
+      return [];
     }
   }
 };

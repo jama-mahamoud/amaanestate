@@ -24,6 +24,7 @@ type ModerationStatus = 'pending' | 'active' | 'rejected' | 'suspended';
 export default function ListingModeratedList() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ModerationStatus>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
 
@@ -33,19 +34,16 @@ export default function ListingModeratedList() {
 
   const loadListings = async () => {
     setLoading(true);
-    // For now, we'll use a hacky way to get non-pending if needed, 
-    // but the service currently only has getPendingListings.
-    // I'll update the service to be more flexible if needed, 
-    // but let's stick to the requirements of the moderation queue first.
-    let data: Listing[] = [];
-    if (statusFilter === 'pending') {
-      data = await moderationService.getPendingListings();
-    } else {
-      // Logic for other statuses could go here
-      data = await moderationService.getPendingListings(); // Fallback
+    setError(null);
+    try {
+      const data = await moderationService.getPendingListings(undefined, statusFilter as any);
+      setListings(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to sync with asset network');
+      toast.error('Synchronization failure detected');
+    } finally {
+      setLoading(false);
     }
-    setListings(data);
-    setLoading(false);
   };
 
   const handleApprove = async (id: string) => {
@@ -112,9 +110,37 @@ export default function ListingModeratedList() {
 
   if (loading && listings.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
-        <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Asset Network...</p>
+      <div className="space-y-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="glass-card p-8 rounded-[2.5rem] border border-white/5 animate-pulse flex flex-col lg:flex-row gap-8">
+            <div className="w-full lg:w-48 aspect-square rounded-3xl bg-white/5 shrink-0" />
+            <div className="flex-1 space-y-4">
+              <div className="h-8 bg-white/5 rounded-xl w-1/3" />
+              <div className="h-4 bg-white/5 rounded-lg w-1/4" />
+              <div className="h-20 bg-white/5 rounded-2xl w-full" />
+            </div>
+          </div>
+        ))}
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
+          <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Asset Network...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] border border-red-500/10">
+        <AlertCircle className="text-red-500 mb-6" size={48} />
+        <h3 className="text-2xl font-display font-bold">Network Breach</h3>
+        <p className="text-white/40 text-xs mt-2 uppercase tracking-widest">{error}</p>
+        <Button 
+          onClick={loadListings}
+          className="mt-8 bg-white/5 border border-white/10 hover:border-luxury-gold text-[10px] uppercase font-black tracking-widest"
+        >
+          Re-establish Connection
+        </Button>
       </div>
     );
   }

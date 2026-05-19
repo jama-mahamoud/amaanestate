@@ -38,13 +38,19 @@ export const listingRepository = {
     }
 
     try {
-      // Query only by createdAt to avoid compound index requirements. 
-      // All other filtering is performed client-side.
-      const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
+      // Query without order to avoid composite index requirements in initial dev phase
+      const q = query(collection(db, 'listings'));
 
       const querySnapshot = await getDocs(q);
       let listings = querySnapshot.docs.map(normalizeListing);
       
+      // Sort client-side
+      listings.sort((a: any, b: any) => {
+        const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+
       // Client-side advanced filtering
       if (filters.status) {
         listings = listings.filter(l => l.status === filters.status);
@@ -85,9 +91,14 @@ export const listingRepository = {
   async fetchAdminListings(): Promise<Listing[]> {
     // Admin needs full access, no filtering except maybe by date
     try {
-      const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'listings'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(normalizeListing);
+      const listings = querySnapshot.docs.map(normalizeListing);
+      return listings.sort((a: any, b: any) => {
+        const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
       console.error('Error fetching admin listings:', error);
       throw error;

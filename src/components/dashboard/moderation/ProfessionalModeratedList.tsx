@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 export default function ProfessionalModeratedList() {
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>('pending');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -34,9 +35,16 @@ export default function ProfessionalModeratedList() {
 
   const loadApps = async () => {
     setLoading(true);
-    const data = await moderationService.getProfessionalApplications(statusFilter);
-    setApps(data);
-    setLoading(false);
+    setError(null);
+    try {
+      const data = await moderationService.getProfessionalApplications(statusFilter);
+      setApps(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to retrieve applications');
+      toast.error('Sync failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleApprove = async (appId: string, userId: string, proData: any) => {
@@ -81,6 +89,17 @@ export default function ProfessionalModeratedList() {
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
         <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Vetting Registry...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] border border-red-500/10">
+        <UserX className="text-red-500 mb-6" size={48} />
+        <h3 className="text-2xl font-display font-bold">Registry Sync Issue</h3>
+        <p className="text-white/40 text-xs mt-2 uppercase tracking-widest">{error}</p>
+        <Button onClick={loadApps} className="mt-8 border border-white/10 hover:border-luxury-gold">Retry Registry Query</Button>
       </div>
     );
   }
