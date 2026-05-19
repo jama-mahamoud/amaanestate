@@ -114,6 +114,35 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "slug", "content", "category", "language", "authorId", "published", "createdAt"]
+    },
+    "Broker": {
+      "title": "Broker",
+      "description": "Legally verified property transaction broker application and profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "region": { "type": "string" },
+        "city": { "type": "string" },
+        "officeAddress": { "type": "string" },
+        "governmentIdUrl": { "type": "string" },
+        "businessLicenseUrl": { "type": "string" },
+        "brokerCertificateUrl": { "type": "string" },
+        "profilePhotoUrl": { "type": "string" },
+        "yearsOfExperience": { "type": "number" },
+        "areasOfOperation": { "type": "array" },
+        "propertySpecialization": { "type": "array" },
+        "languagesSpoken": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "suspended"] },
+        "isVerified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "fullName", "phone", "whatsapp", "email", "region", "city", "officeAddress", "status", "isVerified", "createdAt"]
     }
   },
   "firestore": {
@@ -172,6 +201,44 @@
         }
       },
       "description": "Collection of contact form submissions"
+    },
+    "/brokers/{brokerId}": {
+      "schema": "Broker",
+      "description": "Collection of verified broker applications and registry records"
+    },
+    "/brokerApplications/{applicationId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Collection of full broker registration applications"
+    },
+    "/brokerProfiles/{profileId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "isVerified": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Collection of public broker profiles for verified registries"
+    },
+    "/legalAudits/{auditId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "brokerId": { "type": "string" },
+          "details": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Confidential and verified anti-fraud legal audit records per broker"
     }
   }
 }

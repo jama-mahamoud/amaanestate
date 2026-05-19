@@ -50,6 +50,11 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
                   <ShieldCheck size={10} /> Verified
                 </Badge>
               )}
+              {property.legalChecked && property.listingType === 'sale' && (
+                <Badge className="bg-[#C5A059] text-black border-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-[9px] uppercase tracking-widest font-bold">
+                  <ShieldCheck size={10} /> Legally Verified
+                </Badge>
+              )}
             </div>
           </div>
           

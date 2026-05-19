@@ -20,6 +20,13 @@ export interface Listing {
   verificationStatus?: 'pending' | 'verified' | 'rejected';
   legalChecked?: boolean;
   ownershipVerified?: boolean;
+  legalListingId?: string;
+  legalOwnershipCertificateUrl?: string;
+  legalTitleDeedUrl?: string;
+  sellerNationalIdUrl?: string;
+  associatedBrokerId?: string;
+  legalReferenceNumber?: string;
+  governmentRegistryNumber?: string;
   images: string[];
   features?: Record<string, any>;
   metadata?: Record<string, any>;
@@ -117,6 +124,33 @@ export interface Article {
   isFeatured?: boolean;
   published: boolean;
   views: number;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface Broker {
+  id: string;
+  userId: string;
+  fullName: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  region: string;
+  city: string;
+  officeAddress: string;
+
+  governmentIdUrl: string;
+  businessLicenseUrl: string;
+  brokerCertificateUrl: string;
+  profilePhotoUrl: string;
+
+  yearsOfExperience: number;
+  areasOfOperation: string[];
+  propertySpecialization: string[];
+  languagesSpoken: string[];
+
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  isVerified: boolean;
   createdAt: any;
   updatedAt?: any;
 }

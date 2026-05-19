@@ -38,6 +38,7 @@ export default function Navbar() {
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
     { name: 'News', path: '/news' },
+    { name: 'Brokers', path: '/brokers' },
     { name: 'Expert Pros', path: '/services' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },

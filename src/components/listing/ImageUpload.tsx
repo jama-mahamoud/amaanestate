@@ -7,6 +7,7 @@ interface ImageUploadProps {
   onImagesChange: (files: File[]) => void;
   maxFiles?: number;
   existingImages?: string[];
+  label?: string;
 }
 
 interface ImagePreview {
@@ -14,7 +15,7 @@ interface ImagePreview {
   previewUrl: string;
 }
 
-export default function ImageUpload({ onImagesChange, maxFiles = 10, existingImages = [] }: ImageUploadProps) {
+export default function ImageUpload({ onImagesChange, maxFiles = 10, existingImages = [], label }: ImageUploadProps) {
   const [previews, setPreviews] = useState<ImagePreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +88,7 @@ export default function ImageUpload({ onImagesChange, maxFiles = 10, existingIma
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">Asset Imagery</label>
+        <label className="text-[10px] uppercase font-bold tracking-widest text-white/20 ml-1">{label || "Asset Imagery"}</label>
         <p className="text-[10px] text-white/40 font-medium">{previews.length} / {maxFiles} Files</p>
       </div>
 

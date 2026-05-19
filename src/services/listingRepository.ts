@@ -20,11 +20,12 @@ const normalizeListing = (doc: QueryDocumentSnapshot<DocumentData>): Listing => 
   return {
     ...data,
     id: doc.id,
-    status: data.status || 'pending',
-    verificationStatus: data.verificationStatus || 'pending',
-    isVerified: !!data.isVerified,
-    legalChecked: !!data.legalChecked,
-    ownershipVerified: !!data.ownershipVerified,
+    // Fallback logic to support legacy documents when security or moderation statuses are missing
+    status: data.status || 'active',
+    verificationStatus: data.verificationStatus || 'verified',
+    isVerified: data.isVerified !== undefined ? !!data.isVerified : true,
+    legalChecked: data.legalChecked !== undefined ? !!data.legalChecked : true,
+    ownershipVerified: data.ownershipVerified !== undefined ? !!data.ownershipVerified : true,
     createdAt: data.createdAt?.toDate?.() || new Date(),
     updatedAt: data.updatedAt?.toDate?.() || new Date(),
   } as Listing;

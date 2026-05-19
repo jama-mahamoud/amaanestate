@@ -255,7 +255,18 @@ export default function PropertyDetails() {
                     className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase text-[9px] tracking-[0.25em] px-5 py-2 rounded-full font-bold flex items-center gap-1.5"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Verified by AmaanEstate
+                    Verified Agent
+                  </motion.div>
+                )}
+                {property.legalChecked && property.listingType === 'sale' && (
+                  <motion.div 
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: [0.9, 1.05, 1] }}
+                    transition={{ repeat: Infinity, duration: 3, repeatType: "reverse", delay: 1 }}
+                    className="bg-[#C5A059]/10 border border-[#C5A059]/30 text-[#C5A059] uppercase text-[9px] tracking-[0.25em] px-5 py-2 rounded-full font-bold flex items-center gap-1.5"
+                  >
+                    <ShieldCheck size={12} />
+                    Legal Title Verified
                   </motion.div>
                 )}
               </div>

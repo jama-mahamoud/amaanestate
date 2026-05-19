@@ -19,9 +19,10 @@ import ListingModeratedList from '@/components/dashboard/moderation/ListingModer
 import ProfessionalModeratedList from '@/components/dashboard/moderation/ProfessionalModeratedList';
 import ArticleModeratedList from '@/components/dashboard/moderation/ArticleModeratedList';
 import InquiryModeratedList from '@/components/dashboard/moderation/InquiryModeratedList';
+import BrokerModeratedList from '@/components/dashboard/moderation/BrokerModeratedList';
 import { useAuth } from '@/contexts/AuthContext';
 
-type TabType = 'listings' | 'professionals' | 'articles' | 'inquiries';
+type TabType = 'listings' | 'professionals' | 'articles' | 'inquiries' | 'brokers';
 
 export default function ModerationCenter() {
   const { profile } = useAuth();
@@ -75,6 +76,7 @@ export default function ModerationCenter() {
   const tabs = [
     { id: 'listings', label: 'Listing Assets', icon: <LayoutList size={18} />, count: stats.pendingListings },
     { id: 'professionals', label: 'Pro Vetting', icon: <Users size={18} />, count: stats.pendingProfessionals },
+    { id: 'brokers', label: 'Legal Audits', icon: <ShieldCheck size={18} />, count: 0 },
     { id: 'articles', label: 'News Intelligence', icon: <FileText size={18} />, count: stats.totalArticles },
     { id: 'inquiries', label: 'Comm Inbound', icon: <MessageSquare size={18} />, count: stats.totalInquiries },
   ];
@@ -143,6 +145,7 @@ export default function ModerationCenter() {
               >
                  {activeTab === 'listings' && <ListingModeratedList />}
                  {activeTab === 'professionals' && <ProfessionalModeratedList />}
+                 {activeTab === 'brokers' && <BrokerModeratedList />}
                  {activeTab === 'articles' && <ArticleModeratedList />}
                  {activeTab === 'inquiries' && <InquiryModeratedList />}
               </motion.div>

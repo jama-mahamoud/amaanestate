@@ -9,10 +9,12 @@ import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
-import { Property, VehicleListing, Professional, Article, Listing } from '@/types';
+import { Property, VehicleListing, Professional, Article, Listing, Broker } from '@/types';
 import { listingService } from '@/services/listingService';
 import { listingRepository } from '@/services/listingRepository';
 import { articleService } from '@/services/articleService';
+import { brokerService } from '@/services/brokerService';
+import BrokerCard from '@/components/brokers/BrokerCard';
 
 interface Opportunity {
   id: string;
@@ -184,6 +186,7 @@ export default function Home() {
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [latestVehicles, setLatestVehicles] = useState<VehicleListing[]>([]);
   const [topProfessionals, setTopProfessionals] = useState<Professional[]>([]);
+  const [verifiedBrokers, setVerifiedBrokers] = useState<Broker[]>([]);
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -269,16 +272,18 @@ export default function Home() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [listingsRes, prosRes, articlesRes] = await Promise.all([
+        const [listingsRes, prosRes, articlesRes, brokersRes] = await Promise.all([
           listingRepository.fetchListings({ status: 'active' }),
           listingService.getProfessionalServices('All', 'active'),
-          articleService.getArticles()
+          articleService.getArticles(),
+          brokerService.getVerifiedBrokers()
         ]);
         
         setListings(listingsRes);
         setFeaturedProperties(listingsRes.filter(l => l.category === 'property' && l.isFeatured).slice(0, 3) as Property[]);
         setLatestVehicles(listingsRes.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
         setLatestArticles(articlesRes.slice(0, 3));
+        setVerifiedBrokers(brokersRes.slice(0, 3));
         
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
           id: s.id,
@@ -774,6 +779,46 @@ export default function Home() {
                   description="Verified expert profiles are currently undergoing regional background checks." 
                   icon={<Award size={48} />}
                 />
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Verified Broker Network */}
+      <section className="py-16 md:py-32 bg-luxury-charcoal/30 border-y border-white/5 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C5A059]/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#C5A059]/5 blur-[80px] rounded-full pointer-events-none translate-y-1/2 -translate-x-1/4"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
+            <div>
+              <p className="text-luxury-gold font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs mb-3 md:mb-4">Anti-Fraud Protection Network</p>
+              <h2 className="text-3xl md:text-6xl font-display font-bold text-white tracking-tight">
+                Verified <span className="text-luxury-gold">Brokers</span>
+              </h2>
+              <p className="text-white/40 mt-4 max-w-lg text-sm md:text-base">Identity verified. Legal compliance checked. Connect directly with the safest and most elite property agents in the region.</p>
+            </div>
+            <Link to="/brokers" className="text-luxury-gold flex items-center gap-2 font-semibold hover:gap-4 transition-all group text-sm md:text-base bg-luxury-gold/10 px-6 py-3 rounded-xl border border-luxury-gold/30 hover:bg-luxury-gold hover:text-black">
+              View Broker Registry <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {loading ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-12 h-12 text-luxury-gold animate-spin mb-4" />
+                <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Legal Database...</p>
+              </div>
+            ) : verifiedBrokers.length > 0 ? (
+              verifiedBrokers.map((broker, i) => (
+                <BrokerCard key={broker.id} broker={broker} index={i} />
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center glass-card rounded-[3rem] border-white/5 text-white/40">
+                <Shield className="w-12 h-12 mx-auto text-luxury-gold opacity-50 mb-4" />
+                <p>Regional legal audits are ongoing. No brokers fully verified yet.</p>
               </div>
             )}
           </div>

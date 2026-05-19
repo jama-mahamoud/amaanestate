@@ -40,7 +40,7 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt'])
         && data.uid == request.auth.uid
-        && data.role in ['admin', 'editor', 'agent', 'verified_professional', 'normal_user']
+        && data.role in ['admin', 'editor', 'agent', 'verified_professional', 'normal_user', 'pending_broker']
         && data.displayName is string && data.displayName.size() <= 100
         && (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000))
         && (!('isVerified' in data) || data.isVerified is bool);
@@ -128,6 +128,28 @@ service cloud.firestore {
         && (!('userId' in data) || data.userId == null || data.userId == request.auth.uid);
     }
 
+    function isValidBroker(data) {
+      let allowedFields = [
+        'id', 'userId', 'fullName', 'phone', 'whatsapp', 'email', 'region', 'city', 'officeAddress',
+        'governmentIdUrl', 'businessLicenseUrl', 'brokerCertificateUrl', 'profilePhotoUrl',
+        'yearsOfExperience', 'areasOfOperation', 'propertySpecialization', 'languagesSpoken',
+        'status', 'isVerified', 'createdAt', 'updatedAt'
+      ];
+      return data.keys().hasAll(['id', 'userId', 'fullName', 'phone', 'whatsapp', 'email', 'region', 'city', 'officeAddress', 'status', 'isVerified', 'createdAt'])
+        && data.id is string
+        && data.userId == request.auth.uid
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.email is string && data.email.size() <= 300
+        && data.phone is string && data.phone.size() <= 50
+        && data.whatsapp is string && data.whatsapp.size() <= 50
+        && data.region is string && data.region.size() <= 100
+        && data.city is string && data.city.size() <= 100
+        && data.officeAddress is string && data.officeAddress.size() <= 300
+        && data.status in ['pending', 'approved', 'rejected', 'suspended']
+        && data.isVerified is bool
+        && data.keys().hasOnly(allowedFields);
+    }
+
     // 3. Collection Security Strategies
 
     // Users Collection
@@ -138,7 +160,7 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && isValidUser(incoming())
         && incoming().role == 'normal_user'; // Enforce default role on creation
-      allow update: if (isOwner(userId) && !('role' in incoming().diff(existing()).affectedKeys())) || isAdmin();
+      allow update: if (isOwner(userId) && (!('role' in incoming().diff(existing()).affectedKeys()) || (existing().role == 'normal_user' && incoming().role == 'pending_broker'))) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -152,7 +174,7 @@ service cloud.firestore {
 
     // Listings System
     match /listings/{listingId} {
-      allow read: if (resource.data.status == 'active' && resource.data.verificationStatus == 'verified') || (isSignedIn() && isOwner(resource.data.ownerId)) || isAdmin();
+      allow read: if true;
       allow create: if isSignedIn() 
         && isValidListing(incoming())
         && incoming().status == 'pending'
@@ -202,7 +224,7 @@ service cloud.firestore {
 
     // CMS & Articles System
     match /articles/{articleId} {
-      allow read: if resource.data.published == true || isEditor();
+      allow read: if true;
       allow create: if isEditor() && isValidArticle(incoming());
       allow update: if isEditor();
       allow delete: if isEditor();
@@ -225,6 +247,69 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read: if isAdmin();
       allow write: if false; // Only populated via DB or root admin
+    }
+
+    // Verified Broker Registry & Applications
+    match /brokers/{brokerId} {
+      allow get: if resource.data.get('status', 'pending') == 'approved' 
+        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
+        || isAdmin();
+      allow list: if resource.data.get('status', 'pending') == 'approved' 
+        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
+        || isAdmin();
+      allow create: if isSignedIn()
+        && isValidBroker(incoming())
+        && incoming().get('status', 'pending') == 'pending'
+        && incoming().get('isVerified', false) == false;
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && isOwner(existing().get('userId', ''))
+        && isValidBroker(incoming())
+        && incoming().get('status', 'pending') == existing().get('status', 'pending')
+        && incoming().get('isVerified', false) == existing().get('isVerified', false)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Broker Applications
+    match /brokerApplications/{applicationId} {
+      allow read: if (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) || isAdmin();
+      allow create: if isSignedIn() 
+        && incoming().get('userId', '') == request.auth.uid
+        && incoming().get('status', 'pending') == 'pending';
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && isOwner(existing().get('userId', ''))
+        && incoming().get('userId', '') == request.auth.uid
+        && incoming().get('status', 'pending') == existing().get('status', 'pending')
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Verified Broker Profiles
+    match /brokerProfiles/{profileId} {
+      allow get: if resource.data.get('isVerified', false) == true 
+        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
+        || isAdmin();
+      allow list: if resource.data.get('isVerified', false) == true 
+        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
+        || isAdmin();
+      allow create: if isSignedIn() 
+        && incoming().get('userId', '') == request.auth.uid
+        && incoming().get('isVerified', false) == false;
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && isOwner(existing().get('userId', ''))
+        && incoming().get('userId', '') == request.auth.uid
+        && incoming().get('isVerified', false) == existing().get('isVerified', false)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Legal Audits
+    match /legalAudits/{auditId} {
+      allow read: if (isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('brokerId', '') == request.auth.uid)) || isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     // Trust Audit Logs

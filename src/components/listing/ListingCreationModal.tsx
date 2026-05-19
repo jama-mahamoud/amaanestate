@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Plus, Info, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, Info, CheckCircle2, ShieldCheck } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 import { collection, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -28,6 +28,15 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+
+  // Legal verification states
+  const [legalReferenceNumber, setLegalReferenceNumber] = useState('');
+  const [governmentRegistryNumber, setGovernmentRegistryNumber] = useState('');
+  const [brokerId, setBrokerId] = useState('');
+  
+  const [ownershipCertificateFiles, setOwnershipCertificateFiles] = useState<File[]>([]);
+  const [titleDeedFiles, setTitleDeedFiles] = useState<File[]>([]);
+  const [sellerNationalIdFiles, setSellerNationalIdFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -128,6 +137,27 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         listingData.latitude = formData.latitude;
         listingData.longitude = formData.longitude;
         listingData.region = formData.city;
+
+        // Apply mandatory legal verification fields for SALE properties
+        if (formData.listingType === 'sale') {
+          listingData.legalReferenceNumber = legalReferenceNumber;
+          listingData.governmentRegistryNumber = governmentRegistryNumber;
+          listingData.associatedBrokerId = brokerId;
+          
+          // Generate unique legal listing ID (format: AE-JIG-LND-YYYY-XXXXXX)
+          const year = new Date().getFullYear();
+          const rand = Math.floor(100000 + Math.random() * 900000);
+          const cityPrefix = formData.city ? formData.city.substring(0,3).toUpperCase() : 'UNK';
+          listingData.legalListingId = `AE-${cityPrefix}-LND-${year}-${rand}`;
+          
+          listingData.legalChecked = false;
+          listingData.ownershipVerified = false;
+          
+          // Simulated uploads (in production these would be real URLs)
+          listingData.legalOwnershipCertificateUrl = ownershipCertificateFiles.length ? "url" : "";
+          listingData.legalTitleDeedUrl = titleDeedFiles.length ? "url" : "";
+          listingData.sellerNationalIdUrl = sellerNationalIdFiles.length ? "url" : "";
+        }
       }
 
       // 4. Create listing with all data in one go
@@ -448,6 +478,67 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                   className="bg-white/5 border-white/10 min-h-[160px] rounded-xl focus-visible:ring-luxury-gold/30 py-4 text-white"
                 />
               </div>
+
+              {category === 'property' && formData.listingType === 'sale' && (
+                <div className="space-y-6 border border-[#C5A059]/20 bg-[#C5A059]/5 p-6 rounded-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C5A059]/10 blur-3xl opacity-50 pointer-events-none"></div>
+                  
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="text-[#C5A059]" size={24} />
+                    <div>
+                      <h3 className="text-[#C5A059] font-bold text-sm tracking-widest uppercase">Legal Ownership Verification System</h3>
+                      <p className="text-[10px] text-white/50 mt-1">Mandatory for all property sales. Prevents duplicate and fraudulent listings.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1">Legal Reference Number (Waraaqaha)</label>
+                      <Input 
+                        required
+                        placeholder="e.g. 102/2026/XYZ"
+                        value={legalReferenceNumber}
+                        onChange={e => setLegalReferenceNumber(e.target.value)}
+                        className="bg-black/50 border-white/10 h-11 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1">Govt Registry Number</label>
+                      <Input 
+                        required
+                        placeholder="e.g. GRN-89324"
+                        value={governmentRegistryNumber}
+                        onChange={e => setGovernmentRegistryNumber(e.target.value)}
+                        className="bg-black/50 border-white/10 h-11 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1">Represented By Broker ID (Optional for direct owners)</label>
+                      <Input 
+                        placeholder="e.g. BROKER-XXX"
+                        value={brokerId}
+                        onChange={e => setBrokerId(e.target.value)}
+                        className="bg-black/50 border-white/10 h-11 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1 block mb-2">Upload Ownership Certificate</label>
+                      <ImageUpload onImagesChange={setOwnershipCertificateFiles} maxFiles={1} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1 block mb-2">Upload Official Title Deed</label>
+                      <ImageUpload onImagesChange={setTitleDeedFiles} maxFiles={1} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/60 ml-1 block mb-2">Upload Seller National ID</label>
+                      <ImageUpload onImagesChange={setSellerNationalIdFiles} maxFiles={1} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-xs">
