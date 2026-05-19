@@ -21,56 +21,37 @@ export default function Home() {
   const [topProfessionals, setTopProfessionals] = useState<Professional[]>([]);
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState<Listing[]>([]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [searchPropertyType, setSearchPropertyType] = useState('Houses');
   const [searchBuyRent, setSearchBuyRent] = useState('Sell');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [allListings, setAllListings] = useState<Listing[]>([]);
-  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
 
-  // Apply filters whenever dependencies change
-  const applyFilters = () => {
-    // Standardize listings before filtering
-    const standardizedListings = allListings.map(l => ({
-        ...l,
-        status: l.status || 'pending',
-        verificationStatus: l.verificationStatus || 'pending',
-        isVerified: !!l.isVerified
-    }));
-
-    const filtered = standardizedListings.filter(l => {
-      const matchesQuery = searchQuery.trim() === '' || 
-                           l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesCity = searchCity === '' || l.city === searchCity;
-      
-      const matchesType = (
-          (searchPropertyType === 'Houses' && l.category === 'property') ||
-          (searchPropertyType === 'Land' && l.category === 'land') ||
-          (searchPropertyType === 'Vehicles' && l.category === 'vehicle')
-      );
-      
-      const matchesStatus = l.listingType === searchBuyRent.toLowerCase();
-      
-      const matchesVerified = !verifiedOnly || l.isVerified;
-      
-      const isMatch = matchesQuery && matchesCity && matchesType && matchesStatus && matchesVerified;
-      
-      return isMatch;
-    }).sort((a, b) => {
-        // Verified first
-        if (a.isVerified && !b.isVerified) return -1;
-        if (!a.isVerified && b.isVerified) return 1;
-        // Then by date (desc)
-        return new Date(b.createdAt?.seconds * 1000 || 0).getTime() - new Date(a.createdAt?.seconds * 1000 || 0).getTime();
-    });                
-    
-    setFilteredListings(filtered);
-    console.log(`DEBUG: Total listings fetched ${allListings.length}. Filtered results: ${filtered.length}. Params: city=${searchCity}, type=${searchPropertyType}, status=${searchBuyRent}, query="${searchQuery}"`);
+  // Load listings whenever filters change
+  const loadListings = async () => {
+    setLoading(true);
+    try {
+        const category = searchPropertyType === 'Vehicles' ? 'vehicle' : 'property';
+        const listingsRes = await listingRepository.fetchListings({
+            status: 'active',
+            city: searchCity || undefined,
+            category: category,
+            searchQuery: searchQuery || undefined,
+            verifiedOnly: verifiedOnly
+        });
+        setListings(listingsRes);
+    } catch (error) {
+        console.error("Failed to load listings", error);
+    } finally {
+        setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadListings();
+  }, [searchCity, searchPropertyType, searchBuyRent, verifiedOnly]); // Include searchQuery if we want live search
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,8 +63,7 @@ export default function Home() {
           articleService.getArticles()
         ]);
         
-        setAllListings(listingsRes);
-        setFilteredListings(listingsRes); // Initially, show all
+        setListings(listingsRes);
         setFeaturedProperties(listingsRes.filter(l => l.category === 'property' && l.isFeatured).slice(0, 3) as Property[]);
         setLatestVehicles(listingsRes.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
         setLatestArticles(articlesRes.slice(0, 3));
@@ -105,7 +85,7 @@ export default function Home() {
         }));
         setTopProfessionals(mappedPros);
       } catch (err) {
-        console.error("Home page data initialization failed:", err);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -114,8 +94,9 @@ export default function Home() {
   }, []);
 
   const handleSearch = () => {
-    applyFilters();
+    loadListings();
   };
+
 
   // Check if filters are active
   const isFilterActive = searchQuery !== '' || searchCity !== '' || searchPropertyType !== 'Houses' || searchBuyRent !== 'Sell' || verifiedOnly;
@@ -126,8 +107,6 @@ export default function Home() {
     setSearchPropertyType('Houses');
     setSearchBuyRent('Sell');
     setVerifiedOnly(false);
-    // Explicit trigger since removing filters necessitates a re-filter
-    setTimeout(applyFilters, 0);
   };
 
   const removeFilter = (filterType: string) => {
@@ -136,16 +115,15 @@ export default function Home() {
     if (filterType === 'type') setSearchPropertyType('Houses');
     if (filterType === 'status') setSearchBuyRent('Sell');
     if (filterType === 'verified') setVerifiedOnly(false);
-    setTimeout(applyFilters, 0);
   };
 
   const filteredProperties = useMemo(() => {
-    return filteredListings.filter(l => l.category === 'property' || l.category === 'land') as Property[];
-  }, [filteredListings]);
+    return listings.filter(l => l.category === 'property' || l.category === 'land') as Property[];
+  }, [listings]);
 
   const filteredVehicles = useMemo(() => {
-    return filteredListings.filter(l => l.category === 'vehicle') as VehicleListing[];
-  }, [filteredListings]);
+    return listings.filter(l => l.category === 'vehicle') as VehicleListing[];
+  }, [listings]);
 
   const cities = [
     { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1200&auto=format&fit=crop' },
@@ -328,7 +306,7 @@ export default function Home() {
             {/* Filter Summary */}
             {isFilterActive && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 flex flex-wrap justify-center gap-2">
-                    <div className="text-white/60 mb-2 w-full text-sm">{filteredListings.length} {filteredListings.length === 1 ? 'result' : 'results'} found</div>
+                    <div className="text-white/60 mb-2 w-full text-sm">{listings.length} {listings.length === 1 ? 'result' : 'results'} found</div>
                     {searchQuery && <Badge onClick={() => removeFilter('search')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">Query: {searchQuery} ✕</Badge>}
                     {searchCity !== '' && <Badge onClick={() => removeFilter('city')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchCity} ✕</Badge>}
                     {searchPropertyType !== 'Houses' && <Badge onClick={() => removeFilter('type')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchPropertyType} ✕</Badge>}

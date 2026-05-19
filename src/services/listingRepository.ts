@@ -31,7 +31,7 @@ const normalizeListing = (doc: QueryDocumentSnapshot<DocumentData>): Listing => 
 };
 
 export const listingRepository = {
-  async fetchListings(filters: { status?: string, verificationStatus?: string, city?: string, category?: string } = {}): Promise<Listing[]> {
+  async fetchListings(filters: { status?: string, verificationStatus?: string, city?: string, category?: string, searchQuery?: string, verifiedOnly?: boolean } = {}): Promise<Listing[]> {
     const cacheKey = JSON.stringify(filters);
     if (cache.has(cacheKey) && Date.now() - (cache.get(cacheKey)?.timestamp || 0) < CACHE_DURATION) {
       return cache.get(cacheKey)!.data;
@@ -47,7 +47,20 @@ export const listingRepository = {
       const q = query(collection(db, 'listings'), ...constraints, orderBy('createdAt', 'desc'));
 
       const querySnapshot = await getDocs(q);
-      const listings = querySnapshot.docs.map(normalizeListing);
+      let listings = querySnapshot.docs.map(normalizeListing);
+      
+      // Client-side advanced filtering
+      if (filters.searchQuery) {
+        const queryLower = filters.searchQuery.toLowerCase();
+        listings = listings.filter(l => 
+          l.title.toLowerCase().includes(queryLower) || 
+          (l.description && l.description.toLowerCase().includes(queryLower))
+        );
+      }
+      
+      if (filters.verifiedOnly) {
+          listings = listings.filter(l => l.isVerified);
+      }
       
       cache.set(cacheKey, { data: listings, timestamp: Date.now() });
       return listings;
