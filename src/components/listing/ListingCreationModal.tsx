@@ -70,7 +70,10 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         newListingId, 
         selectedFiles,
         (progressMap) => {
-          const totalProgress = Object.values(progressMap).reduce((a, b) => a + b, 0) / selectedFiles.length;
+          const values = Object.values(progressMap);
+          const totalProgress = values.length > 0 
+            ? values.reduce((a, b) => a + b, 0) / selectedFiles.length 
+            : 0;
           setUploadProgress(totalProgress);
         }
       );

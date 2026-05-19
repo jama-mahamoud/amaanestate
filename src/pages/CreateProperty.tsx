@@ -5,14 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { Upload, ChevronRight, Loader2 } from 'lucide-react';
-import { listingRepository } from '@/services/listingRepository';
-
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { listingService } from '@/services/listingService';
 import GalleryUpload from '@/components/article/GalleryUpload';
 
