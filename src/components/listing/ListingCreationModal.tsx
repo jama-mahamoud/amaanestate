@@ -12,6 +12,7 @@ import { Loader2, Plus, Info, CheckCircle2 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 import { collection, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import MapPicker from '../location/MapPicker';
 
 interface ListingCreationModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     description: '',
     price: '',
     currency: 'USD',
-    city: '',
+    city: category === 'property' ? 'Jigjiga' : '',
     location: '',
     listingType: 'sale' as ListingType,
     subcategory: '',
@@ -45,8 +46,26 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     // Property specific
     beds: '',
     baths: '',
-    size: ''
+    size: '',
+    // Location spec
+    district: '',
+    landmark: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined
   });
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        city: category === 'property' ? 'Jigjiga' : '',
+        district: '',
+        landmark: '',
+        latitude: undefined,
+        longitude: undefined
+      }));
+    }
+  }, [category, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +105,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         price: Number(formData.price),
         currency: formData.currency,
         city: formData.city,
-        location: formData.location || formData.city,
+        location: formData.district ? `${formData.district}, ${formData.city}` : formData.city,
         listingType: formData.listingType,
         subcategory: formData.subcategory,
         images: uploadedImages.map(img => img.url),
@@ -104,6 +123,11 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         listingData.beds = Number(formData.beds) || 0;
         listingData.baths = Number(formData.baths) || 0;
         listingData.size = formData.size;
+        listingData.district = formData.district;
+        listingData.landmark = formData.landmark;
+        listingData.latitude = formData.latitude;
+        listingData.longitude = formData.longitude;
+        listingData.region = formData.city;
       }
 
       // 4. Create listing with all data in one go
@@ -216,13 +240,30 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Primary Region</label>
-                  <Input 
-                    required
-                    placeholder="e.g. Jigjiga"
-                    value={formData.city}
-                    onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus-visible:ring-luxury-gold/30"
-                  />
+                  {category === 'property' ? (
+                    <Select 
+                      value={formData.city || 'Jigjiga'} 
+                      onValueChange={(val) => setFormData({ ...formData, city: val })}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus:ring-luxury-gold/30 text-white">
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-luxury-black border-white/10 text-white">
+                        <SelectItem value="Jigjiga">Jigjiga</SelectItem>
+                        <SelectItem value="Dire Dawa">Dire Dawa</SelectItem>
+                        <SelectItem value="Addis Ababa">Addis Ababa</SelectItem>
+                        <SelectItem value="Godey">Godey</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input 
+                      required
+                      placeholder="e.g. Jigjiga"
+                      value={formData.city}
+                      onChange={e => setFormData({ ...formData, city: e.target.value })}
+                      className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus-visible:ring-luxury-gold/30"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -322,6 +363,72 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                       onChange={e => setFormData({ ...formData, baths: e.target.value })}
                       className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus-visible:ring-luxury-gold/30"
                     />
+                  </div>
+                </div>
+              )}
+
+              {category === 'property' && (
+                <div className="space-y-4 border-t border-white/5 pt-6">
+                  <h3 className="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span>Location Intelligence</span>
+                    <span className="h-px flex-1 bg-white/5" />
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">District / Xaafad</label>
+                      <Input 
+                        required
+                        placeholder="e.g. Hodan / Central"
+                        value={formData.district}
+                        onChange={e => setFormData({ ...formData, district: e.target.value })}
+                        className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus-visible:ring-luxury-gold/30 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Street / Landmark</label>
+                      <Input 
+                        required
+                        placeholder="e.g. Near Shabelle River view"
+                        value={formData.landmark}
+                        onChange={e => setFormData({ ...formData, landmark: e.target.value })}
+                        className="bg-white/5 border-white/10 h-11 md:h-12 rounded-xl focus-visible:ring-luxury-gold/30 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Interactive map widget */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-[#C5A059] ml-1">Pinpoint Asset Coordinates</label>
+                    <MapPicker 
+                      city={formData.city || 'Jigjiga'} 
+                      latitude={formData.latitude} 
+                      longitude={formData.longitude} 
+                      onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/30 ml-1">Latitude</label>
+                      <Input 
+                        type="number" 
+                        value={formData.latitude ?? ''} 
+                        readOnly 
+                        className="bg-white/5 border-white/10 text-white/40 select-all cursor-not-allowed h-10 text-xs font-mono"
+                        placeholder="Auto-generated"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-[#C5A059]/40 ml-1">Longitude</label>
+                      <Input 
+                        type="number" 
+                        value={formData.longitude ?? ''} 
+                        readOnly 
+                        className="bg-white/5 border-white/10 text-white/40 select-all cursor-not-allowed h-10 text-xs font-mono"
+                        placeholder="Auto-generated"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

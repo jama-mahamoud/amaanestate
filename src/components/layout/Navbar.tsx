@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, MessageCircle } from 'lucide-react';
+import { Menu, X, User, MessageCircle, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,11 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuth();
 
+  // Premium Theme Engine State Synchronized with Storage
+  const [isLightTheme, setIsLightTheme] = useState(() => {
+    return localStorage.getItem('theme') === 'light';
+  });
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -18,6 +23,16 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (isLightTheme) {
+      document.body.classList.add('theme-light');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.body.classList.remove('theme-light');
+      localStorage.setItem('theme', 'dark');
+    }
+  }, [isLightTheme]);
 
   const navLinks = [
     { name: 'Properties', path: '/properties' },
@@ -82,6 +97,15 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-8">
+          {/* Custom Theme Switcher */}
+          <button 
+            onClick={() => setIsLightTheme(!isLightTheme)}
+            className="w-10 h-10 rounded-full bg-white/5 border border-white/5 hover:border-luxury-gold/30 hover:bg-white/10 flex items-center justify-center text-luxury-gold transition-all cursor-pointer"
+            aria-label="Toggle luxury themes"
+          >
+            {isLightTheme ? <Moon size={16} className="text-neutral-800" /> : <Sun size={16} />}
+          </button>
+
           {user ? (
             <Link to="/dashboard" className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold hover:text-white transition-colors flex items-center gap-2">
                <User size={14} /> My Dashboard
@@ -97,12 +121,21 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu Toggle */}
-        <button 
-          className="lg:hidden p-2 text-white/70 hover:text-white transition-colors" 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-4 lg:hidden">
+          <button 
+            onClick={() => setIsLightTheme(!isLightTheme)}
+            className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-luxury-gold cursor-pointer"
+            aria-label="Toggle themes"
+          >
+            {isLightTheme ? <Moon size={16} className="text-[#0a0a0a]" /> : <Sun size={16} />}
+          </button>
+          <button 
+            className="p-2 text-white/70 hover:text-white transition-colors" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav */}
@@ -147,6 +180,18 @@ export default function Navbar() {
                 transition={{ delay: navLinks.length * 0.05 }}
                 className="pt-8 border-t border-white/5 flex flex-col space-y-4"
               >
+                {/* Mobile Toggle inside list */}
+                <Button 
+                  onClick={() => {
+                    setIsLightTheme(!isLightTheme);
+                    setMobileMenuOpen(false);
+                  }}
+                  variant="outline" 
+                  className="w-full border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-16 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px] cursor-pointer"
+                >
+                  Theme: {isLightTheme ? 'Switch to Dark' : 'Switch to Light'}
+                </Button>
+
                 {user ? (
                    <Button asChild variant="outline" className="w-full border-luxury-gold/20 bg-luxury-gold/5 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-16 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px]">
                       <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>My Dashboard</Link>

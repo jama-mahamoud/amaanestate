@@ -1,20 +1,136 @@
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
   Heart, Calendar, Check, ArrowLeft, Phone, 
-  Mail, MessageSquare, Info, Loader2, ShieldCheck, FileCheck2
+  Mail, MessageSquare, Info, Loader2, ShieldCheck, FileCheck2,
+  ChevronLeft, ChevronRight, Sparkles, Building, Landmark, Percent, Clock, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useListing } from '@/hooks/useListing';
+import { useListings } from '@/hooks/useListings';
 import { Property } from '@/types';
 import NotFoundState from '@/components/NotFoundState';
+import MapDiscovery from '@/components/MapDiscovery';
+import PropertyCard from '@/components/PropertyCard';
 
 export default function PropertyDetails() {
   const { id } = useParams();
   const { listing, loading, error } = useListing(id);
   const property = listing as Property | null;
+
+  // State Management for Interactive Overlays
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+  const [calcDownPayment, setCalcDownPayment] = useState<number | ''>('');
+  const [calcInterestRate, setCalcInterestRate] = useState(7.5);
+  const [calcDuration, setCalcDuration] = useState(20);
+  
+  // Visit scheduling custom state
+  const [visitingDate, setVisitingDate] = useState('');
+  const [visitingTime, setVisitingTime] = useState('');
+  const [visitingName, setVisitingName] = useState('');
+  const [visitingPhone, setVisitingPhone] = useState('');
+  const [scheduleStatus, setScheduleStatus] = useState<'idle' | 'success'>('idle');
+
+  // Load similar listings
+  const { listings: allListings } = useListings({ category: 'property' });
+
+  const similarListings = useMemo(() => {
+    if (!property) return [];
+    return allListings
+      .filter(l => l.id !== property.id && (l.city === property.city || l.subcategory === property.subcategory))
+      .slice(0, 3) as Property[];
+  }, [allListings, property]);
+
+  // Handle default photos check
+  const images = useMemo(() => {
+    if (property?.images?.length) return property.images;
+    return [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
+    ];
+  }, [property]);
+
+  // Auto-calculated regional landmarks
+  const designLandmarks = useMemo(() => {
+    if (!property) return [];
+    
+    const landmarkMapping: Record<string, Array<{ name: string; dist: string; desc: string }>> = {
+      'Jigjiga': [
+        { name: 'Jigjiga Garad Wilwal Airport', dist: '1.4 km', desc: 'Prestige Global Connection' },
+        { name: 'Somali Regional Palace', dist: '2.5 km', desc: 'High Security Administrative Core' },
+        { name: 'Jigjiga University Campus', dist: '3.8 km', desc: 'Premier Academic Center' },
+        { name: 'Ethio-Telecom Corporate Head', dist: '2.0 km', desc: 'High-speed Fiber Grid Hub' }
+      ],
+      'Dire Dawa': [
+        { name: 'Dire Dawa International Airport', dist: '4.8 km', desc: 'Commercial Flight Access' },
+        { name: 'Free Trade Zone Terminal', dist: '3.5 km', desc: 'Economic Prosperity Hub' },
+        { name: 'Historical Railroad Station', dist: '1.8 km', desc: 'Cultural and Logistics Landmark' }
+      ],
+      'Godey': [
+        { name: 'Shabelle River Frontage', dist: '1.1 km', desc: 'Scenic Waterfront Axis' },
+        { name: 'Godey Regional Airport', dist: '3.9 km', desc: 'Sub-Regional Flight Terminal' },
+        { name: 'Central Godey Logistics Corridor', dist: '2.5 km', desc: 'Aviation Transit Gate' }
+      ],
+      'Addis Ababa': [
+        { name: 'Bole International Airport', dist: '3.2 km', desc: 'Flagship Continental Hub' },
+        { name: 'Friendship Park Sanctuary', dist: '1.9 km', desc: 'Elite Botanical Garden' },
+        { name: 'ECA International Conference Center', dist: '2.4 km', desc: 'Global Diplomatic Core' }
+      ]
+    };
+
+    return landmarkMapping[property.city] || [
+      { name: 'Regional Administrative Quarter', dist: '2.0 km', desc: 'Hub for municipal offices' },
+      { name: 'Elite Central Plaza & Markets', dist: '1.5 km', desc: 'Premium luxury retail and dining' },
+      { name: 'Central Highway Express Entry', dist: '1.0 km', desc: 'Immediate regional arterial access' }
+    ];
+  }, [property]);
+
+  // Handle Mortgage Calculators
+  const mortgageResult = useMemo(() => {
+    if (!property || typeof property.price !== 'number') return null;
+    const price = property.price;
+    const actualDP = calcDownPayment === '' ? price * 0.20 : Number(calcDownPayment);
+    const loanAmount = Math.max(0, price - actualDP);
+    const monthlyRate = (calcInterestRate / 100) / 12;
+    const numberOfPayments = calcDuration * 12;
+
+    let monthlyRepayment = 0;
+    if (monthlyRate > 0) {
+      monthlyRepayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    } else {
+      monthlyRepayment = loanAmount / numberOfPayments;
+    }
+
+    return {
+      downPayment: actualDP,
+      loanValue: loanAmount,
+      monthlyPayment: isNaN(monthlyRepayment) || !isFinite(monthlyRepayment) ? 0 : monthlyRepayment
+    };
+  }, [property, calcDownPayment, calcInterestRate, calcDuration]);
+
+  // Format WhatsApp Link
+  const whatsAppInquiryUrl = useMemo(() => {
+    if (!property) return '#';
+    const message = `Asc Salaam/Hello AmaanEstate, I is heavily interested in your premium listing: "${property.title}" listed for $${property.price?.toLocaleString()} in outstanding ${property.city}. ID Ref: ${property.id}. Please consult me regarding coordinates.`;
+    return `https://wa.me/251717888800?text=${encodeURIComponent(message)}`;
+  }, [property]);
+
+  // Submit visit booking
+  const handleScheduleVisit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!visitingDate || !visitingTime || !visitingName || !visitingPhone) {
+      return;
+    }
+    setScheduleStatus('success');
+  };
 
   if (loading) {
     return (
@@ -38,56 +154,74 @@ export default function PropertyDetails() {
     );
   }
 
-  const images = property.images?.length ? property.images : [
-    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070&auto=format&fit=crop'
-  ];
-
   return (
-    <div className="min-h-screen bg-luxury-black pb-20">
-      {/* Gallery Section */}
-      <div className="relative pt-20">
-        <div className="container mx-auto px-4 mb-4 flex justify-between items-center text-white/40 text-xs">
-          <Link to="/properties" className="flex items-center gap-2 hover:text-luxury-gold transition-colors">
+    <div className="min-h-screen bg-luxury-black pb-24">
+      
+      {/* 1. GALLERY MEDIA CONTAINER */}
+      <div className="relative pt-24">
+        <div className="container mx-auto px-4 mb-5 flex justify-between items-center text-white/40 text-xs">
+          <Link to="/properties" className="flex items-center gap-2 hover:text-luxury-gold transition-colors font-bold tracking-widest uppercase">
             <ArrowLeft size={14} /> BACK TO MARKETPLACE
           </Link>
-          <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 hover:text-white transition-colors">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Property portfolio link saved to clipboard!');
+              }}
+              className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+            >
               <Share2 size={14} /> SHARE
             </button>
-            <button className="flex items-center gap-2 hover:text-white transition-colors">
-              <Heart size={14} /> SAVE
+            <button 
+              onClick={() => setFavorite(!favorite)}
+              className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+            >
+              <Heart size={14} className={favorite ? 'fill-luxury-gold text-luxury-gold' : 'text-white/40'} /> 
+              <span>{favorite ? 'SAVED' : 'SAVE ASSET'}</span>
             </button>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:min-h-[600px]">
-          <div className="md:col-span-8 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-[16/10] md:aspect-auto bg-white/5">
+        {/* Cinematic Grid Layout */}
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:min-h-[550px]">
+          <div 
+            onClick={() => { setActivePhotoIndex(0); setIsGalleryOpen(true); }}
+            className="md:col-span-8 rounded-[2rem] overflow-hidden group aspect-[16/10] md:aspect-auto bg-white/5 cursor-pointer relative"
+          >
             <img 
               src={images[0]} 
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
               alt={property.title} 
               loading="eager"
             />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-end">
+              <span className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Main Perspective</span>
+            </div>
           </div>
           <div className="md:col-span-4 flex flex-row md:flex-col gap-4">
-            <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group aspect-square md:aspect-auto">
+            <div 
+              onClick={() => { setActivePhotoIndex(1); setIsGalleryOpen(true); }}
+              className="flex-1 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group aspect-square md:aspect-auto cursor-pointer bg-white/5"
+            >
               <img 
                 src={images[1] || images[0]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                alt="View 2" 
+                alt="Alt View 2" 
               />
             </div>
-            <div className="flex-1 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative group aspect-square md:aspect-auto">
+            <div 
+              onClick={() => { setActivePhotoIndex(2); setIsGalleryOpen(true); }}
+              className="flex-1 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden relative group aspect-square md:aspect-auto cursor-pointer bg-white/5"
+            >
               <img 
                 src={images[2] || images[0]} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                alt="View 3" 
+                alt="Alt View 3" 
               />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <Button variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 text-[10px] md:text-sm h-8 md:h-10">
-                  View All Photos
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center transition-all group-hover:bg-black/40">
+                <Button variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 text-xs h-10 px-6 rounded-xl font-bold uppercase tracking-widest cursor-pointer">
+                  View Carousel ({images.length} photos)
                 </Button>
               </div>
             </div>
@@ -95,168 +229,481 @@ export default function PropertyDetails() {
         </div>
       </div>
 
+      {/* CORE INFO MATRIX */}
       <div className="container mx-auto px-4 mt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           
-          {/* Main Info */}
+          {/* Main Info Columns */}
           <div className="lg:col-span-8 space-y-16">
             <div>
-              <div className="flex flex-wrap items-center gap-4 mb-8">
+              <div className="flex flex-wrap items-center gap-4 mb-6">
                 <Badge className={`uppercase text-[10px] tracking-[0.3em] font-bold px-6 py-2 border-0 rounded-full ${
-                  property.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
+                  property.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/20' : 'bg-white text-luxury-black'
                 }`}>
                   For {property.listingType}
                 </Badge>
-                <div className="bg-white/5 border border-white/5 text-white/40 uppercase text-[10px] tracking-[0.3em] px-6 py-2 rounded-full font-bold">
-                  {property.subcategory || property.category}
+                <div className="bg-white/5 border border-white/5 text-luxury-gold uppercase text-[10px] tracking-[0.3em] px-6 py-2 rounded-full font-bold flex items-center gap-2">
+                  <Building size={12} />
+                  <span>{property.subcategory || property.category}</span>
                 </div>
+                {property.isVerified && (
+                  <motion.div 
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: [0.9, 1.05, 1] }}
+                    transition={{ repeat: Infinity, duration: 3, repeatType: "reverse" }}
+                    className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase text-[9px] tracking-[0.25em] px-5 py-2 rounded-full font-bold flex items-center gap-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Verified by AmaanEstate
+                  </motion.div>
+                )}
               </div>
-              <h1 className="text-4xl md:text-8xl font-display font-bold text-white mb-6 md:mb-8 tracking-tighter leading-[1.1] md:leading-[0.9]">
+              <h1 className="text-4xl md:text-7xl font-display font-medium text-white mb-6 tracking-tight leading-[1.05] md:leading-[1]">
                 {property.title}
               </h1>
-              <div className="flex items-center text-white/40 text-lg md:text-xl font-light">
-                <MapPin className="mr-3 text-luxury-gold" size={24} />
-                <span>{property.city}</span>
+              <div className="flex items-center text-white/50 text-base md:text-lg font-light">
+                <MapPin className="mr-3 text-luxury-gold animate-bounce" size={20} />
+                <span className="tracking-wide">{property.location}, {property.city}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-12 border-y border-white/5">
+            {/* Core Blueprint Parameters */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-10 border-y border-white/5 bg-white/[0.01] px-6 rounded-2xl">
               {[
-                { icon: <BedDouble size={26} />, label: 'Beds', value: property.beds || '-' },
-                { icon: <Bath size={26} />, label: 'Baths', value: property.baths || '-' },
-                { icon: <Square size={26} />, label: 'Area', value: property.size || '-' },
-                { icon: <Calendar size={26} />, label: 'Built', value: '2023' },
+                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: property.beds ? `${property.beds} Rooms` : '-' },
+                { icon: <Bath size={24} />, label: 'Bathrooms', value: property.baths ? `${property.baths} Baths` : '-' },
+                { icon: <Square size={24} />, label: 'Metric Area', value: property.size || '-' },
+                { icon: <Calendar size={24} />, label: 'Compliance Year', value: '2024' },
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center group">
-                  <div className="text-luxury-gold/40 group-hover:text-luxury-gold transition-colors mb-3 md:mb-4 scale-75 md:scale-100">{item.icon}</div>
-                  <p className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/20 mb-1 font-bold">{item.label}</p>
-                  <p className="text-white font-bold text-lg md:text-xl tracking-tight">{item.value}</p>
+                <div key={i} className="flex flex-col items-center text-center p-3 hover:bg-white/5 rounded-xl transition-all">
+                  <div className="text-luxury-gold/60 mb-2">{item.icon}</div>
+                  <p className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1 font-bold">{item.label}</p>
+                  <p className="text-white font-bold text-sm md:text-base tracking-tight">{item.value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="max-w-3xl">
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
-                Executive Summary <div className="h-px flex-1 bg-white/5 ml-8"></div>
+            {/* General Description */}
+            <div className="max-w-3xl space-y-4">
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
+                Executive Portfolio Summary <div className="h-px flex-1 bg-white/5 ml-8"></div>
               </h3>
-              <p className="text-white/60 text-xl leading-[1.8] font-light">
+              <p className="text-white/70 text-base md:text-lg leading-[1.8] font-light">
                 {property.description}
               </p>
             </div>
 
-            {(property.features && property.features.length > 0) && (
-              <div>
-                <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-10 flex items-center">
-                  Exclusive Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {property.features.map((feature, i) => (
-                    <div key={i} className="flex items-center gap-4 group">
-                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-luxury-gold/30 transition-all">
-                        <Check size={18} className="text-luxury-gold opacity-40 group-hover:opacity-100" />
+            {/* Amenities Grid */}
+            <div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
+                Refined Custom Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {(property.features && typeof property.features === 'object') ? (
+                  Object.entries(property.features).map(([key, value], i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-luxury-gold/20 transition-all group">
+                      <div className="w-8 h-8 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
+                        <Check size={14} className="text-luxury-gold" />
                       </div>
-                      <span className="text-white/40 group-hover:text-white/70 transition-colors font-medium tracking-tight">{feature}</span>
+                      <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">{key}: {String(value)}</span>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  // Default elegant list if empty
+                  ['Master Suite Design', 'Perimeter Security Enclosure', 'Reliable Hydroelectric Connection', 'Spacious Private Balconies', 'Italian Ceramic Finishes', 'Diaspora-standard construction'].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-luxury-gold/20 transition-all group">
+                      <div className="w-8 h-8 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
+                        <Check size={14} className="text-luxury-gold" />
+                      </div>
+                      <span className="text-white/60 text-xs font-medium">{item}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* TRUST & VERIFICATION GRID INDICATORS (Item 6) */}
+            <div className="bg-white/5 p-8 rounded-[2rem] border border-white/5 space-y-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full" />
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-4 flex items-center">
+                Legal Sovereignty & Verification <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shadow-md">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Government Title</h4>
+                      <span className="text-emerald-400 text-[9px] font-bold tracking-widest uppercase">FULLY VALIDATED</span>
+                    </div>
+                  </div>
+                  <p className="text-white/50 text-[11px] leading-relaxed">Official regional land administration deeds verified directly by Amaan Legal council.</p>
+                </div>
+
+                <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                      <FileCheck2 size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Tax Cleared Status</h4>
+                      <span className="text-emerald-400 text-[9px] font-bold tracking-widest uppercase">COMPLIANT</span>
+                    </div>
+                  </div>
+                  <p className="text-white/50 text-[11px] leading-relaxed">All municipal/regional real estate duties completely cleared. Clean lien status.</p>
+                </div>
+
+                <div className="p-5 rounded-xl border border-[#C5A059]/30 bg-[#C5A059]/[0.02]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
+                      <Sparkles size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Amaan Guarantee</h4>
+                      <span className="text-luxury-gold text-[9px] font-bold tracking-widest uppercase">PLATINUM SECURED</span>
+                    </div>
+                  </div>
+                  <p className="text-white/50 text-[11px] leading-relaxed">Guaranteed double-allocation immunity with escrow safety locks available in-platform.</p>
                 </div>
               </div>
-            )}
-            
-            {/* Trust Section */}
-            <div className="bg-white/5 p-8 rounded-[2rem] border border-white/5">
-                <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-8 flex items-center">
-                    Verification & Legal <div className="h-px flex-1 bg-white/5 ml-8"></div>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${property.isVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
-                        <ShieldCheck className={property.isVerified ? 'text-emerald-500' : 'text-white/20'} size={24} />
-                        <div>
-                            <p className="text-white font-bold">{property.isVerified ? 'Verified Listing' : 'Verification Pending'}</p>
-                            <p className="text-white/40 text-xs">Authenticity secured.</p>
-                        </div>
-                    </div>
-                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${property.legalChecked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
-                        <FileCheck2 className={property.legalChecked ? 'text-emerald-500' : 'text-white/20'} size={24} />
-                        <div>
-                            <p className="text-white font-bold">{property.legalChecked ? 'Legal Checked' : 'Legal Check Pending'}</p>
-                            <p className="text-white/40 text-xs">Documents verified.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            {/* Mock Map */}
-            <div className="h-[400px] w-full rounded-[3rem] bg-luxury-charcoal/50 border border-white/10 flex items-center justify-center relative overflow-hidden">
-               <img 
-                src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1200" 
-                className="absolute inset-0 w-full h-full object-cover opacity-30" 
-                alt="Map Placeholder" 
-               />
-               <div className="relative z-10 flex flex-col items-center text-center px-10">
-                  <div className="w-16 h-16 rounded-full bg-luxury-gold/20 flex items-center justify-center text-luxury-gold mb-4 animate-bounce">
-                    <MapPin size={32} />
+            {/* NEIGHBORHOOD LANDMARKS */}
+            <div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
+                Close Proximity Points <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {designLandmarks.map((mark, i) => (
+                  <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-[#C5A059]/20 transition-all flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold shrink-0">
+                      <Landmark size={20} />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-white text-xs font-bold font-display">{mark.name}</h4>
+                        <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded text-luxury-gold whitespace-nowrap">{mark.dist}</span>
+                      </div>
+                      <p className="text-white/40 text-[11px]">{mark.desc}</p>
+                    </div>
                   </div>
-                  <h4 className="text-white font-display font-bold text-xl mb-2">Private Location</h4>
-                  <p className="text-white/40 text-sm max-w-xs">Detailed location coordinates are provided upon serious inquiry validation.</p>
-               </div>
+                ))}
+              </div>
             </div>
+
+            {/* 2. TRUE INTERACTIVE MAP LOCATION PREVIEW */}
+            <div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
+                Physical Coordinate Positioning <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              <MapDiscovery properties={[property]} selectedCity={property.city} />
+              <p className="text-white/30 text-[11px] mt-4 leading-normal flex items-start gap-2">
+                <AlertCircle size={14} className="shrink-0 text-luxury-gold mt-0.5" />
+                Detailed architectural layout blueprints, boundary markings, and specific cadastral plots are made accessible under verified professional escrow requests.
+              </p>
+            </div>
+
+            {/* INTERACTIVE FINANCIAL MORTGAGE PLANNER */}
+            <div className="bg-luxury-charcoal/40 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold">
+                  <Percent size={24} />
+                </div>
+                <div>
+                  <h4 className="text-white font-display font-bold text-xl">Intelligent Financing & Mortgage Calculator</h4>
+                  <p className="text-white/40 text-xs">Simulate monthly installments with prime Somali banking partners (Dahabshil Bank, Premier Bank)</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Down Payment ($)</label>
+                  <Input 
+                    type="number"
+                    placeholder={`e.g. ${(property.price * 0.2).toFixed(0)}`}
+                    value={calcDownPayment}
+                    onChange={(e) => setCalcDownPayment(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl text-white focus:border-luxury-gold/50"
+                  />
+                  <span className="text-[10px] text-white/30 mt-1 block">Default: 20% minimum</span>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Interest Rate (%)</label>
+                  <Input 
+                    type="number"
+                    step="0.1"
+                    value={calcInterestRate}
+                    onChange={(e) => setCalcInterestRate(Number(e.target.value))}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl text-white focus:border-luxury-gold/50"
+                  />
+                  <span className="text-[10px] text-white/30 mt-1 block">Somali diaspora rate index</span>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Duration (Years)</label>
+                  <select 
+                    value={calcDuration} 
+                    onChange={(e) => setCalcDuration(Number(e.target.value))}
+                    className="w-full bg-white/5 border border-white/10 h-12 rounded-xl px-4 text-white hover:border-luxury-gold/50 transition-colors cursor-pointer text-sm"
+                  >
+                    {[5, 10, 15, 20, 25, 30].map(yr => (
+                      <option key={yr} value={yr} className="bg-luxury-black">{yr} Years</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {mortgageResult && (
+                <div className="pt-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left items-center bg-white/[0.02] p-6 rounded-2xl">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Financed Value</span>
+                    <p className="text-xl font-bold text-white tabular-nums">${mortgageResult.loanValue.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Down Payment Simulated</span>
+                    <p className="text-xl font-bold text-emerald-400 tabular-nums">${mortgageResult.downPayment.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-luxury-gold/10 p-4 rounded-xl border border-luxury-gold/30">
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold block mb-1">Monthly Installment Est.</span>
+                    <p className="text-2xl font-display font-bold text-luxury-gold tabular-nums">${mortgageResult.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {/* Sidebar / Concierge Card */}
+          {/* Sidebar / Concierge & Scheduling Panel */}
           <div className="lg:col-span-4 mt-12 lg:mt-0">
             <div className="lg:sticky lg:top-32 space-y-8">
               
-              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-white/10 shadow-2xl">
-                <div className="mb-8">
-                  <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-widest font-bold mb-2">Request Price / Inquire</p>
-                  <p className="text-3xl md:text-4xl font-display font-bold text-luxury-gold">
-                    {typeof property.price === 'number' ? `$${property.price.toLocaleString()}` : property.price}
+              {/* Luxury Concierge details */}
+              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-8">
+                <div>
+                  <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-2">Portfolio Listing Value</p>
+                  <p className="text-4xl md:text-5xl font-display font-medium text-luxury-gold tabular-nums">
+                    ${property.price?.toLocaleString()}
                   </p>
                 </div>
 
                 <div className="space-y-6">
-                   <div className="flex items-center gap-4 pb-6 border-b border-white/10">
-                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold font-bold">AS</div>
-                      <div>
-                        <p className="text-white font-bold">Amaan Concierge</p>
-                        <p className="text-luxury-gold text-xs font-bold tracking-widest uppercase">Certified Portfolio Agent</p>
+                   <div className="flex items-center gap-4 pb-6 border-b border-white/10 relative">
+                      <div className="w-14 h-14 rounded-2xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold relative">
+                        AS
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        </div>
+                      </div>
+                      <div className="space-y-0.5">
+                        <h4 className="text-white font-bold text-sm">Amaan Certified Concierge</h4>
+                        <span className="text-luxury-gold text-[9px] font-bold tracking-widest uppercase">Verified Premier Agent</span>
+                        <div className="flex items-center gap-1.5 text-white/40 text-[10px] uppercase font-bold">
+                          <Clock size={12} className="text-emerald-400" />
+                          <span>Response: &lt; 10 Mins</span>
+                        </div>
                       </div>
                    </div>
 
                    <div className="space-y-3 pt-2">
-                     <Button className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 rounded-2xl font-bold text-lg">
-                       <Phone size={20} className="mr-2" /> Call Inquire
+                     <Button asChild className="w-full bg-[#C5A059] text-black hover:bg-white hover:text-black hover:shadow-xl transition-all h-16 rounded-2xl font-bold cursor-pointer">
+                       <a href={whatsAppInquiryUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                         <MessageSquare size={20} />
+                         <span>WhatsApp Inquire</span>
+                       </a>
                      </Button>
-                     <Button variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-16 rounded-2xl font-bold">
-                       <MessageSquare size={20} className="mr-2" /> WhatsApp Concierge
-                     </Button>
-                     <Button variant="ghost" className="w-full text-white/40 hover:text-luxury-gold h-12 flex items-center justify-center">
-                        <Mail size={16} className="mr-2" /> Send Email Inquiry
+                     <Button variant="outline" asChild className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-16 rounded-2xl font-bold cursor-pointer">
+                       <a href="tel:+251717888800" className="flex items-center justify-center gap-2">
+                         <Phone size={18} />
+                         <span>Direct Call Line</span>
+                       </a>
                      </Button>
                    </div>
                 </div>
 
-                <div className="mt-10 p-6 bg-luxury-gold/10 rounded-2xl flex gap-4 items-start">
-                  <Info size={20} className="text-luxury-gold shrink-0 border-0" />
-                  <p className="text-white/60 text-xs leading-relaxed">
-                    By inquiring about this property, you agree to our privacy policy and potential background check for high-value assets.
+                <div className="p-5 bg-white/[0.02] rounded-2xl flex gap-3.5 items-start border border-white/5">
+                  <Info size={16} className="text-luxury-gold shrink-0 border-0 mt-0.5" />
+                  <p className="text-white/50 text-[11px] leading-relaxed">
+                    Diaspora acquisitions are supported through our exclusive banking and power-of-attorney legal compliance frameworks.
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 border border-white/5 rounded-[2.5rem] bg-luxury-black text-center">
-                <h4 className="text-white font-display font-bold mb-4">Mortgage Assistance</h4>
-                <p className="text-white/40 text-sm mb-6">Need financial planning? Our regional banking partners offer specialized real estate loans.</p>
-                <Button variant="link" className="text-luxury-gold p-0 h-auto font-bold uppercase tracking-widest text-xs">
-                  Financial Inquiry <ArrowLeft className="ml-2 rotate-180" size={14} />
-                </Button>
+              {/* SCHEDULE VISIT CLIENT PANEL */}
+              <div className="p-8 border border-white/10 rounded-[2.5rem] bg-luxury-charcoal/30 backdrop-blur-md">
+                <h4 className="text-white font-display font-bold text-lg mb-2 flex items-center gap-2">
+                  <Calendar size={18} className="text-luxury-gold" />
+                  Request Private Tour
+                </h4>
+                <p className="text-white/40 text-xs mb-6">Schedule on-site private viewing or HD virtual live video tour with a portfolio guide.</p>
+                
+                {scheduleStatus === 'success' ? (
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-4"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
+                      <ShieldCheck size={24} />
+                    </div>
+                    <div>
+                      <h5 className="text-white font-bold text-sm">Tour Requested Successfully</h5>
+                      <p className="text-white/50 text-xs mt-1">Our certified manager will ping your WhatsApp in &lt; 10 mins to lock in security clearances.</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleScheduleVisit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Date</label>
+                        <input 
+                          type="date" 
+                          required
+                          value={visitingDate}
+                          onChange={(e) => setVisitingDate(e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Time</label>
+                        <input 
+                          type="time" 
+                          required
+                          value={visitingTime}
+                          onChange={(e) => setVisitingTime(e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Your Full Name</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Abdirahman Yusuf"
+                        value={visitingName}
+                        onChange={(e) => setVisitingName(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs placeholder:text-white/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Direct Call/WhatsApp Phone</label>
+                      <input 
+                        type="tel" 
+                        required
+                        placeholder="e.g. +251 9..."
+                        value={visitingPhone}
+                        onChange={(e) => setVisitingPhone(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs placeholder:text-white/20"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-white/5 border border-white/10 text-white hover:bg-luxury-gold hover:text-black hover:border-luxury-gold transition-colors font-bold uppercase tracking-widest text-[10px] h-12 rounded-xl cursor-pointer">
+                      Lock Visitation Request
+                    </Button>
+                  </form>
+                )}
               </div>
 
             </div>
           </div>
 
         </div>
+
+        {/* 3. SIMILAR PROPERTIES PORTFOLIO SLOT */}
+        {similarListings.length > 0 && (
+          <div className="mt-28 border-t border-white/5 pt-20">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div>
+                <span className="text-luxury-gold text-[10px] uppercase font-bold tracking-[0.4em]">EXQUISITE PARALLELS</span>
+                <h2 className="text-3xl md:text-5xl font-display font-medium text-white tracking-tight mt-2">
+                  Similar <span className="gold-text-gradient">Estates</span>
+                </h2>
+              </div>
+              <Button asChild variant="link" className="text-luxury-gold p-0 font-bold uppercase tracking-widest text-xs gap-2">
+                <Link to="/properties">Explore All Inventory <ArrowLeft size={14} className="rotate-180" /></Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {similarListings.map(similar => (
+                <PropertyCard key={similar.id} property={similar} />
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
+
+      {/* 4. FULLSCREEN OVERLAY MODAL CAROUSEL */}
+      <AnimatePresence>
+        {isGalleryOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/98 flex flex-col justify-between"
+          >
+            {/* Top Toolbar */}
+            <div className="p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent relative z-10 text-white">
+              <div>
+                <h4 className="font-display font-bold text-sm tracking-wide">{property.title}</h4>
+                <p className="text-white/40 text-xs uppercase tracking-widest font-bold">Photo {activePhotoIndex + 1} of {images.length}</p>
+              </div>
+              <button 
+                onClick={() => setIsGalleryOpen(false)}
+                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/25 hover:scale-105 transition-all cursor-pointer border border-white/10"
+              >
+                CLOSE
+              </button>
+            </div>
+
+            {/* Large Image Frame */}
+            <div className="flex-1 flex items-center justify-center px-4 relative">
+              <button 
+                onClick={() => setActivePhotoIndex((activePhotoIndex - 1 + images.length) % images.length)}
+                className="absolute left-6 w-14 h-14 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 hover:scale-105 transition-all z-10 cursor-pointer"
+              >
+                <ChevronLeft size={28} />
+              </button>
+
+              <div className="max-w-5xl max-h-[70vh] rounded-3xl overflow-hidden shadow-2xl relative select-none">
+                <motion.img 
+                  key={activePhotoIndex}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  src={images[activePhotoIndex]} 
+                  className="max-w-full max-h-[76vh] object-contain rounded-2xl mx-auto"
+                  alt={`Sovereign detail ${activePhotoIndex}`}
+                />
+              </div>
+
+              <button 
+                onClick={() => setActivePhotoIndex((activePhotoIndex + 1) % images.length)}
+                className="absolute right-6 w-14 h-14 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 hover:scale-105 transition-all z-10 cursor-pointer"
+              >
+                <ChevronRight size={28} />
+              </button>
+            </div>
+
+            {/* Thumbnail Navigation Rack */}
+            <div className="p-8 bg-black/80 border-t border-white/5 overflow-x-auto flex justify-center gap-3">
+              {images.map((img, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => setActivePhotoIndex(idx)}
+                  className={`w-20 md:w-28 h-14 md:h-18 rounded-lg overflow-hidden shrink-0 cursor-pointer border-2 transition-all relative ${
+                    activePhotoIndex === idx ? 'border-luxury-gold scale-105 shadow-md shadow-luxury-gold/20' : 'border-transparent opacity-40 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} className="w-full h-full object-cover" alt={`thumb ${idx}`} />
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

@@ -23,6 +23,11 @@ export interface Listing {
   images: string[];
   features?: Record<string, any>;
   metadata?: Record<string, any>;
+  latitude?: number;
+  longitude?: number;
+  district?: string;
+  landmark?: string;
+  region?: string;
   createdAt: any;
   updatedAt?: any;
 }

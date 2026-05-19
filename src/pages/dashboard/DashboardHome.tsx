@@ -1,15 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, Activity } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, 
+  Activity, Heart, Copy, Check, ShieldCheck, Sparkles, Bell, AlertCircle, Share2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/services/userService';
 import { useDashboard } from '@/contexts/DashboardContext';
+import { useListings } from '@/hooks/useListings';
+import { Property } from '@/types';
 
 export default function DashboardHome() {
   const { user } = useAuth();
   const { openListingModal } = useDashboard();
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'notifications' | 'compliance' | 'referrals' | 'favorites'>('notifications');
+
+  // Simulated live notification items
+  const [notifications, setNotifications] = useState([
+    { id: '1', title: 'Buyer Inquiry Received', body: 'Abdirahman Yusuf requested a private video tour of Jigjiga Villa Ref #192.', time: '3 mins ago', type: 'inquiry', unread: true },
+    { id: '2', title: 'Land Deed Validated', body: 'Legal title deed audit for plot Godey River Bank cleared regulatory check successfully.', time: '2 hours ago', type: 'compliance', unread: true },
+    { id: '3', title: 'Professional Tier Approved', body: 'AmaanEstate Executive Professional classification successfully enabled.', time: '1 day ago', type: 'badge', unread: false },
+    { id: '4', title: 'Referral Link Visited', body: 'A diaspora user in Minneapolis registered using your invite. Est commission locked.', time: '2 days ago', type: 'referral', unread: false }
+  ]);
+
+  // Handle Mark Notifications as Read
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  };
+
+  // Saved Listings mockup (from default listings)
+  const { listings } = useListings({ limit: 4 });
+  const mockSavedProperties = useMemo(() => {
+    return listings.slice(0, 2) as Property[];
+  }, [listings]);
+
+  // Global statistic figures
   const [stats, setStats] = useState({
     properties: 0,
     vehicles: 0,
@@ -27,176 +56,391 @@ export default function DashboardHome() {
   }, []);
 
   const statCards = [
-    { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+0%' },
-    { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car />, change: '+0%' },
-    { label: 'Active Agents', value: stats.agents, icon: <Users />, change: '+0' },
-    { label: 'Market Users', value: stats.users, icon: <TrendingUp />, change: '+0%' },
+    { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+8%' },
+    { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car />, change: '+5%' },
+    { label: 'Certified Agents', value: stats.agents, icon: <Users />, change: '+4' },
+    { label: 'Market Users', value: stats.users, icon: <TrendingUp />, change: '+12%' },
   ];
+
+  // Copy referral link action
+  const referralLink = `https://amaanestate.com/verify?ref=${user?.uid?.slice(0, 8) || 'amaan888'}`;
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-5xl font-display font-bold mb-3 tracking-tighter">
-            Command <span className="text-white/20">Center</span>
+          <h1 className="text-4xl md:text-6xl font-display font-medium mb-3 tracking-tight">
+            Executive <span className="gold-text-gradient">Console</span>
             {user?.displayName && (
-              <span className="block text-2xl mt-2 text-luxury-gold/60 font-medium">Operator: {user.displayName}</span>
+              <span className="block text-xl mt-1 text-white/50 font-light">Welcome back, {user.displayName}</span>
             )}
           </h1>
-          <p className="text-white/20 text-sm font-bold uppercase tracking-[0.3em]">Institutional Grade Surveillance Interface Active</p>
+          <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">Enterprise Security Index Mode: Secure & Encrypted</p>
         </div>
         <div className="flex gap-4">
-           <div className="glass-card px-8 py-5 rounded-2xl relative overflow-hidden group">
+           <div className="glass-card px-8 py-4 rounded-2xl relative overflow-hidden flex items-center gap-4 border border-white/5 bg-white/[0.01]">
               <div className="absolute top-0 right-0 w-16 h-16 bg-luxury-gold/5 blur-xl rounded-full" />
-              <p className="text-[9px] uppercase tracking-[0.4em] font-black text-luxury-gold/40 mb-2">System Status</p>
-              <div className="flex items-center gap-3">
-                <Activity size={14} className="text-luxury-gold animate-pulse" />
-                <p className="text-2xl font-display font-bold tracking-tighter">Optimal <span className="text-white/20">100%</span></p>
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Market Feed</p>
+                <p className="text-sm font-bold tracking-tight text-white">LIVE REFRESH: OPTIMAL</p>
               </div>
            </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* CORE HIGH-FIDELITY STATISTIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ delay: i * 0.08 }}
           >
-            <div className="glass-card p-10 rounded-[3rem] relative overflow-hidden group hover:border-luxury-gold/20 transition-all duration-700">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-3x rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000" />
+            <div className="glass-card p-8 rounded-[2rem] relative overflow-hidden group hover:border-[#C5A059]/35 hover:scale-[1.01] transition-all duration-500 bg-white/[0.01]">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000" />
               
-              <div className="flex justify-between items-start mb-10">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold group-hover:bg-luxury-gold group-hover:text-luxury-black transition-all duration-500 shadow-xl group-hover:shadow-luxury-gold/20">
+              <div className="flex justify-between items-start mb-8">
+                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-luxury-gold group-hover:bg-[#C5A059] group-hover:text-black transition-all duration-500">
                   {stat.icon}
                 </div>
-                <div className="bg-luxury-gold/10 text-luxury-gold px-3 py-1 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2">
+                <div className="bg-luxury-gold/5 border border-luxury-gold/10 text-luxury-gold px-3 py-1 rounded-full text-[9px] font-bold tracking-widest flex items-center gap-1">
                   {stat.change} <ArrowUpRight size={10} />
                 </div>
               </div>
               {loading ? (
-                <div className="h-[48px] flex items-center mb-3">
-                   <Loader2 className="w-6 h-6 text-white/10 animate-spin" />
+                <div className="h-[40px] flex items-center mb-2">
+                   <Loader2 className="w-6 h-6 text-[#C5A059] animate-spin" />
                 </div>
               ) : (
-                <p className="text-5xl font-display font-bold mb-3 tracking-tighter tabular-nums">{stat.value}</p>
+                <p className="text-4xl font-display font-medium mb-1.5 tracking-tight tabular-nums text-white">{stat.value}</p>
               )}
-              <p className="text-white/10 text-[10px] uppercase tracking-[0.4em] font-black">{stat.label}</p>
+              <p className="text-white/40 text-[9px] uppercase tracking-[0.3em] font-bold">{stat.label}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* INTELLIGENT UX PORTAL WITH TABBED SHEETS (Items 4, 5, 6) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        <div className="lg:col-span-8 space-y-12">
-           <div className="glass-card rounded-[4rem] p-12 h-[500px] flex flex-col justify-between overflow-hidden relative group shadow-2xl">
-              <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-luxury-gold/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-              <div>
-                <h3 className="text-3xl font-display font-bold mb-3 tracking-tight">Network Activity</h3>
-                <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Real-time Transactional Logic Sequence</p>
-              </div>
-              <div className="h-64 w-full flex items-end gap-5 px-4 pb-4">
-                 {[45, 75, 40, 95, 60, 85, 50, 100, 70, 90, 55, 80].map((h, i) => (
-                    <div key={i} className="flex-1 group/bar relative">
-                       <motion.div 
-                         initial={{ height: 0 }}
-                         animate={{ height: `${h}%` }}
-                         className="absolute bottom-0 w-full bg-white/[0.03] rounded-2xl group-hover/bar:bg-luxury-gold/20 transition-all duration-500 border border-white/[0.05]"
-                       />
+        {/* Main Tab Container (Saved, Referral, Notifications, Legal Compliance) */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Custom Luxury Navigation Row */}
+          <div className="border border-white/5 bg-white/[0.01] p-1.5 rounded-2xl flex flex-wrap gap-1">
+            {[
+              { id: 'notifications', label: 'Live Notifications', unreadCount: notifications.filter(n => n.unread).length },
+              { id: 'compliance', label: 'Compliance & Auditing' },
+              { id: 'referrals', label: 'Opportunities & Referrals' },
+              { id: 'favorites', label: 'Bookmarked Assets' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-5 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                  activeTab === tab.id 
+                    ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10' 
+                    : 'text-white/40 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tab.unreadCount !== undefined && tab.unreadCount > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-normal ${activeTab === tab.id ? 'bg-black text-white' : 'bg-luxury-gold text-black'}`}>
+                    {tab.unreadCount} NEW
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="glass-card p-8 md:p-10 rounded-[2.5rem] border border-white/10 relative min-h-[440px]">
+            <AnimatePresence mode="wait">
+              
+              {/* TAB 1: REAL-TIME NOTIFICATION SYSTEM (Item 5) */}
+              {activeTab === 'notifications' && (
+                <motion.div
+                  key="notifications-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6"
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
+                        <Bell size={18} className="text-[#C5A059]" />
+                        Real-time Action Stream
+                      </h3>
+                      <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">In-app property signals & audit triggers</p>
                     </div>
-                 ))}
-              </div>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="glass-card p-10 rounded-[3.5rem] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-                <h4 className="text-xl font-display font-bold text-white mb-8 flex items-center gap-4 tracking-tight">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-luxury-gold">
-                    <Clock size={18} />
+                    {notifications.some(n => n.unread) && (
+                      <Button 
+                        variant="ghost" 
+                        onClick={handleMarkAllRead}
+                        className="text-[10px] text-[#C5A059] hover:text-white uppercase tracking-widest font-extrabold cursor-pointer"
+                      >
+                        Clear All Unread
+                      </Button>
+                    )}
                   </div>
-                  System Frequency
-                </h4>
-                 <div className="space-y-8 flex flex-col items-center justify-center h-48">
-                    <Activity size={32} className="text-luxury-gold/20 mb-4 animate-[pulse_3s_infinite]" />
-                    <p className="text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">Encrypted Data Stream Active</p>
-                 </div>
-              </div>
-              <div className="glass-card p-10 rounded-[3.5rem] relative overflow-hidden">
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-                <h4 className="text-xl font-display font-bold text-white mb-8 flex items-center gap-4 tracking-tight">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-luxury-gold">
-                    <MapPin size={18} />
+
+                  <div className="space-y-3">
+                    {notifications.map((notif) => (
+                      <div 
+                        key={notif.id}
+                        className={`p-5 rounded-xl border transition-all flex items-start gap-4 ${
+                          notif.unread 
+                            ? 'border-[#C5A059]/30 bg-[#C5A059]/[0.02]/30 relative' 
+                            : 'border-white/5 bg-white/[0.005]'
+                        }`}
+                      >
+                        {notif.unread && (
+                          <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-luxury-gold animate-pulse" />
+                        )}
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                          notif.type === 'inquiry' ? 'bg-[#C5A059]/15 text-luxury-gold' :
+                          notif.type === 'compliance' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/50'
+                        }`}>
+                          <Sparkles size={16} />
+                        </div>
+                        <div className="space-y-1 overflow-hidden pr-6">
+                          <h4 className="text-white font-bold text-sm">{notif.title}</h4>
+                          <p className="text-white/60 text-xs leading-relaxed">{notif.body}</p>
+                          <span className="text-[10px] text-white/30 block font-semibold">{notif.time}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  Regional Dominance
-                </h4>
-                <div className="space-y-8">
-                  {[
-                    { city: 'Jigjiga Central', share: '45%', color: 'bg-luxury-gold' },
-                    { city: 'Dire Dawa Hub', share: '30%', color: 'bg-white/40' },
-                    { city: 'Addis Link', share: '25%', color: 'bg-white/20' },
-                  ].map((item, i) => (
-                    <div key={i} className="space-y-3">
-                       <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em]">
-                         <span className="text-white/20">{item.city}</span>
-                         <span className="text-white">{item.share}</span>
-                       </div>
-                       <div className="h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/5">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            whileInView={{ width: item.share }}
-                            transition={{ duration: 1.5, ease: "circOut" }}
-                            className={`h-full ${item.color}`} 
-                          />
-                       </div>
+                </motion.div>
+              )}
+
+              {/* TAB 2: COMPLIANCE & TRUST SYSTEMS (Item 6) */}
+              {activeTab === 'compliance' && (
+                <motion.div
+                  key="compliance-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div>
+                    <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
+                      <ShieldCheck size={18} className="text-[#C5A059]" />
+                      Title Deed & Asset Approvals
+                    </h3>
+                    <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Government-audited legal property queues</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {[
+                      { property: 'Jigjiga Villa, Elite Block #3', ID: 'AE-9481', status: 'Approved', badge: 'Verified by AmaanEstate', color: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' },
+                      { property: 'Godey Riverfront Plot #12', ID: 'AE-0044', status: 'Audited', badge: 'Legal Checks Cleared', color: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' },
+                      { property: 'Dire Dawa Business Quarter Layout', ID: 'AE-8812', status: 'Pending Deed Verification', badge: 'Awaiting Registry Match', color: 'border-luxury-gold/20 text-luxury-gold bg-luxury-gold/5' },
+                    ].map((app, i) => (
+                      <div key={i} className="p-6 rounded-2xl border border-white/5 bg-white/[0.005] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-white font-bold text-sm font-display">{app.property}</h4>
+                            <span className="text-[10px] font-mono font-medium text-white/30">{app.ID}</span>
+                          </div>
+                          <span className={`inline-block text-[9px] font-bold tracking-widest uppercase px-3 py-1 rounded-full ${app.color}`}>
+                            ● {app.badge}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-right">
+                          <span className="text-[11px] font-semibold text-white/50 bg-white/5 px-4 py-1.5 rounded-xl border border-white/5">{app.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-5 bg-white/[0.02] rounded-2xl border border-white/5 flex gap-4">
+                    <AlertCircle size={18} className="text-luxury-gold shrink-0 mt-0.5" />
+                    <p className="text-white/50 text-[11px] leading-relaxed">
+                      Lien-free status is monitored in collaboration with Regional Cadastral Systems. Double allocation safety keys are auto-assigned to approved assets.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* TAB 3: DIAGPORA REFERRALS & EARNINGS OPPORTUNITIES */}
+              {activeTab === 'referrals' && (
+                <motion.div
+                  key="referrals-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-white/5">
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
+                        <Share2 size={18} className="text-[#C5A059]" />
+                        Diaspora Referral rewards
+                      </h3>
+                      <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Earn commissions by referring investors & land acquisitions</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-           </div>
+                    <div className="bg-[#C5A059]/10 border border-[#C5A059]/20 p-4 rounded-xl text-center md:text-right shrink-0">
+                      <span className="text-[10px] uppercase text-white/30 block mb-0.5 font-bold">Referral Wallet Balance</span>
+                      <p className="text-2xl font-display font-bold text-luxury-gold tabular-nums">$1,450.00 USD</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 block mb-2">Share Invites with Friends & Colleagues</label>
+                      <div className="flex rounded-xl overflow-hidden border border-white/10 group bg-white/5 p-1 relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value={referralLink}
+                          className="w-full bg-transparent px-4 text-white text-xs select-all outline-none"
+                        />
+                        <Button 
+                          onClick={handleCopyLink}
+                          className="bg-[#C5A059] text-black hover:bg-white flex items-center gap-2 px-6 h-11 rounded-lg font-bold text-xs shrink-0 cursor-pointer"
+                        >
+                          {copied ? (
+                            <>
+                              <Check size={14} />
+                              <span>COPIED</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} />
+                              <span>COPY LINK</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+                        <span className="text-[9px] uppercase font-bold text-white/30 block mb-1">Affiliate Registered</span>
+                        <p className="text-2xl font-bold font-display text-white tabular-nums">12</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+                        <span className="text-[9px] uppercase font-bold text-white/30 block mb-1">Purchases Initiated</span>
+                        <p className="text-2xl font-bold font-display text-white tabular-nums">2</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/30 text-center">
+                        <span className="text-[9px] uppercase font-bold text-luxury-gold block mb-1">Your Payout Queue</span>
+                        <p className="text-2xl font-bold font-display text-luxury-gold tabular-nums">$750 pending</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* TAB 4: SAVED LISTINGS & VEHICLES HISTORY */}
+              {activeTab === 'favorites' && (
+                <motion.div
+                  key="saved-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6"
+                >
+                  <div>
+                    <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
+                      <Heart size={18} className="text-[#C5A059] fill-[#C5A059]" />
+                      Saved Regional Portfolio
+                    </h3>
+                    <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Quick tracking card indices saved for ongoing queries</p>
+                  </div>
+
+                  {mockSavedProperties.length === 0 ? (
+                    <div className="text-center py-10">
+                      <Heart size={36} className="text-white/10 mx-auto mb-3" />
+                      <p className="text-white/30 text-xs">No bookmarks recorded. Navigate our portfolio to save premium assets.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {mockSavedProperties.map((prop) => (
+                        <div key={prop.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 flex gap-4 items-center justify-between group">
+                          <div className="flex items-center gap-4 overflow-hidden">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 shrink-0">
+                              <img src={prop.images?.[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=300'} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            <div className="truncate">
+                              <h4 className="text-white font-bold text-xs truncate font-display">{prop.title}</h4>
+                              <p className="text-[#C5A059] text-xs font-bold font-display mt-0.5">${prop.price?.toLocaleString()}</p>
+                              <span className="text-[10px] text-white/30 font-semibold">{prop.city}</span>
+                            </div>
+                          </div>
+                          <Button asChild size="sm" variant="ghost" className="text-xs hover:text-luxury-gold bg-white/5 group-hover:bg-[#C5A059] group-hover:text-black transition-all cursor-pointer rounded-lg shrink-0 h-10 px-4">
+                            <Link to={`/properties/${prop.id}`}>Visit</Link>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+          </div>
         </div>
 
-        <div className="lg:col-span-4 space-y-10">
-           <div className="p-12 bg-luxury-gold rounded-[4rem] text-luxury-black relative overflow-hidden group shadow-2xl">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-white/30 blur-[60px] rounded-full translate-x-1/4 -translate-y-1/4 group-hover:scale-150 transition-transform duration-1000" />
-              <div className="relative z-10">
-                <p className="text-[10px] uppercase font-black tracking-[0.4em] mb-4 opacity-50">Strategic Expansion</p>
-                <h3 className="text-4xl font-display font-bold mb-8 leading-[0.9] tracking-tighter">Scale Your <br /> Digital Assets</h3>
-                <p className="text-luxury-black/60 text-base font-medium mb-12 max-w-[220px] leading-relaxed italic">Initiate new property protocols across the regional network.</p>
-                <Button 
-                  onClick={() => openListingModal('property')}
-                  className="w-full bg-luxury-black text-white hover:bg-luxury-black/90 h-20 rounded-[2rem] font-bold text-lg border-0 shadow-2xl shadow-luxury-gold/50 transition-all duration-500 hover:-translate-y-1"
-                >
-                  Initialize New Log
-                </Button>
-              </div>
-           </div>
+        {/* SIDEBAR ANALYTICS AND ACCOUNT ACTIONS */}
+        <div className="lg:col-span-4 space-y-8">
+          
+          {/* Quick Create CTA Block */}
+          <div className="p-8 bg-[#C5A059] rounded-[2.5rem] text-black relative overflow-hidden group shadow-2xl">
+             <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 blur-[50px] rounded-full translate-x-1/4 -translate-y-1/4" />
+             <div className="relative z-10">
+               <span className="text-[9px] uppercase font-black tracking-[0.3em] opacity-40">Portfolio Asset Actions</span>
+               <h3 className="text-3xl font-display font-medium mb-6 leading-none tracking-tight">Expand Your Digital Footprint</h3>
+               <p className="text-black/60 text-xs font-medium mb-8 leading-relaxed italic">Initiate legal asset logs for verification in our system.</p>
+               <Button 
+                 onClick={() => openListingModal('property')}
+                 className="w-full bg-black text-white hover:bg-black/90 h-16 rounded-2xl font-bold text-sm border-0 shadow-lg cursor-pointer"
+               >
+                 Register New Asset
+               </Button>
+             </div>
+          </div>
 
-           <div className="glass-card rounded-[4rem] p-12 relative overflow-hidden">
-              <div className="absolute inset-0 bg-white/[0.01]" />
-              <h3 className="text-2xl font-display font-bold mb-10 tracking-tight">Network Health</h3>
-              <div className="space-y-8 relative z-10">
-                 {[
-                   { label: 'Firestore Sync', status: 'Operational', color: 'bg-[#22c55e]' },
-                   { label: 'Identity Encryption', status: 'Verified', color: 'bg-[#22c55e]' },
-                   { label: 'Storage Bandwidth', status: 'Optimal', color: 'bg-luxury-gold' },
-                 ].map((s, i) => (
-                   <div key={i} className="flex items-center justify-between group cursor-pointer">
-                      <p className="text-white/20 text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors">{s.label}</p>
-                      <div className="flex items-center gap-4">
-                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/10 group-hover:text-white/30 transition-colors">{s.status}</span>
-                         <div className={`w-2 h-2 rounded-full ${s.color} shadow-[0_0_10px_currentColor] animate-pulse`} />
-                      </div>
-                   </div>
-                 ))}
+          {/* Regional Market Shares */}
+          <div className="glass-card rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden bg-white/[0.01]">
+              <div className="absolute inset-0 bg-white/[0.005]" />
+              <h3 className="text-lg font-display font-medium mb-6 tracking-wide flex items-center gap-2">
+                <Activity size={16} className="text-luxury-gold" />
+                Regional Portfolios
+              </h3>
+              <div className="space-y-6 relative z-10">
+                {[
+                  { city: 'Jigjiga Capital', share: '45%', color: 'bg-[#C5A059]' },
+                  { city: 'Dire Dawa Transit', share: '30%', color: 'bg-white/40' },
+                  { city: 'Addis Linkage', share: '25%', color: 'bg-white/10' },
+                ].map((item, i) => (
+                  <div key={i} className="space-y-2">
+                     <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em]">
+                       <span className="text-white/40">{item.city}</span>
+                       <span className="text-white">{item.share}</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: item.share }}
+                          transition={{ duration: 1.5, ease: "circOut" }}
+                          className={`h-full ${item.color}`} 
+                        />
+                     </div>
+                  </div>
+                ))}
               </div>
-              <div className="mt-12 pt-10 border-t border-white/5 flex items-center justify-center">
-                 <p className="text-white/5 text-[10px] font-black uppercase tracking-[0.5em]">Session Secured</p>
-              </div>
-           </div>
+          </div>
         </div>
 
       </div>

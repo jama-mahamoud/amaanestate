@@ -119,6 +119,80 @@
   }
 }
 
+/* SMOOTH PREMIUM THEME TRANSITIONS */
+body {
+  transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ALABASTER CREAM LIGHT THEME ENGINE */
+body.theme-light {
+  background-color: var(--color-luxury-cream);
+  color: var(--color-luxury-black);
+}
+
+body.theme-light .glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-color: rgba(197, 160, 89, 0.25);
+  box-shadow: 0 20px 50px rgba(10, 10, 10, 0.05);
+}
+
+body.theme-light .glass-card:hover {
+  border-color: var(--color-luxury-gold);
+}
+
+body.theme-light .text-white,
+body.theme-light h1,
+body.theme-light h2,
+body.theme-light h3,
+body.theme-light h4,
+body.theme-light h5,
+body.theme-light select,
+body.theme-light option,
+body.theme-light input {
+  color: var(--color-luxury-black) !important;
+}
+
+body.theme-light .gold-text-gradient {
+  background-image: linear-gradient(to right, #C5A059, #8C6F35, #C5A059);
+}
+
+body.theme-light .text-white\/60,
+body.theme-light .text-white\/70,
+body.theme-light .text-white\/80 {
+  color: rgba(10, 10, 10, 0.75) !important;
+}
+
+body.theme-light .text-white\/40,
+body.theme-light .text-white\/50 {
+  color: rgba(10, 10, 10, 0.5) !important;
+}
+
+body.theme-light .text-white\/20,
+body.theme-light .text-white\/30,
+body.theme-light .text-white\/10 {
+  color: rgba(10, 10, 10, 0.3) !important;
+}
+
+body.theme-light header {
+  background-color: rgba(245, 245, 240, 0.85);
+  border-bottom-color: rgba(10, 10, 10, 0.08);
+}
+
+body.theme-light nav a {
+  color: rgba(10, 10, 10, 0.7) !important;
+}
+
+body.theme-light nav a:hover {
+  color: var(--color-luxury-gold) !important;
+}
+
+body.theme-light .custom-map-price-marker div.bg-luxury-charcoal {
+  background-color: #ffffff !important;
+  color: #0a0a0a !important;
+  border-color: var(--color-luxury-gold) !important;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
