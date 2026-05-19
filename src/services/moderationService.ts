@@ -34,7 +34,7 @@ export interface ModerationStats {
   totalInquiries: number;
 }
 
-export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'suspended';
+export type ApplicationStatus = 'pending' | 'reviewing' | 'active' | 'rejected' | 'suspended';
 
 export const moderationService = {
   /**
@@ -42,6 +42,7 @@ export const moderationService = {
    */
   async getModerationStats(): Promise<ModerationStats> {
     try {
+      console.log('Fetching moderation stats...');
       const listingsRef = collection(db, 'listings');
       const proAppsRef = collection(db, 'professionalApplications');
       const usersRef = collection(db, 'users');
@@ -57,7 +58,7 @@ export const moderationService = {
         totalInquiriesCount
       ] = await Promise.all([
         getCountFromServer(query(listingsRef, where('status', '==', 'pending'))),
-        getCountFromServer(query(proAppsRef, where('status', '==', 'pending_review'))),
+        getCountFromServer(query(proAppsRef, where('status', 'in', ['pending', 'pending_review']))),
         getCountFromServer(query(usersRef, where('role', '==', 'verified_professional'))),
         getCountFromServer(listingsRef),
         getCountFromServer(articlesRef),
@@ -73,6 +74,7 @@ export const moderationService = {
         totalInquiries: totalInquiriesCount.data().count
       };
     } catch (error) {
+      console.error('Error fetching moderation stats:', error);
       handleFirestoreError(error, OperationType.GET, 'moderation/stats');
       return {
         pendingListings: 0,
@@ -97,6 +99,7 @@ export const moderationService = {
     }
 
     try {
+      console.log(`Querying listings with status: ${status}...`);
       const q = query(listingsRef, ...constraints);
       const snapshot = await getDocs(q);
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Listing[];
@@ -108,9 +111,11 @@ export const moderationService = {
         return bTime - aTime;
       });
     } catch (error) {
+      console.error(`Error querying listings with status ${status}:`, error);
       handleFirestoreError(error, OperationType.LIST, 'listings/pending');
       // If the query failed, try an even simpler fallback
       try {
+        console.warn('Falling back to local filter for listings...');
         const snapshot = await getDocs(listingsRef);
         return snapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() as any }))
@@ -127,6 +132,7 @@ export const moderationService = {
   async approveListing(id: string) {
     const listingRef = doc(db, 'listings', id);
     try {
+      console.log(`Approving listing ${id}...`);
       await updateDoc(listingRef, {
         status: 'active',
         isVisible: true,
@@ -136,6 +142,7 @@ export const moderationService = {
       });
       return true;
     } catch (error) {
+      console.error(`Error approving listing ${id}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
       return false;
     }
@@ -147,6 +154,7 @@ export const moderationService = {
   async rejectListing(id: string) {
     const listingRef = doc(db, 'listings', id);
     try {
+      console.log(`Rejecting listing ${id}...`);
       await updateDoc(listingRef, {
         status: 'rejected',
         isVisible: false,
@@ -155,6 +163,7 @@ export const moderationService = {
       });
       return true;
     } catch (error) {
+      console.error(`Error rejecting listing ${id}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
       return false;
     }
@@ -183,6 +192,7 @@ export const moderationService = {
   async suspendItem(collectionName: string, id: string) {
     const docRef = doc(db, collectionName, id);
     try {
+      console.log(`Suspending item ${id} in ${collectionName}...`);
       await updateDoc(docRef, {
         status: 'suspended',
         isVisible: false,
@@ -190,6 +200,7 @@ export const moderationService = {
       });
       return true;
     } catch (error) {
+      console.error(`Error suspending item ${id}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${id}`);
       return false;
     }
@@ -201,9 +212,11 @@ export const moderationService = {
   async deleteDocument(collectionName: string, id: string) {
     const docRef = doc(db, collectionName, id);
     try {
+      console.log(`Deleting document ${id} from ${collectionName}...`);
       await deleteDoc(docRef);
       return true;
     } catch (error) {
+      console.error(`Error deleting document ${id}:`, error);
       handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${id}`);
       return false;
     }
@@ -215,10 +228,12 @@ export const moderationService = {
   async approveProfessional(applicationId: string, userId: string, proData: any) {
     const batch = writeBatch(db);
     
+    console.log(`Approving professional application ${applicationId} for user ${userId}...`);
+
     // 1. Update application status
     const appRef = doc(db, 'professionalApplications', applicationId);
     batch.update(appRef, { 
-      status: 'approved', 
+      status: 'active', // Use active instead of approved for consistency
       updatedAt: serverTimestamp() 
     });
 
@@ -226,19 +241,27 @@ export const moderationService = {
     const userRef = doc(db, 'users', userId);
     batch.update(userRef, { 
       role: 'verified_professional', 
-      isVerified: true 
+      isVerified: true,
+      proStatus: 'active'
     });
 
     // 3. Create/Update professional service
+    // This is what queries normally look for (Expert Pros section)
     const serviceId = `pro-${userId}`;
     const serviceRef = doc(db, 'professionalServices', serviceId);
     
+    // Safety check for data structure
+    const personalInfo = proData.personalInfo || {};
+    const proDetails = proData.professionalDetails || {};
+
     const serviceData: Omit<ProfessionalService, 'id'> = {
-      title: proData.personalInfo.title,
-      description: proData.professionalDetails.bio,
-      category: proData.professionalDetails.category,
-      city: proData.personalInfo.city,
+      title: personalInfo.title || 'Professional Expert',
+      description: proDetails.bio || '',
+      category: proDetails.category || 'General',
+      city: personalInfo.city || 'Regional',
       providerId: userId,
+      providerName: personalInfo.fullName || 'Verified Expert',
+      providerImage: personalInfo.profilePhotoUrl || '',
       status: 'active',
       createdAt: serverTimestamp()
     };
@@ -247,8 +270,10 @@ export const moderationService = {
 
     try {
       await batch.commit();
+      console.log('Professional approval batch committed successfully');
       return true;
     } catch (error) {
+      console.error('Error committing professional approval batch:', error);
       handleFirestoreError(error, OperationType.WRITE, 'moderation/approve-pro');
       return false;
     }
@@ -260,12 +285,14 @@ export const moderationService = {
   async rejectProfessional(applicationId: string) {
     const appRef = doc(db, 'professionalApplications', applicationId);
     try {
+      console.log(`Rejecting professional application ${applicationId}...`);
       await updateDoc(appRef, { 
         status: 'rejected', 
         updatedAt: serverTimestamp() 
       });
       return true;
     } catch (error) {
+      console.error(`Error rejecting professional application ${applicationId}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `professionalApplications/${applicationId}`);
       return false;
     }
@@ -276,10 +303,15 @@ export const moderationService = {
    */
   async getProfessionalApplications(status: ApplicationStatus = 'pending') {
     const appsRef = collection(db, 'professionalApplications');
-    const statusToQuery = status === 'pending' ? 'pending_review' : status;
     
+    // Handle both 'pending' and 'pending_review' for legacy reasons
+    let statusValues: string[] = [status];
+    if (status === 'pending') statusValues = ['pending', 'pending_review'];
+    if (status === 'active') statusValues = ['active', 'approved'];
+
     try {
-      const q = query(appsRef, where('status', '==', statusToQuery));
+      console.log(`Querying professional applications with status in: ${statusValues}...`);
+      const q = query(appsRef, where('status', 'in', statusValues));
       const snapshot = await getDocs(q);
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
       
@@ -290,12 +322,14 @@ export const moderationService = {
         return bTime - aTime;
       });
     } catch (error) {
+       console.error(`Error querying professional applications with status ${status}:`, error);
        handleFirestoreError(error, OperationType.LIST, 'professionalApplications');
        try {
+         console.warn('Falling back to local filter for professional applications...');
          const snapshot = await getDocs(appsRef);
          return snapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() as any }))
-          .filter(a => a.status === statusToQuery);
+          .filter(a => statusValues.includes(a.status));
        } catch (e) {
          return [];
        }
@@ -309,6 +343,7 @@ export const moderationService = {
     const articlesRef = collection(db, 'articles');
     
     try {
+      console.log('Fetching articles for moderation...');
       let q;
       if (publishedOnly !== undefined) {
         q = query(articlesRef, where('published', '==', publishedOnly));
@@ -325,6 +360,7 @@ export const moderationService = {
         return bTime - aTime;
       });
     } catch (error) {
+      console.error('Error fetching articles:', error);
       handleFirestoreError(error, OperationType.LIST, 'articles');
       try {
         const fallbackSnapshot = await getDocs(articlesRef);
@@ -346,6 +382,7 @@ export const moderationService = {
     const messagesRef = collection(db, 'contactMessages');
     
     try {
+      console.log('Fetching contact messages for moderation...');
       const snapshot = await getDocs(messagesRef);
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
       
@@ -355,8 +392,28 @@ export const moderationService = {
         return bTime - aTime;
       }).slice(0, 100);
     } catch (error) {
+      console.error('Error fetching contact messages:', error);
       handleFirestoreError(error, OperationType.LIST, 'contactMessages');
       return [];
+    }
+  },
+
+  /**
+   * Archive/Unarchive a contact message
+   */
+  async archiveMessage(id: string, archived: boolean) {
+    const messageRef = doc(db, 'contactMessages', id);
+    try {
+      console.log(`${archived ? 'Archiving' : 'Restoring'} message ${id}...`);
+      await updateDoc(messageRef, {
+        archived,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      console.error(`Error updating message ${id}:`, error);
+      handleFirestoreError(error, OperationType.UPDATE, `contactMessages/${id}`);
+      return false;
     }
   }
 };

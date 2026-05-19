@@ -86,20 +86,25 @@ export default function ProfessionalModeratedList() {
 
   if (loading && apps.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
-        <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Vetting Registry...</p>
+      <div className="flex flex-col items-center justify-center py-24 min-h-[400px] glass-card rounded-[3rem] border border-white/5">
+        <Loader2 className="animate-spin text-luxury-gold mb-6" size={48} />
+        <div className="text-center">
+            <p className="text-white/20 text-[10px] uppercase font-black tracking-[0.4em] mb-2">Querying Vetting Registry...</p>
+            <p className="text-white/10 text-[8px] uppercase tracking-widest">Scanning professional identities</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] border border-red-500/10">
-        <UserX className="text-red-500 mb-6" size={48} />
-        <h3 className="text-2xl font-display font-bold">Registry Sync Issue</h3>
-        <p className="text-white/40 text-xs mt-2 uppercase tracking-widest">{error}</p>
-        <Button onClick={loadApps} className="mt-8 border border-white/10 hover:border-luxury-gold">Retry Registry Query</Button>
+      <div className="flex flex-col items-center justify-center py-24 glass-card rounded-[3.5rem] border border-red-500/20 bg-red-500/5">
+        <div className="w-20 h-20 rounded-3xl bg-red-500/10 flex items-center justify-center text-red-500 mb-8">
+           <UserX size={40} />
+        </div>
+        <h3 className="text-3xl font-display font-bold">Registry Sync Issue</h3>
+        <p className="text-white/40 text-[10px] mt-3 uppercase tracking-[0.2em] font-bold bg-white/5 px-4 py-2 rounded-full border border-white/5">{error}</p>
+        <Button onClick={loadApps} className="mt-10 border border-white/10 hover:border-luxury-gold h-14 px-10 rounded-2xl text-[10px] uppercase font-bold tracking-widest">Retry Registry Query</Button>
       </div>
     );
   }
@@ -107,15 +112,15 @@ export default function ProfessionalModeratedList() {
   return (
     <div className="space-y-8">
       {/* Status Bar */}
-      <div className="flex flex-wrap gap-2">
-        {(['pending', 'approved', 'rejected', 'suspended'] as const).map((s) => (
+      <div className="flex flex-wrap gap-3">
+        {(['pending', 'active', 'rejected', 'suspended'] as const).map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-xl text-[10px] uppercase font-black tracking-widest transition-all ${
+            onClick={() => setStatusFilter(s as any)}
+            className={`px-6 py-3 rounded-2xl text-[10px] uppercase font-black tracking-widest transition-all ${
               statusFilter === s 
-              ? 'bg-luxury-gold text-black border-luxury-gold' 
-              : 'bg-white/5 border-white/5 text-white/40 hover:text-white'
+              ? 'bg-luxury-gold text-black border-luxury-gold shadow-lg shadow-luxury-gold/20' 
+              : 'bg-white/5 border-white/5 text-white/40 hover:text-white hover:bg-white/10'
             } border`}
           >
             {s}
@@ -124,10 +129,12 @@ export default function ProfessionalModeratedList() {
       </div>
 
       {apps.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] border-dashed border-white/5">
-          <ShieldCheck className="text-white/10 mb-6" size={48} />
-          <h3 className="text-2xl font-display font-bold">Registry Clear</h3>
-          <p className="text-white/20 text-xs mt-2 uppercase tracking-widest">No applications found for this status</p>
+        <div className="flex flex-col items-center justify-center py-32 glass-card rounded-[3.5rem] border-2 border-dashed border-white/5">
+          <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-white/10 mb-8">
+            <ShieldCheck size={40} />
+          </div>
+          <h3 className="text-3xl font-display font-bold">Registry Clear</h3>
+          <p className="text-white/20 text-[10px] mt-3 uppercase tracking-[0.3em] font-black">No candidates found for {statusFilter} status</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -252,7 +259,7 @@ export default function ProfessionalModeratedList() {
                               </Button>
                             )}
                             
-                            {statusFilter === 'approved' && (
+                            {statusFilter === 'active' && (
                               <div className="flex gap-4">
                                  <div className="flex-1 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-green-500 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                                     <CheckCircle2 size={16} /> Verified Active

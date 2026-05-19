@@ -47,8 +47,7 @@ export default function InquiryModeratedList() {
 
   const handleArchive = async (id: string, currentStatus: boolean) => {
     setActioningId(id);
-    // Real Firestore update
-    const success = await moderationService.suspendItem('contactMessages', id); // Reusing suspend logic for archive
+    const success = await moderationService.archiveMessage(id, !currentStatus);
     if (success) {
       toast.success(currentStatus ? 'Message restored' : 'Message archived');
       setMessages(prev => prev.filter(m => m.id !== id));
@@ -73,9 +72,25 @@ export default function InquiryModeratedList() {
 
   if (loading && messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
-        <p className="text-white/20 text-[10px] uppercase font-bold tracking-[0.3em]">Querying Message Vault...</p>
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+        <Loader2 className="animate-spin text-luxury-gold mb-6" size={48} />
+        <div className="text-center">
+          <p className="text-white/20 text-[10px] uppercase font-black tracking-[0.4em] mb-2">Accessing Comm Link...</p>
+          <p className="text-white/10 text-[8px] uppercase tracking-widest">Querying encrypted database</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] border border-red-500/10">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mb-6">
+           <MessageSquare size={32} />
+        </div>
+        <h3 className="text-2xl font-display font-bold">Signal Lost</h3>
+        <p className="text-white/40 text-xs mt-2 uppercase tracking-widest">{error}</p>
+        <Button onClick={loadMessages} className="mt-8 border border-white/10 hover:border-luxury-gold">Reconnect Signal</Button>
       </div>
     );
   }

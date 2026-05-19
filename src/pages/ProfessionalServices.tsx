@@ -30,13 +30,13 @@ export default function ProfessionalServices() {
   const mappedPros: Professional[] = useMemo(() => {
     return services.map(s => ({
       id: s.id,
-      name: "Verified Specialist", 
+      name: s.providerName || "Verified Specialist", 
       title: s.title,
       category: s.category,
       skills: [s.category],
       experienceYears: Math.floor(Math.random() * 15) + 3,
       city: s.city || "Regionally Verified",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
+      image: s.providerImage || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
       rating: 4.8 + Math.random() * 0.2,
       reviewCount: Math.floor(Math.random() * 100),
       availability: 'Available',

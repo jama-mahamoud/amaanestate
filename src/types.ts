@@ -1,5 +1,5 @@
 export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
-export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended';
+export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended' | 'rejected';
 export type ListingType = 'sale' | 'rent';
 
 export interface Listing {
@@ -58,6 +58,8 @@ export interface ProfessionalService {
   category: ServiceCategory;
   city: string;
   providerId: string;
+  providerName?: string;
+  providerImage?: string;
   status: ServiceStatus;
   createdAt: any;
 }

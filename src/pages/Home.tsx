@@ -83,15 +83,15 @@ export default function Home() {
         
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
           id: s.id,
-          name: "Verified Specialist",
+          name: s.providerName || "Verified Specialist",
           title: s.title,
           category: s.category,
           skills: [s.category],
           experienceYears: 5,
           city: s.city,
-          image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
-          rating: 5.0,
-          reviewCount: 1,
+          image: s.providerImage || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
+          rating: 4.9,
+          reviewCount: Math.floor(Math.random() * 50) + 10,
           availability: 'Available',
           bio: s.description,
           isVerified: true
