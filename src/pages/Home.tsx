@@ -163,7 +163,7 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-luxury-black">
+      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-luxury-black pt-40 pb-20">
         <motion.div 
           initial={{ scale: 1.1, opacity: 0 }}
           animate={{ scale: 1, opacity: 0.6 }}
@@ -178,29 +178,30 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-luxury-black/40 via-luxury-black/60 to-luxury-black"></div>
         </motion.div>
 
-        <div className="container mx-auto px-4 relative z-10 text-center">
+        <div className="container mx-auto px-6 relative z-10 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="max-w-5xl mx-auto space-y-8"
           >
-            <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 tracking-tighter leading-tight">
+            <h1 className="text-5xl md:text-8xl font-display font-bold text-white tracking-tighter leading-[0.95]">
               Trusted Property & Professionals <br />
               <span className="text-luxury-gold">Across the Somali Region</span>
             </h1>
-            <p className="text-white/80 text-base md:text-xl max-w-2xl mx-auto mb-10 font-light tracking-wide px-4">
+            <p className="text-white/70 text-lg md:text-2xl font-light tracking-wide max-w-2xl mx-auto">
               Buy, sell, rent, and connect with verified agents, engineers, and trusted professionals.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <div className="flex flex-wrap justify-center gap-4 pt-4">
               <Button onClick={() => navigate('/properties')} className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">Browse Properties</Button>
               <Button onClick={() => navigate('/services')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">Find Professionals</Button>
               <Button onClick={() => navigate('/properties/list')} className="bg-white/10 text-white hover:bg-white/20 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
             </div>
 
             {/* Advanced Search Bar */}
-            <div className="max-w-6xl mx-auto bg-white/10 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-2xl border border-white/10">
+            <div className="mt-16 bg-white/10 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-2xl border border-white/10 w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                  <Input 
                    placeholder="Search..." 
@@ -237,7 +238,7 @@ export default function Home() {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/50 text-sm">
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/60 text-sm">
                 <span className="flex items-center gap-2"><Shield className="text-luxury-gold" size={16} /> Verified Listings</span>
                 <span className="flex items-center gap-2"><Users className="text-luxury-gold" size={16} /> Verified Agents</span>
                 <span className="flex items-center gap-2"><Award className="text-luxury-gold" size={16} /> Legal Document Checked</span>

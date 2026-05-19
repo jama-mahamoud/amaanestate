@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, MapPin, Briefcase, CheckCircle2, Users, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ export default function ProfessionalServices() {
   const [currentCategory, setCurrentCategory] = useState<ServiceCategory | 'All'>('All');
   const [currentCity, setCurrentCity] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const registryRef = useRef<HTMLDivElement>(null);
 
   const { services, loading, error, refresh } = useProfessionalServices(currentCategory);
 
@@ -70,7 +71,7 @@ export default function ProfessionalServices() {
                 Connect with the Somali Region's most verified and vetted specialists. Every expert is pre-qualified for excellence.
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
-                <Button size="lg" className="bg-luxury-gold text-black rounded-2xl hover:bg-white text-lg font-bold">
+                <Button onClick={() => registryRef.current?.scrollIntoView({ behavior: 'smooth' })} size="lg" className="bg-luxury-gold text-black rounded-2xl hover:bg-white text-lg font-bold">
                   Explore Experts
                 </Button>
                 <Link to="/professional-registration">
@@ -91,7 +92,7 @@ export default function ProfessionalServices() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div ref={registryRef} className="container mx-auto px-4 max-w-7xl">
         {/* Search & Categories */}
         <div className="sticky top-24 z-20 mb-12">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-[2rem] shadow-2xl flex flex-col md:flex-row gap-4">
