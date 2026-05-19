@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,11 +31,32 @@ export default function Navbar() {
     <header 
       className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out ${
         isScrolled 
-          ? 'bg-luxury-black/80 backdrop-blur-xl py-4 border-b border-white/5 shadow-2xl' 
-          : 'bg-transparent py-8'
+          ? 'bg-luxury-black/80 backdrop-blur-xl border-b border-white/5 shadow-2xl' 
+          : 'bg-transparent'
       }`}
     >
-      <div className="container mx-auto max-w-7xl px-4 md:px-6 flex items-center justify-between">
+      {/* WhatsApp Institutional Strip */}
+      <div className="w-full border-b border-white/5 bg-black/20 backdrop-blur-sm py-2 px-4 relative z-50">
+        <div className="container mx-auto max-w-7xl flex justify-end">
+          <a 
+            href="https://wa.me/251910012794" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 group transition-all cursor-pointer"
+          >
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#25D366]/10 text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-all duration-500 shadow-lg shadow-black/20">
+              <MessageCircle size={10} fill="currentColor" fillOpacity={0.1} />
+            </div>
+            <p className="text-[9px] md:text-[10px] uppercase font-black tracking-[0.25em] text-white/30 group-hover:text-white transition-colors duration-300">
+              WhatsApp Support <span className="mx-2 text-white/10 hidden md:inline">|</span> <span className="text-white/50 group-hover:text-luxury-gold">+251 910 012 794</span>
+            </p>
+          </a>
+        </div>
+      </div>
+
+      <div className={`container mx-auto max-w-7xl px-4 md:px-6 flex items-center justify-between transition-all duration-500 ${
+        isScrolled ? 'py-4' : 'py-8'
+      }`}>
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center space-x-2 md:space-x-3 group outline-none">
             <div className="bg-luxury-gold text-luxury-black w-10 h-10 md:w-11 md:h-11 flex items-center justify-center font-display font-black text-xl md:text-2xl rounded-xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-3 shadow-xl shadow-luxury-gold/20">
