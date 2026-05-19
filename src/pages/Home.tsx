@@ -11,6 +11,7 @@ import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
 import { Property, VehicleListing, Professional, Article, Listing } from '@/types';
 import { listingService } from '@/services/listingService';
+import { listingRepository } from '@/services/listingRepository';
 import { articleService } from '@/services/articleService';
 
 export default function Home() {
@@ -76,15 +77,15 @@ export default function Home() {
       setLoading(true);
       try {
         const [listingsRes, prosRes, articlesRes] = await Promise.all([
-          listingService.getListings({ limit: 100 }),
+          listingRepository.fetchListings({ status: 'active' }),
           listingService.getProfessionalServices('All', 'active'),
           articleService.getArticles()
         ]);
         
-        setAllListings(listingsRes.listings);
-        setFilteredListings(listingsRes.listings); // Initially, show all
-        setFeaturedProperties(listingsRes.listings.filter(l => l.category === 'property' && l.isFeatured).slice(0, 3) as Property[]);
-        setLatestVehicles(listingsRes.listings.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
+        setAllListings(listingsRes);
+        setFilteredListings(listingsRes); // Initially, show all
+        setFeaturedProperties(listingsRes.filter(l => l.category === 'property' && l.isFeatured).slice(0, 3) as Property[]);
+        setLatestVehicles(listingsRes.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
         setLatestArticles(articlesRes.slice(0, 3));
         
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
