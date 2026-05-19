@@ -31,7 +31,15 @@ export default function Home() {
 
   // Apply filters whenever dependencies change
   const applyFilters = () => {
-    const filtered = allListings.filter(l => {
+    // Standardize listings before filtering
+    const standardizedListings = allListings.map(l => ({
+        ...l,
+        status: l.status || 'pending',
+        verificationStatus: l.verificationStatus || 'pending',
+        isVerified: !!l.isVerified
+    }));
+
+    const filtered = standardizedListings.filter(l => {
       const matchesQuery = searchQuery.trim() === '' || 
                            l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -48,17 +56,19 @@ export default function Home() {
       
       const matchesVerified = !verifiedOnly || l.isVerified;
       
-      return matchesQuery && matchesCity && matchesType && matchesStatus && matchesVerified;
+      const isMatch = matchesQuery && matchesCity && matchesType && matchesStatus && matchesVerified;
+      
+      return isMatch;
     }).sort((a, b) => {
         // Verified first
         if (a.isVerified && !b.isVerified) return -1;
         if (!a.isVerified && b.isVerified) return 1;
         // Then by date (desc)
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.createdAt?.seconds * 1000 || 0).getTime() - new Date(a.createdAt?.seconds * 1000 || 0).getTime();
     });                
     
     setFilteredListings(filtered);
-    console.log(`DEBUG: Search applied with city ${searchCity}, type ${searchPropertyType}, status ${searchBuyRent}, query: "${searchQuery}" - Results count:`, filtered.length);
+    console.log(`DEBUG: Total listings fetched ${allListings.length}. Filtered results: ${filtered.length}. Params: city=${searchCity}, type=${searchPropertyType}, status=${searchBuyRent}, query="${searchQuery}"`);
   };
 
   useEffect(() => {
