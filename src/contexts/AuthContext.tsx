@@ -108,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // Check for minor background updates
             const existingData = userDoc.data() as UserProfile;
+            console.log('DEBUG: Firestore Profile Data:', existingData);
             
             const normalizedRole = existingData.role 
               ? (existingData.role.toString().toLowerCase().trim() as UserRole)
