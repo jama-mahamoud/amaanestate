@@ -23,7 +23,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchCity, setSearchCity] = useState('Jigjiga');
+  const [searchCity, setSearchCity] = useState('');
   const [searchPropertyType, setSearchPropertyType] = useState('Houses');
   const [searchBuyRent, setSearchBuyRent] = useState('Sell');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -45,7 +45,7 @@ export default function Home() {
                            l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      const matchesCity = l.city === searchCity;
+      const matchesCity = searchCity === '' || l.city === searchCity;
       
       const matchesType = (
           (searchPropertyType === 'Houses' && l.category === 'property') ||
@@ -118,11 +118,11 @@ export default function Home() {
   };
 
   // Check if filters are active
-  const isFilterActive = searchQuery !== '' || searchCity !== 'Jigjiga' || searchPropertyType !== 'Houses' || searchBuyRent !== 'Sell' || verifiedOnly;
+  const isFilterActive = searchQuery !== '' || searchCity !== '' || searchPropertyType !== 'Houses' || searchBuyRent !== 'Sell' || verifiedOnly;
 
   const resetFilters = () => {
     setSearchQuery('');
-    setSearchCity('Jigjiga');
+    setSearchCity('');
     setSearchPropertyType('Houses');
     setSearchBuyRent('Sell');
     setVerifiedOnly(false);
@@ -132,7 +132,7 @@ export default function Home() {
 
   const removeFilter = (filterType: string) => {
     if (filterType === 'search') setSearchQuery('');
-    if (filterType === 'city') setSearchCity('Jigjiga');
+    if (filterType === 'city') setSearchCity('');
     if (filterType === 'type') setSearchPropertyType('Houses');
     if (filterType === 'status') setSearchBuyRent('Sell');
     if (filterType === 'verified') setVerifiedOnly(false);
@@ -218,6 +218,7 @@ export default function Home() {
                    className="bg-white/5 border-white/10 text-white col-span-1 lg:col-span-2 h-14 rounded-xl"
                  />
                  <select className="bg-luxury-black border border-white/10 text-white rounded-xl h-14 px-4 hover:border-luxury-gold focus:border-luxury-gold transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-luxury-gold" value={searchCity} onChange={(e) => setSearchCity(e.target.value)}>
+                    <option value="">All Cities</option>
                     <option value="Jigjiga">Jigjiga</option>
                     <option value="Dire Dawa">Dire Dawa</option>
                     <option value="Godey">Godey</option>
@@ -329,7 +330,7 @@ export default function Home() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 flex flex-wrap justify-center gap-2">
                     <div className="text-white/60 mb-2 w-full text-sm">{filteredListings.length} {filteredListings.length === 1 ? 'result' : 'results'} found</div>
                     {searchQuery && <Badge onClick={() => removeFilter('search')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">Query: {searchQuery} ✕</Badge>}
-                    {searchCity !== 'Jigjiga' && <Badge onClick={() => removeFilter('city')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchCity} ✕</Badge>}
+                    {searchCity !== '' && <Badge onClick={() => removeFilter('city')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchCity} ✕</Badge>}
                     {searchPropertyType !== 'Houses' && <Badge onClick={() => removeFilter('type')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchPropertyType} ✕</Badge>}
                     {searchBuyRent !== 'Sell' && <Badge onClick={() => removeFilter('status')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchBuyRent} ✕</Badge>}
                     {verifiedOnly && <Badge onClick={() => removeFilter('verified')} className="cursor-pointer bg-luxury-gold text-luxury-black hover:bg-white">Verified Only ✕</Badge>}
