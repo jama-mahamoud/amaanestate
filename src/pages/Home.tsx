@@ -9,7 +9,7 @@ import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import EmptyState from '@/components/EmptyState';
-import { Property, VehicleListing, Professional, ListingCategory, Article } from '@/types';
+import { Property, VehicleListing, Professional, Article, Listing } from '@/types';
 import { listingService } from '@/services/listingService';
 import { articleService } from '@/services/articleService';
 
@@ -29,20 +29,38 @@ export default function Home() {
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
 
-  const filteredProperties = useMemo(() => {
-    return filteredListings.filter(l => l.category === 'property') as Property[];
-  }, [filteredListings]);
-
-  const filteredVehicles = useMemo(() => {
-    return filteredListings.filter(l => l.category === 'vehicle') as VehicleListing[];
-  }, [filteredListings]);
+  // Apply filters whenever dependencies change
+  const applyFilters = () => {
+    const filtered = allListings.filter(l => {
+      const matchesQuery = searchQuery.trim() === '' || 
+                           l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesCity = l.city === searchCity;
+      
+      const matchesType = (
+          (searchPropertyType === 'Houses' && l.category === 'property') ||
+          (searchPropertyType === 'Land' && l.category === 'land') ||
+          (searchPropertyType === 'Vehicles' && l.category === 'vehicle')
+      );
+      
+      const matchesStatus = l.listingType === searchBuyRent.toLowerCase();
+      
+      const matchesVerified = !verifiedOnly || l.isVerified;
+      
+      return matchesQuery && matchesCity && matchesType && matchesStatus && matchesVerified;
+    });                
+    
+    setFilteredListings(filtered);
+    console.log(`DEBUG: Search applied with city ${searchCity}, type ${searchPropertyType}, status ${searchBuyRent}, query: "${searchQuery}" - Results count:`, filtered.length);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [listingsRes, prosRes, articlesRes] = await Promise.all([
-          listingService.getListings({ limit: 100 }), // Fetch more for client-side filtering
+          listingService.getListings({ limit: 100 }),
           listingService.getProfessionalServices('All', 'active'),
           articleService.getArticles()
         ]);
@@ -53,7 +71,6 @@ export default function Home() {
         setLatestVehicles(listingsRes.listings.filter(l => l.category === 'vehicle').slice(0, 2) as VehicleListing[]);
         setLatestArticles(articlesRes.slice(0, 3));
         
-        // ... (rest of mapping professional services)
         const mappedPros: Professional[] = prosRes.slice(0, 3).map(s => ({
           id: s.id,
           name: "Verified Specialist",
@@ -80,24 +97,38 @@ export default function Home() {
   }, []);
 
   const handleSearch = () => {
-    const filtered = allListings.filter(l => {
-        const matchesQuery = l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             l.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCity = searchCity === 'All Cities' || l.city === searchCity;
-        // Map UI types to listing subcategories or category
-        const matchesType = searchPropertyType === 'All Types' || (
-            (searchPropertyType === 'Houses' && l.category === 'property') ||
-            (searchPropertyType === 'Land' && l.category === 'land') ||
-            (searchPropertyType === 'Vehicles' && l.category === 'vehicle')
-        );
-        const matchesStatus = l.listingType === searchBuyRent.toLowerCase();
-        
-        return matchesQuery && matchesCity && matchesType && matchesStatus;
-    });                
-    
-    setFilteredListings(filtered);
-    console.log('DEBUG: Filtered Results Count:', filtered.length);
+    applyFilters();
   };
+
+  // Check if filters are active
+  const isFilterActive = searchQuery !== '' || searchCity !== 'Jigjiga' || searchPropertyType !== 'Houses' || searchBuyRent !== 'Sell' || verifiedOnly;
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSearchCity('Jigjiga');
+    setSearchPropertyType('Houses');
+    setSearchBuyRent('Sell');
+    setVerifiedOnly(false);
+    // Explicit trigger since removing filters necessitates a re-filter
+    setTimeout(applyFilters, 0);
+  };
+
+  const removeFilter = (filterType: string) => {
+    if (filterType === 'search') setSearchQuery('');
+    if (filterType === 'city') setSearchCity('Jigjiga');
+    if (filterType === 'type') setSearchPropertyType('Houses');
+    if (filterType === 'status') setSearchBuyRent('Sell');
+    if (filterType === 'verified') setVerifiedOnly(false);
+    setTimeout(applyFilters, 0);
+  };
+
+  const filteredProperties = useMemo(() => {
+    return filteredListings.filter(l => l.category === 'property' || l.category === 'land') as Property[];
+  }, [filteredListings]);
+
+  const filteredVehicles = useMemo(() => {
+    return filteredListings.filter(l => l.category === 'vehicle') as VehicleListing[];
+  }, [filteredListings]);
 
   const cities = [
     { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1200&auto=format&fit=crop' },
@@ -275,6 +306,19 @@ export default function Home() {
             <h2 className="text-3xl md:text-6xl font-display font-bold text-white tracking-tight">
               Handpicked <span className="text-white/40">Excellence</span>
             </h2>
+
+            {/* Filter Summary */}
+            {isFilterActive && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 flex flex-wrap justify-center gap-2">
+                    <div className="text-white/60 mb-2 w-full text-sm">{filteredListings.length} {filteredListings.length === 1 ? 'result' : 'results'} found</div>
+                    {searchQuery && <Badge onClick={() => removeFilter('search')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">Query: {searchQuery} ✕</Badge>}
+                    {searchCity !== 'Jigjiga' && <Badge onClick={() => removeFilter('city')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchCity} ✕</Badge>}
+                    {searchPropertyType !== 'Houses' && <Badge onClick={() => removeFilter('type')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchPropertyType} ✕</Badge>}
+                    {searchBuyRent !== 'Sell' && <Badge onClick={() => removeFilter('status')} className="cursor-pointer bg-white/10 text-white hover:bg-white/20">{searchBuyRent} ✕</Badge>}
+                    {verifiedOnly && <Badge onClick={() => removeFilter('verified')} className="cursor-pointer bg-luxury-gold text-luxury-black hover:bg-white">Verified Only ✕</Badge>}
+                    <Button onClick={resetFilters} variant="link" className="text-luxury-gold hover:text-white underline text-sm p-0 h-auto">Reset Filters</Button>
+                </motion.div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
