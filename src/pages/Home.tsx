@@ -359,7 +359,7 @@ export default function Home() {
   }, [listings]);
 
   const cities = [
-    { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1547433020-007d4b4a689d?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Jigjiga', properties: 42, image: 'https://z-p3-scontent.fadd2-1.fna.fbcdn.net/v/t39.30808-6/644707886_34399610449652315_5526136155595269031_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGG8Md0zSF5JEOcUeJWUR-FwSUKVndKoKzBJQpWd0qgrLtg8OnfD_UgpaslnUkJdiNIVAe-a5WPL_EXq1HgVTML&_nc_ohc=zrWUo1R7-c4Q7kNvwG_CBmi&_nc_oc=AdoP54zcd7rzWpavPSjFmtdESKbF-njPr5xuv-BHlcoh3z-QlGc-kSFI2fv8we1wDNI&_nc_zt=23&_nc_ht=z-p3-scontent.fadd2-1.fna&_nc_gid=kDZ3FhoiF35jvwVQmD8dEw&_nc_ss=7b2a8&oh=00_Af7s74-9GDNTvCbBHpauvhvsUD6305ZvL_xH9Rbv4uMScg&oe=6A1283E1' },
     { name: 'Dire Dawa', properties: 28, image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?q=80&w=1200&auto=format&fit=crop' },
     { name: 'Addis Ababa', properties: 156, image: 'https://images.unsplash.com/photo-1698246401918-be4816c4961a?q=80&w=1200&auto=format&fit=crop' },
     { name: 'Hargeisa', properties: 34, image: 'https://images.unsplash.com/photo-1489493585363-d693ca3508f7?q=80&w=1200&auto=format&fit=crop' },
