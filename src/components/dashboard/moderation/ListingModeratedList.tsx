@@ -27,24 +27,25 @@ export default function ListingModeratedList() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ModerationStatus>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadListings();
-  }, [statusFilter]);
-
-  const loadListings = async () => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await moderationService.getPendingListings(undefined, statusFilter as any);
-      setListings(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to sync with asset network');
-      toast.error('Synchronization failure detected');
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    const unsubscribe = moderationService.subscribeToListings(
+      (data) => {
+        setListings(data);
+        setLoading(false);
+      },
+      statusFilter as any,
+      undefined
+    );
+
+    return () => unsubscribe();
+  }, [statusFilter, refreshKey]);
+
+  const loadListings = () => setRefreshKey(prev => prev + 1);
 
   const handleApprove = async (id: string) => {
     setActioningId(id);

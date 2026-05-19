@@ -37,8 +37,17 @@ export default function ModerationCenter() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    // Initial fetch
     loadStats();
-  }, [activeTab]);
+
+    // Subscribe to real-time changes
+    const unsubscribe = moderationService.subscribeToStats((newStats) => {
+      setStats(newStats);
+      setLoadingStats(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const loadStats = async () => {
     setLoadingStats(true);
@@ -66,8 +75,8 @@ export default function ModerationCenter() {
   const tabs = [
     { id: 'listings', label: 'Listing Assets', icon: <LayoutList size={18} />, count: stats.pendingListings },
     { id: 'professionals', label: 'Pro Vetting', icon: <Users size={18} />, count: stats.pendingProfessionals },
-    { id: 'articles', label: 'News Intelligence', icon: <FileText size={18} />, count: 0 },
-    { id: 'inquiries', label: 'Comm Inbound', icon: <MessageSquare size={18} />, count: 0 },
+    { id: 'articles', label: 'News Intelligence', icon: <FileText size={18} />, count: stats.totalArticles },
+    { id: 'inquiries', label: 'Comm Inbound', icon: <MessageSquare size={18} />, count: stats.totalInquiries },
   ];
 
   return (

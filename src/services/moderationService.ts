@@ -12,6 +12,7 @@ import {
   getCountFromServer,
   writeBatch,
   setDoc,
+  onSnapshot,
   Timestamp
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
@@ -52,7 +53,7 @@ export const moderationService = {
       const [
         pendingListingsCount,
         pendingProsCount,
-        verifiedProsCount,
+        activeProsCount,
         totalListingsCount,
         totalArticlesCount,
         totalInquiriesCount
@@ -68,7 +69,7 @@ export const moderationService = {
       return {
         pendingListings: pendingListingsCount.data().count,
         pendingProfessionals: pendingProsCount.data().count,
-        totalVerifiedProfessionals: verifiedProsCount.data().count,
+        totalVerifiedProfessionals: activeProsCount.data().count,
         totalListings: totalListingsCount.data().count,
         totalArticles: totalArticlesCount.data().count,
         totalInquiries: totalInquiriesCount.data().count
@@ -85,6 +86,51 @@ export const moderationService = {
         totalInquiries: 0
       };
     }
+  },
+
+  /**
+   * Real-time stats subscription
+   */
+  subscribeToStats(callback: (stats: ModerationStats) => void) {
+    const listingsRef = collection(db, 'listings');
+    const proAppsRef = collection(db, 'professionalApplications');
+    
+    // For stats, we'll use a listener on the collections and re-fetch counts
+    // This is more efficient than listening to every doc for simple counts
+    const unsubListings = onSnapshot(listingsRef, () => this.getModerationStats().then(callback));
+    const unsubProApps = onSnapshot(proAppsRef, () => this.getModerationStats().then(callback));
+    
+    return () => {
+      unsubListings();
+      unsubProApps();
+    };
+  },
+
+  /**
+   * Real-time subscription for listings
+   */
+  subscribeToListings(callback: (listings: Listing[]) => void, status: ListingStatus = 'pending', category?: ListingCategory) {
+    const listingsRef = collection(db, 'listings');
+    let constraints: any[] = [where('status', '==', status)];
+    
+    if (category) {
+      constraints.push(where('category', '==', category));
+    }
+
+    const q = query(listingsRef, ...constraints);
+    
+    return onSnapshot(q, (snapshot) => {
+      const listings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Listing[];
+      listings.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+      callback(listings);
+    }, (error) => {
+      console.error('Listings subscription error:', error);
+      callback([]);
+    });
   },
 
   /**
@@ -299,6 +345,31 @@ export const moderationService = {
   },
 
   /**
+   * Real-time subscription for professional applications
+   */
+  subscribeToProfessionalApplications(callback: (apps: any[]) => void, status: ApplicationStatus = 'pending') {
+    const appsRef = collection(db, 'professionalApplications');
+    let statusValues: string[] = [status];
+    if (status === 'pending') statusValues = ['pending', 'pending_review'];
+    if (status === 'active') statusValues = ['active', 'approved'];
+
+    const q = query(appsRef, where('status', 'in', statusValues));
+    
+    return onSnapshot(q, (snapshot) => {
+      const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      apps.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+      callback(apps);
+    }, (error) => {
+      console.error('Pro applications subscription error:', error);
+      callback([]);
+    });
+  },
+
+  /**
    * Get professional applications
    */
   async getProfessionalApplications(status: ApplicationStatus = 'pending') {
@@ -334,6 +405,30 @@ export const moderationService = {
          return [];
        }
     }
+  },
+
+  /**
+   * Real-time subscription for articles
+   */
+  subscribeToArticles(callback: (articles: Article[]) => void, publishedOnly?: boolean) {
+    const articlesRef = collection(db, 'articles');
+    let q = query(articlesRef);
+    if (publishedOnly !== undefined) {
+      q = query(articlesRef, where('published', '==', publishedOnly));
+    }
+    
+    return onSnapshot(q, (snapshot) => {
+      const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+      articles.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+      callback(articles);
+    }, (error) => {
+      console.error('Articles subscription error:', error);
+      callback([]);
+    });
   },
 
   /**
@@ -373,6 +468,26 @@ export const moderationService = {
         return [];
       }
     }
+  },
+
+  /**
+   * Real-time subscription for messages
+   */
+  subscribeToMessages(callback: (messages: any[]) => void) {
+    const messagesRef = collection(db, 'contactMessages');
+    
+    return onSnapshot(messagesRef, (snapshot) => {
+      const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      messages.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+      callback(messages);
+    }, (error) => {
+      console.error('Messages subscription error:', error);
+      callback([]);
+    });
   },
 
   /**

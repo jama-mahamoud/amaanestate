@@ -27,21 +27,21 @@ export default function ArticleModeratedList() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   useEffect(() => {
-    loadArticles();
-  }, [statusFilter]);
-
-  const loadArticles = async () => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await moderationService.getAllArticles(statusFilter === 'all' ? undefined : statusFilter === 'published');
-      setArticles(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to sync content network');
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    const unsubscribe = moderationService.subscribeToArticles(
+      (data) => {
+        setArticles(data);
+        setLoading(false);
+      },
+      statusFilter === 'all' ? undefined : (statusFilter === 'published')
+    );
+
+    return () => unsubscribe();
+  }, [statusFilter]);
+
+  const loadArticles = () => setStatusFilter(prev => prev); // Dummy for compatibility
 
   const handleTogglePublish = async (id: string, currentStatus: boolean) => {
     setActioningId(id);

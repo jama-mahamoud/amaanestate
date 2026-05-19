@@ -29,23 +29,24 @@ export default function ProfessionalModeratedList() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadApps();
-  }, [statusFilter]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const loadApps = async () => {
+  useEffect(() => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await moderationService.getProfessionalApplications(statusFilter);
-      setApps(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to retrieve applications');
-      toast.error('Sync failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    const unsubscribe = moderationService.subscribeToProfessionalApplications(
+      (data) => {
+        setApps(data);
+        setLoading(false);
+      },
+      statusFilter
+    );
+
+    return () => unsubscribe();
+  }, [statusFilter, refreshKey]);
+
+  const loadApps = () => setRefreshKey(prev => prev + 1);
 
   const handleApprove = async (appId: string, userId: string, proData: any) => {
     setActioningId(appId);

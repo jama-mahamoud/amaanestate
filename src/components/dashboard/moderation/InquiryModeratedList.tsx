@@ -25,25 +25,24 @@ export default function InquiryModeratedList() {
   const [statusFilter, setStatusFilter] = useState<'new' | 'archived'>('new');
   const [actioningId, setActioningId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadMessages();
-  }, [statusFilter]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const loadMessages = async () => {
+  useEffect(() => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await moderationService.getContactMessages();
+    
+    const unsubscribe = moderationService.subscribeToMessages((data) => {
       const filtered = statusFilter === 'new' 
         ? data.filter(m => !m.archived)
         : data.filter(m => m.archived);
       setMessages(filtered);
-    } catch (err: any) {
-      setError(err.message || 'Communication network offline');
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, [statusFilter, refreshKey]);
+
+  const loadMessages = () => setRefreshKey(prev => prev + 1);
 
   const handleArchive = async (id: string, currentStatus: boolean) => {
     setActioningId(id);
