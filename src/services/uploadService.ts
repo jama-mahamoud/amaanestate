@@ -1,37 +1,17 @@
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
-import { v4 as uuidv4 } from 'uuid';
+import { uploadToCloudinary } from './cloudinaryUpload';
 
 export const uploadFile = async (
   file: File, 
-  path: string, 
+  _path: string, 
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const fileId = uuidv4();
-    const extension = file.name.split('.').pop();
-    const filePath = `${path}/${fileId}.${extension}`;
-    const storageRef = ref(storage, filePath);
-
-    console.log('Starting upload to:', filePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload progress:', progress);
-        if (onProgress) onProgress(progress);
-      },
-      (error) => {
-        console.error('Upload error:', error);
-        reject(error);
-      },
-      async () => {
-        console.log('Upload completed');
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve(downloadURL);
-      }
-    );
-  });
+  try {
+    console.log('Starting Cloudinary broadcast for asset:', file.name);
+    const response = await uploadToCloudinary(file, onProgress);
+    console.log('Cloudinary broadcast successful:', response.secure_url);
+    return response.secure_url;
+  } catch (error) {
+    console.error('Cloudinary broadcast failure:', error);
+    throw error;
+  }
 };

@@ -157,6 +157,21 @@
         }
       },
       "description": "Audit log for trust and verification actions"
+    },
+    "/contactMessages/{messageId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string" },
+          "email": { "type": "string" },
+          "inquiryType": { "type": "string" },
+          "message": { "type": "string" },
+          "status": { "type": "string", "enum": ["unread", "read", "archived"] },
+          "userId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Collection of contact form submissions"
     }
   }
 }

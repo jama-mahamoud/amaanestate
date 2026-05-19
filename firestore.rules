@@ -118,6 +118,16 @@ service cloud.firestore {
         && data.keys().hasOnly(allowedFields);
     }
 
+    function isValidContactMessage(data) {
+      return data.keys().hasAll(['fullName', 'email', 'inquiryType', 'message', 'status', 'createdAt'])
+        && data.fullName is string
+        && data.email is string
+        && data.inquiryType is string
+        && data.message is string
+        && data.status in ['unread', 'read', 'archived']
+        && (!('userId' in data) || data.userId == null || data.userId == request.auth.uid);
+    }
+
     // 3. Collection Security Strategies
 
     // Users Collection
@@ -196,6 +206,13 @@ service cloud.firestore {
       allow create: if isEditor() && isValidArticle(incoming());
       allow update: if isEditor();
       allow delete: if isEditor();
+    }
+
+    // Contact Messages
+    match /contactMessages/{messageId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidContactMessage(incoming()); 
+      allow update, delete: if isAdmin();
     }
 
     // Global Stats & Analytics

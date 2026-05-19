@@ -7,8 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function Contact() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,17 +30,44 @@ export default function Contact() {
     }
 
     setLoading(true);
+    console.log('Dispatching correspondence...', formData);
+
     try {
-      await addDoc(collection(db, 'contactMessages'), {
-        ...formData,
+      const authUserId = user?.uid || null;
+      const submissionData = {
+        fullName: formData.name.trim(),
+        email: formData.email.trim(),
+        inquiryType: formData.subject,
+        message: formData.message.trim(),
         status: 'unread',
-        createdAt: serverTimestamp()
-      });
+        createdAt: serverTimestamp(),
+        userId: authUserId
+      };
+
+      console.log('--- CONTACT SUBMISSION ATTEMPT ---');
+      console.log('Current Auth User ID:', authUserId);
+      console.log('Submission Payload:', submissionData);
+      
+      const docRef = await addDoc(collection(db, 'contactMessages'), submissionData);
+      console.log('Submission success, document ID:', docRef.id);
+      
       setSuccess(true);
-      toast.success('Correspondence dispatched successfully');
-    } catch (error) {
-      console.error('Contact submission error:', error);
-      toast.error('Failed to dispatch inquiry. Please try again.');
+      toast.success('Inquiry dispatched successfully');
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: 'Property Portfolio Inquiry',
+        message: ''
+      });
+    } catch (error: any) {
+      console.error('Contact submission CRITICAL failure:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      toast.error(`Failed to dispatch inquiry: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -240,14 +270,22 @@ export default function Contact() {
                       </div>
 
                       <Button 
-                        disabled={loading}
+                        disabled={loading || !user}
                         className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-16 md:h-20 rounded-[1.5rem] md:rounded-[2rem] font-bold text-lg md:text-xl shadow-2xl shadow-luxury-gold/10"
                       >
                         {loading ? <Loader2 className="animate-spin mr-3" /> : <Send size={20} className="mr-3" />}
                         {loading ? 'Dispatching...' : 'Dispatch Correspondence'}
                       </Button>
+
+                      {!user && (
+                        <div className="text-center mt-4">
+                          <p className="text-white/40 text-xs md:text-sm">
+                            Please <Link to="/login" className="text-luxury-gold hover:underline">sign in</Link> to initialize institutional correspondence.
+                          </p>
+                        </div>
+                      )}
                       
-                      <div className="text-center">
+                      <div className="text-center mt-6">
                          <p className="text-white/10 text-[9px] uppercase font-bold tracking-[0.5em]">Secure Institutional Protocol</p>
                       </div>
                     </form>
