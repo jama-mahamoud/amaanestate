@@ -50,7 +50,8 @@ service cloud.firestore {
       let allowedFields = ['title', 'description', 'category', 'price', 'currency', 'city', 'location', 
                            'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images', 'features', 
                            'isFeatured', 'metadata', 'subcategory', 'year', 'mileage', 
-                           'fuelType', 'transmission', 'beds', 'baths', 'size'];
+                           'fuelType', 'transmission', 'beds', 'baths', 'size',
+                           'isVerified', 'verificationStatus', 'legalChecked', 'ownershipVerified'];
                            
       return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
         && data.title is string && data.title.size() <= 200
@@ -66,7 +67,11 @@ service cloud.firestore {
         && (!('year' in data) || data.year is number)
         && (!('mileage' in data) || data.mileage is string)
         && (!('beds' in data) || data.beds is number)
-        && (!('baths' in data) || data.baths is number);
+        && (!('baths' in data) || data.baths is number)
+        && (!('isVerified' in data) || data.isVerified is bool)
+        && (!('verificationStatus' in data) || data.verificationStatus in ['pending', 'verified', 'rejected'])
+        && (!('legalChecked' in data) || data.legalChecked is bool)
+        && (!('ownershipVerified' in data) || data.ownershipVerified is bool);
     }
     
     function isValidService(data) {
@@ -137,10 +142,14 @@ service cloud.firestore {
 
     // Listings System
     match /listings/{listingId} {
-      allow read: if resource.data.status == 'active' || (isSignedIn() && isOwner(resource.data.ownerId)) || isAdmin();
+      allow read: if (resource.data.status == 'active' && resource.data.verificationStatus == 'verified') || (isSignedIn() && isOwner(resource.data.ownerId)) || isAdmin();
       allow create: if isSignedIn() 
         && isValidListing(incoming())
-        && incoming().status == 'pending';
+        && incoming().status == 'pending'
+        && incoming().verificationStatus == 'pending'
+        && incoming().isVerified == false
+        && incoming().legalChecked == false
+        && incoming().ownershipVerified == false;
       allow update: if (
         isOwner(existing().ownerId) && (
           incoming().diff(existing()).affectedKeys().hasOnly([
@@ -193,6 +202,12 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read: if isAdmin();
       allow write: if false; // Only populated via DB or root admin
+    }
+
+    // Trust Audit Logs
+    match /trustAuditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // System only
     }
   }
 }

@@ -56,6 +56,10 @@
         "ownerId": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "active", "sold", "rented", "archived"] },
         "isFeatured": { "type": "boolean" },
+        "isVerified": { "type": "boolean" },
+        "verificationStatus": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "legalChecked": { "type": "boolean" },
+        "ownershipVerified": { "type": "boolean" },
         "images": { "type": "array" },
         "features": { "type": "object" },
         "createdAt": { "type": "string", "format": "date-time" },
@@ -141,6 +145,18 @@
     "/articles/{articleId}": {
       "schema": "Article",
       "description": "Collection of articles, news, and reports"
+    },
+    "/trustAuditLogs/{logId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "listingId": { "type": "string" },
+          "adminId": { "type": "string" },
+          "action": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Audit log for trust and verification actions"
     }
   }
 }

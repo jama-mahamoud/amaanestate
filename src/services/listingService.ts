@@ -118,8 +118,12 @@ export const listingService = {
     const newListing = {
       ...data,
       ownerId: auth.currentUser.uid,
-      status: 'pending', // All submissions default to pending
-      isFeatured: false, // Cannot self-feature
+      status: 'pending', 
+      isFeatured: false, 
+      isVerified: false,
+      verificationStatus: 'pending',
+      legalChecked: false,
+      ownershipVerified: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -142,6 +146,10 @@ export const listingService = {
       ownerId: auth.currentUser.uid,
       status: 'pending', 
       isFeatured: false, 
+      isVerified: false,
+      verificationStatus: 'pending',
+      legalChecked: false,
+      ownershipVerified: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -155,11 +163,19 @@ export const listingService = {
     }
   },
 
-  async updateListing(id: string, data: Partial<Listing>) {
+  async updateListing(id: string, data: Partial<Listing>, asAdmin: boolean = false) {
     const listingRef = doc(db, 'listings', id);
+    const cleanData = { ...data };
+    if (!asAdmin) {
+      delete cleanData.isVerified;
+      delete cleanData.verificationStatus;
+      delete cleanData.legalChecked;
+      delete cleanData.ownershipVerified;
+      delete cleanData.isFeatured;
+    }
     try {
       await updateDoc(listingRef, {
-        ...data,
+        ...cleanData,
         updatedAt: serverTimestamp(),
       });
       return true;
