@@ -358,12 +358,29 @@ export default function Home() {
     return listings.filter(l => l.category === 'vehicle') as VehicleListing[];
   }, [listings]);
 
-  const cities = [
-    { name: 'Jigjiga', properties: 42, image: 'https://z-p3-scontent.fadd2-1.fna.fbcdn.net/v/t39.30808-6/644707886_34399610449652315_5526136155595269031_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGG8Md0zSF5JEOcUeJWUR-FwSUKVndKoKzBJQpWd0qgrLtg8OnfD_UgpaslnUkJdiNIVAe-a5WPL_EXq1HgVTML&_nc_ohc=zrWUo1R7-c4Q7kNvwG_CBmi&_nc_oc=AdoP54zcd7rzWpavPSjFmtdESKbF-njPr5xuv-BHlcoh3z-QlGc-kSFI2fv8we1wDNI&_nc_zt=23&_nc_ht=z-p3-scontent.fadd2-1.fna&_nc_gid=kDZ3FhoiF35jvwVQmD8dEw&_nc_ss=7b2a8&oh=00_Af7s74-9GDNTvCbBHpauvhvsUD6305ZvL_xH9Rbv4uMScg&oe=6A1283E1' },
-    { name: 'Dire Dawa', properties: 28, image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?q=80&w=1200&auto=format&fit=crop' },
-    { name: 'Addis Ababa', properties: 156, image: 'https://images.unsplash.com/photo-1698246401918-be4816c4961a?q=80&w=1200&auto=format&fit=crop' },
-    { name: 'Hargeisa', properties: 34, image: 'https://images.unsplash.com/photo-1489493585363-d693ca3508f7?q=80&w=1200&auto=format&fit=crop' },
-  ];
+  const cities = useMemo(() => {
+    const list = [
+      { name: 'Jigjiga', image: 'https://z-p3-scontent.fadd2-1.fna.fbcdn.net/v/t39.30808-6/644707886_34399610449652315_5526136155595269031_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGG8Md0zSF5JEOcUeJWUR-FwSUKVndKoKzBJQpWd0qgrLtg8OnfD_UgpaslnUkJdiNIVAe-a5WPL_EXq1HgVTML&_nc_ohc=zrWUo1R7-c4Q7kNvwG_CBmi&_nc_oc=AdoP54zcd7rzWpavPSjFmtdESKbF-njPr5xuv-BHlcoh3z-QlGc-kSFI2fv8we1wDNI&_nc_zt=23&_nc_ht=z-p3-scontent.fadd2-1.fna&_nc_gid=kDZ3FhoiF35jvwVQmD8dEw&_nc_ss=7b2a8&oh=00_Af7s74-9GDNTvCbBHpauvhvsUD6305ZvL_xH9Rbv4uMScg&oe=6A1283E1' },
+      { name: 'Dire Dawa', image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?q=80&w=1200&auto=format&fit=crop' },
+      { name: 'Addis Ababa', image: 'https://images.unsplash.com/photo-1698246401918-be4816c4961a?q=80&w=1200&auto=format&fit=crop' },
+      { name: 'Hargeisa', image: 'https://images.unsplash.com/photo-1489493585363-d693ca3508f7?q=80&w=1200&auto=format&fit=crop' },
+    ];
+
+    return list.map(city => {
+      // Return count of active Listings (where category is property or land)
+      // where the city field or region matches city.name case-insensitively
+      const count = listings.filter(l => 
+        (l.category === 'property' || l.category === 'land') &&
+        ((l.city && l.city.toLowerCase() === city.name.toLowerCase()) ||
+        ((l as any).region && (l as any).region.toLowerCase() === city.name.toLowerCase()))
+      ).length;
+
+      return {
+        ...city,
+        properties: count
+      };
+    });
+  }, [listings]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -660,17 +677,17 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer"
+                onClick={() => navigate(`/properties?city=${city.name}`)}
+                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-luxury-gold/30 glass-card transition-all"
               >
                 <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
                 <div className="absolute inset-x-0 bottom-0 p-8">
                   <h3 className="text-3xl font-display font-bold text-white mb-2">{city.name}</h3>
                   <p className="text-luxury-gold font-semibold text-sm tracking-widest uppercase">{city.properties} Premium Listings</p>
-                  <div className="mt-6 overflow-hidden h-0 group-hover:h-10 transition-all duration-500">
-                    <Button variant="ghost" className="text-white p-0 hover:text-luxury-gold hover:bg-transparent" onClick={() => navigate(`/properties?city=${city.name}`)}>
-                      Explore City <ArrowRight className="ml-2" size={16} />
-                    </Button>
+                  <div className="mt-6 flex items-center text-white/60 group-hover:text-luxury-gold transition-colors text-sm font-semibold gap-2">
+                    <span>Explore City</span>
+                    <ArrowRight className="group-hover:translate-x-1.5 transition-transform" size={16} />
                   </div>
                 </div>
               </motion.div>

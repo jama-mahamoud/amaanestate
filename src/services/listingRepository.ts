@@ -56,7 +56,11 @@ export const listingRepository = {
         listings = listings.filter(l => l.status === filters.status);
       }
       if (filters.city) {
-        listings = listings.filter(l => l.city === filters.city);
+        const cityLower = filters.city.toLowerCase();
+        listings = listings.filter(l => 
+          (l.city && l.city.toLowerCase() === cityLower) || 
+          ((l as any).region && (l as any).region.toLowerCase() === cityLower)
+        );
       }
       if (filters.category) {
         listings = listings.filter(l => l.category === filters.category);

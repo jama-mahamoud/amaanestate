@@ -14,7 +14,9 @@ import {
   QueryConstraint,
   startAfter,
   DocumentData,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  or,
+  and
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Listing, ListingCategory, ListingStatus, ListingType, ProfessionalService, ServiceStatus } from '../types';
@@ -34,45 +36,59 @@ export interface ListingFilter {
 export const listingService = {
   async getListings(filters: ListingFilter = {}) {
     const listingsRef = collection(db, 'listings');
-    const constraints: QueryConstraint[] = [];
+    const filterConstraints: any[] = [];
 
     // Default to active listings if no status is specified
-    constraints.push(where('status', '==', filters.status || 'active'));
+    filterConstraints.push(where('status', '==', filters.status || 'active'));
 
     if (filters.category) {
-      constraints.push(where('category', '==', filters.category));
+      filterConstraints.push(where('category', '==', filters.category));
     }
 
     if (filters.listingType) {
-      constraints.push(where('listingType', '==', filters.listingType));
+      filterConstraints.push(where('listingType', '==', filters.listingType));
     }
 
     if (filters.city && filters.city !== 'All') {
-      constraints.push(where('city', '==', filters.city));
+      filterConstraints.push(or(
+        where('city', '==', filters.city),
+        where('region', '==', filters.city)
+      ));
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       if (filters.minPrice !== undefined) {
-        constraints.push(where('price', '>=', filters.minPrice));
+        filterConstraints.push(where('price', '>=', filters.minPrice));
       }
       if (filters.maxPrice !== undefined) {
-        constraints.push(where('price', '<=', filters.maxPrice));
+        filterConstraints.push(where('price', '<=', filters.maxPrice));
       }
     }
 
-    // Pagination
+    const queryConstraints: any[] = [];
+    if (filterConstraints.length > 0) {
+      // If we are filtering by a city, our query contains an 'or' composite filter.
+      // Firestore requires all other filter conditions to be bundled with the 'or' filter under a single top-level 'and(...)'.
+      if (filters.city && filters.city !== 'All') {
+        queryConstraints.push(and(...filterConstraints));
+      } else {
+        queryConstraints.push(...filterConstraints);
+      }
+    }
+
+    // Pagination/Query Adjustment
     if (filters.limit) {
-      constraints.push(limit(filters.limit));
+      queryConstraints.push(limit(filters.limit));
     } else {
-      constraints.push(limit(20)); // Default page size
+      queryConstraints.push(limit(20)); // Default page size
     }
 
     if (filters.lastDoc) {
-      constraints.push(startAfter(filters.lastDoc));
+      queryConstraints.push(startAfter(filters.lastDoc));
     }
 
     try {
-      const q = query(listingsRef, ...constraints);
+      const q = query(listingsRef, ...queryConstraints);
       const snapshot = await getDocs(q);
       
       const listings = snapshot.docs.map(doc => ({
