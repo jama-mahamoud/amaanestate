@@ -31,30 +31,42 @@ const normalizeListing = (doc: QueryDocumentSnapshot<DocumentData>): Listing => 
 };
 
 export const listingRepository = {
-  async fetchListings(filters: { status?: string, verificationStatus?: string, city?: string, category?: string, searchQuery?: string, verifiedOnly?: boolean } = {}): Promise<Listing[]> {
+  async fetchListings(filters: { status?: string, verificationStatus?: string, city?: string, category?: string, listingType?: string, searchQuery?: string, verifiedOnly?: boolean } = {}): Promise<Listing[]> {
     const cacheKey = JSON.stringify(filters);
     if (cache.has(cacheKey) && Date.now() - (cache.get(cacheKey)?.timestamp || 0) < CACHE_DURATION) {
       return cache.get(cacheKey)!.data;
     }
 
     try {
-      const constraints: any[] = [];
-      if (filters.status) constraints.push(where('status', '==', filters.status));
-      if (filters.verificationStatus) constraints.push(where('verificationStatus', '==', filters.verificationStatus));
-      if (filters.city) constraints.push(where('city', '==', filters.city));
-      if (filters.category) constraints.push(where('category', '==', filters.category));
-
-      const q = query(collection(db, 'listings'), ...constraints, orderBy('createdAt', 'desc'));
+      // Query only by createdAt to avoid compound index requirements. 
+      // All other filtering is performed client-side.
+      const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
 
       const querySnapshot = await getDocs(q);
       let listings = querySnapshot.docs.map(normalizeListing);
       
       // Client-side advanced filtering
+      if (filters.status) {
+        listings = listings.filter(l => l.status === filters.status);
+      }
+      if (filters.city) {
+        listings = listings.filter(l => l.city === filters.city);
+      }
+      if (filters.category) {
+        listings = listings.filter(l => l.category === filters.category);
+      }
+      if (filters.listingType) {
+        listings = listings.filter(l => l.listingType === filters.listingType);
+      }
+      if (filters.verificationStatus) {
+        listings = listings.filter(l => l.verificationStatus === filters.verificationStatus);
+      }
       if (filters.searchQuery) {
         const queryLower = filters.searchQuery.toLowerCase();
         listings = listings.filter(l => 
           l.title.toLowerCase().includes(queryLower) || 
-          (l.description && l.description.toLowerCase().includes(queryLower))
+          (l.description && l.description.toLowerCase().includes(queryLower)) ||
+          (l.city && l.city.toLowerCase().includes(queryLower))
         );
       }
       

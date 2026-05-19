@@ -33,11 +33,24 @@ export default function Home() {
   const loadListings = async () => {
     setLoading(true);
     try {
-        const category = searchPropertyType === 'Vehicles' ? 'vehicle' : 'property';
+        const categoryMap: Record<string, string> = {
+            'Houses': 'property',
+            'Land': 'land',
+            'Vehicles': 'vehicle'
+        };
+        const listingTypeMap: Record<string, string> = {
+            'Sell': 'sale',
+            'Rent': 'rent'
+        };
+        
+        const category = categoryMap[searchPropertyType] || undefined;
+        const listingType = listingTypeMap[searchBuyRent] || undefined;
+
         const listingsRes = await listingRepository.fetchListings({
             status: 'active',
             city: searchCity || undefined,
             category: category,
+            listingType: listingType,
             searchQuery: searchQuery || undefined,
             verifiedOnly: verifiedOnly
         });
