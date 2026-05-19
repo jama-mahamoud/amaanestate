@@ -108,12 +108,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // Check for minor background updates
             const existingData = userDoc.data() as UserProfile;
-            console.log('DEBUG: Firestore Profile Data:', existingData);
+            console.log('DEBUG: Firestore Profile Data:', JSON.stringify(existingData));
+            console.log('DEBUG: User Email:', user.email);
+            console.log('DEBUG: Firestore Profile Role Path:', `users/${user.uid}`);
+            console.log('DEBUG: RAW Firestore Role:', existingData.role);
             
             const normalizedRole = existingData.role 
               ? (existingData.role.toString().toLowerCase().trim() as UserRole)
               : 'normal_user';
 
+            console.log('DEBUG: Normalized Role being set:', normalizedRole);
             setProfile({
               ...existingData,
               role: normalizedRole
@@ -136,9 +140,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profileUnsubscribe = onSnapshot(userRef, (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data() as UserProfile;
+              console.log('DEBUG: Firestore Snapshot Data:', JSON.stringify(data));
+              const normalizedRole = data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user';
+              console.log('DEBUG: Normalized Snapshot Role being set:', normalizedRole);
               setProfile({
                 ...data,
-                role: data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user'
+                role: normalizedRole
               });
             } else {
               setProfile(null);

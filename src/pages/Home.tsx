@@ -22,7 +22,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchCity, setSearchCity] = useState('All Cities');
+  const [searchCity, setSearchCity] = useState('Jigjiga');
+  const [searchPropertyType, setSearchPropertyType] = useState('Houses');
+  const [searchBuyRent, setSearchBuyRent] = useState('Sell');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,49 +120,63 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge className="bg-luxury-gold text-luxury-black border-0 uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold px-3 md:px-4 py-1 mb-4 md:mb-6 animate-pulse text-[9px] md:text-xs">
-              The Region's Finest Estates
-            </Badge>
-            <h1 className="text-4xl md:text-8xl font-display font-extrabold text-white mb-6 md:mb-8 tracking-tighter leading-[1.1] md:leading-none">
-              Luxury Living In <br />
-              <span className="gold-text-gradient">The Somali Region</span>
+            <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 tracking-tighter leading-tight">
+              Trusted Property & Professionals <br />
+              <span className="text-luxury-gold">Across the Somali Region</span>
             </h1>
-            <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto mb-8 md:mb-12 font-light tracking-wide px-4">
-              Experience the pinnacle of real estate excellence. From modern villas in Jigjiga to premium vehicles and strategic land holdings.
+            <p className="text-white/80 text-base md:text-xl max-w-2xl mx-auto mb-10 font-light tracking-wide px-4">
+              Buy, sell, rent, and connect with verified agents, engineers, and trusted professionals.
             </p>
 
-            {/* Search Box */}
-            <div className="max-w-5xl mx-auto glass-card p-2 md:p-3 rounded-3xl md:rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row gap-2">
-              <div className="flex-[1.5] flex items-center bg-white/5 rounded-2xl px-4 md:px-6 py-3 md:py-4 group focus-within:bg-white/10 transition-all border border-white/5 focus-within:border-luxury-gold/50">
-                <Search className="text-luxury-gold mr-3 md:mr-4 group-hover:scale-110 transition-transform" size={20} />
-                <Input 
-                  placeholder="What are you looking for?" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="bg-transparent border-0 text-white placeholder:text-white/20 focus-visible:ring-0 px-0 h-auto text-base md:text-lg w-full"
-                />
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              <Button onClick={() => navigate('/properties')} className="bg-luxury-gold text-luxury-black hover:bg-white text-lg font-bold px-8 py-6 rounded-2xl">Browse Properties</Button>
+              <Button onClick={() => navigate('/services')} variant="outline" className="text-white border-white/20 hover:bg-white/10 text-lg font-bold px-8 py-6 rounded-2xl">Find Professionals</Button>
+              <Button onClick={() => navigate('/properties/list')} className="bg-white/10 text-white hover:bg-white/20 text-lg font-bold px-8 py-6 rounded-2xl">List Property</Button>
+            </div>
+
+            {/* Advanced Search Bar */}
+            <div className="max-w-6xl mx-auto bg-white/10 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-2xl border border-white/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                 <Input 
+                   placeholder="Search..." 
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                   className="bg-white/5 border-white/10 text-white col-span-1 lg:col-span-2 h-14 rounded-xl"
+                 />
+                 <select className="bg-luxury-black border border-white/10 text-white rounded-xl h-14 px-4 hover:border-luxury-gold focus:border-luxury-gold transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-luxury-gold" value={searchCity} onChange={(e) => setSearchCity(e.target.value)}>
+                    <option value="Jigjiga">Jigjiga</option>
+                    <option value="Dire Dawa">Dire Dawa</option>
+                    <option value="Godey">Godey</option>
+                    <option value="Dhagaxbur">Dhagaxbur</option>
+                    <option value="Qabridaha">Qabridaha</option>
+                    <option value="Addis Ababa">Addis Ababa</option>
+                 </select>
+                 <select className="bg-luxury-black border border-white/10 text-white rounded-xl h-14 px-4 hover:border-luxury-gold focus:border-luxury-gold transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-luxury-gold" value={searchPropertyType} onChange={(e) => setSearchPropertyType(e.target.value)}>
+                    <option value="Houses">Houses</option>
+                    <option value="Land">Land</option>
+                    <option value="Vehicles">Vehicles</option>
+                 </select>
+                 <select className="bg-luxury-black border border-white/10 text-white rounded-xl h-14 px-4 hover:border-luxury-gold focus:border-luxury-gold transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-luxury-gold" value={searchBuyRent} onChange={(e) => setSearchBuyRent(e.target.value)}>
+                    <option value="Sell">Sell</option>
+                    <option value="Rent">Rent</option>
+                 </select>
+                 <div className="flex items-center gap-4 text-white">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="accent-luxury-gold" />
+                        Verified
+                    </label>
+                    <Button onClick={handleSearch} className="bg-luxury-gold text-luxury-black font-bold h-14 px-8 rounded-xl w-full">Search</Button>
+                 </div>
               </div>
-              <div className="flex-1 flex items-center bg-white/5 rounded-2xl px-4 md:px-6 py-3 md:py-4 group focus-within:bg-white/10 transition-all border border-white/5 focus-within:border-luxury-gold/50">
-                <MapPin className="text-luxury-gold mr-3 md:mr-4 group-hover:scale-110 transition-transform" size={20} />
-                <select 
-                  className="bg-transparent border-0 text-white focus:outline-none w-full appearance-none text-base md:text-lg"
-                  value={searchCity}
-                  onChange={(e) => setSearchCity(e.target.value)}
-                >
-                  <option className="bg-luxury-black" value="All">All Cities</option>
-                  <option className="bg-luxury-black" value="Jigjiga">Jigjiga</option>
-                  <option className="bg-luxury-black" value="Dire Dawa">Dire Dawa</option>
-                  <option className="bg-luxury-black" value="Addis Ababa">Addis Ababa</option>
-                </select>
-              </div>
-              <Button 
-                size="lg" 
-                onClick={handleSearch}
-                className="bg-luxury-gold text-luxury-black hover:bg-white transition-all font-bold px-8 md:px-12 h-14 md:h-auto py-3 md:py-5 rounded-2xl shadow-xl shadow-luxury-gold/20 text-base md:text-lg uppercase tracking-widest w-full md:w-auto"
-              >
-                Search
-              </Button>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/50 text-sm">
+                <span className="flex items-center gap-2"><Shield className="text-luxury-gold" size={16} /> Verified Listings</span>
+                <span className="flex items-center gap-2"><Users className="text-luxury-gold" size={16} /> Verified Agents</span>
+                <span className="flex items-center gap-2"><Award className="text-luxury-gold" size={16} /> Legal Document Checked</span>
+                <span className="flex items-center gap-2"><Star className="text-luxury-gold" size={16} /> Secure Transactions</span>
             </div>
           </motion.div>
         </div>

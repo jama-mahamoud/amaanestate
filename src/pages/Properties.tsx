@@ -149,7 +149,7 @@ export default function Properties() {
                 Property Category <div className="h-px flex-1 bg-white/5 ml-6"></div>
               </h3>
               <div className="grid grid-cols-1 gap-3">
-                {['All', 'Villa', 'Apartment', 'Commercial', 'Land', 'House'].map((cat) => (
+                {['All', 'Houses', 'Land', 'Vehicles'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => updateFilter('category', cat)}
@@ -171,7 +171,7 @@ export default function Properties() {
                 Premium Regions <div className="h-px flex-1 bg-white/5 ml-6"></div>
               </h3>
               <div className="grid grid-cols-1 gap-3">
-                {['All', 'Jigjiga', 'Dire Dawa', 'Addis Ababa', 'Godey'].map((city) => (
+                {['All', 'Jigjiga', 'Dire Dawa', 'Godey', 'Dhagaxbur', 'Qabridaha', 'Addis Ababa'].map((city) => (
                   <button
                     key={city}
                     onClick={() => updateFilter('city', city)}
