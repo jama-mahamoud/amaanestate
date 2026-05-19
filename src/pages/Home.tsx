@@ -107,7 +107,28 @@ export default function Home() {
   }, []);
 
   const handleSearch = () => {
-    loadListings();
+    const params = new URLSearchParams();
+    if (searchCity) params.set('city', searchCity);
+    if (searchBuyRent) params.set('listingType', searchBuyRent === 'Sell' ? 'sale' : 'rent');
+    
+    // In Properties.tsx, 'category' param is used for subcategory (Houses, Land, etc.)
+    // and the main category is hardcoded to 'property' (or 'land' is handled separately)
+    // Actually, Properties page defaults to category: 'property'.
+    if (searchPropertyType === 'Land') {
+       navigate(`/properties?city=${searchCity}&category=Land`);
+       return;
+    }
+    
+    if (searchPropertyType === 'Vehicles') {
+       navigate(`/vehicles?city=${searchCity}`);
+       return;
+    }
+    
+    if (searchPropertyType !== 'Houses') {
+        params.set('category', searchPropertyType);
+    }
+    
+    navigate(`/properties?${params.toString()}`);
   };
 
 
@@ -139,10 +160,10 @@ export default function Home() {
   }, [listings]);
 
   const cities = [
-    { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1200&auto=format&fit=crop' },
-    { name: 'Dire Dawa', properties: 28, image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop' },
-    { name: 'Addis Ababa', properties: 156, image: 'https://images.unsplash.com/photo-1449156003141-3586624ad722?q=80&w=1200&auto=format&fit=crop' },
-    { name: 'Hargeisa', properties: 34, image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Jigjiga', properties: 42, image: 'https://images.unsplash.com/photo-1547433020-007d4b4a689d?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Dire Dawa', properties: 28, image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Addis Ababa', properties: 156, image: 'https://images.unsplash.com/photo-1698246401918-be4816c4961a?q=80&w=1200&auto=format&fit=crop' },
+    { name: 'Hargeisa', properties: 34, image: 'https://images.unsplash.com/photo-1489493585363-d693ca3508f7?q=80&w=1200&auto=format&fit=crop' },
   ];
 
   const containerVariants = {
@@ -162,7 +183,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
+      {/* 1. Hero Section (Keep Existing) */}
       <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-luxury-black pt-40 pb-20">
         <motion.div 
           initial={{ scale: 1.1, opacity: 0 }}
@@ -234,7 +255,7 @@ export default function Home() {
                     <option value="Rent">Rent</option>
                  </select>
                  <div className="flex items-center gap-4 text-white">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs uppercase font-bold tracking-widest text-white/60">
                         <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="accent-luxury-gold" />
                         Verified
                     </label>
@@ -244,11 +265,11 @@ export default function Home() {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/60 text-sm">
-                <span className="flex items-center gap-2"><Shield className="text-luxury-gold" size={16} /> Verified Listings</span>
-                <span className="flex items-center gap-2"><Users className="text-luxury-gold" size={16} /> Verified Agents</span>
-                <span className="flex items-center gap-2"><Award className="text-luxury-gold" size={16} /> Legal Document Checked</span>
-                <span className="flex items-center gap-2"><Star className="text-luxury-gold" size={16} /> Secure Transactions</span>
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/60 text-[10px] uppercase font-bold tracking-widest">
+                <span className="flex items-center gap-2"><Shield className="text-luxury-gold" size={14} /> Verified Listings</span>
+                <span className="flex items-center gap-2"><Users className="text-luxury-gold" size={14} /> Verified Agents</span>
+                <span className="flex items-center gap-2"><Award className="text-luxury-gold" size={14} /> Legal Document Checked</span>
+                <span className="flex items-center gap-2"><Star className="text-luxury-gold" size={14} /> Secure Transactions</span>
             </div>
           </motion.div>
         </div>
@@ -264,10 +285,10 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Categories Grid */}
+      {/* Categories Grid (Specialized Marketplaces) */}
       <section className="py-16 md:py-32 bg-luxury-black overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:list-view md:mb-16 gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
             <div>
               <p className="text-luxury-gold font-bold tracking-[0.2em] uppercase text-xs mb-3 md:mb-4">Elite Portfolios</p>
               <h2 className="text-3xl md:text-5xl font-display font-bold text-white tracking-tight">
@@ -314,7 +335,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Properties */}
+      {/* Featured Properties (Featured Listings) */}
       <section className="py-16 md:py-32 bg-luxury-charcoal/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 md:mb-20">
@@ -368,7 +389,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Latest News */}
+      {/* Latest News (Latest Insights) */}
       <section className="py-16 md:py-32 bg-luxury-black">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
@@ -423,7 +444,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Cities */}
+      {/* Popular Cities (Strategic Locations) */}
       <section className="py-16 md:py-32 bg-luxury-black">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16 gap-6">
@@ -433,41 +454,33 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {cities.length > 0 ? (
-              cities.map((city, i) => (
-                <motion.div
-                  key={city.name}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer"
-                >
-                  <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                  <div className="absolute inset-x-0 bottom-0 p-8">
-                    <h3 className="text-3xl font-display font-bold text-white mb-2">{city.name}</h3>
-                    <p className="text-luxury-gold font-semibold text-sm tracking-widest uppercase">{city.properties} Premium Listings</p>
-                    <div className="mt-6 overflow-hidden h-0 group-hover:h-10 transition-all duration-500">
-                      <Button variant="ghost" className="text-white p-0 hover:text-luxury-gold hover:bg-transparent">
-                        Explore City <ArrowRight className="ml-2" size={16} />
-                      </Button>
-                    </div>
+            {cities.map((city, i) => (
+              <motion.div
+                key={city.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer"
+              >
+                <img src={city.image} alt={city.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                <div className="absolute inset-x-0 bottom-0 p-8">
+                  <h3 className="text-3xl font-display font-bold text-white mb-2">{city.name}</h3>
+                  <p className="text-luxury-gold font-semibold text-sm tracking-widest uppercase">{city.properties} Premium Listings</p>
+                  <div className="mt-6 overflow-hidden h-0 group-hover:h-10 transition-all duration-500">
+                    <Button variant="ghost" className="text-white p-0 hover:text-luxury-gold hover:bg-transparent" onClick={() => navigate(`/properties?city=${city.name}`)}>
+                      Explore City <ArrowRight className="ml-2" size={16} />
+                    </Button>
                   </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="col-span-1 md:col-span-2 lg:col-span-4 py-20 text-center glass-card rounded-[3rem] border-white/5">
-                <MapPin className="mx-auto text-white/10 mb-6" size={40} />
-                <p className="text-white/40 font-display text-xl">Regional Network Initializing</p>
-                <p className="text-white/10 text-xs uppercase tracking-widest mt-2">Connecting Major Hubs...</p>
-              </div>
-            )}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Vehicles */}
+      {/* Featured Vehicles (Luxury Mobility) */}
       <section className="py-16 md:py-32 bg-luxury-charcoal/40">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
@@ -551,7 +564,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* Why Choose Us (Premium Standards) */}
       <section className="py-16 md:py-32 bg-luxury-black border-y border-white/5">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
@@ -571,7 +584,7 @@ export default function Home() {
                   { icon: <Users size={24} />, title: 'Expert Local Insight', desc: 'Our team possesses deep knowledge of the regional market dynamics and growth areas.' },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-6">
-                    <div className="w-12 h-12 rounded-xl bg-luxury-gold/10 flex items-center justify-center shrink-0 text-luxury-gold shadow-lg shadow-luxury-gold/5">
+                    <div className="w-12 h-12 rounded-xl bg-luxury-gold/10 flex items-center justify-center shrink-0 text-luxury-gold shadow-lg shadow-luxury-gold/5 border border-luxury-gold/10">
                       {item.icon}
                     </div>
                     <div>
@@ -623,7 +636,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Lifestyle CTA (Elevate Your Lifestyle) */}
       <section className="py-16 md:py-20 bg-luxury-black relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-luxury-gold/10 blur-[150px] rounded-full translate-y-1/2 translate-x-1/4"></div>
