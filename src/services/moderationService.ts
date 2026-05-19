@@ -1,0 +1,266 @@
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  orderBy, 
+  limit, 
+  serverTimestamp,
+  getCountFromServer,
+  writeBatch,
+  setDoc,
+  Timestamp
+} from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
+import { 
+  Listing, 
+  Article, 
+  UserProfile, 
+  ListingStatus, 
+  ListingCategory,
+  ProfessionalService
+} from '../types';
+import { handleFirestoreError, OperationType } from '../lib/utils';
+
+export interface ModerationStats {
+  pendingListings: number;
+  pendingProfessionals: number;
+  totalVerifiedProfessionals: number;
+  totalListings: number;
+  totalArticles: number;
+  totalInquiries: number;
+}
+
+export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'suspended';
+
+export const moderationService = {
+  /**
+   * Fetch global moderation stats for dashboard analytics
+   */
+  async getModerationStats(): Promise<ModerationStats> {
+    try {
+      const listingsRef = collection(db, 'listings');
+      const proAppsRef = collection(db, 'professionalApplications');
+      const usersRef = collection(db, 'users');
+      const articlesRef = collection(db, 'articles');
+      const inquiriesRef = collection(db, 'contactMessages');
+
+      const [
+        pendingListingsCount,
+        pendingProsCount,
+        verifiedProsCount,
+        totalListingsCount,
+        totalArticlesCount,
+        totalInquiriesCount
+      ] = await Promise.all([
+        getCountFromServer(query(listingsRef, where('status', '==', 'pending'))),
+        getCountFromServer(query(proAppsRef, where('status', '==', 'pending_review'))),
+        getCountFromServer(query(usersRef, where('role', '==', 'verified_professional'))),
+        getCountFromServer(listingsRef),
+        getCountFromServer(articlesRef),
+        getCountFromServer(inquiriesRef)
+      ]);
+
+      return {
+        pendingListings: pendingListingsCount.data().count,
+        pendingProfessionals: pendingProsCount.data().count,
+        totalVerifiedProfessionals: verifiedProsCount.data().count,
+        totalListings: totalListingsCount.data().count,
+        totalArticles: totalArticlesCount.data().count,
+        totalInquiries: totalInquiriesCount.data().count
+      };
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, 'moderation/stats');
+      return {
+        pendingListings: 0,
+        pendingProfessionals: 0,
+        totalVerifiedProfessionals: 0,
+        totalListings: 0,
+        totalArticles: 0,
+        totalInquiries: 0
+      };
+    }
+  },
+
+  /**
+   * Fetch listings pending approval
+   */
+  async getPendingListings(category?: ListingCategory) {
+    const listingsRef = collection(db, 'listings');
+    const constraints = [where('status', '==', 'pending'), orderBy('createdAt', 'desc')];
+    
+    if (category) {
+      constraints.push(where('category', '==', category));
+    }
+
+    try {
+      const q = query(listingsRef, ...constraints);
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Listing[];
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'listings/pending');
+      return [];
+    }
+  },
+
+  /**
+   * Approve a listing
+   */
+  async approveListing(id: string) {
+    const listingRef = doc(db, 'listings', id);
+    try {
+      await updateDoc(listingRef, {
+        status: 'active',
+        isVerified: true,
+        verificationStatus: 'verified',
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Reject a listing
+   */
+  async rejectListing(id: string) {
+    const listingRef = doc(db, 'listings', id);
+    try {
+      await updateDoc(listingRef, {
+        status: 'archived',
+        verificationStatus: 'rejected',
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Approve professional application and create service document
+   */
+  async approveProfessional(applicationId: string, userId: string, proData: any) {
+    const batch = writeBatch(db);
+    
+    // 1. Update application status
+    const appRef = doc(db, 'professionalApplications', applicationId);
+    batch.update(appRef, { 
+      status: 'approved', 
+      updatedAt: serverTimestamp() 
+    });
+
+    // 2. Update user role
+    const userRef = doc(db, 'users', userId);
+    batch.update(userRef, { 
+      role: 'verified_professional', 
+      isVerified: true 
+    });
+
+    // 3. Create/Update professional service
+    const serviceId = `pro-${userId}`;
+    const serviceRef = doc(db, 'professionalServices', serviceId);
+    
+    const serviceData: Omit<ProfessionalService, 'id'> = {
+      title: proData.personalInfo.title,
+      description: proData.professionalDetails.bio,
+      category: proData.professionalDetails.category,
+      city: proData.personalInfo.city,
+      providerId: userId,
+      status: 'active',
+      createdAt: serverTimestamp()
+    };
+    
+    batch.set(serviceRef, serviceData, { merge: true });
+
+    try {
+      await batch.commit();
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'moderation/approve-pro');
+      return false;
+    }
+  },
+
+  /**
+   * Reject professional application
+   */
+  async rejectProfessional(applicationId: string) {
+    const appRef = doc(db, 'professionalApplications', applicationId);
+    try {
+      await updateDoc(appRef, { 
+        status: 'rejected', 
+        updatedAt: serverTimestamp() 
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `professionalApplications/${applicationId}`);
+      return false;
+    }
+  },
+
+  /**
+   * Get professional applications
+   */
+  async getProfessionalApplications(status: ApplicationStatus = 'pending') {
+    const appsRef = collection(db, 'professionalApplications');
+    const q = query(
+      appsRef, 
+      where('status', '==', status === 'pending' ? 'pending_review' : status),
+      orderBy('createdAt', 'desc')
+    );
+    
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    } catch (error) {
+       // Index might be missing for orderBy, fallback to simple query
+       const fallbackQ = query(appsRef, where('status', '==', status === 'pending' ? 'pending_review' : status));
+       const fallbackSnapshot = await getDocs(fallbackQ);
+       return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    }
+  },
+
+  /**
+   * Moderation for articles
+   */
+  async getAllArticles(publishedOnly?: boolean) {
+    const articlesRef = collection(db, 'articles');
+    let q;
+    if (publishedOnly !== undefined) {
+      q = query(articlesRef, where('published', '==', publishedOnly), orderBy('createdAt', 'desc'));
+    } else {
+      q = query(articlesRef, orderBy('createdAt', 'desc'));
+    }
+
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+    } catch (error) {
+      const fallbackSnapshot = await getDocs(articlesRef);
+      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any })) as Article[];
+    }
+  },
+
+  /**
+   * Moderation for inquiries / contact messages
+   */
+  async getContactMessages() {
+    const messagesRef = collection(db, 'contactMessages');
+    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(100));
+    
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    } catch (error) {
+      const fallbackSnapshot = await getDocs(messagesRef);
+      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    }
+  }
+};

@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   Plus,
-  Briefcase
+  Briefcase,
+  ShieldCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -39,14 +40,18 @@ function DashboardContent() {
 
   const navItems = [
     { name: 'Portfolio', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-    { name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> },
-    { name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> },
   ];
 
   const currentRole = profile?.role?.toString().trim().toLowerCase();
   const isAdmin = currentRole === 'admin' || currentRole === 'administrator';
   const isEditor = isAdmin || currentRole === 'editor';
 
+  if (isAdmin) {
+    navItems.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+  }
+
+  navItems.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+  navItems.push({ name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
 
   if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });

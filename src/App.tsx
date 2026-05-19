@@ -29,6 +29,7 @@ import Register from './pages/Register';
 // Dashboard
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
+import ModerationCenter from './pages/dashboard/ModerationCenter';
 import DashboardProperties from './pages/dashboard/DashboardProperties';
 import DashboardVehicles from './pages/dashboard/DashboardVehicles';
 import DashboardUsers from './pages/dashboard/DashboardUsers';
@@ -70,6 +71,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
+            <Route path="moderation" element={<ModerationCenter />} />
             <Route path="properties" element={<DashboardProperties />} />
             <Route path="vehicles" element={<DashboardVehicles />} />
             <Route path="articles" element={<DashboardArticles />} />
