@@ -114,6 +114,7 @@ export const moderationService = {
     try {
       await updateDoc(listingRef, {
         status: 'active',
+        isVisible: true,
         isVerified: true,
         verificationStatus: 'verified',
         updatedAt: serverTimestamp()
@@ -132,13 +133,63 @@ export const moderationService = {
     const listingRef = doc(db, 'listings', id);
     try {
       await updateDoc(listingRef, {
-        status: 'archived',
+        status: 'rejected',
+        isVisible: false,
         verificationStatus: 'rejected',
         updatedAt: serverTimestamp()
       });
       return true;
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Toggle featured status for a listing
+   */
+  async toggleFeatureListing(id: string, isFeatured: boolean) {
+    const listingRef = doc(db, 'listings', id);
+    try {
+      await updateDoc(listingRef, {
+        isFeatured,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Suspend a listing or professional
+   */
+  async suspendItem(collectionName: string, id: string) {
+    const docRef = doc(db, collectionName, id);
+    try {
+      await updateDoc(docRef, {
+        status: 'suspended',
+        isVisible: false,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Delete any document across collections
+   */
+  async deleteDocument(collectionName: string, id: string) {
+    const docRef = doc(db, collectionName, id);
+    try {
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${id}`);
       return false;
     }
   },

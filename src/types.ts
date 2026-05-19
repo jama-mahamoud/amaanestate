@@ -1,5 +1,5 @@
 export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
-export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived';
+export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended';
 export type ListingType = 'sale' | 'rent';
 
 export interface Listing {
