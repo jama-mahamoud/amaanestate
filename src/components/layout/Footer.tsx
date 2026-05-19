@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
+import AmaanLogo from '../brand/AmaanLogo';
 
 export default function Footer() {
   return (
@@ -11,9 +12,7 @@ export default function Footer() {
           
           <div className="space-y-6">
             <Link to="/" className="flex items-center space-x-2 group outline-none">
-              <div className="bg-luxury-gold text-luxury-black w-10 h-10 flex items-center justify-center font-bold text-xl rounded-lg shadow-lg shadow-luxury-gold/20">
-                A
-              </div>
+              <AmaanLogo size="sm" />
               <span className="font-display font-bold text-2xl tracking-tight">
                 Amaan<span className="text-luxury-gold">Estate</span>
               </span>

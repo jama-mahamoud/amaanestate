@@ -19,6 +19,7 @@ import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
+import AmaanLogo from '@/components/brand/AmaanLogo';
 
 function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -71,9 +72,7 @@ function DashboardContent() {
         <div className="flex flex-col h-full">
           <div className="p-10 flex items-center justify-between">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="bg-luxury-gold text-luxury-black w-10 h-10 flex items-center justify-center font-display font-black text-xl rounded-xl transition-all duration-500 group-hover:rotate-3 shadow-xl shadow-luxury-gold/10">
-                A
-              </div>
+              <AmaanLogo size="sm" />
               <span className="font-display font-bold text-2xl tracking-tighter">Amaan<span className="gold-text-gradient">Estate</span></span>
             </Link>
             <Button variant="ghost" size="icon" className="lg:hidden text-white/20 hover:text-white" onClick={() => setIsSidebarOpen(false)}>

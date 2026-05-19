@@ -4,6 +4,7 @@ import { Menu, X, User, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
+import AmaanLogo from '../brand/AmaanLogo';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,9 +60,7 @@ export default function Navbar() {
       }`}>
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center space-x-2 md:space-x-3 group outline-none">
-            <div className="bg-luxury-gold text-luxury-black w-10 h-10 md:w-11 md:h-11 flex items-center justify-center font-display font-black text-xl md:text-2xl rounded-xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-3 shadow-xl shadow-luxury-gold/20">
-              A
-            </div>
+            <AmaanLogo size="md" />
             <span className="font-display font-extrabold text-xl md:text-2xl tracking-tighter text-white whitespace-nowrap">
               Amaan<span className="gold-text-gradient bg-clip-text">Estate</span>
             </span>
