@@ -181,6 +181,38 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
   }
 ];
 
+function AnimatedCounter({ target, suffix = '', duration = 1200 }: { target: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = target;
+    if (start === end) return;
+
+    const stepsCount = 30;
+    const incrementTime = duration / stepsCount;
+    const step = Math.ceil(end / stepsCount);
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        clearInterval(timer);
+        setCount(end);
+      } else {
+        setCount(start);
+      }
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [target, duration]);
+
+  return (
+    <span>
+      {count.toLocaleString()}{suffix}
+    </span>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
@@ -427,13 +459,37 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="max-w-5xl mx-auto space-y-8"
           >
-            <h1 className="text-5xl md:text-8xl font-display font-bold text-white tracking-tighter leading-[0.95]">
-              Trusted Property & Professionals <br />
-              <span className="text-luxury-gold">Across the Somali Region</span>
+            <h1 className="text-5xl md:text-8xl font-display font-black text-white tracking-tighter leading-[0.95]">
+              Find Verified Experts For Your <br />
+              <span className="text-luxury-gold">Home, Property & Business</span>
             </h1>
             <p className="text-white/70 text-lg md:text-2xl font-light tracking-wide max-w-2xl mx-auto">
-              Buy, sell, rent, and connect with verified agents, engineers, and trusted professionals.
+              Somaliland & Somali Region's premier luxury real estate network, verified professional agencies, and licensed construction builders.
             </p>
+
+            {/* Social Proof Counter Banner */}
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 mt-6 pt-2">
+              <div className="flex flex-col items-center">
+                <span className="text-4xl md:text-5xl lg:text-6xl font-black text-luxury-gold tracking-tighter font-display mb-1 block">
+                  <AnimatedCounter target={1200} suffix="+" />
+                </span>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.16em] text-white/50">Verified Experts</span>
+              </div>
+              <div className="w-px h-12 bg-white/10 hidden sm:block" />
+              <div className="flex flex-col items-center">
+                <span className="text-4xl md:text-5xl lg:text-6xl font-black text-luxury-gold tracking-tighter font-display mb-1 block">
+                  <AnimatedCounter target={500} suffix="+" />
+                </span>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.16em] text-white/50">Premium Listings</span>
+              </div>
+              <div className="w-px h-12 bg-white/10 hidden sm:block" />
+              <div className="flex flex-col items-center">
+                <span className="text-4xl md:text-5xl lg:text-6xl font-black text-luxury-gold tracking-tighter font-display mb-1 block">
+                  <AnimatedCounter target={300} suffix="+" />
+                </span>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.16em] text-white/50">Enterprise Clients</span>
+              </div>
+            </div>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap justify-center gap-4 pt-4">

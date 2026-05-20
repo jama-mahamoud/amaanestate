@@ -8,8 +8,8 @@ export const auth = getAuth(app);
 
 // Use initializeFirestore with settings to mitigate WebChannel connection issues in AI Studio preview
 export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-  // This helps when running inside nested iframes/proxies
+  experimentalForceLongPolling: true,
+  // This forces HTTP long-polling to immediately bypass WebSocket handshakes inside proxies and iframes
 }, (firebaseConfig as any).firestoreDatabaseId);
 
 export const googleProvider = new GoogleAuthProvider();

@@ -88,42 +88,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (user) {
           // Ensure profile exists first
           const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
+          let userDoc;
           
-          if (!userDoc.exists()) {
-            const newProfile: UserProfile = {
+          try {
+            userDoc = await getDoc(userRef);
+            
+            if (!userDoc.exists()) {
+              const newProfile: UserProfile = {
+                uid: user.uid,
+                displayName: user.displayName || 'Anonymous User',
+                email: user.email || '',
+                role: 'normal_user' as UserRole,
+                createdAt: serverTimestamp(),
+                photoURL: user.photoURL,
+                isVerified: user.emailVerified,
+              };
+              try {
+                await setDoc(userRef, newProfile);
+              } catch (setErr) {
+                console.warn("Failed to write user profile (operating in offline fallback):", setErr);
+              }
+              setProfile(newProfile);
+            } else {
+              // Check for minor background updates
+              const existingData = userDoc.data() as UserProfile;
+              
+              const normalizedRole = existingData.role 
+                ? (existingData.role.toString().toLowerCase().trim() as UserRole)
+                : 'normal_user';
+
+              setProfile({
+                ...existingData,
+                role: normalizedRole
+              });
+
+              if (
+                existingData.displayName !== user.displayName || 
+                existingData.photoURL !== user.photoURL
+              ) {
+                try {
+                  await setDoc(userRef, {
+                    displayName: user.displayName || existingData.displayName,
+                    photoURL: user.photoURL || existingData.photoURL
+                  }, { merge: true });
+                } catch (setErr) {
+                  console.warn("Failed to update user profile (operating in offline fallback):", setErr);
+                }
+              }
+            }
+          } catch (docErr) {
+            console.warn("Failed to fetch user doc from active server (profile loaded from local session memory):", docErr);
+            // Fallback profile if offline/failed to fetch from server
+            setProfile({
               uid: user.uid,
-              displayName: user.displayName || 'Anonymous User',
+              displayName: user.displayName || 'User',
               email: user.email || '',
               role: 'normal_user' as UserRole,
-              createdAt: serverTimestamp(),
               photoURL: user.photoURL,
               isVerified: user.emailVerified,
-            };
-            await setDoc(userRef, newProfile);
-            setProfile(newProfile);
-          } else {
-            // Check for minor background updates
-            const existingData = userDoc.data() as UserProfile;
-            
-            const normalizedRole = existingData.role 
-              ? (existingData.role.toString().toLowerCase().trim() as UserRole)
-              : 'normal_user';
-
-            setProfile({
-              ...existingData,
-              role: normalizedRole
+              createdAt: serverTimestamp(),
             });
-
-            if (
-              existingData.displayName !== user.displayName || 
-              existingData.photoURL !== user.photoURL
-            ) {
-              await setDoc(userRef, {
-                displayName: user.displayName || existingData.displayName,
-                photoURL: user.photoURL || existingData.photoURL
-              }, { merge: true });
-            }
           }
 
           // Set up real-time listener for the user profile
@@ -141,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setProfile(null);
             }
           }, (error) => {
-            console.error("Profile snapshot listener error:", error);
+            console.warn("Profile snapshot listener encountered an error (operating offline/restricted environment):", error);
           });
           
         } else {

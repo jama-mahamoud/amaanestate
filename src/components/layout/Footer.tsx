@@ -35,19 +35,19 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Navigation</h3>
+            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Quick Directory</h3>
             <ul className="space-y-4">
               {[
-                { name: 'Featured Properties', path: '/properties' },
+                { name: 'Browse Properties', path: '/properties' },
                 { name: 'Luxury Vehicles', path: '/vehicles' },
                 { name: 'Professional Expertise', path: '/services' },
                 { name: 'Intelligence Briefs', path: '/news' },
-                { name: 'About the Platform', path: '/about' },
-                { name: 'Direct Inquiries', path: '/contact' }
+                { name: 'Company About', path: '/about' },
+                { name: 'Contact & Support', path: '/contact' }
               ].map((link) => (
                 <li key={link.name}>
                   <Link to={link.path} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group">
-                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-luxury-gold" />
                     {link.name}
                   </Link>
                 </li>
@@ -56,13 +56,20 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Strategic Cities</h3>
+            <h3 className="font-display font-bold text-white mb-8 tracking-wide uppercase text-xs">Ecosystem Services</h3>
             <ul className="space-y-4">
-              {['Jigjiga', 'Dire Dawa', 'Godey', 'Dhagahbur', 'Addis Ababa'].map((city) => (
-                <li key={city}>
-                  <Link to={`/properties?city=${city}`} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group">
-                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                    {city}
+              {[
+                { name: '🌐 Become Broker', path: '/brokers/apply' },
+                { name: '🎓 Become Expert', path: '/become-pro' },
+                { name: '🏢 List Property', path: '/properties/create' },
+                { name: '🛡️ Registry Verification', path: '/brokers' },
+                { name: '📨 Direct Enquiries', path: '/contact' },
+                { name: '🔒 Privacy Policy', path: '/contact' }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-white/60 hover:text-luxury-gold transition-colors text-sm flex items-center group font-medium">
+                    <ArrowRight size={14} className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-luxury-gold" />
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -105,7 +112,7 @@ export default function Footer() {
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-white/40 text-xs tracking-widest uppercase">
-            &copy; {new Date().getFullYear()} AmaanEstate. Global Real Estate Excellence.
+            &copy; {new Date().getFullYear()} AmaanEstate.com. All Rights Reserved. Global Real Estate & Structural Verification Network.
           </p>
           <div className="flex gap-8">
             <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy Policy</Link>

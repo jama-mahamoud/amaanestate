@@ -258,5 +258,19 @@ export const listingService = {
       handleFirestoreError(error, OperationType.LIST, 'professionalServices');
       return [];
     }
+  },
+
+  async getProfessionalServiceById(id: string): Promise<ProfessionalService | null> {
+    const serviceRef = doc(db, 'professionalServices', id);
+    try {
+      const snapshot = await getDoc(serviceRef);
+      if (snapshot.exists()) {
+        return { id: snapshot.id, ...snapshot.data() } as ProfessionalService;
+      }
+      return null;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `professionalServices/${id}`);
+      return null;
+    }
   }
 };
