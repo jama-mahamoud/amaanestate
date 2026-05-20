@@ -6,6 +6,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function formatPrice(price: number, currency?: string) {
+  const curr = currency || 'ETB';
+  if (curr === 'USD') {
+    return `$${price.toLocaleString()}`;
+  }
+  return `${price.toLocaleString()} ETB`;
+}
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

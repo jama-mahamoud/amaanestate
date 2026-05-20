@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useListing } from '@/hooks/useListing';
 import { VehicleListing } from '@/types';
 import NotFoundState from '@/components/NotFoundState';
+import { formatPrice } from '@/lib/utils';
 
 export default function VehicleDetails() {
   const { id } = useParams();
@@ -44,7 +45,7 @@ export default function VehicleDetails() {
   ];
 
   const displayPrice = typeof vehicle.price === 'number' 
-    ? `$${vehicle.price.toLocaleString()}` 
+    ? formatPrice(vehicle.price, vehicle.currency) 
     : vehicle.price;
 
   return (

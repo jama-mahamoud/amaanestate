@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
+import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
@@ -120,7 +121,8 @@ export default function PropertyDetails() {
   // Format WhatsApp Link
   const whatsAppInquiryUrl = useMemo(() => {
     if (!property) return '#';
-    const message = `Asc Salaam/Hello AmaanEstate, I is heavily interested in your premium listing: "${property.title}" listed for $${property.price?.toLocaleString()} in outstanding ${property.city}. ID Ref: ${property.id}. Please consult me regarding coordinates.`;
+    const priceText = formatPrice(property.price, property.currency);
+    const message = `Asc Salaam/Hello AmaanEstate, I is heavily interested in your premium listing: "${property.title}" listed for ${priceText} in outstanding ${property.city}. ID Ref: ${property.id}. Please consult me regarding coordinates.`;
     return `https://wa.me/251717888800?text=${encodeURIComponent(message)}`;
   }, [property]);
 
@@ -431,7 +433,7 @@ export default function PropertyDetails() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Down Payment ($)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Down Payment ({property.currency || 'ETB'})</label>
                   <Input 
                     type="number"
                     placeholder={`e.g. ${(property.price * 0.2).toFixed(0)}`}
@@ -470,15 +472,15 @@ export default function PropertyDetails() {
                 <div className="pt-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left items-center bg-white/[0.02] p-6 rounded-2xl">
                   <div>
                     <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Financed Value</span>
-                    <p className="text-xl font-bold text-white tabular-nums">${mortgageResult.loanValue.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-white tabular-nums">{formatPrice(mortgageResult.loanValue, property.currency)}</p>
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Down Payment Simulated</span>
-                    <p className="text-xl font-bold text-emerald-400 tabular-nums">${mortgageResult.downPayment.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-emerald-400 tabular-nums">{formatPrice(mortgageResult.downPayment, property.currency)}</p>
                   </div>
                   <div className="bg-luxury-gold/10 p-4 rounded-xl border border-luxury-gold/30">
                     <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold block mb-1">Monthly Installment Est.</span>
-                    <p className="text-2xl font-display font-bold text-luxury-gold tabular-nums">${mortgageResult.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo</p>
+                    <p className="text-2xl font-display font-bold text-luxury-gold tabular-nums">{formatPrice(mortgageResult.monthlyPayment, property.currency)}/mo</p>
                   </div>
                 </div>
               )}
@@ -495,7 +497,7 @@ export default function PropertyDetails() {
                 <div>
                   <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-2">Portfolio Listing Value</p>
                   <p className="text-4xl md:text-5xl font-display font-medium text-luxury-gold tabular-nums">
-                    ${property.price?.toLocaleString()}
+                    {formatPrice(property.price, property.currency)}
                   </p>
                 </div>
 

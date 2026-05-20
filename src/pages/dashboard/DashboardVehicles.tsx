@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { VehicleListing } from '@/types';
 import DashboardEmptyState from '@/components/DashboardEmptyState';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
+import { formatPrice } from '@/lib/utils';
 
 export default function DashboardVehicles() {
   const { user } = useAuth();
@@ -39,12 +40,8 @@ export default function DashboardVehicles() {
     v.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const displayPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(price);
+  const displayPrice = (price: number, currency?: string) => {
+    return formatPrice(price, currency);
   };
 
   return (
@@ -135,7 +132,7 @@ export default function DashboardVehicles() {
                       </div>
                     </td>
                     <td className="p-8">
-                      <p className="text-lg font-display font-bold text-white tabular-nums">{displayPrice(vehicle.price)}</p>
+                      <p className="text-lg font-display font-bold text-white tabular-nums">{displayPrice(vehicle.price, vehicle.currency)}</p>
                     </td>
                     <td className="p-8 text-right">
                       <div className="flex items-center justify-end gap-3 md:opacity-20 group-hover:opacity-100 transition-opacity">

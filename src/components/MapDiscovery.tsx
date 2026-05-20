@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Property } from '@/types';
+import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, X, ArrowUpRight, BedDouble, Bath, Square, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -247,7 +248,7 @@ export default function MapDiscovery({
                 : 'bg-neutral-900/95 border-[#C5A059]/30 text-[#C5A059] hover:border-[#C5A059] hover:-translate-y-1'
             }">
               <span class="text-[10px] font-mono leading-none font-bold tracking-tight">
-                $${(prop.price / 1000).toFixed(0)}k
+                ${prop.currency === 'USD' ? `$${(prop.price / 1000).toFixed(0)}k` : `${(prop.price / 1000).toFixed(0)}k ETB`}
               </span>
             </div>
             <div class="w-2.5 h-2.5 transform rotate-45 -mt-1.5 border-r border-b shadow-md transition-all duration-350 ${
@@ -375,7 +376,7 @@ export default function MapDiscovery({
                   <span>{selectedProperty.location || selectedProperty.city}</span>
                 </div>
                 <p className="text-xl font-display font-black text-[#C5A059] tabular-nums mt-1">
-                  ${selectedProperty.price?.toLocaleString()}
+                  {formatPrice(selectedProperty.price, selectedProperty.currency)}
                 </p>
               </div>
 

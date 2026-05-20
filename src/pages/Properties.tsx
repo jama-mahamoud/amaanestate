@@ -23,13 +23,15 @@ export default function Properties() {
   const currentCategory = searchParams.get('category') || 'All';
   const currentType = searchParams.get('listingType') || 'All';
   const currentCity = searchParams.get('city') || 'All';
+  const currentCurrency = searchParams.get('currency') || 'All';
 
   const filters = useMemo(() => ({
     category: 'property' as ListingCategory,
     listingType: currentType !== 'All' ? currentType as ListingType : undefined,
     city: currentCity !== 'All' ? currentCity : undefined,
+    currency: currentCurrency !== 'All' ? currentCurrency : undefined,
     limit: 25 // Greater count for visual map representation
-  }), [currentType, currentCity]);
+  }), [currentType, currentCity, currentCurrency]);
 
   const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
 
@@ -329,6 +331,28 @@ export default function Properties() {
                   >
                     <MapPin size={16} className={currentCity === city ? 'text-luxury-black' : 'text-luxury-gold'} />
                     {city === 'All' ? 'All Locations' : city}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.3em] mb-8 flex items-center">
+                Listing Currency <div className="h-px flex-1 bg-white/5 ml-6"></div>
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                {['All', 'ETB', 'USD'].map((cur) => (
+                  <button
+                    key={cur}
+                    onClick={() => updateFilter('currency', cur)}
+                    className={`flex items-center justify-between px-6 py-4 rounded-xl text-sm font-medium transition-all group ${
+                      currentCurrency === cur 
+                        ? 'bg-luxury-gold text-luxury-black font-bold shadow-lg shadow-luxury-gold/10' 
+                        : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <span>{cur === 'All' ? 'All Currencies' : cur === 'ETB' ? 'Ethiopian Birr (ETB)' : 'US Dollar (USD)'}</span>
+                    <div className={`w-2 h-2 rounded-full transition-all ${currentCurrency === cur ? 'bg-luxury-black' : 'bg-transparent group-hover:bg-white/20'}`} />
                   </button>
                 ))}
               </div>

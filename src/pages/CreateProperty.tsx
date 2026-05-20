@@ -14,6 +14,7 @@ import { listingService } from '@/services/listingService';
 import { uploadFile } from '@/services/uploadService';
 import GalleryUpload from '@/components/article/GalleryUpload';
 import MapPicker from '@/components/location/MapPicker';
+import { formatPrice } from '@/lib/utils';
 
 // Document Uploader helper component for Step 5
 function DocumentUploader({
@@ -99,6 +100,7 @@ export default function CreateProperty() {
     title: '',
     description: '',
     price: '',
+    currency: 'ETB' as 'ETB' | 'USD',
     city: 'Jigjiga',
     subcategory: 'Apartment',
     listingType: 'sale' as 'sale' | 'rent',
@@ -168,7 +170,7 @@ export default function CreateProperty() {
             title: formData.title,
             description: formData.description,
             price: Number(formData.price),
-            currency: 'USD',
+            currency: formData.currency,
             city: formData.city,
             location: formData.district ? `${formData.district}, ${formData.city}` : formData.city,
             subcategory: formData.subcategory,
@@ -219,7 +221,7 @@ export default function CreateProperty() {
   };
 
   const formattedPrice = formData.price 
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(formData.price))
+    ? formatPrice(Number(formData.price), formData.currency)
     : 'Not Specified';
 
   return (
@@ -354,17 +356,27 @@ export default function CreateProperty() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     <div className="space-y-2">
                       <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
-                        <span>Market Value (USD $)</span>
+                        <span>Market Value</span>
                         <span className="text-[10px] text-[#C5A059] tracking-widest uppercase font-mono">{formattedPrice}</span>
                       </label>
-                      <Input 
-                        type="number" 
-                        placeholder="e.g. 150000" 
-                        value={formData.price} 
-                        onChange={e => setFormData({...formData, price: e.target.value})} 
-                        className="bg-white/5 border-white/10 h-14 rounded-2xl focus-visible:ring-[#C5A059]/30" 
-                        required 
-                      />
+                      <div className="flex gap-2">
+                        <Input 
+                          type="number" 
+                          placeholder="e.g. 2500000" 
+                          value={formData.price} 
+                          onChange={e => setFormData({...formData, price: e.target.value})} 
+                          className="bg-white/5 border-white/10 h-14 rounded-2xl focus-visible:ring-[#C5A059]/30 flex-1 text-white" 
+                          required 
+                        />
+                        <select
+                          value={formData.currency}
+                          onChange={e => setFormData({...formData, currency: e.target.value as 'ETB' | 'USD'})}
+                          className="bg-white/5 border border-white/10 h-14 w-28 rounded-2xl focus:ring-1 focus:ring-[#C5A059]/30 focus:border-[#C5A059]/30 text-white px-3 cursor-pointer font-bold text-sm"
+                        >
+                          <option value="ETB" className="bg-neutral-900 text-white">ETB</option>
+                          <option value="USD" className="bg-neutral-900 text-white">USD</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">

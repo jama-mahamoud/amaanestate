@@ -18,6 +18,7 @@ import ImageUpload from './ImageUpload';
 import { collection, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import MapPicker from '../location/MapPicker';
+import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ListingCreationModalProps {
@@ -45,7 +46,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     title: '',
     description: '',
     price: '',
-    currency: 'USD',
+    currency: 'ETB',
     city: category === 'property' ? 'Jigjiga' : '',
     location: '',
     listingType: 'sale' as ListingType,
@@ -337,7 +338,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
   };
 
   const formattedPrice = formData.price
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(formData.price))
+    ? formatPrice(Number(formData.price), formData.currency)
     : 'Not Set';
 
   return (
@@ -479,15 +480,25 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                       {/* Market Value / Pricing and Intent */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Market Value (USD $)</label>
-                          <Input 
-                            type="number" 
-                            placeholder="Enter expected amount in USD" 
-                            value={formData.price} 
-                            onChange={(e) => setFormData({ ...formData, price: e.target.value })} 
-                            className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                            required 
-                          />
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Market Value</label>
+                          <div className="flex gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="e.g. 2500000" 
+                              value={formData.price} 
+                              onChange={(e) => setFormData({ ...formData, price: e.target.value })} 
+                              className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 flex-1 text-white" 
+                              required 
+                            />
+                            <select
+                              value={formData.currency}
+                              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                              className="bg-[#0c0c0c] border border-white/10 h-12 w-24 rounded-xl focus:ring-1 focus:ring-[#C5A059]/30 focus:border-[#C5A059]/30 text-white px-2 cursor-pointer font-bold text-xs"
+                            >
+                              <option value="ETB" className="bg-[#0d0d0d] text-white">ETB</option>
+                              <option value="USD" className="bg-[#0d0d0d] text-white">USD</option>
+                            </select>
+                          </div>
                         </div>
 
                         <div className="space-y-2">

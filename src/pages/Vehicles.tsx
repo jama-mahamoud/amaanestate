@@ -11,13 +11,15 @@ import { ListingCategory, ListingType, VehicleListing } from '@/types';
 export default function Vehicles() {
   const [currentCategory, setCurrentCategory] = useState('All');
   const [currentType, setCurrentType] = useState('All');
+  const [currentCurrency, setCurrentCurrency] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filters = useMemo(() => ({
     category: 'vehicle' as ListingCategory,
     listingType: currentType !== 'All' ? currentType as ListingType : undefined,
+    currency: currentCurrency !== 'All' ? currentCurrency : undefined,
     limit: 12
-  }), [currentType]);
+  }), [currentType, currentCurrency]);
 
   const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
 
@@ -68,18 +70,34 @@ export default function Vehicles() {
               />
             </div>
             
-            <div className="flex bg-white/5 rounded-xl md:rounded-2xl p-1.5 border border-white/5 w-fit">
-              {['All', 'sale', 'rent'].map(type => (
-                <button 
-                  key={type}
-                  onClick={() => setCurrentType(type)}
-                  className={`h-11 md:h-12 px-6 md:px-8 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
-                    currentType === type ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex bg-white/5 rounded-xl md:rounded-2xl p-1.5 border border-white/5 w-fit">
+                {['All', 'sale', 'rent'].map(type => (
+                  <button 
+                    key={type}
+                    onClick={() => setCurrentType(type)}
+                    className={`h-11 md:h-12 px-6 md:px-8 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
+                      currentType === type ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex bg-white/5 rounded-xl md:rounded-2xl p-1.5 border border-white/5 w-fit">
+                {['All', 'ETB', 'USD'].map(cur => (
+                  <button 
+                    key={cur}
+                    onClick={() => setCurrentCurrency(cur)}
+                    className={`h-11 md:h-12 px-5 md:px-6 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
+                      currentCurrency === cur ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
+                    }`}
+                  >
+                    {cur}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

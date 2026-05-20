@@ -29,6 +29,7 @@ export interface ListingFilter {
   minPrice?: number;
   maxPrice?: number;
   status?: ListingStatus;
+  currency?: string;
   limit?: number;
   lastDoc?: QueryDocumentSnapshot<DocumentData>;
 }
@@ -47,6 +48,10 @@ export const listingService = {
 
     if (filters.listingType) {
       filterConstraints.push(where('listingType', '==', filters.listingType));
+    }
+
+    if (filters.currency && filters.currency !== 'All') {
+      filterConstraints.push(where('currency', '==', filters.currency));
     }
 
     if (filters.city && filters.city !== 'All') {

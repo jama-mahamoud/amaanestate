@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Gauge, Fuel, Calendar, ArrowRight, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { VehicleListing } from '@/types';
+import { formatPrice } from '@/lib/utils';
 
 interface VehicleCardProps {
   vehicle: VehicleListing;
@@ -11,7 +12,7 @@ interface VehicleCardProps {
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const mainImage = vehicle.images?.[0] || 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop';
   const displayPrice = typeof vehicle.price === 'number' 
-    ? `$${vehicle.price.toLocaleString()}` 
+    ? formatPrice(vehicle.price, vehicle.currency) 
     : vehicle.price;
 
   return (
