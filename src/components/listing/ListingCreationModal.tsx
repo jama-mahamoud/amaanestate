@@ -182,14 +182,8 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
       case 5:
         return formData.description.trim().length >= 10;
       case 6:
-        if (category === 'property') {
-          // Render Step 6 verification: Sale listings require legal waraaqaha info
-          if (formData.listingType === 'sale') {
-            return formData.legalReferenceNumber.trim() !== '' && formData.governmentRegistryNumber.trim() !== '';
-          }
-          return true; // Rent listings bypass
-        }
-        return true; // Vehicles skip verification and go directly to summary review
+        // All legal claims verification fields are completely optional
+        return true;
       case 7:
         return true;
       default:
@@ -1004,42 +998,56 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                         <ShieldCheck size={20} />
                       </div>
                       <div>
-                        <h4 className="text-lg font-bold text-white">Regulatory Legal Registry Validation</h4>
-                        <p className="text-white/40 text-[11px] mt-0.5">Mandatory security checks to ensure non-duplicate titles and legitimate broker representation.</p>
+                        <h4 className="text-lg font-bold text-white">Regulatory Legal Registry Validation (Optional)</h4>
+                        <p className="text-[#C5A059] text-[11px] mt-0.5 font-semibold">Optional legal verification documents can be submitted to improve trust and verification status. These are not required for initial property listing.</p>
                       </div>
+                    </div>
+
+                    <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl text-xs text-white/60 leading-relaxed">
+                      Waraaqaha iyo mulkiyada can be uploaded if available to secure a <strong className="text-[#C5A059]">Verified Badge</strong>. You can safely skip these upload requirements and publish your listing immediately.
                     </div>
 
                     {formData.listingType === 'rent' ? (
                       <div className="p-6 border border-white/5 bg-white/[0.01] rounded-2xl space-y-3">
                         <p className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                          <Check size={14} className="stroke-[3]" /> Rent listing bypass system active
+                          <Check size={14} className="stroke-[3]" /> Rent listings are exempt from checks
                         </p>
                         <p className="text-white/50 text-[11px] leading-relaxed">
-                          Properties allocated for active monthly lease/rent do not require strict waraaqaha land registry uploads. You may proceed and optionally fill standard references.
+                          Properties allocated for active monthly lease/rent do not require waraaqaha land registry uploads. You may proceed and optionally fill standard references to elevate buyer confidence.
                         </p>
+                        
+                        <div className="pt-2 border-t border-white/5 space-y-3">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 block">Broker ID Code (Optional)</label>
+                            <Input 
+                              placeholder="e.g. BROKER-JIG-123 (Optional)" 
+                              value={formData.associatedBrokerId} 
+                              onChange={(e) => setFormData({ ...formData, associatedBrokerId: e.target.value })} 
+                              className="bg-white/5 border-white/10 h-12 rounded-xl text-white" 
+                            />
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Legal Reference Number (Waraaqaha)</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Legal Reference Number (Waraaqaha) (Optional)</label>
                             <Input 
-                              placeholder="e.g. 104/2026-XJL" 
+                              placeholder="e.g. 104/2026-XJL (Optional)" 
                               value={formData.legalReferenceNumber} 
                               onChange={(e) => setFormData({ ...formData, legalReferenceNumber: e.target.value })} 
                               className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 text-white" 
-                              required 
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Govt Registry Stamp ID</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Govt Registry Stamp ID (Optional)</label>
                             <Input 
-                              placeholder="e.g. REG-782" 
+                              placeholder="e.g. REG-782 (Optional)" 
                               value={formData.governmentRegistryNumber} 
                               onChange={(e) => setFormData({ ...formData, governmentRegistryNumber: e.target.value })} 
                               className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 text-white" 
-                              required 
                             />
                           </div>
                         </div>
@@ -1047,7 +1055,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Broker ID Code (Optional)</label>
                           <Input 
-                            placeholder="e.g. BROKER-JIG-123" 
+                            placeholder="e.g. BROKER-JIG-123 (Optional)" 
                             value={formData.associatedBrokerId} 
                             onChange={(e) => setFormData({ ...formData, associatedBrokerId: e.target.value })} 
                             className="bg-white/5 border-white/10 h-12 rounded-xl text-white" 
@@ -1057,16 +1065,16 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
                         {/* File inputs for verification deeds */}
                         <div className="space-y-4 pt-4 border-t border-white/5">
                           <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Verification Ownership Certificate (JPEG/PNG)</label>
-                            <ImageUpload onImagesChange={setOwnershipCertificateFiles} maxFiles={1} label="Ownership Cert File" />
+                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Verification Ownership Certificate (JPEG/PNG) (Optional)</label>
+                            <ImageUpload onImagesChange={setOwnershipCertificateFiles} maxFiles={1} label="Ownership Cert File (Optional)" />
                           </div>
                           <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Land Title Deed (JPEG/PNG)</label>
-                            <ImageUpload onImagesChange={setTitleDeedFiles} maxFiles={1} label="Title Deed File" />
+                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Land Title Deed (JPEG/PNG) (Optional)</label>
+                            <ImageUpload onImagesChange={setTitleDeedFiles} maxFiles={1} label="Title Deed File (Optional)" />
                           </div>
                           <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Seller Identity Verification ID card (JPEG/PNG)</label>
-                            <ImageUpload onImagesChange={setSellerNationalIdFiles} maxFiles={1} label="Ident Passport File" />
+                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Seller Identity Verification ID card (JPEG/PNG) (Optional)</label>
+                            <ImageUpload onImagesChange={setSellerNationalIdFiles} maxFiles={1} label="Ident Passport File (Optional)" />
                           </div>
                         </div>
                       </div>

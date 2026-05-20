@@ -149,10 +149,7 @@ export default function CreateProperty() {
       case 4:
         return formData.description.trim().length >= 15;
       case 5:
-        // Rent Listings do not strictly require all seller deeds, Sale listings require deeds
-        if (formData.listingType === 'sale') {
-          return formData.legalReferenceNumber.trim() !== '' && formData.governmentRegistryNumber.trim() !== '';
-        }
+        // All legal verification parameters are completely optional
         return true;
       case 6:
         return true;
@@ -608,17 +605,25 @@ export default function CreateProperty() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-display font-bold text-white leading-tight">Legal Claims Verification</h3>
-                    <p className="text-white/40 text-xs mt-1">Mandatory verification checks to enforce regional integrity and prevent multi-sold fraudulent deeds.</p>
+                    <p className="text-[#C5A059] text-xs font-semibold mt-1">
+                      Optional legal verification documents can be submitted to improve trust and verification status. These are not required for initial property listing.
+                    </p>
                   </div>
+                </div>
+
+                <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+                  <p className="text-xs text-white/60 leading-relaxed">
+                    Improve buyer confidence and secure a <strong className="text-[#C5A059]">Verified Badge</strong> by providing optional official documentation. You can safely skip this step and publish your listing immediately without any restriction.
+                  </p>
                 </div>
 
                 {formData.listingType === 'rent' ? (
                   <div className="p-8 border border-white/10 bg-white/5 rounded-2xl space-y-4">
                     <p className="text-white font-bold leading-relaxed flex items-center gap-2">
-                       <CheckCircle2 className="text-emerald-400 shrink-0" size={18} /> Rent Listings Exempt from Mandatory Land Registry upload
+                       <CheckCircle2 className="text-emerald-400 shrink-0" size={18} /> Rent Listings are exempt from verification checks
                     </p>
                     <p className="text-white/50 text-xs leading-relaxed">
-                       As a rent listing provider, you can bypass the mandatory public land deed validation requirements. We still encourage listing with updated certificates if available to build instant customer confidence indicators.
+                       Rent listings can bypass public land deed validation. If you want to increase confidence indicators, you can optionally supply registry parameters below.
                     </p>
                     
                     <div className="pt-4 border-t border-white/5 space-y-4">
@@ -637,32 +642,30 @@ export default function CreateProperty() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Legal Reference Number (Waraaqaha)</label>
+                        <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Legal Reference Number (Waraaqaha) (Optional)</label>
                         <Input 
-                          placeholder="e.g. 102/2026/XYZ" 
+                          placeholder="e.g. 102/2026/XYZ (Optional)" 
                           value={formData.legalReferenceNumber} 
                           onChange={e => setFormData({...formData, legalReferenceNumber: e.target.value})} 
                           className="bg-white/5 border-white/10 h-14 rounded-2xl focus-visible:ring-[#C5A059]/30" 
-                          required 
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Govt Registry Number</label>
+                        <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Govt Registry Number (Optional)</label>
                         <Input 
-                          placeholder="e.g. GRN-89324" 
+                          placeholder="e.g. GRN-89324 (Optional)" 
                           value={formData.governmentRegistryNumber} 
                           onChange={e => setFormData({...formData, governmentRegistryNumber: e.target.value})} 
                           className="bg-white/5 border-white/10 h-14 rounded-2xl focus-visible:ring-[#C5A059]/30" 
-                          required 
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Represented By Broker ID (Optional for direct owners)</label>
+                      <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Represented By Broker ID (Optional)</label>
                       <Input 
-                        placeholder="e.g. BROKER-XXX" 
+                        placeholder="e.g. BROKER-XXX (Optional)" 
                         value={formData.associatedBrokerId} 
                         onChange={e => setFormData({...formData, associatedBrokerId: e.target.value})} 
                         className="bg-white/5 border-white/10 h-14 rounded-2xl focus-visible:ring-[#C5A059]/30" 
@@ -671,22 +674,22 @@ export default function CreateProperty() {
 
                     <div className="space-y-4 pt-4 border-t border-white/5">
                       <DocumentUploader 
-                        label="Upload Ownership Certificate (Waraaqaha Lahaanshaha)"
-                        description="PDF or high-resolution scan of official regional certification parameters."
+                        label="Upload Ownership Certificate (Waraaqaha Lahaanshaha) (Optional)"
+                        description="PDF or high-resolution scan of official regional certification parameters (not required for initial listing)."
                         value={formData.legalOwnershipCertificateUrl}
                         onChange={(url) => setFormData({...formData, legalOwnershipCertificateUrl: url})}
                       />
                       
                       <DocumentUploader 
-                        label="Upload Official Title Deed (Mulkiyada)"
-                        description="PDF or scan verifying legal boundary points and registration registry stamps."
+                        label="Upload Official Title Deed (Mulkiyada) (Optional)"
+                        description="PDF or scan verifying legal boundary points and registration registry stamps (not required for initial listing)."
                         value={formData.legalTitleDeedUrl}
                         onChange={(url) => setFormData({...formData, legalTitleDeedUrl: url})}
                       />
 
                       <DocumentUploader 
-                        label="Upload Seller National Identity Credential"
-                        description="Clear photo scan of National Passport, Regional Identification doc, or Voter registration."
+                        label="Upload Seller National Identity Credential (Optional)"
+                        description="Clear photo scan of National Passport, Regional Identification doc, or Voter registration (not required for initial listing)."
                         value={formData.sellerNationalIdUrl}
                         onChange={(url) => setFormData({...formData, sellerNationalIdUrl: url})}
                       />
