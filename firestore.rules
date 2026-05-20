@@ -51,6 +51,10 @@ service cloud.firestore {
                            'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images', 'features', 
                            'isFeatured', 'metadata', 'subcategory', 'year', 'mileage', 
                            'fuelType', 'transmission', 'beds', 'baths', 'size',
+                           'createdBy', 'createdByRole',
+                           'region', 'district', 'landmark', 'latitude', 'longitude',
+                           'legalListingId', 'legalReferenceNumber', 'governmentRegistryNumber', 'associatedBrokerId',
+                           'legalOwnershipCertificateUrl', 'legalTitleDeedUrl', 'sellerNationalIdUrl',
                            'isVerified', 'verificationStatus', 'legalChecked', 'ownershipVerified'];
                            
       return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
@@ -183,15 +187,20 @@ service cloud.firestore {
         && incoming().legalChecked == false
         && incoming().ownershipVerified == false;
       allow update: if (
-        isOwner(existing().ownerId) && (
+        (isOwner(existing().ownerId) || (isSignedIn() && existing().createdBy == request.auth.uid)) && (
           incoming().diff(existing()).affectedKeys().hasOnly([
             'title', 'description', 'price', 'currency', 'city', 'location', 
             'images', 'features', 'updatedAt', 'metadata', 'subcategory',
-            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size', 'status'
-          ]) // Owner cannot change 'isFeatured'
+            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size', 'status',
+            'region', 'district', 'landmark', 'latitude', 'longitude',
+            'legalReferenceNumber', 'governmentRegistryNumber', 'associatedBrokerId',
+            'legalOwnershipCertificateUrl', 'legalTitleDeedUrl', 'sellerNationalIdUrl', 'legalListingId'
+          ]) // Owner/Creator cannot change 'isFeatured'
         )
       ) || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if (
+        isSignedIn() && (existing().ownerId == request.auth.uid || existing().createdBy == request.auth.uid)
+      ) || isAdmin();
     }
 
     // Services

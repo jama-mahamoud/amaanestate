@@ -8,6 +8,7 @@ import {
   addDoc, 
   updateDoc, 
   setDoc,
+  deleteDoc,
   doc, 
   getDoc, 
   serverTimestamp,
@@ -136,9 +137,21 @@ export const listingService = {
     if (!auth.currentUser) throw new Error('Authentication required');
 
     const listingsRef = collection(db, 'listings');
+    let userRole = 'normal_user';
+    try {
+      const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userSnap.exists()) {
+        userRole = userSnap.data().role || 'normal_user';
+      }
+    } catch (err) {
+      console.warn('Failed to fetch user role for listing creation, falling back to normal_user:', err);
+    }
+
     const newListing = {
       ...data,
       ownerId: auth.currentUser.uid,
+      createdBy: auth.currentUser.uid,
+      createdByRole: userRole,
       status: 'pending', 
       isFeatured: false, 
       isVerified: false,
@@ -162,9 +175,21 @@ export const listingService = {
     if (!auth.currentUser) throw new Error('Authentication required');
 
     const listingRef = doc(db, 'listings', id);
+    let userRole = 'normal_user';
+    try {
+      const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userSnap.exists()) {
+        userRole = userSnap.data().role || 'normal_user';
+      }
+    } catch (err) {
+      console.warn('Failed to fetch user role for listing creation, falling back to normal_user:', err);
+    }
+
     const newListing = {
       ...data,
       ownerId: auth.currentUser.uid,
+      createdBy: auth.currentUser.uid,
+      createdByRole: userRole,
       status: 'pending', 
       isFeatured: false, 
       isVerified: false,
@@ -206,12 +231,21 @@ export const listingService = {
     }
   },
 
-  async getUserListings(userId: string, category?: ListingCategory, limitCount = 50) {
+  async getUserListings(userId: string, category?: ListingCategory, limitCount = 50, userRole?: string) {
     const listingsRef = collection(db, 'listings');
-    const constraints: QueryConstraint[] = [
-      where('ownerId', '==', userId),
-      limit(limitCount)
-    ];
+    const constraints: any[] = [];
+
+    if (userRole === 'admin') {
+      constraints.push(limit(limitCount));
+    } else {
+      constraints.push(
+        or(
+          where('ownerId', '==', userId),
+          where('createdBy', '==', userId)
+        )
+      );
+      constraints.push(limit(limitCount));
+    }
 
     if (category) {
       constraints.push(where('category', '==', category));
@@ -276,6 +310,17 @@ export const listingService = {
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `professionalServices/${id}`);
       return null;
+    }
+  },
+
+  async deleteListing(id: string): Promise<boolean> {
+    const listingRef = doc(db, 'listings', id);
+    try {
+      await deleteDoc(listingRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `listings/${id}`);
+      return false;
     }
   }
 };

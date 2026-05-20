@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Edit3, Trash2, Eye, Car, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,18 +12,20 @@ import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
 export default function DashboardVehicles() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<VehicleListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleListing | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadUserVehicles = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await listingService.getUserListings(user.uid, 'vehicle');
+      const data = await listingService.getUserListings(user.uid, 'vehicle', 50, profile?.role);
       setVehicles(data as VehicleListing[]);
     } catch (err: any) {
       setError(err.message || 'Failed to load fleet');
@@ -32,8 +35,21 @@ export default function DashboardVehicles() {
   };
 
   useEffect(() => {
-    loadUserVehicles();
-  }, [user]);
+    if (user) {
+      loadUserVehicles();
+    }
+  }, [user, profile]);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Waa hubaal miyaa inaad delete garayso listing-kan?')) {
+      const success = await listingService.deleteListing(id);
+      if (success) {
+        loadUserVehicles();
+      } else {
+        alert('Delete failed. Verify permissions or try again.');
+      }
+    }
+  };
 
   const filteredVehicles = vehicles.filter(v => 
     v.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -52,7 +68,10 @@ export default function DashboardVehicles() {
           <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Vehicle Fleet Management Protocal</p>
         </div>
         <Button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setSelectedVehicle(null);
+            setIsModalOpen(true);
+          }}
           className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1"
         >
           <Plus size={20} className="mr-3" /> Catalog New Unit
@@ -61,9 +80,13 @@ export default function DashboardVehicles() {
 
       <ListingCreationModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedVehicle(null);
+        }}
         category="vehicle"
         onSuccess={loadUserVehicles}
+        listingToEdit={selectedVehicle}
       />
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -136,9 +159,60 @@ export default function DashboardVehicles() {
                     </td>
                     <td className="p-8 text-right">
                       <div className="flex items-center justify-end gap-3 md:opacity-20 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"><Eye size={18} /></Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Edit3 size={18} /></Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"><Trash2 size={18} /></Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"
+                          onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                          title="View"
+                        >
+                          <Eye size={18} />
+                        </Button>
+                        
+                        {(() => {
+                          const currentUser = {
+                            uid: user?.uid,
+                            role: profile?.role
+                          };
+                          const canEdit =
+                            currentUser?.role === 'admin' ||
+                            vehicle.ownerId === currentUser?.uid ||
+                            vehicle.createdBy === currentUser?.uid;
+
+                          if (canEdit) {
+                            return (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"
+                                  onClick={() => {
+                                    setSelectedVehicle(vehicle);
+                                    setIsModalOpen(true);
+                                  }}
+                                  title="Edit"
+                                >
+                                  <Edit3 size={18} />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"
+                                  onClick={() => handleDelete(vehicle.id)}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={18} />
+                                </Button>
+                              </>
+                            );
+                          } else {
+                            return (
+                              <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
+                                Access Restricted
+                              </span>
+                            );
+                          }
+                        })()}
                       </div>
                     </td>
                   </motion.tr>

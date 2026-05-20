@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Edit3, Trash2, Eye, MapPin, Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,18 +12,20 @@ import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
 export default function DashboardProperties() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadUserProperties = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await listingService.getUserListings(user.uid, 'property');
+      const data = await listingService.getUserListings(user.uid, 'property', 50, profile?.role);
       setProperties(data as Property[]);
     } catch (err: any) {
       setError(err.message || 'Failed to load portfolio');
@@ -32,8 +35,21 @@ export default function DashboardProperties() {
   };
 
   useEffect(() => {
-    loadUserProperties();
-  }, [user]);
+    if (user) {
+      loadUserProperties();
+    }
+  }, [user, profile]);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Waa hubaal miyaa inaad delete garayso listing-kan?')) {
+      const success = await listingService.deleteListing(id);
+      if (success) {
+        loadUserProperties();
+      } else {
+        alert('Delete failed. Verify permissions or try again.');
+      }
+    }
+  };
 
   const filteredProperties = properties.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -53,7 +69,10 @@ export default function DashboardProperties() {
           <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Asset Management & Global Distribution</p>
         </div>
         <Button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setSelectedProperty(null);
+            setIsModalOpen(true);
+          }}
           className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1"
         >
           <Plus size={20} className="mr-3" /> Create Property Listing
@@ -62,9 +81,13 @@ export default function DashboardProperties() {
 
       <ListingCreationModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedProperty(null);
+        }}
         category="property"
         onSuccess={loadUserProperties}
+        listingToEdit={selectedProperty}
       />
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -139,9 +162,60 @@ export default function DashboardProperties() {
                     </td>
                     <td className="p-8 text-right">
                       <div className="flex items-center justify-end gap-3 md:opacity-20 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"><Eye size={18} /></Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Edit3 size={18} /></Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"><Trash2 size={18} /></Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"
+                          onClick={() => navigate(`/properties/${property.id}`)}
+                          title="View"
+                        >
+                          <Eye size={18} />
+                        </Button>
+                        
+                        {(() => {
+                          const currentUser = {
+                            uid: user?.uid,
+                            role: profile?.role
+                          };
+                          const canEdit =
+                            currentUser?.role === 'admin' ||
+                            property.ownerId === currentUser?.uid ||
+                            property.createdBy === currentUser?.uid;
+
+                          if (canEdit) {
+                            return (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"
+                                  onClick={() => {
+                                    setSelectedProperty(property);
+                                    setIsModalOpen(true);
+                                  }}
+                                  title="Edit"
+                                >
+                                  <Edit3 size={18} />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"
+                                  onClick={() => handleDelete(property.id)}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={18} />
+                                </Button>
+                              </>
+                            );
+                          } else {
+                            return (
+                              <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
+                                Access Restricted
+                              </span>
+                            );
+                          }
+                        })()}
                       </div>
                     </td>
                   </motion.tr>

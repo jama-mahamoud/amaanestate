@@ -14,6 +14,8 @@ export interface Listing {
   location: string;
   listingType: ListingType;
   ownerId: string;
+  createdBy?: string;
+  createdByRole?: string;
   status: ListingStatus;
   isFeatured?: boolean;
   isVerified?: boolean;

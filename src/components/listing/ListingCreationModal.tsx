@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
 import { storageService } from '@/services/storageService';
@@ -26,10 +26,11 @@ interface ListingCreationModalProps {
   onClose: () => void;
   category: ListingCategory;
   onSuccess?: () => void;
+  listingToEdit?: any;
 }
 
-export default function ListingCreationModal({ isOpen, onClose, category, onSuccess }: ListingCreationModalProps) {
-  const { user } = useAuth();
+export default function ListingCreationModal({ isOpen, onClose, category, onSuccess, listingToEdit }: ListingCreationModalProps) {
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +96,108 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     governmentRegistryNumber: '',
     associatedBrokerId: ''
   });
+
+  useEffect(() => {
+    if (listingToEdit) {
+      setFormData({
+        title: listingToEdit.title || '',
+        description: listingToEdit.description || '',
+        price: listingToEdit.price?.toString() || '',
+        currency: listingToEdit.currency || 'ETB',
+        city: listingToEdit.city || '',
+        location: listingToEdit.location || '',
+        listingType: listingToEdit.listingType || 'sale',
+        subcategory: listingToEdit.subcategory || '',
+        
+        // Vehicle specific
+        year: listingToEdit.year?.toString() || new Date().getFullYear().toString(),
+        mileage: listingToEdit.mileage || '',
+        fuelType: listingToEdit.fuelType || 'Petrol',
+        transmission: listingToEdit.transmission || 'Automatic',
+        
+        // Household specific (Villas, Apartments, etc.)
+        beds: listingToEdit.features?.beds?.toString() || listingToEdit.beds?.toString() || '',
+        baths: listingToEdit.features?.baths?.toString() || listingToEdit.baths?.toString() || '',
+        size: listingToEdit.features?.size || listingToEdit.size || '',
+        furnished: listingToEdit.features?.furnished || 'No',
+        parking: listingToEdit.features?.parking || 'No',
+        
+        // Land specific fields
+        plotType: listingToEdit.features?.plotType || 'Freehold',
+        zoningType: listingToEdit.features?.zoningType || 'Residential',
+        roadAccess: listingToEdit.features?.roadAccess ? 'Yes' : 'No',
+        waterAccess: listingToEdit.features?.waterAccess ? 'Yes' : 'No',
+        electricityNearby: listingToEdit.features?.electricityNearby ? 'Yes' : 'No',
+        cornerPlot: listingToEdit.features?.cornerPlot ? 'Yes' : 'No',
+        boundaryDescription: listingToEdit.features?.boundaryDescription || '',
+        surveyReference: listingToEdit.features?.surveyReference || '',
+        terrain: listingToEdit.features?.terrain || 'Flat',
+        fenced: listingToEdit.features?.fenced ? 'Yes' : 'No',
+        landUse: listingToEdit.features?.landUse || 'Residential',
+        
+        // Commercial specific fields
+        parkingSpaces: listingToEdit.features?.parkingSpaces?.toString() || '',
+        floorsCount: listingToEdit.features?.floorsCount?.toString() || '',
+        powerCapacity: listingToEdit.features?.powerCapacity || '',
+        securitySystems: listingToEdit.features?.securitySystems ? 'Yes' : 'No',
+
+        // Location spec
+        district: listingToEdit.district || '',
+        landmark: listingToEdit.landmark || '',
+        latitude: listingToEdit.latitude,
+        longitude: listingToEdit.longitude,
+
+        // Legal & Safety Verification IDs (Step 6)
+        legalReferenceNumber: listingToEdit.legalReferenceNumber || '',
+        governmentRegistryNumber: listingToEdit.governmentRegistryNumber || '',
+        associatedBrokerId: listingToEdit.associatedBrokerId || ''
+      });
+      setCurrentStep(1);
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        price: '',
+        currency: 'ETB',
+        city: category === 'property' ? 'Jigjiga' : '',
+        location: '',
+        listingType: 'sale',
+        subcategory: category === 'property' ? 'Apartment' : 'SUV',
+        year: new Date().getFullYear().toString(),
+        mileage: '',
+        fuelType: 'Petrol',
+        transmission: 'Automatic',
+        beds: '',
+        baths: '',
+        size: '',
+        furnished: 'No',
+        parking: 'No',
+        plotType: 'Freehold',
+        zoningType: 'Residential',
+        roadAccess: 'No',
+        waterAccess: 'No',
+        electricityNearby: 'No',
+        cornerPlot: 'No',
+        boundaryDescription: '',
+        surveyReference: '',
+        terrain: 'Flat',
+        fenced: 'No',
+        landUse: 'Residential',
+        parkingSpaces: '',
+        floorsCount: '',
+        powerCapacity: '',
+        securitySystems: 'No',
+        district: '',
+        landmark: '',
+        latitude: undefined,
+        longitude: undefined,
+        legalReferenceNumber: '',
+        governmentRegistryNumber: '',
+        associatedBrokerId: ''
+      });
+      setCurrentStep(1);
+    }
+  }, [listingToEdit, isOpen, category]);
 
   // Calculate dynamic steps based on listing category
   const getSteps = () => {
@@ -196,7 +299,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     e.preventDefault();
     if (!user) return;
 
-    if (selectedFiles.length === 0) {
+    if (selectedFiles.length === 0 && !listingToEdit) {
       setError('At least one primary listing photograph is required.');
       setCurrentStep(4);
       return;
@@ -207,21 +310,28 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     setError(null);
 
     try {
-      // 1. Pre-generate Listing Firestore Document ID
-      const newListingId = doc(collection(db, 'listings')).id;
+      // 1. Pre-generate / Use existing Listing ID
+      const newListingId = listingToEdit ? listingToEdit.id : doc(collection(db, 'listings')).id;
 
-      // 2. Upload main images to Cloudinary in parallel
-      const uploadedImages = await storageService.uploadListingImages(
-        newListingId, 
-        selectedFiles,
-        (progressMap) => {
-          const values = Object.values(progressMap);
-          const totalProgress = values.length > 0 
-            ? values.reduce((a, b) => a + b, 0) / selectedFiles.length 
-            : 0;
-          setUploadProgress(totalProgress);
-        }
-      );
+      // 2. Upload main images to Cloudinary if selected, otherwise keep existing
+      let uploadedImages = listingToEdit?.metadata?.imageMetas || [];
+      let imagesUrls = listingToEdit?.images || [];
+
+      if (selectedFiles.length > 0) {
+        const newlyUploaded = await storageService.uploadListingImages(
+          newListingId, 
+          selectedFiles,
+          (progressMap) => {
+            const values = Object.values(progressMap);
+            const totalProgress = values.length > 0 
+              ? values.reduce((a, b) => a + b, 0) / selectedFiles.length 
+              : 0;
+            setUploadProgress(totalProgress);
+          }
+        );
+        uploadedImages = newlyUploaded;
+        imagesUrls = newlyUploaded.map(img => img.url);
+      }
 
       // 3. Prepare full payload structure
       const listingData: any = {
@@ -234,7 +344,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         location: formData.district ? `${formData.district}, ${formData.city}` : formData.city,
         listingType: formData.listingType,
         subcategory: formData.subcategory,
-        images: uploadedImages.map(img => img.url),
+        images: imagesUrls,
         metadata: {
           imageMetas: uploadedImages
         }
@@ -290,17 +400,21 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
           listingData.associatedBrokerId = formData.associatedBrokerId;
 
           // Generate randomized registry reference lookup code
-          const yearStamp = new Date().getFullYear();
-          const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-          const cityPrefix = formData.city ? formData.city.substring(0,3).toUpperCase() : 'JIG';
-          listingData.legalListingId = `AE-${cityPrefix}-LND-${yearStamp}-${randomSuffix}`;
+          if (!listingToEdit?.legalListingId) {
+            const yearStamp = new Date().getFullYear();
+            const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+            const cityPrefix = formData.city ? formData.city.substring(0,3).toUpperCase() : 'JIG';
+            listingData.legalListingId = `AE-${cityPrefix}-LND-${yearStamp}-${randomSuffix}`;
+          } else {
+            listingData.legalListingId = listingToEdit.legalListingId;
+          }
           
-          listingData.legalChecked = false;
-          listingData.ownershipVerified = false;
+          listingData.legalChecked = listingToEdit?.legalChecked || false;
+          listingData.ownershipVerified = listingToEdit?.ownershipVerified || false;
 
-          let ownershipUrl = "";
-          let deedUrl = "";
-          let nationalIdUrl = "";
+          let ownershipUrl = listingToEdit?.legalOwnershipCertificateUrl || "";
+          let deedUrl = listingToEdit?.legalTitleDeedUrl || "";
+          let nationalIdUrl = listingToEdit?.sellerNationalIdUrl || "";
 
           // Perform actual dynamic file uploads for credential security files
           if (ownershipCertificateFiles.length > 0) {
@@ -322,9 +436,14 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         }
       }
 
-      // 4. Save listing
-      const finalListingId = await listingService.createListingWithId(newListingId, listingData);
-      if (!finalListingId) throw new Error('Unresolved document insertion failure.');
+      // 4. Save/Update listing
+      if (listingToEdit) {
+        const success = await listingService.updateListing(listingToEdit.id, listingData, profile?.role === 'admin');
+        if (!success) throw new Error('Unresolved document updating failure.');
+      } else {
+        const finalListingId = await listingService.createListingWithId(newListingId, listingData);
+        if (!finalListingId) throw new Error('Unresolved document insertion failure.');
+      }
 
       onSuccess?.();
       onClose();
