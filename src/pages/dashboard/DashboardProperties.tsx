@@ -59,7 +59,7 @@ export default function DashboardProperties() {
           onClick={() => setIsModalOpen(true)}
           className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1"
         >
-          <Plus size={20} className="mr-3" /> Initialize Listing
+          <Plus size={20} className="mr-3" /> Create Property Listing
         </Button>
       </div>
 
@@ -154,9 +154,9 @@ export default function DashboardProperties() {
           </div>
         ) : (
           <DashboardEmptyState 
-            title="Portfolio Initialized" 
-            description={error ? "Our asset registry database is temporarily indisposed." : "The asset registry is currently awaiting the first structural input. Begin by initializing a new estate log."} 
-            actionLabel="Initialize Listing"
+            title="Portfolio Enrolled" 
+            description={error ? "Our database is temporarily unavailable." : "Your catalog is currently waiting for your first listing upload. Begin by publishing a new property."} 
+            actionLabel="Create Property Listing"
             onAction={() => setIsModalOpen(true)}
             icon={<Building2 size={48} />}
           />
