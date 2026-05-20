@@ -366,32 +366,39 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         listingData.region = formData.city;
 
         // Populate structured features
-        listingData.features = {
+        const features: any = {
+          size: formData.size,
           beds: Number(formData.beds) || 0,
           baths: Number(formData.baths) || 0,
-          size: formData.size,
-          furnished: formData.furnished,
-          parking: formData.parking,
-          
-          // Custom Land attributes
-          plotType: formData.plotType,
-          zoningType: formData.zoningType,
-          roadAccess: formData.roadAccess === 'Yes',
-          waterAccess: formData.waterAccess === 'Yes',
-          electricityNearby: formData.electricityNearby === 'Yes',
-          cornerPlot: formData.cornerPlot === 'Yes',
-          boundaryDescription: formData.boundaryDescription,
-          surveyReference: formData.surveyReference,
-          terrain: formData.terrain,
-          fenced: formData.fenced === 'Yes',
-          landUse: formData.landUse,
-
-          // Custom Commercial attributes
-          parkingSpaces: Number(formData.parkingSpaces) || 0,
-          floorsCount: Number(formData.floorsCount) || 0,
-          powerCapacity: formData.powerCapacity,
-          securitySystems: formData.securitySystems === 'Yes'
         };
+
+        if (formData.furnished && formData.furnished !== 'No') features.furnished = formData.furnished;
+        if (formData.parking && formData.parking !== 'No') features.parking = formData.parking;
+
+        // Custom Land attributes
+        if (formData.subcategory === 'Land') {
+          if (formData.plotType) features.plotType = formData.plotType;
+          if (formData.zoningType) features.zoningType = formData.zoningType;
+          if (formData.roadAccess === 'Yes') features.roadAccess = true;
+          if (formData.waterAccess === 'Yes') features.waterAccess = true;
+          if (formData.electricityNearby === 'Yes') features.electricityNearby = true;
+          if (formData.cornerPlot === 'Yes') features.cornerPlot = true;
+          if (formData.boundaryDescription) features.boundaryDescription = formData.boundaryDescription;
+          if (formData.surveyReference) features.surveyReference = formData.surveyReference;
+          if (formData.terrain && formData.terrain !== 'Flat') features.terrain = formData.terrain;
+          if (formData.fenced === 'Yes') features.fenced = true;
+          if (formData.landUse) features.landUse = formData.landUse;
+        }
+
+        // Custom Commercial attributes
+        if (formData.subcategory === 'Commercial') {
+          if (formData.parkingSpaces && Number(formData.parkingSpaces) > 0) features.parkingSpaces = Number(formData.parkingSpaces);
+          if (formData.floorsCount && Number(formData.floorsCount) > 0) features.floorsCount = Number(formData.floorsCount);
+          if (formData.powerCapacity) features.powerCapacity = formData.powerCapacity;
+          if (formData.securitySystems === 'Yes') features.securitySystems = true;
+        }
+
+        listingData.features = features;
 
         // If listing is for property Sale, handle mandatory legal certificate uploads!
         if (formData.listingType === 'sale') {

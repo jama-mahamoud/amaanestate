@@ -26,6 +26,7 @@ import { handleFirestoreError, OperationType } from '../lib/utils';
 export interface ListingFilter {
   category?: ListingCategory;
   listingType?: ListingType;
+  subcategory?: string; // Rename to subcategory
   city?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -43,12 +44,17 @@ export const listingService = {
     // Default to active listings if no status is specified
     filterConstraints.push(where('status', '==', filters.status || 'active'));
 
-    if (filters.category) {
+    if (filters.category && !filters.subcategory) {
       filterConstraints.push(where('category', '==', filters.category));
     }
 
     if (filters.listingType) {
       filterConstraints.push(where('listingType', '==', filters.listingType));
+    }
+    
+    // Updated to subcategory
+    if (filters.subcategory && filters.subcategory !== 'All') {
+      filterConstraints.push(where('subcategory', '==', filters.subcategory.toLowerCase()));
     }
 
     if (filters.currency && filters.currency !== 'All') {

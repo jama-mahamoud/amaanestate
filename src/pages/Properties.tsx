@@ -20,18 +20,19 @@ export default function Properties() {
   
   const navigate = useNavigate();
   
-  const currentCategory = searchParams.get('category') || 'All';
   const currentType = searchParams.get('listingType') || 'All';
+  const currentSubcategory = searchParams.get('subcategory') || 'All';
   const currentCity = searchParams.get('city') || 'All';
   const currentCurrency = searchParams.get('currency') || 'All';
 
   const filters = useMemo(() => ({
     category: 'property' as ListingCategory,
     listingType: currentType !== 'All' ? currentType as ListingType : undefined,
+    subcategory: currentSubcategory !== 'All' ? currentSubcategory : undefined,
     city: currentCity !== 'All' ? currentCity : undefined,
     currency: currentCurrency !== 'All' ? currentCurrency : undefined,
-    limit: 25 // Greater count for visual map representation
-  }), [currentType, currentCity, currentCurrency]);
+    limit: 25
+  }), [currentType, currentSubcategory, currentCity, currentCurrency]);
 
   const { listings, loading, error, hasMore, loadMore, refresh } = useListings(filters);
 
@@ -139,13 +140,8 @@ export default function Properties() {
 
   // Read filtered items output
   const filteredListings = useMemo(() => {
-    // If we have categories explicitly set in sidebar that are active, maintain them
-    let result = parsedSearch.listings;
-    if (currentCategory !== 'All') {
-      result = result.filter(l => l.subcategory === currentCategory);
-    }
-    return result;
-  }, [parsedSearch.listings, currentCategory]);
+    return parsedSearch.listings;
+  }, [parsedSearch.listings]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -217,23 +213,23 @@ export default function Properties() {
 
       <div className="container mx-auto px-4">
         {/* Quick Filter Bar */}
-        <div className="glass-card mb-4 p-2 md:p-4 rounded-3xl md:rounded-[2rem] flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+        <div className="glass-card mb-8 p-4 md:p-6 rounded-3xl flex flex-col md:flex-row items-stretch md:items-center gap-4">
             <div className="flex-1 relative group border-0">
-              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
               <Input 
-                placeholder="Type natural query: e.g. 3 bedroom in Jigjiga under 200k..." 
+                placeholder="Search properties..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border-0 h-12 md:h-14 pl-14 md:pl-16 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-sm md:text-base w-full"
+                className="bg-white/5 border-0 h-14 pl-14 rounded-xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 w-full"
               />
            </div>
-           <div className="h-px md:h-10 w-full md:w-px bg-white/5" />
-           <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+           
+           <div className="flex gap-2 overflow-x-auto pb-0 md:pb-0">
              {['All', 'sale', 'rent'].map(type => (
                <button 
                 key={type}
                 onClick={() => updateFilter('listingType', type)}
-                className={`h-12 md:h-14 px-6 md:px-8 rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all whitespace-nowrap flex-1 md:flex-none cursor-pointer ${
+                className={`h-14 px-8 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all whitespace-nowrap cursor-pointer ${
                   currentType === type ? 'bg-luxury-gold text-luxury-black' : 'hover:bg-white/5 text-white/40 border border-white/5'
                 }`}
                >
@@ -244,7 +240,7 @@ export default function Properties() {
            <Button 
              variant="outline" 
              onClick={() => setShowFilters(!showFilters)}
-             className="lg:hidden h-12 border-white/5 bg-white/5 text-white rounded-xl text-[9px] uppercase font-bold tracking-widest cursor-pointer"
+             className="md:hidden h-14 border-white/5 bg-white/5 text-white rounded-xl text-[10px] uppercase font-bold tracking-widest cursor-pointer"
            >
              <SlidersHorizontal size={14} className="mr-2" /> {showFilters ? 'Hide' : 'Filters'}
            </Button>
@@ -290,25 +286,25 @@ export default function Properties() {
                 Property Category <div className="h-px flex-1 bg-white/5 ml-6"></div>
               </h3>
               <div className="grid grid-cols-1 gap-3">
-                {['All', 'Houses', 'Land', 'Vehicles'].map((cat) => (
+                {[
+                  { label: 'All', value: 'All' },
+                  { label: 'Houses', value: 'house' },
+                  { label: 'Apartments', value: 'apartment' },
+                  { label: 'Villas', value: 'villa' },
+                  { label: 'Land', value: 'land' },
+                  { label: 'Commercial', value: 'commercial' }
+                ].map((cat) => (
                   <button
-                    key={cat}
-                    onClick={() => {
-                      if (cat === 'Vehicles') {
-                        // Redirect to vehicles page
-                        navigate('/vehicles');
-                        return;
-                      }
-                      updateFilter('category', cat);
-                    }}
+                    key={cat.value}
+                    onClick={() => updateFilter('subcategory', cat.value)}
                     className={`flex items-center justify-between px-6 py-4 rounded-xl text-sm font-medium transition-all group ${
-                      currentCategory === cat 
+                      currentSubcategory === cat.value 
                         ? 'bg-luxury-gold text-luxury-black font-bold shadow-lg shadow-luxury-gold/10' 
                         : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    {cat}
-                    <div className={`w-2 h-2 rounded-full transition-all ${currentCategory === cat ? 'bg-luxury-black' : 'bg-transparent group-hover:bg-white/20'}`} />
+                    {cat.label}
+                    <div className={`w-2 h-2 rounded-full transition-all ${currentSubcategory === cat.value ? 'bg-luxury-black' : 'bg-transparent group-hover:bg-white/20'}`} />
                   </button>
                 ))}
               </div>
@@ -376,16 +372,16 @@ export default function Properties() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
                   {/* Listings Left Pane */}
-                  <div className="w-full lg:w-[45%] xl:w-[42%] flex flex-col gap-6 lg:max-h-[750px] lg:overflow-y-auto pr-2 no-scrollbar scroll-smooth">
-                    <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-4 rounded-2xl mb-1 shrink-0">
-                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Synchronized Map Grid</span>
-                      <span className="text-[10px] text-luxury-gold uppercase tracking-widest font-black">{filteredListings.length} Estates Found</span>
+                  <div className="w-full lg:w-[40%] flex flex-col gap-6 lg:max-h-[800px] lg:overflow-y-auto pr-2">
+                    <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-4 rounded-2xl mb-2 shrink-0">
+                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Map Grid</span>
+                      <span className="text-[10px] text-luxury-gold uppercase tracking-widest font-black">{filteredListings.length} Found</span>
                     </div>
                     
                     {filteredListings.length === 0 ? (
-                      <div className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-3xl">
+                      <div className="py-12 text-center bg-white/[0.02] border border-white/5 rounded-3xl">
                         <p className="text-white/40 text-xs">No active estates found matching criteria.</p>
                       </div>
                     ) : (
@@ -404,7 +400,7 @@ export default function Properties() {
                   </div>
 
                   {/* Map Right Sticky Pane */}
-                  <div className="w-full lg:w-[55%] xl:w-[58%] lg:sticky lg:top-32 h-[500px] lg:h-[750px] rounded-[2.5rem] overflow-hidden">
+                  <div className="w-full lg:w-[60%] lg:sticky lg:top-32 h-[500px] lg:h-[800px] rounded-[2.5rem] overflow-hidden border border-white/5">
                     <MapDiscovery 
                       properties={filteredListings as unknown as Property[]} 
                       selectedCity={currentCity}
@@ -430,8 +426,8 @@ export default function Properties() {
                   </div>
                 ) : filteredListings.length === 0 ? (
                   <EmptyState 
-                    title="No Estates Found" 
-                    description={error ? "Our servers are experiencing an authentication anomaly. Please verify your connection." : "No properties match your current filters. Experience tells us that excellence is worth the search."} 
+                    title="No Properties Found" 
+                    description={error ? "Our servers are experiencing an authentication anomaly. Please verify your connection." : "No properties are registered in this category yet."} 
                     actionLabel={error ? "Retry Access" : "View All Inventory"}
                     onAction={error ? refresh : clearFilters}
                     icon={<Search size={48} />}
@@ -443,7 +439,7 @@ export default function Properties() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <div className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className={`grid gap-6 md:gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
                       {filteredListings.map((prop) => (
                         <PropertyCard 
                           key={prop.id} 

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, BedDouble, Bath, Square, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Property } from '@/types';
-import { formatPrice } from '@/lib/utils';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface PropertyCardProps {
   property: Property;
@@ -13,9 +13,10 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) {
+  const { formatPriceConverted } = useSettings();
   const mainImage = property.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop';
   const displayPrice = typeof property.price === 'number' 
-    ? formatPrice(property.price, property.currency) 
+    ? formatPriceConverted(property.price, property.currency || 'ETB') 
     : property.price;
 
   return (

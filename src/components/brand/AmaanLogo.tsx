@@ -2,12 +2,26 @@ import { motion } from 'motion/react';
 
 interface AmaanLogoProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export default function AmaanLogo({ className = '', size = 'md' }: AmaanLogoProps) {
   // Dimensions map for responsive configurations
   const sizeMap = {
+    xxs: {
+      wrapper: 'w-3 h-3 md:w-4 md:h-4',
+      box: 'w-3 h-3 md:w-4 md:h-4 text-[8px] md:text-[9px] rounded-sm',
+      fontSize: 'text-[8px] md:text-[9px]',
+      svgSize: 24,
+      svgMargin: '-m-1',
+    },
+    xs: {
+      wrapper: 'w-6 h-6',
+      box: 'w-6 h-6 text-sm rounded-md',
+      fontSize: 'text-sm',
+      svgSize: 36,
+      svgMargin: '-m-1.5',
+    },
     sm: {
       wrapper: 'w-8 h-8',
       box: 'w-8 h-8 text-lg rounded-lg',

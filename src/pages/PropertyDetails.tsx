@@ -99,40 +99,8 @@ export default function PropertyDetails() {
     ];
   }, [property]);
 
-  // Auto-calculated regional landmarks
-  const designLandmarks = useMemo(() => {
-    if (!property) return [];
-    
-    const landmarkMapping: Record<string, Array<{ name: string; dist: string; desc: string }>> = {
-      'Jigjiga': [
-        { name: 'Jigjiga Garad Wilwal Airport', dist: '1.4 km', desc: 'Prestige Global Connection' },
-        { name: 'Somali Regional Palace', dist: '2.5 km', desc: 'High Security Administrative Core' },
-        { name: 'Jigjiga University Campus', dist: '3.8 km', desc: 'Premier Academic Center' },
-        { name: 'Ethio-Telecom Corporate Head', dist: '2.0 km', desc: 'High-speed Fiber Grid Hub' }
-      ],
-      'Dire Dawa': [
-        { name: 'Dire Dawa International Airport', dist: '4.8 km', desc: 'Commercial Flight Access' },
-        { name: 'Free Trade Zone Terminal', dist: '3.5 km', desc: 'Economic Prosperity Hub' },
-        { name: 'Historical Railroad Station', dist: '1.8 km', desc: 'Cultural and Logistics Landmark' }
-      ],
-      'Godey': [
-        { name: 'Shabelle River Frontage', dist: '1.1 km', desc: 'Scenic Waterfront Axis' },
-        { name: 'Godey Regional Airport', dist: '3.9 km', desc: 'Sub-Regional Flight Terminal' },
-        { name: 'Central Godey Logistics Corridor', dist: '2.5 km', desc: 'Aviation Transit Gate' }
-      ],
-      'Addis Ababa': [
-        { name: 'Bole International Airport', dist: '3.2 km', desc: 'Flagship Continental Hub' },
-        { name: 'Friendship Park Sanctuary', dist: '1.9 km', desc: 'Elite Botanical Garden' },
-        { name: 'ECA International Conference Center', dist: '2.4 km', desc: 'Global Diplomatic Core' }
-      ]
-    };
-
-    return landmarkMapping[property.city] || [
-      { name: 'Regional Administrative Quarter', dist: '2.0 km', desc: 'Hub for municipal offices' },
-      { name: 'Elite Central Plaza & Markets', dist: '1.5 km', desc: 'Premium luxury retail and dining' },
-      { name: 'Central Highway Express Entry', dist: '1.0 km', desc: 'Immediate regional arterial access' }
-    ];
-  }, [property]);
+  // Mocked for display if needed but really we should only show items from listing.
+  // We will stop using designLandmarks based on city.
 
   // Handle Mortgage Calculators
   const mortgageResult = useMemo(() => {
@@ -376,10 +344,10 @@ export default function PropertyDetails() {
             {/* Core Blueprint Parameters */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-10 border-y border-white/5 bg-white/[0.01] px-6 rounded-2xl">
               {[
-                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: property.beds ? `${property.beds} Rooms` : '-' },
-                { icon: <Bath size={24} />, label: 'Bathrooms', value: property.baths ? `${property.baths} Baths` : '-' },
-                { icon: <Square size={24} />, label: 'Metric Area', value: property.size || '-' },
-                { icon: <Calendar size={24} />, label: 'Compliance Year', value: '2024' },
+                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: (property.beds !== undefined ? property.beds : 'Not Provided') + ' Rooms' },
+                { icon: <Bath size={24} />, label: 'Bathrooms', value: (property.baths !== undefined ? property.baths : 'Not Provided') + ' Baths' },
+                { icon: <Square size={24} />, label: 'Metric Area', value: property.size || 'Not Provided' },
+                { icon: <Calendar size={24} />, label: 'Compliance Year', value: property.complianceYear || 'Not provided' },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center p-3 hover:bg-white/5 rounded-xl transition-all">
                   <div className="text-luxury-gold/60 mb-2">{item.icon}</div>
@@ -395,7 +363,7 @@ export default function PropertyDetails() {
                 Executive Portfolio Summary <div className="h-px flex-1 bg-white/5 ml-8"></div>
               </h3>
               <p className="text-white/70 text-base md:text-lg leading-[1.8] font-light">
-                {property.description}
+                {property.description || 'No description provided.'}
               </p>
             </div>
 
@@ -441,37 +409,18 @@ export default function PropertyDetails() {
                       <ShieldCheck size={20} />
                     </div>
                     <div>
-                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Government Title</h4>
-                      <span className="text-emerald-400 text-[9px] font-bold tracking-widest uppercase">FULLY VALIDATED</span>
+                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Legal & Tax Status</h4>
+                      <span className="text-emerald-400 text-[9px] font-bold tracking-widest uppercase">
+                        {property.verification?.titleType || 'Not provided'}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-white/50 text-[11px] leading-relaxed">Official regional land administration deeds verified directly by Amaan Legal council.</p>
-                </div>
-
-                <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02]">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                      <FileCheck2 size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Tax Cleared Status</h4>
-                      <span className="text-emerald-400 text-[9px] font-bold tracking-widest uppercase">COMPLIANT</span>
-                    </div>
-                  </div>
-                  <p className="text-white/50 text-[11px] leading-relaxed">All municipal/regional real estate duties completely cleared. Clean lien status.</p>
-                </div>
-
-                <div className="p-5 rounded-xl border border-[#C5A059]/30 bg-[#C5A059]/[0.02]">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
-                      <Sparkles size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-white text-xs font-bold uppercase tracking-widest leading-none">Amaan Guarantee</h4>
-                      <span className="text-luxury-gold text-[9px] font-bold tracking-widest uppercase">PLATINUM SECURED</span>
-                    </div>
-                  </div>
-                  <p className="text-white/50 text-[11px] leading-relaxed">Guaranteed double-allocation immunity with escrow safety locks available in-platform.</p>
+                  <p className="text-white/50 text-[11px] leading-relaxed">
+                    Legal: {property.verification?.legalStatus || 'N/A'} | Tax: {property.verification?.taxStatus || 'N/A'}
+                  </p>
+                  <p className="text-white/50 text-[11px] leading-relaxed mt-2">
+                    Notes: {property.verification?.verificationNotes || 'No notes provided.'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -482,20 +431,24 @@ export default function PropertyDetails() {
                 Close Proximity Points <div className="h-px flex-1 bg-white/5 ml-8"></div>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {designLandmarks.map((mark, i) => (
-                  <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-[#C5A059]/20 transition-all flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold shrink-0">
-                      <Landmark size={20} />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-white text-xs font-bold font-display">{mark.name}</h4>
-                        <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded text-luxury-gold whitespace-nowrap">{mark.dist}</span>
+                {property.nearbyPlaces && Array.isArray(property.nearbyPlaces) && property.nearbyPlaces.length > 0 ? (
+                  property.nearbyPlaces.map((mark: any, i: number) => (
+                    <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-[#C5A059]/20 transition-all flex items-start gap-4">
+                      <div className="w-11 h-11 rounded-xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold shrink-0">
+                        <Landmark size={20} />
                       </div>
-                      <p className="text-white/40 text-[11px]">{mark.desc}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-white text-xs font-bold font-display">{mark.name}</h4>
+                          <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded text-luxury-gold whitespace-nowrap">{mark.dist}</span>
+                        </div>
+                        <p className="text-white/40 text-[11px]">{mark.desc}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-white/40 text-xs text-center py-4">No nearby landmarks data available.</p>
+                )}
               </div>
             </div>
 

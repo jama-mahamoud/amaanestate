@@ -115,7 +115,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} AmaanEstate.com. All Rights Reserved. Global Real Estate & Structural Verification Network.
           </p>
           <div className="flex gap-8">
-            <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy Policy</Link>
+            <Link to="/privacy" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy Policy</Link>
             <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Terms & Conditions</Link>
           </div>
         </div>

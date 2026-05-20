@@ -1,16 +1,70 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, MessageCircle, Sun, Moon } from 'lucide-react';
+import { Menu, X, User, MessageCircle, Sun, Moon, ChevronDown, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import AmaanLogo from '../brand/AmaanLogo';
+import MegaMenu from './MegaMenu';
+
+const MobileAccordionItem = ({ title, sections, setMobileMenuOpen }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { t } = useSettings();
+  
+  return (
+    <div className="border-b border-white/5 py-4 w-full text-left">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="w-full flex justify-between items-center text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all"
+      >
+        <span>{t(title)}</span>
+        <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180 text-luxury-gold' : 'text-white/30'}`} />
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="py-4 space-y-6">
+              {sections.map((section, idx) => (
+                <div key={idx} className="flex flex-col gap-3">
+                  <h3 className="text-luxury-gold text-[10px] font-bold uppercase tracking-widest">{t(section.title)}</h3>
+                  <ul className="flex flex-col gap-3 pl-3 border-l border-white/10">
+                    {section.items.map((item: any, i: number) => (
+                      <li key={i}>
+                        <Link 
+                          to={item.href} 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-white/70 hover:text-white transition-colors text-sm block py-1"
+                        >
+                          {t(item.title)}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [currDropdownOpen, setCurrDropdownOpen] = useState(false);
   const { user } = useAuth();
-
+  const { language, setLanguage, currency, setCurrency, t } = useSettings();
+  
   // Premium Theme Engine State Synchronized with Storage
   const [isLightTheme, setIsLightTheme] = useState(() => {
     return localStorage.getItem('theme') === 'light';
@@ -34,12 +88,165 @@ export default function Navbar() {
     }
   }, [isLightTheme]);
 
+  const menuData = [
+    {
+      title: 'Properties',
+      sections: [
+        {
+          title: 'Residential',
+          items: [
+            { title: 'Houses', href: '/properties?subcategory=house' },
+            { title: 'Apartments', href: '/properties?subcategory=apartment' },
+            { title: 'Villas', href: '/properties?subcategory=villa' },
+            { title: 'Luxury Homes', href: '/properties?tag=luxury' },
+          ]
+        },
+        {
+          title: 'Land & Commercial',
+          items: [
+            { title: 'Land', href: '/properties?subcategory=land' },
+            { title: 'Offices', href: '/properties?subcategory=office' },
+            { title: 'Warehouses', href: '/properties?subcategory=warehouse' },
+            { title: 'Hotels', href: '/properties?subcategory=hotel' },
+          ]
+        },
+        {
+          title: 'Rental',
+          items: [
+            { title: 'Rentals', href: '/properties?status=rent' },
+            { title: 'Furnished', href: '/properties?tag=furnished' },
+            { title: 'Short Stay', href: '/properties?tag=short-stay' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Vehicles',
+      sections: [
+        {
+          title: 'Personal Vehicles',
+          items: [
+            { title: 'SUVs', href: '/vehicles?type=suv' },
+            { title: 'Sedans', href: '/vehicles?type=sedan' },
+            { title: 'Luxury Cars', href: '/vehicles?tag=luxury' },
+            { title: 'Pickups', href: '/vehicles?type=pickup' },
+          ]
+        },
+        {
+          title: 'Commercial Vehicles',
+          items: [
+            { title: 'Trucks', href: '/vehicles?type=truck' },
+            { title: 'Buses', href: '/vehicles?type=bus' },
+            { title: 'Construction', href: '/vehicles?type=construction' },
+          ]
+        },
+        {
+          title: 'Other',
+          items: [
+            { title: 'Motorbikes', href: '/vehicles?type=motorbike' },
+            { title: 'Machinery', href: '/vehicles?type=machinery' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Brokers & Registry',
+      sections: [
+        {
+          title: 'Broker Network',
+          items: [
+            { title: 'Verified Brokers', href: '/brokers?type=verified' },
+            { title: 'Premium Agents', href: '/brokers?type=premium' },
+            { title: 'Commercial Brokers', href: '/brokers?type=commercial' },
+          ]
+        },
+        {
+          title: 'Registry',
+          items: [
+            { title: 'Broker Registry', href: '/brokers/registry' },
+            { title: 'Verification', href: '/brokers/verification' },
+            { title: 'Become Broker', href: '/brokers/apply' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Experts & Services',
+      sections: [
+        {
+          title: 'Construction',
+          items: [
+            { title: 'Engineers', href: '/services?type=engineer' },
+            { title: 'Architects', href: '/services?type=architect' },
+            { title: 'Builders', href: '/services?type=builder' },
+          ]
+        },
+        {
+          title: 'Professional',
+          items: [
+            { title: 'Lawyers', href: '/services?type=lawyer' },
+            { title: 'Interior Designers', href: '/services?type=designer' },
+            { title: 'Contractors', href: '/services?type=contractor' },
+          ]
+        },
+        {
+          title: 'Access',
+          items: [
+            { title: 'Become Expert', href: '/become-pro' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Jobs & Gigs',
+      sections: [
+        {
+          title: 'Employment',
+          items: [
+            { title: 'Full-time Jobs', href: '/opportunities?type=job' },
+            { title: 'Remote Jobs', href: '/opportunities?type=remote' },
+          ]
+        },
+        {
+          title: 'Freelance',
+          items: [
+            { title: 'Project Gigs', href: '/opportunities?type=gig' },
+            { title: 'Post a Job', href: '/opportunities/post' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Academy & Authority',
+      sections: [
+        {
+          title: 'Learning',
+          items: [
+            { title: 'All Courses', href: '/academy?type=course' },
+            { title: 'Scholarships', href: '/academy?type=scholarship' },
+          ]
+        },
+        {
+          title: 'Market Intelligence',
+          items: [
+            { title: 'Market Reports', href: '/news?cat=market' },
+            { title: 'Investment News', href: '/news?cat=investment' },
+            { title: 'Legal Updates', href: '/news?cat=legal' },
+            { title: 'Authority Insights', href: '/authority' },
+          ]
+        }
+      ]
+    }
+  ];
+
   const navLinks = [
+    { name: 'Home', path: '/' },
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
-    { name: 'News', path: '/news' },
-    { name: 'Brokers', path: '/brokers' },
-    { name: 'Expert Pros', path: '/services' },
+    { name: 'Brokers & Registry', path: '/brokers' },
+    { name: 'Experts & Services', path: '/services' },
+    { name: 'Jobs & Gigs', path: '/opportunities' },
+    { name: 'Academy & Authority', path: '/academy' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
@@ -52,52 +259,127 @@ export default function Navbar() {
           : 'bg-transparent'
       }`}
     >
-      {/* WhatsApp Institutional Strip */}
-      <div className="w-full border-b border-white/5 bg-black/20 backdrop-blur-sm py-2 px-4 relative z-50">
-        <div className="container mx-auto max-w-7xl flex justify-end">
-          <a 
-            href="https://wa.me/251910012794" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 group transition-all cursor-pointer"
-          >
-            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#25D366]/10 text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-all duration-500 shadow-lg shadow-black/20">
-              <MessageCircle size={10} fill="currentColor" fillOpacity={0.1} />
+      {/* Top Utility Bar */}
+      <div className="w-full border-b border-white/5 bg-luxury-black/90 backdrop-blur-md py-2 px-4 relative z-50 hidden md:block">
+        <div className="container mx-auto max-w-7xl flex justify-between items-center text-[10px] uppercase font-bold tracking-[0.1em] text-white/60">
+          <div className="flex items-center gap-6">
+            <a 
+              href="https://wa.me/251910012794" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-[#25D366] transition-colors"
+            >
+              <MessageCircle size={12} className="text-[#25D366]" />
+              {t('WhatsApp Support')}: <span className="text-white">+251 910 012 794</span>
+            </a>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div 
+                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                onClick={() => { setLangDropdownOpen(!langDropdownOpen); setCurrDropdownOpen(false); }}
+              >
+                <span className="mb-[-1px]">🌐 {language === 'en' ? 'EN' : 'SOM'}</span> <ChevronDown size={10} />
+              </div>
+              <AnimatePresence>
+                {langDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
+                  >
+                    <button 
+                      onClick={() => { setLanguage('en'); setLangDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    >
+                      <span>English</span>
+                      {language === 'en' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                    <button 
+                      onClick={() => { setLanguage('so'); setLangDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    >
+                      <span>Soomaali</span>
+                      {language === 'so' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <p className="text-[9px] md:text-[10px] uppercase font-black tracking-[0.25em] text-white/30 group-hover:text-white transition-colors duration-300">
-              WhatsApp Support <span className="mx-2 text-white/10 hidden md:inline">|</span> <span className="text-white/50 group-hover:text-luxury-gold">+251 910 012 794</span>
-            </p>
-          </a>
+            <span className="w-px h-3 bg-white/20"></span>
+            
+            <div className="relative">
+              <div 
+                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                onClick={() => { setCurrDropdownOpen(!currDropdownOpen); setLangDropdownOpen(false); }}
+              >
+                <span className="mb-[-1px]">💱 {currency}</span> <ChevronDown size={10} />
+              </div>
+              <AnimatePresence>
+                {currDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
+                  >
+                    <button 
+                      onClick={() => { setCurrency('ETB'); setCurrDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    >
+                      <span>ETB (Birr)</span>
+                      {currency === 'ETB' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                    <button 
+                      onClick={() => { setCurrency('USD'); setCurrDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    >
+                      <span>USD ($)</span>
+                      {currency === 'USD' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <span className="w-px h-3 bg-white/20"></span>
+            {user ? (
+               <Link to="/dashboard" className="flex items-center gap-2 hover:text-luxury-gold transition-colors">
+                 <User size={12} /> {t('Account')}
+               </Link>
+            ) : (
+               <Link to="/login" className="flex items-center gap-2 hover:text-luxury-gold transition-colors">
+                 <User size={12} /> {t('Login')}
+               </Link>
+            )}
+          </div>
         </div>
       </div>
 
       <div className={`container mx-auto max-w-7xl px-4 md:px-6 flex items-center justify-between transition-all duration-500 ${
         isScrolled ? 'py-4' : 'py-8'
       }`}>
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center space-x-2 md:space-x-3 group outline-none">
-            <AmaanLogo size="md" />
-            <span className="font-display font-extrabold text-xl md:text-2xl tracking-tighter text-white whitespace-nowrap">
+        {/* LOGO AREA - Left matched width */}
+        <div className="flex items-center gap-2 shrink-0 xl:flex-1 mt-[-3px]">
+          <Link to="/" className="flex items-center space-x-2 md:space-x-2.5 group outline-none">
+            <AmaanLogo size="xxs" />
+            <span className="font-display font-bold text-base md:text-lg tracking-tighter text-white whitespace-nowrap">
               Amaan<span className="gold-text-gradient bg-clip-text">Estate</span>
             </span>
           </Link>
         </div>
         
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-10">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
-              to={link.path} 
-              className="text-[10px] items-center uppercase font-bold tracking-[0.2em] text-white/60 transition-all hover:text-luxury-gold relative group"
-            >
-              {link.name}
-              <span className="absolute -bottom-2 left-1/2 w-0 h-0.5 bg-luxury-gold transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
-            </Link>
+        {/* Desktop Nav - Centered strictly */}
+        <nav className="hidden xl:flex items-center gap-2 2xl:gap-5 justify-center flex-none">
+          {menuData.map((menu) => (
+            <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} />
           ))}
+          <Link to="/about" className="text-[10px] uppercase font-bold tracking-[0.1em] text-white/60 transition-all hover:text-luxury-gold p-2 whitespace-nowrap">{t('About')}</Link>
+          <Link to="/contact" className="text-[10px] uppercase font-bold tracking-[0.1em] text-white/60 transition-all hover:text-luxury-gold p-2 whitespace-nowrap">{t('Contact')}</Link>
         </nav>
 
-        <div className="hidden lg:flex items-center gap-8">
+        {/* Desktop Actions - Right matched width */}
+        <div className="hidden xl:flex items-center gap-6 shrink-0 xl:flex-1 justify-end">
           {/* Custom Theme Switcher */}
           <button 
             onClick={() => setIsLightTheme(!isLightTheme)}
@@ -107,22 +389,13 @@ export default function Navbar() {
             {isLightTheme ? <Moon size={16} className="text-neutral-800" /> : <Sun size={16} />}
           </button>
 
-          {user ? (
-            <Link to="/dashboard" className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold hover:text-white transition-colors flex items-center gap-2">
-               <User size={14} /> My Dashboard
-            </Link>
-          ) : (
-            <Link to="/login" className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-colors">
-              Sign In
-            </Link>
-          )}
           <Button asChild className="luxury-button shadow-luxury-gold/10">
-            <Link to="/become-pro">Join Us</Link>
+            <Link to="/become-pro">{t('Join Us')}</Link>
           </Button>
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="flex items-center gap-4 xl:hidden">
           <button 
             onClick={() => setIsLightTheme(!isLightTheme)}
             className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-luxury-gold cursor-pointer"
@@ -143,84 +416,75 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-40 bg-luxury-black/98 backdrop-blur-2xl flex flex-col items-center justify-center p-8 h-screen"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="xl:hidden fixed inset-y-0 right-0 z-[100] w-full sm:w-[400px] bg-luxury-black border-l border-white/10 flex flex-col h-screen shadow-2xl"
           >
-            <div className="absolute top-8 right-4">
+            <div className="flex items-center justify-between p-6 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                 <AmaanLogo size="xxs" />
+                 <span className="font-display font-bold text-base text-white">Menu</span>
+              </div>
               <button 
-                className="p-4 text-white/50 hover:text-luxury-gold transition-colors" 
+                className="text-white/50 hover:text-luxury-gold transition-colors p-2" 
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <X size={32} />
+                <X size={24} />
               </button>
             </div>
             
-            <nav className="flex flex-col space-y-8 md:space-y-12 text-center w-full max-w-xs overflow-y-auto max-h-[70vh] no-scrollbar py-8">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Link 
-                    to={link.path} 
-                    className="text-3xl md:text-4xl font-display font-bold text-white hover:text-luxury-gold transition-all tracking-tighter"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                </motion.div>
-              ))}
+            <div className="flex-1 overflow-y-auto px-6 py-4 no-scrollbar">
+              <nav className="flex flex-col gap-2 pb-8">
+                {menuData.map((menu) => (
+                  <MobileAccordionItem key={menu.title} title={menu.title} sections={menu.sections} setMobileMenuOpen={setMobileMenuOpen} />
+                ))}
+
+                <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-4 border-b border-white/5">{t('About')}</Link>
+                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-4 border-b border-white/5">{t('Contact')}</Link>
+              </nav>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: navLinks.length * 0.05 }}
-                className="pt-8 border-t border-white/5 flex flex-col space-y-4"
-              >
-                {/* Mobile Toggle inside list */}
+              <div className="pt-4 pb-12 flex flex-col space-y-4">
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setLanguage(language === 'en' ? 'so' : 'en')}
+                    variant="outline" 
+                    className="flex-1 border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                  >
+                    🌐 {language === 'en' ? t('SOM') : t('EN')}
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrency(currency === 'ETB' ? 'USD' : 'ETB')}
+                    variant="outline" 
+                    className="flex-1 border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                  >
+                    💱 {currency === 'ETB' ? t('USD') : t('ETB')}
+                  </Button>
+                </div>
+
                 <Button 
-                  onClick={() => {
-                    setIsLightTheme(!isLightTheme);
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => setIsLightTheme(!isLightTheme)}
                   variant="outline" 
-                  className="w-full border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-16 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px] cursor-pointer"
+                  className="w-full border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
                 >
-                  Theme: {isLightTheme ? 'Switch to Dark' : 'Switch to Light'}
+                  {t('Theme')}: {t(isLightTheme ? 'Switch to Dark' : 'Switch to Light')}
                 </Button>
 
                 {user ? (
-                   <Button asChild variant="outline" className="w-full border-luxury-gold/20 bg-luxury-gold/5 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-16 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px]">
-                      <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>My Dashboard</Link>
+                   <Button asChild variant="outline" className="w-full border-luxury-gold/20 bg-luxury-gold/5 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                      <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>{t('My Dashboard')}</Link>
                    </Button>
                 ) : (
-                  <Button asChild variant="outline" className="w-full border-white/5 bg-white/5 text-white hover:bg-luxury-gold hover:text-luxury-black transition-all h-16 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px]">
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                  <Button asChild variant="outline" className="w-full border-white/5 bg-white/5 text-white hover:bg-luxury-gold hover:text-luxury-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('Sign In')}</Link>
                   </Button>
                 )}
-                <Button asChild className="w-full bg-luxury-gold text-luxury-black h-16 rounded-[1.5rem] font-bold text-base shadow-2xl shadow-luxury-gold/10">
-                  <Link to="/become-pro" onClick={() => setMobileMenuOpen(false)}>Join Us</Link>
+                <Button asChild className="w-full bg-luxury-gold text-luxury-black h-14 rounded-xl font-bold text-sm shadow-xl shadow-luxury-gold/10">
+                  <Link to="/become-pro" onClick={() => setMobileMenuOpen(false)}>{t('Join Us')}</Link>
                 </Button>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="pt-12 flex flex-col items-center"
-              >
-                 <p className="text-white/10 text-[9px] uppercase font-bold tracking-[0.5em] mb-4">Official Presence</p>
-                 <div className="flex gap-6">
-                    <div className="w-1.5 h-1.5 rounded-full bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                 </div>
-              </motion.div>
-            </nav>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

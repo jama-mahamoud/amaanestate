@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import { AuthProvider } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
@@ -24,6 +25,8 @@ import CreateProperty from './pages/CreateProperty';
 import BrokerRegistry from './pages/brokers/BrokerRegistry';
 import BrokerApplication from './pages/brokers/BrokerApplication';
 
+import PrivacyPolicy from './pages/PrivacyPolicy';
+
 // Auth Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -44,10 +47,11 @@ export default function App() {
   return (
     <HelmetProvider>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<RootLayout />}>
-            {/* Public Routes */}
-            <Route index element={<Home />} />
+        <SettingsProvider>
+          <Routes>
+            <Route path="/" element={<RootLayout />}>
+              {/* Public Routes */}
+              <Route index element={<Home />} />
           <Route path="properties" element={<Properties />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
           <Route path="properties/create" element={<CreateProperty />} />
@@ -63,6 +67,7 @@ export default function App() {
           <Route path="become-pro" element={<ProfessionalRegistration />} />
           <Route path="brokers" element={<BrokerRegistry />} />
           <Route path="brokers/apply" element={<BrokerApplication />} />
+          <Route path="privacy" element={<PrivacyPolicy />} />
           
           {/* Auth Routes - Public Only */}
           <Route element={<PublicRoute />}>
@@ -82,11 +87,12 @@ export default function App() {
             <Route path="articles/create" element={<CreateArticle />} />
             <Route path="articles/edit/:id" element={<EditArticle />} />
             <Route path="users" element={<DashboardUsers />} />
-            <Route path="settings" element={<DashboardSettings />} />
+              <Route path="settings" element={<DashboardSettings />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </AuthProvider>
+        </Routes>
+        </SettingsProvider>
+      </AuthProvider>
     </HelmetProvider>
   );
 }

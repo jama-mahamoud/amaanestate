@@ -120,6 +120,41 @@ export default function CreateProperty() {
     legalOwnershipCertificateUrl: '',
     legalTitleDeedUrl: '',
     sellerNationalIdUrl: '',
+
+    // Advanced Property Details
+    nearbyPlaces: [{ name: '', distance: '', description: '' }],
+    verification: {
+      titleType: '',
+      legalStatus: '',
+      taxStatus: '',
+      verificationNotes: ''
+    },
+    features: {
+      furnished: false,
+      parking: false,
+      parkingSpaces: 0,
+      waterAccess: false,
+      electricityNearby: false,
+      securitySystem: false,
+      cornerPlot: false,
+      roadAccess: false,
+      fenced: false,
+      floorsCount: 0,
+      plotType: '',
+      terrain: '',
+      zoningType: '',
+      landUse: ''
+    },
+    financing: {
+      minDownPayment: 0,
+      suggestedInterestRate: 0,
+      mortgageDurationDefault: 0
+    },
+    conciergeExtras: {
+      agentResponseTime: '',
+      whatsAppContact: '',
+      viewingNotes: ''
+    }
   });
 
   // Calculate overall form completion progress
@@ -128,12 +163,13 @@ export default function CreateProperty() {
     { id: 2, label: 'Location' },
     { id: 3, label: 'Property Photos' },
     { id: 4, label: 'Description' },
-    { id: 5, label: 'Verification' },
-    { id: 6, label: 'Preview & Submit' }
+    { id: 5, label: 'Advanced Details' },
+    { id: 6, label: 'Verification' },
+    { id: 7, label: 'Preview & Submit' }
   ];
 
   const handleNextStep = () => {
-    if (currentStep < 6) setCurrentStep(currentStep + 1);
+    if (currentStep < 7) setCurrentStep(currentStep + 1);
   };
 
   const handlePrevStep = () => {
@@ -151,9 +187,11 @@ export default function CreateProperty() {
       case 4:
         return formData.description.trim().length >= 15;
       case 5:
-        // All legal verification parameters are completely optional
         return true;
       case 6:
+        // All legal verification parameters are completely optional
+        return true;
+      case 7:
         return true;
       default:
         return false;
@@ -173,7 +211,7 @@ export default function CreateProperty() {
             currency: formData.currency,
             city: formData.city,
             location: formData.district ? `${formData.district}, ${formData.city}` : formData.city,
-            subcategory: formData.subcategory,
+            subcategory: formData.subcategory.toLowerCase(),
             listingType: formData.listingType === 'sale' ? 'sale' : 'rent',
             category: 'property',
             images: formData.images,
@@ -182,6 +220,9 @@ export default function CreateProperty() {
             latitude: formData.latitude,
             longitude: formData.longitude,
             region: formData.city,
+            beds: Number(formData.beds),
+            baths: Number(formData.baths),
+            size: formData.size,
             features: {
                 size: formData.size,
                 beds: Number(formData.beds),
@@ -211,6 +252,34 @@ export default function CreateProperty() {
            payload.sellerNationalIdUrl = formData.sellerNationalIdUrl || '';
         }
 
+        // Append Advanced Details
+        payload.nearbyPlaces = formData.nearbyPlaces.filter(p => p.name || p.distance || p.description);
+        
+        // Add verification only if something is filled
+        if (Object.values(formData.verification).some(v => v)) {
+            payload.verification = formData.verification;
+        }
+
+        // Add features only if something is filled
+        const filledFeatures = Object.fromEntries(
+            Object.entries(formData.features).filter(([_, v]) => v !== false && v !== 0 && v !== '')
+        );
+        if (Object.keys(filledFeatures).length > 0) {
+            payload.features = { ...payload.features, ...filledFeatures };
+        }
+
+        // Add optional metadata
+        if (Object.values(formData.financing).some(v => v)) payload.financing = formData.financing;
+        if (Object.values(formData.conciergeExtras).some(v => v)) payload.conciergeExtras = formData.conciergeExtras;
+        if (formData.district || formData.landmark) {
+             payload.locationExtras = {
+                 district: formData.district,
+                 landmark: formData.landmark,
+                 latitude: formData.latitude,
+                 longitude: formData.longitude
+             };
+        }
+        
         await listingService.createListing(payload);
         navigate('/properties');
     } catch (err) {
@@ -600,10 +669,71 @@ export default function CreateProperty() {
               </motion.div>
             )}
 
-            {/* STEP 5: Regulatory & Legal Verification System */}
+            {/* STEP 5: Advanced Property Details */}
             {currentStep === 5 && (
               <motion.div
                 key="step5"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-8 md:p-12 bg-white/[0.01] border border-white/10 rounded-[3rem] space-y-10"
+              >
+                <div>
+                  <h3 className="text-2xl font-display font-bold text-white mb-2">Advanced Property Details</h3>
+                  <p className="text-white/40 text-xs">Configure specialized amenities, zoning attributes, and technical property extras.</p>
+                </div>
+
+                <div className="space-y-8">
+                  {/* Nearby Places Section */}
+                  <div className="space-y-4">
+                    <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1">Nearby Places</label>
+                    {formData.nearbyPlaces.map((place, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input placeholder="Place Name" value={place.name} onChange={e => {
+                          const newList = [...formData.nearbyPlaces];
+                          newList[index].name = e.target.value;
+                          setFormData({...formData, nearbyPlaces: newList});
+                        }} className="bg-white/5 border-white/10" />
+                        <Input placeholder="Distance" value={place.distance} onChange={e => {
+                          const newList = [...formData.nearbyPlaces];
+                          newList[index].distance = e.target.value;
+                          setFormData({...formData, nearbyPlaces: newList});
+                        }} className="bg-white/5 border-white/10" />
+                        <Input placeholder="Description" value={place.description} onChange={e => {
+                          const newList = [...formData.nearbyPlaces];
+                          newList[index].description = e.target.value;
+                          setFormData({...formData, nearbyPlaces: newList});
+                        }} className="bg-white/5 border-white/10" />
+                        <Button type="button" variant="ghost" onClick={() => setFormData({...formData, nearbyPlaces: formData.nearbyPlaces.filter((_, i) => i !== index)})}>Remove</Button>
+                      </div>
+                    ))}
+                    <Button type="button" variant="outline" onClick={() => setFormData({...formData, nearbyPlaces: [...formData.nearbyPlaces, { name: '', distance: '', description: '' }]})}>Add Place</Button>
+                  </div>
+
+                  {/* Features/Amenities Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+                    <label className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] ml-1 col-span-full">Amenities/Features</label>
+                    {['furnished', 'parking', 'waterAccess', 'electricityNearby', 'securitySystem', 'cornerPlot', 'roadAccess', 'fenced'].map(feature => (
+                      <label key={feature} className="flex items-center gap-2 cursor-pointer text-white/80 text-sm">
+                        <input type="checkbox" checked={!!(formData.features as any)[feature]} onChange={e => setFormData({...formData, features: {...formData.features, [feature]: e.target.checked}})} className="rounded border-white/10" />
+                        <span className="capitalize">{feature.replace(/([A-Z])/g, ' $1')}</span>
+                      </label>
+                    ))}
+                    <Input type="number" placeholder="Parking Spaces" value={(formData.features as any).parkingSpaces} onChange={e => setFormData({...formData, features: {...formData.features, parkingSpaces: Number(e.target.value)}})} className="bg-white/5 border-white/10" />
+                    <Input type="number" placeholder="Floors Count" value={(formData.features as any).floorsCount} onChange={e => setFormData({...formData, features: {...formData.features, floorsCount: Number(e.target.value)}})} className="bg-white/5 border-white/10" />
+                    <Input placeholder="Plot Type" value={(formData.features as any).plotType} onChange={e => setFormData({...formData, features: {...formData.features, plotType: e.target.value}})} className="bg-white/5 border-white/10" />
+                    <Input placeholder="Terrain" value={(formData.features as any).terrain} onChange={e => setFormData({...formData, features: {...formData.features, terrain: e.target.value}})} className="bg-white/5 border-white/10" />
+                    <Input placeholder="Zoning Type" value={(formData.features as any).zoningType} onChange={e => setFormData({...formData, features: {...formData.features, zoningType: e.target.value}})} className="bg-white/5 border-white/10" />
+                    <Input placeholder="Land Use" value={(formData.features as any).landUse} onChange={e => setFormData({...formData, features: {...formData.features, landUse: e.target.value}})} className="bg-white/5 border-white/10" />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 6: Regulatory & Legal Verification System */}
+            {currentStep === 6 && (
+              <motion.div
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -711,10 +841,10 @@ export default function CreateProperty() {
               </motion.div>
             )}
 
-            {/* STEP 6: Review & Publish Preview */}
-            {currentStep === 6 && (
+            {/* STEP 7: Review & Publish Preview */}
+            {currentStep === 7 && (
               <motion.div
-                key="step6"
+                key="step7"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}

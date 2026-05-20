@@ -69,7 +69,8 @@ export function useListings(initialFilters: ListingFilter = {}) {
     initialFilters.minPrice, 
     initialFilters.maxPrice,
     initialFilters.status,
-    initialFilters.currency
+    initialFilters.currency,
+    initialFilters.subcategory
   ]);
 
   const loadMore = () => {

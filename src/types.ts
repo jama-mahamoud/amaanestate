@@ -46,6 +46,40 @@ export interface Property extends Listing {
   beds?: number;
   baths?: number;
   size?: string;
+  complianceYear?: string;
+  verification?: {
+    titleType?: string;
+    legalStatus?: string;
+    taxStatus?: string;
+    verificationNotes?: string;
+  };
+  nearbyPlaces?: Array<{ name: string; distance: string; description: string }>;
+  features?: {
+    furnished?: boolean;
+    parking?: boolean;
+    parkingSpaces?: number;
+    waterAccess?: boolean;
+    electricityNearby?: boolean;
+    securitySystem?: boolean;
+    cornerPlot?: boolean;
+    roadAccess?: boolean;
+    fenced?: boolean;
+    floorsCount?: number;
+    plotType?: string;
+    terrain?: string;
+    zoningType?: string;
+    landUse?: string;
+  };
+  financing?: {
+    minDownPayment?: number;
+    suggestedInterestRate?: number;
+    mortgageDurationDefault?: number;
+  };
+  conciergeExtras?: {
+    agentResponseTime?: string;
+    whatsAppContact?: string;
+    viewingNotes?: string;
+  };
 }
 
 export interface VehicleListing extends Listing {
