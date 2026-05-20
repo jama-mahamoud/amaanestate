@@ -174,8 +174,9 @@ export default function DashboardVehicles() {
                             uid: user?.uid,
                             role: profile?.role
                           };
+                          const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
                           const canEdit =
-                            currentUser?.role === 'admin' ||
+                            isUserAdmin ||
                             vehicle.ownerId === currentUser?.uid ||
                             vehicle.createdBy === currentUser?.uid;
 

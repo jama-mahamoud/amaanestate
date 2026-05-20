@@ -42,11 +42,16 @@ export default function DashboardProperties() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Waa hubaal miyaa inaad delete garayso listing-kan?')) {
-      const success = await listingService.deleteListing(id);
-      if (success) {
-        loadUserProperties();
-      } else {
-        alert('Delete failed. Verify permissions or try again.');
+      try {
+        const success = await listingService.deleteListing(id);
+        if (success) {
+          loadUserProperties();
+        } else {
+          alert('Delete failed. Verify permissions or try again.');
+        }
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Delete failed: ' + (err as Error).message);
       }
     }
   };
@@ -177,8 +182,9 @@ export default function DashboardProperties() {
                             uid: user?.uid,
                             role: profile?.role
                           };
+                          const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
                           const canEdit =
-                            currentUser?.role === 'admin' ||
+                            isUserAdmin ||
                             property.ownerId === currentUser?.uid ||
                             property.createdBy === currentUser?.uid;
 

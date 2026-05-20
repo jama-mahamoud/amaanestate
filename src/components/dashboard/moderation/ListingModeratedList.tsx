@@ -12,12 +12,14 @@ import {
   AlertCircle,
   Star,
   EyeOff,
-  Eye
+  Eye,
+  Edit3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Listing } from '@/types';
 import { moderationService } from '@/services/moderationService';
 import { toast } from 'sonner';
+import ListingCreationModal from '@/components/listing/ListingCreationModal';
 
 type ModerationStatus = 'pending' | 'active' | 'rejected' | 'suspended';
 
@@ -28,6 +30,8 @@ export default function ListingModeratedList() {
   const [statusFilter, setStatusFilter] = useState<ModerationStatus>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -221,11 +225,22 @@ export default function ListingModeratedList() {
                       </div>
                    </div>
                    <div className="flex items-center gap-3">
-                      <a href={`/properties/${listing.id}`} target="_blank" rel="noopener noreferrer">
+                      <a href={listing.category === 'vehicle' ? `/vehicles/${listing.id}` : `/properties/${listing.id}`} target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="sm" className="h-10 rounded-xl bg-white/5 border border-white/5 hover:border-luxury-gold hover:text-luxury-gold text-[10px] uppercase font-black tracking-widest">
                            <ExternalLink size={14} className="mr-2" /> Inspect
                         </Button>
                       </a>
+                      <Button 
+                        onClick={() => {
+                          setEditingListing(listing);
+                          setIsEditModalOpen(true);
+                        }}
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-10 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/20 hover:border-luxury-gold hover:text-luxury-gold text-[10px] uppercase font-black tracking-widest gap-2"
+                      >
+                         <Edit3 size={14} /> Edit
+                      </Button>
                    </div>
                 </div>
 
@@ -306,6 +321,19 @@ export default function ListingModeratedList() {
             </motion.div>
           ))}
         </div>
+      )}
+
+      {editingListing && (
+        <ListingCreationModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingListing(null);
+          }}
+          category={editingListing.category}
+          listingToEdit={editingListing}
+          onSuccess={loadListings}
+        />
       )}
     </div>
   );

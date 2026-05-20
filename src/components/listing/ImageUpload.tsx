@@ -26,48 +26,51 @@ export default function ImageUpload({ onImagesChange, maxFiles = 10, existingIma
     };
   }, [previews]);
 
+  // Synchronize state with parent component via useEffect safely after render
+  useEffect(() => {
+    onImagesChange(previews.map(p => p.file));
+  }, [previews, onImagesChange]);
+
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
     setError(null);
 
     const newFiles = Array.from(files);
-    const validFiles: ImagePreview[] = [];
-
-    if (previews.length + newFiles.length > maxFiles) {
-      setError(`Maximum ${maxFiles} images allowed.`);
-      return;
-    }
-
-    newFiles.forEach(file => {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Only image files are allowed.');
-        return;
-      }
-
-      // Validate file size (max 5MB for optimization)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image must be less than 5MB.');
-        return;
-      }
-
-      validFiles.push({
-        file,
-        previewUrl: URL.createObjectURL(file)
-      });
-    });
 
     setPreviews(prev => {
-      const updated = [...prev, ...validFiles];
-      onImagesChange(updated.map(p => p.file));
-      return updated;
+      if (prev.length + newFiles.length > maxFiles) {
+        setError(`Maximum ${maxFiles} images allowed.`);
+        return prev;
+      }
+
+      const validFiles: ImagePreview[] = [];
+      newFiles.forEach(file => {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          setError('Only image files are allowed.');
+          return;
+        }
+
+        // Validate file size (max 5MB for optimization)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image must be less than 5MB.');
+          return;
+        }
+
+        validFiles.push({
+          file,
+          previewUrl: URL.createObjectURL(file)
+        });
+      });
+
+      return [...prev, ...validFiles];
     });
-  }, [previews.length, maxFiles, onImagesChange]);
+  }, [maxFiles]);
 
   const removeImage = (index: number) => {
+    setError(null);
     setPreviews(prev => {
       const updated = prev.filter((_, i) => i !== index);
-      onImagesChange(updated.map(p => p.file));
       // Cleanup URL object to prevent memory leaks
       URL.revokeObjectURL(prev[index].previewUrl);
       return updated;

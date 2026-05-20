@@ -6,7 +6,8 @@ import {
   MapPin, BedDouble, Bath, Square, Share2, 
   Heart, Calendar, Check, ArrowLeft, Phone, 
   Mail, MessageSquare, Info, Loader2, ShieldCheck, FileCheck2,
-  ChevronLeft, ChevronRight, Sparkles, Building, Landmark, Percent, Clock, AlertCircle
+  ChevronLeft, ChevronRight, Sparkles, Building, Landmark, Percent, Clock, AlertCircle,
+  Edit3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,11 +19,49 @@ import NotFoundState from '@/components/NotFoundState';
 import MapDiscovery from '@/components/MapDiscovery';
 import PropertyCard from '@/components/PropertyCard';
 import PropertyDetailMap from '@/components/location/PropertyDetailMap';
+import { useAuth } from '@/contexts/AuthContext';
+import { listingService } from '@/services/listingService';
+import ListingCreationModal from '@/components/listing/ListingCreationModal';
+import { toast } from 'sonner';
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const { listing, loading, error } = useListing(id);
+  const { listing, loading, error, refresh } = useListing(id);
   const property = listing as Property | null;
+
+  const { user, profile } = useAuth();
+  const isAdmin = profile?.role?.toString().toLowerCase().trim() === 'admin';
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleToggleFeature = async () => {
+    if (!property) return;
+    try {
+      const success = await listingService.updateListing(property.id, { isFeatured: !property.isFeatured }, true);
+      if (success) {
+        toast.success(property.isFeatured ? 'Feature status removed' : 'Listing marked as featured');
+        refresh();
+      } else {
+        toast.error('Failed to update feature status');
+      }
+    } catch (err) {
+      toast.error('Failed to update feature status');
+    }
+  };
+
+  const handleStatusChange = async (newStatus: any) => {
+    if (!property) return;
+    try {
+      const success = await listingService.updateListing(property.id, { status: newStatus }, true);
+      if (success) {
+        toast.success(`Status updated to ${newStatus}`);
+        refresh();
+      } else {
+        toast.error('Failed to update status');
+      }
+    } catch (err) {
+      toast.error('Failed to update status');
+    }
+  };
 
   // State Management for Interactive Overlays
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -162,6 +201,59 @@ export default function PropertyDetails() {
       
       {/* 1. GALLERY MEDIA CONTAINER */}
       <div className="relative pt-24">
+        {isAdmin && property && (
+          <div className="container mx-auto px-4 mb-8">
+            <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 p-5 rounded-[2rem] flex flex-wrap items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold shrink-0">
+                   <ShieldCheck size={24} className="animate-pulse" />
+                </div>
+                <div>
+                   <p className="text-[11px] font-black uppercase tracking-[0.2em] text-luxury-gold leading-none">Administrative Panel Override</p>
+                   <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1.5 font-bold">Unrestricted write access & registry controls</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Feature Toggle */}
+                <button 
+                  onClick={handleToggleFeature}
+                  className={`flex items-center gap-2 px-5 h-11 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                    property.isFeatured 
+                      ? 'bg-luxury-gold/20 border-luxury-gold text-luxury-gold' 
+                      : 'bg-white/5 border-white/5 text-white/40 hover:text-white hover:border-white/25'
+                  }`}
+                >
+                  <Sparkles size={12} fill={property.isFeatured ? 'currentColor' : 'none'} /> 
+                  <span>{property.isFeatured ? 'Featured Asset' : 'Mark Featured'}</span>
+                </button>
+
+                {/* Status Switcher */}
+                <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-xl px-4 h-11 text-[9px] uppercase font-black tracking-widest text-white/40">
+                  <span className="font-bold">STATUS:</span>
+                  <select
+                    value={property.status}
+                    onChange={(e) => handleStatusChange(e.target.value as any)}
+                    className="bg-transparent border-0 text-white focus:outline-none cursor-pointer text-[9px] uppercase font-black tracking-widest"
+                  >
+                    <option value="pending" className="bg-luxury-black">PENDING</option>
+                    <option value="active" className="bg-luxury-black">ACTIVE</option>
+                    <option value="rejected" className="bg-luxury-black">REJECTED</option>
+                    <option value="suspended" className="bg-luxury-black">SUSPENDED</option>
+                  </select>
+                </div>
+
+                {/* Edit Button */}
+                <Button 
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="h-11 rounded-xl bg-luxury-gold hover:bg-white text-black font-black text-[9px] uppercase tracking-widest gap-2 px-6 shadow-lg shadow-luxury-gold/10"
+                >
+                  <Edit3 size={12} /> Rewrite Listing
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="container mx-auto px-4 mb-5 flex justify-between items-center text-white/40 text-xs">
           <Link to="/properties" className="flex items-center gap-2 hover:text-luxury-gold transition-colors font-bold tracking-widest uppercase">
             <ArrowLeft size={14} /> BACK TO MARKETPLACE
@@ -717,6 +809,16 @@ export default function PropertyDetails() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isAdmin && property && (
+        <ListingCreationModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          category="property"
+          listingToEdit={property}
+          onSuccess={refresh}
+        />
+      )}
 
     </div>
   );

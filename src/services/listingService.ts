@@ -235,17 +235,17 @@ export const listingService = {
     const listingsRef = collection(db, 'listings');
     const constraints: any[] = [];
 
-    if (userRole === 'admin') {
-      constraints.push(limit(limitCount));
-    } else {
+    const isAdmin = userRole?.toString().toLowerCase().trim() === 'admin';
+    if (!isAdmin) {
       constraints.push(
         or(
           where('ownerId', '==', userId),
           where('createdBy', '==', userId)
         )
       );
-      constraints.push(limit(limitCount));
     }
+    
+    constraints.push(limit(limitCount));
 
     if (category) {
       constraints.push(where('category', '==', category));
