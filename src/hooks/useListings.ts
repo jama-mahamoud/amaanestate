@@ -70,7 +70,9 @@ export function useListings(initialFilters: ListingFilter = {}) {
     initialFilters.maxPrice,
     initialFilters.status,
     initialFilters.currency,
-    initialFilters.subcategory
+    initialFilters.subcategory,
+    initialFilters.associatedBrokerId,
+    initialFilters.ownerId
   ]);
 
   const loadMore = () => {

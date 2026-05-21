@@ -24,6 +24,8 @@ import ProfessionalRegistration from './pages/ProfessionalRegistration';
 import CreateProperty from './pages/CreateProperty';
 import BrokerRegistry from './pages/brokers/BrokerRegistry';
 import BrokerApplication from './pages/brokers/BrokerApplication';
+import AgencyRegistration from './pages/brokers/AgencyRegistration';
+import BrokerDetails from './pages/brokers/BrokerDetails';
 
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
@@ -66,7 +68,9 @@ export default function App() {
           <Route path="professionals/:id" element={<ProfessionalDetails />} />
           <Route path="become-pro" element={<ProfessionalRegistration />} />
           <Route path="brokers" element={<BrokerRegistry />} />
+          <Route path="brokers/:id" element={<BrokerDetails />} />
           <Route path="brokers/apply" element={<BrokerApplication />} />
+          <Route path="agency-register" element={<AgencyRegistration />} />
           <Route path="privacy" element={<PrivacyPolicy />} />
           
           {/* Auth Routes - Public Only */}

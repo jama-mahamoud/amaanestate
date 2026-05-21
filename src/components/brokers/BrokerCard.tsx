@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
-import { ShieldCheck, MapPin, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, MapPin, ArrowUpRight, CheckCircle2, MessageCircle, Building2, Home as HomeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Broker } from '@/types';
 
 export default function BrokerCard({ broker, index = 0 }: { broker: Broker; index?: number }) {
@@ -28,34 +29,60 @@ export default function BrokerCard({ broker, index = 0 }: { broker: Broker; inde
           </div>
           <div>
             <h3 className="text-xl font-display font-bold text-white group-hover:text-[#C5A059] transition-colors">{broker.fullName}</h3>
+            {broker.companyName && (
+              <div className="flex items-center gap-1.5 text-white/70 text-xs mt-1 mb-1 font-medium">
+                <Building2 size={12} className="text-[#C5A059]" />
+                <span>{broker.companyName}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 text-white/50 text-xs mt-1">
               <MapPin size={12} />
               <span>{broker.city}, {broker.region}</span>
             </div>
-            <div className="mt-2 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest">
-              <ShieldCheck size={12} />
-              <span>Legally Verified</span>
-            </div>
+            {broker.isVerified && (
+              <div className="mt-2 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest">
+                <ShieldCheck size={12} />
+                <span>{broker.type === 'agency' ? 'Verified Agency 🏢✅' : 'Verified Agent ✅'}</span>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6 py-4 border-y border-white/5">
           <div>
-            <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Experience</span>
-            <p className="text-white text-sm font-semibold">{broker.yearsOfExperience} Years</p>
+            <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Listings</span>
+            <div className="flex items-center gap-1 text-white text-sm font-semibold">
+              <HomeIcon size={14} className="text-[#C5A059]" />
+              {broker.activeListingsCount || 0} Active
+            </div>
           </div>
           <div>
             <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Coverage</span>
-            <p className="text-white text-sm font-semibold truncate">{broker.areasOfOperation[0] || 'Regional'}</p>
+            <p className="text-white text-sm font-semibold truncate">{broker.areasOfOperation?.[0] || broker.city}</p>
           </div>
         </div>
 
-        <Button className="w-full bg-white/5 hover:bg-[#C5A059] text-white hover:text-black border border-white/10 transition-all group/btn" asChild>
-          <a href={`https://wa.me/${broker.whatsapp.replace(/\D/g,'')}?text=Hello%20${broker.fullName},%20I%20found%20you%20on%20AmaanEstate`} target="_blank" rel="noopener noreferrer">
-            Contact on WhatsApp
-            <ArrowUpRight size={16} className="ml-2 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
-          </a>
-        </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 bg-transparent border-white/10 hover:bg-white/5 text-white transition-all group/btn" asChild>
+              <a href={`tel:${broker.phone?.replace(/\D/g,'')}`}>
+                Contact
+              </a>
+            </Button>
+            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-all group/btn" asChild>
+              <a href={`https://wa.me/${broker.whatsapp.replace(/\D/g,'')}?text=Hello%20${broker.fullName},%20I%20found%20you%20on%20AmaanEstate`} target="_blank" rel="noopener noreferrer">
+                <MessageCircle size={16} className="mr-2" />
+                WhatsApp
+              </a>
+            </Button>
+          </div>
+          <Button className="w-full bg-white/5 hover:bg-[#C5A059] text-white hover:text-black border border-white/10 transition-all mt-2" asChild>
+            <Link to={`/brokers/${broker.id}`}>
+              View Profile
+              <ArrowUpRight size={16} className="ml-2" />
+            </Link>
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

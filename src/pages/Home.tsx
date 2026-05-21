@@ -34,9 +34,14 @@ export default function Home() {
           >
             The Premier Gateway to Verified Real Estate, High-End Mobility, and Professional Intelligence in the Somali Region.
           </motion.p>
-          <Button asChild size="lg" className="bg-luxury-gold text-luxury-black font-bold h-14 px-10 rounded-xl">
-              <Link to="/properties">{t('Browse Properties')}</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button asChild size="lg" className="bg-luxury-gold text-luxury-black font-bold h-14 px-10 rounded-xl w-full sm:w-auto">
+                <Link to="/properties">{t('Browse Properties')}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10 font-bold h-14 px-10 rounded-xl w-full sm:w-auto transition-all">
+                <Link to="/brokers">{t('Find Verified Agents')}</Link>
+            </Button>
+          </div>
         </div>
       </section>
 

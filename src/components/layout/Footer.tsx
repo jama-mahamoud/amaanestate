@@ -111,12 +111,12 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-white/40 text-xs tracking-widest uppercase">
+          <p className="text-white/40 text-[10px] tracking-wide">
             &copy; {new Date().getFullYear()} AmaanEstate.com. All Rights Reserved. Global Real Estate & Structural Verification Network.
           </p>
           <div className="flex gap-8">
-            <Link to="/privacy" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Privacy Policy</Link>
-            <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-xs uppercase tracking-widest">Terms & Conditions</Link>
+            <Link to="/privacy" className="text-white/40 hover:text-white transition-colors text-[10px]">Privacy Policy</Link>
+            <Link to="/contact" className="text-white/40 hover:text-white transition-colors text-[10px]">Terms & Conditions</Link>
           </div>
         </div>
       </div>

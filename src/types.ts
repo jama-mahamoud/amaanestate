@@ -167,6 +167,7 @@ export interface Article {
 export interface Broker {
   id: string;
   userId: string;
+  type?: 'individual' | 'agency';
   fullName: string;
   phone: string;
   whatsapp: string;
@@ -174,11 +175,22 @@ export interface Broker {
   region: string;
   city: string;
   officeAddress: string;
+  companyName?: string;
+  businessLicenseNumber?: string;
+  numberOfAgents?: number;
+  companyDescription?: string;
+  website?: string;
+  socialMedia?: string;
+  yearEstablished?: string;
+  activeListingsCount?: number;
+  bio?: string;
 
   governmentIdUrl: string;
   businessLicenseUrl: string;
-  brokerCertificateUrl: string;
-  profilePhotoUrl: string;
+  brokerCertificateUrl?: string; // Optional for agency
+  profilePhotoUrl?: string; // Optional for agency
+  taxRegistrationUrl?: string;
+  officeProofUrl?: string;
 
   yearsOfExperience: number;
   areasOfOperation: string[];

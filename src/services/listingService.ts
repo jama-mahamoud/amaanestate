@@ -26,7 +26,7 @@ import { handleFirestoreError, OperationType } from '../lib/utils';
 export interface ListingFilter {
   category?: ListingCategory;
   listingType?: ListingType;
-  subcategory?: string; // Rename to subcategory
+  subcategory?: string; 
   city?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -34,6 +34,8 @@ export interface ListingFilter {
   currency?: string;
   limit?: number;
   lastDoc?: QueryDocumentSnapshot<DocumentData>;
+  associatedBrokerId?: string;
+  ownerId?: string;
 }
 
 export const listingService = {
@@ -41,8 +43,20 @@ export const listingService = {
     const listingsRef = collection(db, 'listings');
     const filterConstraints: any[] = [];
 
+    if (filters.associatedBrokerId) {
+      filterConstraints.push(where('associatedBrokerId', '==', filters.associatedBrokerId));
+    }
+
+    if (filters.ownerId) {
+      filterConstraints.push(where('ownerId', '==', filters.ownerId));
+    }
+
     // Default to active listings if no status is specified
-    filterConstraints.push(where('status', '==', filters.status || 'active'));
+    if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
+       filterConstraints.push(where('status', '==', 'active'));
+    } else if (filters.status) {
+       filterConstraints.push(where('status', '==', filters.status));
+    }
 
     if (filters.category && !filters.subcategory) {
       filterConstraints.push(where('category', '==', filters.category));

@@ -158,14 +158,13 @@ async function startServer() {
     try {
       ai = getGeminiClient();
     } catch (err: any) {
-      console.warn("Gemini client initialization failed (API key may be missing). Using real-time local compiler fallback:", err.message);
-      const fallbackText = generateLocalFallback(message, contextData);
-      return res.json({ text: fallbackText + "\n\n*(Ogaysiis: Furaha API key hadda lama helin. Waxaa laguu soo bandhigay buug-hagaha tooska ah ee madaalkeena)*" });
+      console.warn("Gemini client initialization failed (API key may be missing).");
+      return res.json({ text: "AI assistant temporarily unavailable" });
     }
 
     try {
       const systemInstruction = `You are the AmaanEstate AI Concierge, a prestigious, luxury multilingual real estate advisor and professional services concierge for the Somali Region.
-Your primary objective is to dynamically assist users in discovering authentic, certified, active properties, rentals, vehicles, or top experts directly fetched from our live Firestore database.
+Your primary objective is to dynamically assist users in discovering authentic, certified, active properties, rentals, vehicles, top verified agents/agencies, or top experts directly fetched from our live Firestore database.
 
 --- LIVE CONTEXT DATA (DO NOT HALLUCINATE ITEMS BEYOND THIS LIST) ---
 DATABASE LIQUID ASSETS (PROPERTIES / LAND / RENTALS / VEHICLES):
@@ -173,6 +172,9 @@ ${contextData.listingsStr}
 
 CERTIFIED ACTIVE REGISTERED PROFESSIONALS (EXPERTS / SERVICES):
 ${contextData.prosStr}
+
+VERIFIED ACTIVE AGENTS & AGENCIES (BROKERS):
+${contextData.brokersStr}
 
 LATEST PORTAL INTEL & ARTICLES:
 ${contextData.articlesStr}
@@ -194,6 +196,7 @@ AI STYLE & MULTILINGUAL GRAMMAR RULES:
    Always structure listings/pros with exact relative links using standard markdown! Example: "[Title](/properties/[id]) - Qiimaha: $500". Never fabricate links.
    - For Properties: /properties/[id]
    - For Vehicles: /vehicles/[id]
+   - For Verified Agents/Agencies: /brokers/[id]
    - For Pros/Experts: /professionals/[providerId] or /services
    - For Articles: /news/[id]
 4. FORBID REPETITION:
@@ -276,12 +279,12 @@ AI STYLE & MULTILINGUAL GRAMMAR RULES:
           if (healingResponse.text && !hasBadRepetition(healingResponse.text)) {
             finalResponseText = healingResponse.text;
           } else {
-            console.warn("Try 2 failed quality inspection. Invoking real-time database local compiler fallback...");
-            finalResponseText = generateLocalFallback(message, contextData);
+            console.warn("Try 2 failed quality inspection.");
+            finalResponseText = "AI assistant temporarily unavailable";
           }
         } catch (healErr) {
           console.error("Self-healing model error:", healErr);
-          finalResponseText = generateLocalFallback(message, contextData);
+          finalResponseText = "AI assistant temporarily unavailable";
         }
       }
 
@@ -290,22 +293,7 @@ AI STYLE & MULTILINGUAL GRAMMAR RULES:
       const errMsg = error.message || "Unknown API issue";
       const cleanedMsg = errMsg.replace(/AIzaSy[A-Za-z0-9_\-]{33}/g, "[REDACTED_API_KEY]");
       console.error("AI Assistant API error gracefully handled:", cleanedMsg);
-
-      let customerNotice = "";
-      if (cleanedMsg.toLowerCase().includes("timeout")) {
-        customerNotice = "\n\n*(Fadlan ogow: Adeegga AI wuxuu qaatay waqti ka badan intii loogu talagalay. Halkan waxaa lagugu soo bandhigay hantida tooska ah ee la xaqiijiyay)*";
-      } else if (cleanedMsg.toLowerCase().includes("api key") || cleanedMsg.toLowerCase().includes("authorized") || cleanedMsg.toLowerCase().includes("not found")) {
-        customerNotice = "\n\n*(Fadlan ogow: Furaha geliye ee API-ga ayaa u baahan in lagu xaqiijiyo Settings. Waxaan halkan kuugu diyaarinay xogta saxda ah ee tooska ah)*";
-      } else if (cleanedMsg.toLowerCase().includes("quota") || cleanedMsg.toLowerCase().includes("exhausted") || cleanedMsg.toLowerCase().includes("limit") || cleanedMsg.includes("429")) {
-        customerNotice = "\n\n*(Fadlan ogow: Adeegga AI wuxuu gaaray xaddiga ugu sarreeya ee codsiyada. Waxaan halkan kuugu diyaarinay xogta saxda ah ee tooska ah)*";
-      }
-
-      try {
-        const fallbackText = generateLocalFallback(message, contextData);
-        res.json({ text: fallbackText + customerNotice });
-      } catch (innerErr) {
-        res.status(500).json({ error: "Unable to process message stream safely context" });
-      }
+      res.json({ text: "AI assistant temporarily unavailable" });
     }
   });
 
@@ -387,6 +375,8 @@ async function fetchDatabaseContext() {
   let prosStr = "No certified professionals active.";
   let articlesStr = "No news articles active.";
 
+  let brokersStr = "No verified agents active.";
+
   try {
     // 1. Get Listings
     const listRef = collection(firestoreDb, "listings");
@@ -409,6 +399,23 @@ async function fetchDatabaseContext() {
     }
   } catch (err) {
     console.error("Error fetching listings context in backend:", err);
+  }
+
+  try {
+    // 1.5 Get Verified Agents (Brokers)
+    const brokerRef = collection(firestoreDb, "brokers");
+    const brokerQ = query(brokerRef, where("status", "==", "approved"), limit(30));
+    const brokerSnap = await getDocs(brokerQ);
+    if (!brokerSnap.empty) {
+      const items = brokerSnap.docs.map(docSnapshot => {
+        const d = docSnapshot.data();
+        const type = d.type === 'agency' ? 'Verified Agency' : 'Verified Agent';
+        return `- ID: ${docSnapshot.id} | Type: ${type} | Name: ${d.fullName} | City: ${d.city} | Specialization: ${d.propertySpecialization?.join(', ')}`;
+      });
+      brokersStr = items.join("\n");
+    }
+  } catch (err) {
+    console.error("Error fetching brokers context in backend:", err);
   }
 
   try {
@@ -443,7 +450,7 @@ async function fetchDatabaseContext() {
     console.error("Error fetching articles context in backend:", err);
   }
 
-  return { listingsStr, prosStr, articlesStr };
+  return { listingsStr, prosStr, articlesStr, brokersStr };
 }
 
 startServer();
