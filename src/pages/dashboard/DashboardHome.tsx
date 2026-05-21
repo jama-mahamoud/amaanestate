@@ -55,12 +55,12 @@ export default function DashboardHome() {
     loadStats();
   }, []);
 
-  const statCards = [
+  const statCards = useMemo(() => [
     { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+8%' },
     { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car />, change: '+5%' },
     { label: 'Certified Agents', value: stats.agents, icon: <Users />, change: '+4' },
     { label: 'Market Users', value: stats.users, icon: <TrendingUp />, change: '+12%' },
-  ];
+  ], [stats.properties, stats.vehicles, stats.agents, stats.users]);
 
   // Copy referral link action
   const referralLink = `https://amaanestate.com/verify?ref=${user?.uid?.slice(0, 8) || 'amaan888'}`;

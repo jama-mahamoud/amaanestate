@@ -84,16 +84,32 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
   * {
     @apply border-border selection:bg-luxury-gold/30 selection:text-white;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-luxury-black text-white antialiased font-sans overflow-x-hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight font-semibold;
   }
   
+  /* Optimize GPU acceleration for heavy composite animations */
+  .group:hover .group-hover\:scale-110,
+  .group:hover .group-hover\:scale-105 {
+    transform: scale(1.10) translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
   }

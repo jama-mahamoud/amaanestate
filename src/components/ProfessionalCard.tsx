@@ -52,6 +52,8 @@ export default function ProfessionalCard({ professional }: ProfessionalCardProps
                     src={professional.image} 
                     alt={professional.name}
                     onError={() => setImageError(true)}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
                     className="w-20 h-20 rounded-2xl object-cover border-4 border-luxury-charcoal shadow-2xl transition-transform duration-500 group-hover/link:scale-105"
                   />
                 ) : (

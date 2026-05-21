@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -6,95 +7,108 @@ import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 
-// Base Pages
-// ... imports stay same ...
-import Home from './pages/Home';
-import Properties from './pages/Properties';
-import Vehicles from './pages/Vehicles';
-import PropertyDetails from './pages/PropertyDetails';
-import VehicleDetails from './pages/VehicleDetails';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import News from './pages/News';
-import ArticleDetails from './pages/ArticleDetails';
-import AgentRegistration from './pages/AgentRegistration';
-import ProfessionalServices from './pages/ProfessionalServices';
-import ProfessionalDetails from './pages/ProfessionalDetails';
-import ProfessionalRegistration from './pages/ProfessionalRegistration';
-import CreateProperty from './pages/CreateProperty';
-import BrokerRegistry from './pages/brokers/BrokerRegistry';
-import BrokerApplication from './pages/brokers/BrokerApplication';
-import AgencyRegistration from './pages/brokers/AgencyRegistration';
-import BrokerDetails from './pages/brokers/BrokerDetails';
+// Luxury Brand Fallback for Code-Splitting Suspense Loaders
+function PageFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-luxury-black text-white/40">
+      <div className="relative w-12 h-12 mb-6">
+        <div className="absolute inset-0 rounded-full border-2 border-luxury-gold/5 animate-pulse" />
+        <div className="absolute inset-0 rounded-full border-2 border-t-luxury-gold border-r-transparent border-b-transparent border-l-transparent animate-spin duration-1000" />
+      </div>
+      <p className="text-[10px] font-bold tracking-[0.4em] uppercase animate-pulse text-luxury-gold font-display">AmaanEstate</p>
+    </div>
+  );
+}
 
-import PrivacyPolicy from './pages/PrivacyPolicy';
+// Lazy Loaded Base Pages
+const Home = lazy(() => import('./pages/Home'));
+const Properties = lazy(() => import('./pages/Properties'));
+const Vehicles = lazy(() => import('./pages/Vehicles'));
+const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
+const VehicleDetails = lazy(() => import('./pages/VehicleDetails'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const News = lazy(() => import('./pages/News'));
+const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
+const AgentRegistration = lazy(() => import('./pages/AgentRegistration'));
+const ProfessionalServices = lazy(() => import('./pages/ProfessionalServices'));
+const ProfessionalDetails = lazy(() => import('./pages/ProfessionalDetails'));
+const ProfessionalRegistration = lazy(() => import('./pages/ProfessionalRegistration'));
+const BrokerRegistry = lazy(() => import('./pages/brokers/BrokerRegistry'));
+const BrokerApplication = lazy(() => import('./pages/brokers/BrokerApplication'));
+const AgencyRegistration = lazy(() => import('./pages/brokers/AgencyRegistration'));
+const BrokerDetails = lazy(() => import('./pages/brokers/BrokerDetails'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
-// Auth Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+// Lazy Loaded Auth Pages
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
 
-// Dashboard
-import DashboardLayout from './pages/dashboard/DashboardLayout';
-import DashboardHome from './pages/dashboard/DashboardHome';
-import ModerationCenter from './pages/dashboard/ModerationCenter';
-import DashboardProperties from './pages/dashboard/DashboardProperties';
-import DashboardVehicles from './pages/dashboard/DashboardVehicles';
-import DashboardUsers from './pages/dashboard/DashboardUsers';
-import DashboardSettings from './pages/dashboard/DashboardSettings';
-import DashboardArticles from './pages/dashboard/DashboardArticles';
-import CreateArticle from './pages/dashboard/CreateArticle';
-import EditArticle from './pages/dashboard/EditArticle';
+// Lazy Loaded Dashboard
+const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout'));
+const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'));
+const ModerationCenter = lazy(() => import('./pages/dashboard/ModerationCenter'));
+const DashboardProperties = lazy(() => import('./pages/dashboard/DashboardProperties'));
+const DashboardVehicles = lazy(() => import('./pages/dashboard/DashboardVehicles'));
+const DashboardUsers = lazy(() => import('./pages/dashboard/DashboardUsers'));
+const DashboardSettings = lazy(() => import('./pages/dashboard/DashboardSettings'));
+const DashboardArticles = lazy(() => import('./pages/dashboard/DashboardArticles'));
+const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
+const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
+const CreateProperty = lazy(() => import('./pages/CreateProperty'));
 
 export default function App() {
   return (
     <HelmetProvider>
       <AuthProvider>
         <SettingsProvider>
-          <Routes>
-            <Route path="/" element={<RootLayout />}>
-              {/* Public Routes */}
-              <Route index element={<Home />} />
-          <Route path="properties" element={<Properties />} />
-          <Route path="properties/:id" element={<PropertyDetails />} />
-          <Route path="properties/create" element={<CreateProperty />} />
-          <Route path="vehicles" element={<Vehicles />} />
-          <Route path="vehicles/:id" element={<VehicleDetails />} />
-          <Route path="news" element={<News />} />
-          <Route path="news/:id" element={<ArticleDetails />} />
-          <Route path="about" element={<About />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="become-agent" element={<AgentRegistration />} />
-          <Route path="services" element={<ProfessionalServices />} />
-          <Route path="professionals/:id" element={<ProfessionalDetails />} />
-          <Route path="become-pro" element={<ProfessionalRegistration />} />
-          <Route path="brokers" element={<BrokerRegistry />} />
-          <Route path="brokers/:id" element={<BrokerDetails />} />
-          <Route path="brokers/apply" element={<BrokerApplication />} />
-          <Route path="agency-register" element={<AgencyRegistration />} />
-          <Route path="privacy" element={<PrivacyPolicy />} />
-          
-          {/* Auth Routes - Public Only */}
-          <Route element={<PublicRoute />}>
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-          </Route>
-        </Route>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<RootLayout />}>
+                {/* Public Routes */}
+                <Route index element={<Home />} />
+                <Route path="properties" element={<Properties />} />
+                <Route path="properties/:id" element={<PropertyDetails />} />
+                <Route path="properties/create" element={<CreateProperty />} />
+                <Route path="vehicles" element={<Vehicles />} />
+                <Route path="vehicles/:id" element={<VehicleDetails />} />
+                <Route path="news" element={<News />} />
+                <Route path="news/:id" element={<ArticleDetails />} />
+                <Route path="about" element={<About />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="become-agent" element={<AgentRegistration />} />
+                <Route path="services" element={<ProfessionalServices />} />
+                <Route path="professionals/:id" element={<ProfessionalDetails />} />
+                <Route path="become-pro" element={<ProfessionalRegistration />} />
+                <Route path="brokers" element={<BrokerRegistry />} />
+                <Route path="brokers/:id" element={<BrokerDetails />} />
+                <Route path="brokers/apply" element={<BrokerApplication />} />
+                <Route path="agency-register" element={<AgencyRegistration />} />
+                <Route path="privacy" element={<PrivacyPolicy />} />
+                
+                {/* Auth Routes - Public Only */}
+                <Route element={<PublicRoute />}>
+                  <Route path="login" element={<Login />} />
+                  <Route path="register" element={<Register />} />
+                </Route>
+              </Route>
 
-        {/* Dashboard Routes (Protected) */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="moderation" element={<ModerationCenter />} />
-            <Route path="properties" element={<DashboardProperties />} />
-            <Route path="vehicles" element={<DashboardVehicles />} />
-            <Route path="articles" element={<DashboardArticles />} />
-            <Route path="articles/create" element={<CreateArticle />} />
-            <Route path="articles/edit/:id" element={<EditArticle />} />
-            <Route path="users" element={<DashboardUsers />} />
-              <Route path="settings" element={<DashboardSettings />} />
-            </Route>
-          </Route>
-        </Routes>
+              {/* Dashboard Routes (Protected) */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<DashboardLayout />}>
+                  <Route index element={<DashboardHome />} />
+                  <Route path="moderation" element={<ModerationCenter />} />
+                  <Route path="properties" element={<DashboardProperties />} />
+                  <Route path="vehicles" element={<DashboardVehicles />} />
+                  <Route path="articles" element={<DashboardArticles />} />
+                  <Route path="articles/create" element={<CreateArticle />} />
+                  <Route path="articles/edit/:id" element={<EditArticle />} />
+                  <Route path="users" element={<DashboardUsers />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                </Route>
+              </Route>
+            </Routes>
+          </Suspense>
         </SettingsProvider>
       </AuthProvider>
     </HelmetProvider>
