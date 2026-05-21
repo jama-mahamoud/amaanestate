@@ -16,8 +16,8 @@ export default function LatestNews() {
     articleService.getArticles(undefined, undefined, true).then(data => {
       // Sort by publish date, newest first, and take top 6
       const sorted = data.sort((a, b) => {
-        const timeA = a.publishedAt?.seconds || 0;
-        const timeB = b.publishedAt?.seconds || 0;
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
         return timeB - timeA;
       }).slice(0, 8);
       setArticles(sorted);
@@ -107,7 +107,7 @@ export default function LatestNews() {
             >
               <div className="relative aspect-[16/10] overflow-hidden">
                 <img 
-                  src={article.imageUrl || `https://images.unsplash.com/photo-1582407947304-fd86f1289c54?auto=format&fit=crop&q=80&w=1000`} 
+                  src={article.featuredImage || `https://images.unsplash.com/photo-1582407947304-fd86f1289c54?auto=format&fit=crop&q=80&w=1000`} 
                   alt={article.title}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                 />
@@ -121,7 +121,7 @@ export default function LatestNews() {
               <div className="p-6 flex-1 flex flex-col">
                 <div className="flex items-center gap-2 text-white/40 text-xs mb-3 font-mono">
                   <Clock size={14} />
-                  {formatDate(article.publishedAt || article.createdAt)}
+                  {formatDate(article.createdAt)}
                 </div>
                 
                 <h3 className="text-xl font-display font-bold text-white mb-3 line-clamp-2 group-hover:text-luxury-gold transition-colors">
@@ -131,7 +131,7 @@ export default function LatestNews() {
                 </h3>
                 
                 <p className="text-white/60 text-sm line-clamp-3 mb-6 flex-1">
-                  {article.excerpt || article.content.substring(0, 150) + '...'}
+                  {article.summary || article.content.substring(0, 150) + '...'}
                 </p>
                 
                 <div className="mt-auto pt-4 border-t border-white/5">

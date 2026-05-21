@@ -1,435 +1,319 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  MessageSquare, 
-  X, 
-  Send, 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX, 
-  HelpCircle, 
-  ArrowRight, 
-  Sparkles, 
-  MapPin, 
-  Search, 
-  Languages 
-} from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { MessageSquare, X, Send, Sparkles, AlertCircle, RefreshCw, ChevronDown, Bot, Loader2 } from 'lucide-react';
 
 interface ChatMessage {
-  role: "user" | "model";
+  role: 'user' | 'model';
   text: string;
 }
 
+const STARTER_PROMPTS = [
+  { text: "Ka raadi guryo ku yaal Jigjiga", query: "Ma haysaan guryo ama dhul iib ah oo ku yaalla Jigjiga?" },
+  { text: "Kala dooro khubaro la aqoonsaday", query: "Ma haysaan khubaro certified ah ama madaalayaal la hubiyay?" },
+  { text: "Sideen ku noqdaa wakiil (Agent)?", query: "Waa maxay shuruudaha ama hannaanka loo maro si aan u noqdo verified agent?" },
+  { text: "Wararkii ugu dambeeyay ee suuqa", query: "Waa maxay warbixintii ugu dambaysay ee ku saabsan suuqa hantida maguurtada ah ee gobolka?" }
+];
+
 export default function AmaanAIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [userInput, setUserInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'model',
+      text: "Kusoo dhawaada AmaanEstate AI Concierge! Waxaan halkan u joogaa inaan kugu caawiyo helitaanka hantida ugu fiican, dhul banaan, guryaha kireysan ama xirfadlayaal la awoodi karo oo ku yaal deegaanka. Maxaan maanta kuu caawin karaa?"
+    }
+  ]);
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [language, setLanguage] = useState<"so" | "en">("so");
-  
-  // Voice input / Speech-to-Text state
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const [hasError, setHasError] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+  const listEndRef = useRef<HTMLDivElement>(null);
 
-  // Selected quick questions
-  const quickSearches = {
-    so: [
-      { label: "Guriga kiro jigjiga", text: "Waxaan rabaa guri kiro ah oo Jigjiga kuyaala" },
-      { label: "Dhul iib ah", text: "Ma haysaan dhul iib ah oo laga iibsado deegaanka?" },
-      { label: "Madaaliyiinta korontada", text: "Koronto yaqaan ama farsamayaqaan ma haysaan?" },
-      { label: "Gawaari iib ah", text: "Nirig ama baabuur iib ah ma kuu hayaan?" }
-    ],
-    en: [
-      { label: "Rent house in Jigjiga", text: "Waxaan rabaa guri kiro ah oo Jigjiga kuyaala" },
-      { label: "Land for sale", text: "Show me land for sale" },
-      { label: "Find electricians", text: "Find verified engineers and electricians in Dire Dawa" },
-      { label: "Apartments under $500", text: "Find comfortable apartments under $500" }
-    ]
-  };
-
-  // Check Web Speech API support
+  // Automatically scroll to the bottom of the conversation on updates
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      setSpeechSupported(true);
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
-          setUserInput(prev => prev + (prev ? " " : "") + transcript);
-          toast.success(language === "so" ? "Codkii waa la duubay!" : "Speech captured successfully!");
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        toast.error(language === "so" ? "Fashil ku yimid aqoonsiga codka." : "Speech recognition failed: " + event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
+    if (listEndRef.current) {
+      listEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [language]);
+  }, [messages, isLoading, isOpen]);
 
-  // Adjust recognition language dynamically
-  useEffect(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.lang = language === "so" ? "so-SO" : "en-US";
-    }
-  }, [language]);
+  // Handle message submission
+  const handleSendMessage = async (customMessage?: string) => {
+    const messageToSend = (customMessage || inputValue).trim();
+    if (!messageToSend) return;
 
-  // Handle first-time welcome message
-  useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeText = language === "so" 
-        ? "Walaal soo dhawoow! Anigu waxaan ahay kaaliyaha caqliga badan ee AmaanEstate. Waxaan kaa caawin karaa guryaha, dhulka, gawaarida, ama madaaliyiinta ku yaal Deegaanka Soomaalida. Maxaan kuu qabtaa maanta? ❤️ \n\n*Tusaale: 'Waxaan rabaa guri kiro ah oo Jigjiga kuyaala' ama 'Find land for sale'*"
-        : "Welcome to AmaanEstate Portal! I am your smart AI marketplace concierge. Ask me in Somali or English to discover properties, rentals, land, vehicles, or verified pros in the Somali Region dynamically!\n\n*Try: 'Guri kiro ah oo Jigjiga' or 'Find apartments under $500'*";
-      setMessages([{ role: "model", text: welcomeText }]);
-    }
-  }, [isOpen, language]);
-
-  // Scroll to bottom helper
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
-
-  const toggleListening = () => {
-    if (!speechSupported) {
-      toast.error(language === "so" ? "Qalabkaaga ama biraawsarku ma taageerayo codka." : "Speech-to-text is not supported on this browser.");
-      return;
+    if (!customMessage) {
+      setInputValue('');
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      try {
-        recognitionRef.current.start();
-        toast.info(language === "so" ? "Dhegeysanaya... Fadlan dhowr kalmadood ku hadal." : "Listening... Please speak now.");
-      } catch (err) {
-        console.error("Failed to start speech recognition:", err);
-      }
-    }
-  };
-
-  const handleSendMessage = async (customText?: string) => {
-    const textToSend = customText || userInput;
-    if (!textToSend.trim()) return;
-
-    // Append user message
-    const updatedMessages = [...messages, { role: "user", text: textToSend } as ChatMessage];
-    setMessages(updatedMessages);
-    setUserInput("");
+    setMessages(prev => [...prev, { role: 'user', text: messageToSend }]);
     setIsLoading(true);
+    setHasError(false);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          message: textToSend,
-          history: updatedMessages.slice(1, -1) // slice to exclude general welcome and last prompt
+          message: messageToSend,
+          history: messages
         })
       });
 
       if (!response.ok) {
-        let errMsg = "Chat api response error";
-        try {
-          const errData = await response.json();
-          if (errData && errData.error) {
-            errMsg = errData.error;
-          }
-        } catch (_) {}
-        throw new Error(errMsg);
+        throw new Error("Backend response failed");
       }
 
       const data = await response.json();
-      setMessages(prev => [...prev, { role: "model", text: data.text || "I apologize, but I couldn't understand that." }]);
-    } catch (err: any) {
-      console.error("AI assistant network failure:", err);
-      setMessages(prev => [
-        ...prev, 
-        { 
-          role: "model", 
-          text: language === "so" 
-            ? "Waan pashilnay in aan xiriir la samaynno serverka. Fadlan hubi khadka internetkaaga." 
-            : "Connection error. Please try again later." 
-        }
-      ]);
+      
+      if (data && data.text) {
+        setMessages(prev => [...prev, { role: 'model', text: data.text }]);
+      } else {
+        throw new Error("Unexpected answer structure");
+      }
+    } catch (err) {
+      console.error("[AmaanAIAssistant] Error sending chat:", err);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Interactive link and markdown line compiler
-  const parseLine = (line: string) => {
-    let isBullet = false;
-    let content = line;
-    if (line.startsWith("- ") || line.startsWith("* ")) {
-      isBullet = true;
-      content = line.substring(2);
-    }
-
-    const segments: React.ReactNode[] = [];
-    const combinedRegex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
-    const parts = content.split(combinedRegex);
-
-    parts.forEach((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        segments.push(
-          <strong key={i} className="font-extrabold text-white">
-            {part.slice(2, -2)}
-          </strong>
-        );
-      } else if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
-        const titleMatch = part.match(/\[(.*?)\]/);
-        const urlMatch = part.match(/\((.*?)\)/);
-        if (titleMatch && urlMatch) {
-          const title = titleMatch[1];
-          const url = urlMatch[1];
-          if (url.startsWith("/")) {
-            segments.push(
-              <Link
-                key={i}
-                to={url}
-                className="text-luxury-gold hover:text-white underline font-bold transition-colors inline cursor-pointer py-0.5"
-                onClick={() => setIsOpen(false)} // close chat on link navigation
-              >
-                {title}
-              </Link>
-            );
-          } else {
-            segments.push(
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                referrerPolicy="no-referrer"
-                rel="noopener noreferrer"
-                className="text-luxury-gold hover:text-white underline font-bold transition-colors inline cursor-pointer py-0.5"
-              >
-                {title}
-              </a>
-            );
-          }
-        } else {
-          segments.push(part);
-        }
-      } else {
-        segments.push(part);
-      }
-    });
-
-    if (isBullet) {
-      return (
-        <span className="flex items-start gap-2 pl-1 mb-1.5 md:pl-2">
-          <span className="text-luxury-gold mt-1 text-sm select-none">•</span>
-          <span className="flex-1 text-white/90 font-light text-sm md:text-base leading-relaxed">{segments}</span>
-        </span>
-      );
-    }
-
-    return <span className="text-white/90 font-light text-sm md:text-base leading-relaxed">{segments}</span>;
+  const parseBoldText = (text: string, parentKey: string | number) => {
+    // Splits text into bold intervals
+    const parts = text.split(/\*\*([^*]+)\*\*/);
+    return (
+      <span key={parentKey}>
+        {parts.map((part, i) => (
+          i % 2 === 1 ? (
+            <strong key={`bold-${parentKey}-${i}`} className="font-extrabold text-white text-shadow-sm">
+              {part}
+            </strong>
+          ) : (
+            <span key={`text-${parentKey}-${i}`}>{part}</span>
+          )
+        ))}
+      </span>
+    );
   };
 
-  const renderFormattedText = (text: string) => {
-    const lines = text.split("\n");
-    return lines.map((line, idx) => (
-      <div key={idx} className="mb-2">
-        {parseLine(line)}
+  const renderMessageContent = (text: string) => {
+    if (!text) return null;
+    const lines = text.split('\n');
+
+    return (
+      <div className="space-y-2 text-sm leading-relaxed text-white/90">
+        {lines.map((line, idx) => {
+          let content = line.trim();
+          
+          // Handle itemization / Bullet list
+          const isBullet = content.startsWith('- ') || content.startsWith('* ');
+          if (isBullet) {
+            content = content.substring(2);
+          }
+
+          // Relative URL extraction
+          const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+          const parts = [];
+          let lastIndex = 0;
+          let match;
+
+          while ((match = linkRegex.exec(content)) !== null) {
+            const [_, linkText, linkUrl] = match;
+            const textBefore = content.substring(lastIndex, match.index);
+            
+            if (textBefore) {
+              parts.push(parseBoldText(textBefore, `before-${idx}-${match.index}`));
+            }
+            
+            parts.push(
+              <Link
+                key={`link-${idx}-${match.index}`}
+                to={linkUrl}
+                onClick={() => setIsOpen(false)} // close assistant sheet on route navigate
+                className="text-[#C5A059] hover:text-[#e0b86e] font-bold underline transition-colors inline-flex items-center gap-0.5"
+              >
+                {linkText}
+              </Link>
+            );
+            
+            lastIndex = linkRegex.lastIndex;
+          }
+
+          if (lastIndex < content.length) {
+            parts.push(parseBoldText(content.substring(lastIndex), `after-${idx}-${lastIndex}`));
+          }
+
+          const renderedLine = parts.length > 0 ? parts : parseBoldText(content, `plain-${idx}`);
+
+          if (isBullet) {
+            return (
+              <div key={`bullet-line-${idx}`} className="flex items-start gap-2.5 pl-2">
+                <span className="text-[#C5A059] mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C5A059] animate-pulse" />
+                <span className="flex-1">{renderedLine}</span>
+              </div>
+            );
+          }
+
+          return content ? (
+            <p key={`p-line-${idx}`}>{renderedLine}</p>
+          ) : (
+            <div key={`empty-line-${idx}`} className="h-2" />
+          );
+        })}
       </div>
-    ));
+    );
   };
 
   return (
     <>
-      {/* Floating Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-luxury-gold text-luxury-black shadow-[0_0_20px_rgba(197,160,89,0.4)] hover:shadow-[0_0_35px_rgba(197,160,89,0.6)] border border-white/20 transition-all cursor-pointer relative overflow-hidden group"
-          id="amaan-ai-assistant-btn"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:animate-shimmer" />
-          {isOpen ? (
-            <X size={26} className="text-luxury-black font-extrabold" />
-          ) : (
-            <div className="flex flex-col items-center">
-              <Sparkles size={26} className="text-luxury-black animate-pulse" />
-            </div>
-          )}
-        </motion.button>
-      </div>
+      {/* Floating Sparkly Golden Launcher Button */}
+      <motion.button
+        id="amaan-ai-assistant-trigger"
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#201F1D] text-[#C5A059] shadow-2xl border border-[#C5A059]/30 hover:bg-[#2F2D2A] transition-all cursor-pointer group hover:scale-105"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Sparkles className="h-6 w-6 animate-pulse group-hover:rotate-12 transition-transform" />
+        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C5A059] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C5A059]"></span>
+        </span>
+      </motion.button>
 
-      {/* Expandable Chat Drawer */}
+      {/* Slide-out Glass Chat Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 80 }}
+            id="amaan-ai-assistant-container"
+            initial={{ opacity: 0, scale: 0.95, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 80 }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed bottom-24 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-[480px] h-[calc(100vh-14rem)] md:h-[650px] bg-luxury-black/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl z-50 overflow-hidden flex flex-col"
-            id="amaan-ai-assistant-drawer"
+            exit={{ opacity: 0, scale: 0.95, y: 50 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed bottom-6 right-6 z-50 flex h-[620px] w-full max-w-md flex-col rounded-[2.5rem] bg-[#141312]/98 border border-[#C5A059]/20 shadow-2xl overflow-hidden backdrop-blur-md"
           >
-            {/* Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/5">
+            {/* Header section with brand insignia */}
+            <div className="flex items-center justify-between border-b border-white/5 bg-[#201F1D]/80 px-6 py-4.5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-luxury-gold/10 border border-luxury-gold/30 flex items-center justify-center">
-                  <Sparkles size={18} className="text-luxury-gold" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 text-[#C5A059]">
+                  <Bot className="h-5 w-5 animate-bounce" style={{ animationDuration: '3s' }} />
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-lg text-white">
-                    Amaan<span className="text-luxury-gold">AI</span> Concierge
-                  </h3>
+                  <h3 className="font-display font-bold text-white text-base">Amaan AI Concierge</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">
-                      Online Contextualized Real-Time
-                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Online Platform Advisor</span>
                   </div>
                 </div>
               </div>
               
-              {/* Language Selector */}
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 p-1.5 rounded-2xl">
-                <Languages size={14} className="text-white/40 ml-1" />
-                <button
-                  onClick={() => setLanguage("so")}
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
-                    language === "so" ? "bg-luxury-gold text-black" : "text-white/50 hover:text-white"
-                  }`}
-                >
-                  SO
-                </button>
-                <button
-                  onClick={() => setLanguage("en")}
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
-                    language === "en" ? "bg-luxury-gold text-black" : "text-white/50 hover:text-white"
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="rounded-full p-2 text-white/40 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            {/* Chat list viewport */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
-              {messages.map((msg, index) => (
+            {/* Scrollable Conversation Container */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+              {messages.map((msg, idx) => (
                 <div
-                  key={index}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  key={`chat-msg-${idx}`}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] px-5 py-4 rounded-[1.8rem] text-sm md:text-base ${
-                      msg.role === "user"
-                        ? "bg-luxury-gold text-luxury-black font-semibold rounded-tr-sm"
-                        : "bg-luxury-charcoal/60 border border-white/5 text-white/95 rounded-tl-sm shadow-md"
+                    className={`max-w-[85%] rounded-[1.5rem] px-5 py-3.5 ${
+                      msg.role === 'user'
+                        ? 'bg-[#C5A059]/10 text-white rounded-br-sm border border-[#C5A059]/20'
+                        : 'bg-white/5 text-white/90 rounded-bl-sm border border-white/5'
                     }`}
                   >
-                    {msg.role === "user" ? (
-                      <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                    ) : (
-                      renderFormattedText(msg.text)
-                    )}
+                    {renderMessageContent(msg.text)}
                   </div>
                 </div>
               ))}
+
+              {/* Loader during API invocation */}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-luxury-charcoal/60 border border-white/5 p-4 rounded-[1.8rem] rounded-tl-sm flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-luxury-gold animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-luxury-gold animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-luxury-gold animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <div className="max-w-[85%] rounded-[1.5rem] rounded-bl-sm px-5 py-3.5 bg-white/5 border border-white/5 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-[#C5A059]" />
+                    <span className="text-xs text-white/40">Adeegga AI ayaa diyaarinaya jawaabta...</span>
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+
+              {/* Graceful Error Display */}
+              {hasError && (
+                <div className="rounded-[1.5rem] bg-rose-500/10 border border-rose-500/20 p-4 space-y-3">
+                  <div className="flex gap-2.5 text-rose-400">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <div>
+                      <p className="font-semibold text-sm">Cilad ayaa dhacday</p>
+                      <p className="text-xs text-white/60">Adeegga AI concierge kuma xiriiri karo server-ka. Fadlan hubi khadkaaga internetka ama dib isku day.</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleSendMessage()}
+                      className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold px-3 py-1.5 transition-all"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Hadda isku day
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div ref={listEndRef} />
             </div>
 
-            {/* Suggested quick searches tags */}
-            <div className="p-3 bg-white/5 border-t border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
-              {quickSearches[language].map((search, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSendMessage(search.text)}
-                  className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/75 hover:bg-luxury-gold/10 hover:border-luxury-gold/30 text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer"
-                >
-                  {search.label}
-                </button>
-              ))}
-            </div>
+            {/* Starter Suggestion Prompts */}
+            {messages.length === 1 && !isLoading && (
+              <div className="px-6 pb-2.5 space-y-2">
+                <span className="text-[9px] uppercase tracking-widest font-bold text-white/30 ml-1">Kala dooro talooyinka bilowga:</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {STARTER_PROMPTS.map((prompt, i) => (
+                    <button
+                      key={`prompt-${i}`}
+                      onClick={() => handleSendMessage(prompt.query)}
+                      className="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[#C5A059]/30 rounded-2xl p-3 text-white/60 hover:text-white transition-all duration-300"
+                    >
+                      {prompt.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {/* Controls Input Area */}
-            <div className="p-5 bg-luxury-charcoal/80 border-t border-white/10">
+            {/* Footer Input Area */}
+            <div className="border-t border-white/5 bg-[#141312] p-4.5">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-2xl h-14 pl-4 pr-2"
+                className="relative flex items-center rounded-2xl bg-white/5 border border-white/10 focus-within:border-[#C5A059]/40 transition-colors px-4 py-1.5"
               >
                 <input
                   type="text"
-                  placeholder={
-                    language === "so" 
-                      ? "Wax ku qor halkan ama taabo codka..." 
-                      : "Type your query or speak click standard voice mic..."
-                  }
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  className="flex-1 bg-transparent text-white border-0 focus:outline-none focus:ring-0 text-sm md:text-base placeholder:text-white/30 h-full"
+                  placeholder="Ma haysaan guri ku yaala Jigjiga?"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  disabled={isLoading}
+                  className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none h-10 pr-12 disabled:opacity-50"
                 />
-
-                {/* Voice button */}
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  className={`p-2.5 rounded-xl cursor-pointer transition-all ${
-                    isListening 
-                      ? "bg-red-500/20 text-red-500 animate-pulse border border-red-500/40" 
-                      : "text-white/40 hover:text-white"
-                  }`}
-                  title="Speech-to-Text Voice input"
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-
-                {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={!userInput.trim() && !isLoading}
-                  className={`h-10 w-10 flex items-center justify-center rounded-xl transition-all cursor-pointer ${
-                    userInput.trim() 
-                      ? "bg-luxury-gold text-black shadow-[0_0_15px_rgba(197,160,89,0.3)] hover:scale-105" 
-                      : "bg-white/5 text-white/20"
-                  }`}
+                  disabled={isLoading || !inputValue.trim()}
+                  className="absolute right-2 flex items-center justify-center h-8 w-8 rounded-xl bg-[#C5A059] text-black hover:bg-[#e0b86e] disabled:opacity-30 disabled:hover:bg-[#C5A059] transition-all cursor-pointer"
                 >
-                  <Send size={16} />
+                  <Send className="h-4 w-4" />
                 </button>
               </form>
-              <p className="text-[9px] text-white/30 text-center mt-2 font-bold tracking-widest uppercase">
-                AmaanEstate Trust-Certified Security Shield
-              </p>
             </div>
           </motion.div>
         )}
