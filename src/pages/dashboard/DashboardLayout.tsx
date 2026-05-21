@@ -75,12 +75,12 @@ function DashboardContent() {
               <AmaanLogo size="sm" />
               <span className="font-display font-bold text-2xl tracking-tighter">Amaan<span className="gold-text-gradient">Estate</span></span>
             </Link>
-            <Button variant="ghost" size="icon" className="lg:hidden text-white/20 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-white/60 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />
             </Button>
           </div>
 
-          <div className="px-6 mb-8 text-[9px] uppercase tracking-[0.4em] font-bold text-white/10 ml-4">
+          <div className="px-6 mb-8 text-[9px] uppercase tracking-[0.4em] font-bold text-white/50 ml-4">
              Management Protocol
           </div>
 
@@ -91,8 +91,8 @@ function DashboardContent() {
                 to={item.path}
                 className={`flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group relative ${
                   location.pathname === item.path 
-                    ? 'bg-white/5 text-luxury-gold font-bold' 
-                    : 'text-white/20 hover:bg-white/[0.02] hover:text-white'
+                    ? 'bg-white/10 text-white font-bold' 
+                    : 'text-white/70 hover:bg-white/[0.05] hover:text-white'
                 }`}
               >
                 {location.pathname === item.path && (
@@ -101,10 +101,12 @@ function DashboardContent() {
                     className="absolute left-0 w-1 h-6 bg-luxury-gold rounded-full"
                   />
                 )}
-                <span className={location.pathname === item.path ? 'text-luxury-gold' : 'text-white/20 group-hover:text-luxury-gold transition-colors'}>
+                <span className={location.pathname === item.path ? 'text-luxury-gold' : 'text-white/60 group-hover:text-luxury-gold transition-colors'}>
                   {item.icon}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.2em]">{item.name}</span>
+                <span className={`text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                  location.pathname === item.path ? 'text-white font-bold' : 'text-white/70 group-hover:text-white'
+                }`}>{item.name}</span>
               </Link>
             ))}
           </nav>
@@ -112,23 +114,23 @@ function DashboardContent() {
           <div className="p-8 space-y-6">
             <div className="glass-card p-6 rounded-3xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-luxury-gold/5 blur-2xl rounded-full" />
-              <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-white/10 mb-4">Authority Hub</p>
+              <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-white/40 mb-4">Authority Hub</p>
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-[1rem] bg-white/5 border border-white/5 flex items-center justify-center text-luxury-gold group-hover:scale-110 transition-transform duration-500">
+                <div className="w-12 h-12 rounded-[1rem] bg-white/5 border border-white/15 flex items-center justify-center text-luxury-gold group-hover:scale-110 transition-transform duration-500">
                   <Briefcase size={20} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-white truncate tracking-tight uppercase">
                     {user?.displayName || 'System Operator'}
                   </p>
-                  <p className="text-[9px] text-white/20 uppercase font-black tracking-widest leading-none mt-1">Role: {profile?.role?.replace('_', ' ') || 'Pending'}</p>
+                  <p className="text-[9px] text-white/60 uppercase font-black tracking-widest leading-none mt-1">Role: {profile?.role?.replace('_', ' ') || 'Pending'}</p>
                 </div>
               </div>
             </div>
             
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-white/20 hover:text-white hover:bg-white/5 rounded-2xl h-16 px-6 transition-all group"
+              className="w-full justify-start text-white/60 hover:text-white hover:bg-white/5 rounded-2xl h-16 px-6 transition-all group"
               onClick={handleLogout}
             >
               <LogOut size={20} className="mr-4 group-hover:translate-x-1 transition-transform" />

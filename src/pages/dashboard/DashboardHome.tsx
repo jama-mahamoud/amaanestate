@@ -149,7 +149,7 @@ export default function DashboardHome() {
                 className={`px-5 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
                   activeTab === tab.id 
                     ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10' 
-                    : 'text-white/40 hover:text-white hover:bg-white/5'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <span>{tab.label}</span>

@@ -117,7 +117,7 @@ export default function ModerationCenter() {
                   className={`flex items-center gap-4 px-8 py-5 rounded-[2rem] transition-all duration-500 whitespace-nowrap border relative group ${
                     activeTab === tab.id 
                     ? 'bg-luxury-gold border-luxury-gold text-black shadow-2xl shadow-luxury-gold/20' 
-                    : 'bg-white/5 border-white/5 text-white/40 hover:border-white/20 hover:text-white'
+                    : 'bg-white/5 border-white/5 text-white/70 hover:border-white/20 hover:text-white'
                   }`}
                >
                   {tab.icon}

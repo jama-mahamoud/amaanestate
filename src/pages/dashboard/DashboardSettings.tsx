@@ -103,7 +103,7 @@ export default function DashboardSettings() {
                   { label: 'Identity Reports', active: true }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between group cursor-pointer">
-                    <span className="text-white/20 text-[10px] font-bold uppercase tracking-widest group-hover:text-white transition-colors">{item.label}</span>
+                    <span className="text-white/60 text-[10px] font-bold uppercase tracking-widest group-hover:text-white transition-colors">{item.label}</span>
                     <div className={`w-2 h-2 rounded-full ${item.active ? 'bg-luxury-gold' : 'bg-white/5'}`} />
                   </div>
                 ))}
