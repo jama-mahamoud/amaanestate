@@ -59,7 +59,8 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     doc.setFontSize(7);
     doc.setTextColor(80, 80, 80);
     doc.text(`DEED REQ ID: ${agreement.agreementId}`, pageWidth - margin - 5, margin + 15, { align: 'right' });
-    doc.text(`STATUS: ${agreement.status.toUpperCase()}`, pageWidth - margin - 5, margin + 19, { align: 'right' });
+    const statusText = agreement.status === 'revision_requested' ? 'REVISION REQUIRED' : agreement.status.toUpperCase();
+    doc.text(`STATUS: ${statusText}`, pageWidth - margin - 5, margin + 19, { align: 'right' });
     
     if (agreement.certificateNumber) {
       doc.setFont('Helvetica', 'bold');

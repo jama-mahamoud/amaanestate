@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
-type TabType = 'Pending Approval' | 'Approved' | 'Rejected';
+type TabType = 'Pending Approval' | 'Approved' | 'Rejected' | 'revision_requested';
 
 export default function AdminAgreements() {
   const navigate = useNavigate();
@@ -47,7 +47,9 @@ export default function AdminAgreements() {
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [revisionReason, setRevisionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Authentication & admin check
@@ -88,15 +90,18 @@ export default function AdminAgreements() {
   };
 
   const handleApprove = async (id: string) => {
+    console.log(`Starting approval for agreement ID: ${id}`);
     setIsProcessing(true);
     try {
       await agreementService.updateStatus(id, 'Approved');
+      console.log(`Successfully updated status to Approved for: ${id}`);
       toast.success("Agreement officially certified and stamped");
       setIsReviewModalOpen(false);
       setSelectedAgreement(null);
       await fetchAgreements();
     } catch (err) {
-      toast.error("Certification protocol failed");
+      console.error(`Approval failed for ID: ${id}`, err);
+      toast.error(`Certification protocol failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -124,6 +129,28 @@ export default function AdminAgreements() {
     }
   };
 
+  const handleRequestRevision = async () => {
+    if (!selectedAgreement) return;
+    if (!revisionReason.trim()) {
+      toast.error("Revision reason is required to guide the user");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await agreementService.updateStatus(selectedAgreement.agreementId, 'revision_requested', revisionReason);
+      toast.success("Revision requested from user");
+      setIsRevisionModalOpen(false);
+      setIsReviewModalOpen(false);
+      setSelectedAgreement(null);
+      setRevisionReason('');
+      await fetchAgreements();
+    } catch (err) {
+      toast.error("Failed to process revision request");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const downloadPDF = (agreement: Agreement) => {
     try {
       const doc = generateAgreementPDF(agreement);
@@ -135,12 +162,26 @@ export default function AdminAgreements() {
   };
 
   const filteredItems = agreements.filter(item => {
-    const matchesTab = item.status === activeTab;
+    // Robust comparison against activeTab
+    const itemStatus = (item.status || '').toLowerCase().trim();
+    const tabStatus = activeTab.toLowerCase().trim();
+    
+    // Specifically handle "Pending Approval" vs "pending"
+    const tabStatusMapping: Record<string, string> = {
+      'pending approval': 'pending approval',
+      'approved': 'approved',
+      'rejected': 'rejected',
+      'revision_requested': 'revision_requested'
+    };
+
+    const matchesTab = itemStatus === tabStatusMapping[tabStatus];
+    
     const matchesSearch = searchTerm === '' || 
       item.agreementId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.agreementTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.parties.partyA.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.parties.partyB.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesTab && matchesSearch;
   });
 
@@ -148,6 +189,7 @@ export default function AdminAgreements() {
     pending: agreements.filter(a => a.status === 'Pending Approval').length,
     approved: agreements.filter(a => a.status === 'Approved').length,
     rejected: agreements.filter(a => a.status === 'Rejected').length,
+    revisions: agreements.filter(a => a.status === 'revision_requested').length,
     total: agreements.length
   };
 
@@ -200,11 +242,12 @@ export default function AdminAgreements() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {[
           { label: 'Pending Approval', value: stats.pending, icon: <Clock className="text-amber-500" />, color: 'from-amber-500/20' },
-          { label: 'Approved Deeds', value: stats.approved, icon: <FileCheck className="text-emerald-500" />, color: 'from-emerald-500/20' },
-          { label: 'Rejected Filings', value: stats.rejected, icon: <XCircle className="text-red-500" />, color: 'from-red-500/20' },
+          { label: 'Approved Agreements', value: stats.approved, icon: <FileCheck className="text-emerald-500" />, color: 'from-emerald-500/20' },
+          { label: 'Rejected Agreements', value: stats.rejected, icon: <XCircle className="text-red-500" />, color: 'from-red-500/20' },
+          { label: 'Draft Agreements', value: stats.revisions, icon: <FileSignature className="text-blue-400" />, color: 'from-blue-400/20' },
           { label: 'Total Volume', value: stats.total, icon: <FileText className="text-blue-500" />, color: 'from-blue-500/20' },
         ].map((stat, idx) => (
           <div key={idx} className={`glass-card p-8 rounded-[2rem] border border-white/5 relative overflow-hidden group`}>
@@ -225,17 +268,17 @@ export default function AdminAgreements() {
       {/* Tabs & Table */}
       <div className="space-y-6">
         <div className="flex items-center gap-1 bg-[#0a0a0a] p-1.5 rounded-2xl border border-white/5 w-fit">
-          {(['Pending Approval', 'Approved', 'Rejected'] as TabType[]).map((tab) => (
+          {(['Pending Approval', 'Approved', 'Rejected', 'revision_requested'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 rounded-xl text-[10px] uppercase tracking-widest font-bold transition-all duration-300 ${
+              className={`px-6 py-3 rounded-xl text-[10px] uppercase tracking-widest font-bold transition-all duration-300 ${
                 activeTab === tab 
                   ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/20' 
                   : 'text-white/40 hover:text-white hover:bg-white/5'
               }`}
             >
-              {tab}
+              {tab === 'revision_requested' ? 'Drafts' : tab}
             </button>
           ))}
         </div>
@@ -297,13 +340,15 @@ export default function AdminAgreements() {
                       <td className="px-8 py-6">
                         <span className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
                           item.status === 'Approved' ? 'text-emerald-500' : 
-                          item.status === 'Rejected' ? 'text-red-500' : 'text-amber-500'
+                          item.status === 'Rejected' ? 'text-red-500' : 
+                          item.status === 'revision_requested' ? 'text-blue-400' : 'text-amber-500'
                         }`}>
                           <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
                             item.status === 'Approved' ? 'bg-emerald-500' : 
-                            item.status === 'Rejected' ? 'bg-red-500' : 'bg-amber-500'
+                            item.status === 'Rejected' ? 'bg-red-500' : 
+                            item.status === 'revision_requested' ? 'bg-blue-400' : 'bg-amber-500'
                           }`} />
-                          {item.status}
+                          {item.status.replace('_', ' ')}
                         </span>
                       </td>
                       <td className="px-8 py-6">
@@ -381,9 +426,10 @@ export default function AdminAgreements() {
                     </span>
                     <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
                       selectedAgreement.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-500' : 
-                      selectedAgreement.status === 'Rejected' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'
+                      selectedAgreement.status === 'Rejected' ? 'bg-red-500/10 text-red-500' : 
+                      selectedAgreement.status === 'revision_requested' ? 'bg-blue-500/10 text-blue-500' : 'bg-amber-500/10 text-amber-500'
                     }`}>
-                      {selectedAgreement.status}
+                      {selectedAgreement.status.replace('_', ' ')}
                     </span>
                   </div>
                   <h2 className="text-3xl font-display font-bold text-white">{selectedAgreement.agreementTitle}</h2>
@@ -606,16 +652,23 @@ export default function AdminAgreements() {
                       <Button 
                         variant="ghost" 
                         onClick={() => setIsRejectModalOpen(true)}
-                        className="flex-1 md:flex-none border border-white/10 hover:bg-red-500/10 hover:text-red-500 text-white h-14 rounded-2xl px-10 text-[11px] font-bold uppercase tracking-widest"
+                        className="flex-1 md:flex-none border border-white/10 hover:bg-red-500/10 hover:text-red-500 text-white h-14 rounded-2xl px-6 text-[11px] font-bold uppercase tracking-widest"
                       >
-                        <X size={16} className="mr-3" /> Terminate Filing
+                        <X size={16} className="mr-2" /> Terminate
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setIsRevisionModalOpen(true)}
+                        className="flex-1 md:flex-none border border-white/10 hover:bg-blue-500/10 hover:text-blue-500 text-white h-14 rounded-2xl px-6 text-[11px] font-bold uppercase tracking-widest"
+                      >
+                        <FileSignature size={16} className="mr-2" /> Request Edit
                       </Button>
                       <Button 
                         onClick={() => handleApprove(selectedAgreement.agreementId)}
                         disabled={isProcessing}
-                        className="flex-1 md:flex-none bg-luxury-gold text-luxury-black hover:bg-white h-14 rounded-2xl px-12 text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-luxury-gold/20"
+                        className="flex-1 md:flex-none bg-luxury-gold text-luxury-black hover:bg-white h-14 rounded-2xl px-10 text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-luxury-gold/20"
                       >
-                        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <><Check size={16} className="mr-3" /> Certify & Release Deed</>}
+                        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <><Check size={16} className="mr-2" /> Certify & Release</>}
                       </Button>
                     </>
                   )}
@@ -630,6 +683,11 @@ export default function AdminAgreements() {
                   {selectedAgreement.status === 'Rejected' && (
                     <div className="flex items-center gap-3 text-red-500 text-xs font-bold uppercase tracking-widest px-8 bg-red-500/10 py-4 rounded-xl border border-red-500/20">
                       <AlertOctagon size={18} /> Rejected Filing
+                    </div>
+                  )}
+                  {selectedAgreement.status === 'revision_requested' && (
+                    <div className="flex items-center gap-3 text-blue-500 text-xs font-bold uppercase tracking-widest px-8 bg-blue-500/10 py-4 rounded-xl border border-blue-500/20">
+                      <FileSignature size={18} /> Revision Required
                     </div>
                   )}
                 </div>
@@ -682,6 +740,55 @@ export default function AdminAgreements() {
                     className="flex-1 bg-red-600 text-white hover:bg-red-500 text-[11px] font-bold uppercase tracking-widest h-14 rounded-2xl"
                   >
                      {isProcessing ? <Loader2 className="animate-spin" /> : 'Confirm Rejection'}
+                  </Button>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Revision Modal */}
+      <AnimatePresence>
+        {isRevisionModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+             <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+               onClick={() => setIsRevisionModalOpen(false)}
+             />
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.9 }}
+               className="relative w-full max-w-md bg-neutral-900 border border-white/10 p-10 rounded-[2.5rem] space-y-8 shadow-2xl"
+             >
+                <div className="space-y-2">
+                   <h3 className="text-2xl font-display font-bold">Request Revision</h3>
+                   <p className="text-[11px] text-white/40 uppercase tracking-widest font-bold">Guide the user on what needs to be changed</p>
+                </div>
+
+                <textarea 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl h-40 p-6 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors placeholder:text-white/10"
+                  placeholder="Explain exactly what needs to be fixed (e.g., missing witnessed ID, incorrect price, typo in names)..."
+                  value={revisionReason}
+                  onChange={(e) => setRevisionReason(e.target.value)}
+                />
+
+                <div className="flex gap-4">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setIsRevisionModalOpen(false)}
+                    className="flex-1 border border-white/5 hover:bg-white/5 text-[11px] font-bold uppercase tracking-widest h-14 rounded-2xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleRequestRevision}
+                    disabled={isProcessing}
+                    className="flex-1 bg-blue-600 text-white hover:bg-blue-500 text-[11px] font-bold uppercase tracking-widest h-14 rounded-2xl"
+                  >
+                     {isProcessing ? <Loader2 className="animate-spin" /> : 'Request Edit'}
                   </Button>
                 </div>
              </motion.div>

@@ -78,7 +78,7 @@ export interface Agreement {
     commissionTerms?: string; // Text field if it has a custom broker commission setup
   };
   legalClauses: string;
-  status: 'Pending Approval' | 'Approved' | 'Rejected';
+  status: 'Pending Approval' | 'Approved' | 'Rejected' | 'revision_requested';
   submittedBy: string;
   submittedAt: string;
   createdAt: string;
@@ -88,6 +88,7 @@ export interface Agreement {
   adminStamp?: boolean;
   adminStampUrl?: string;
   rejectionReason?: string;
+  revisionRequestedReason?: string;
   pdfUrl?: string;
   qrCode?: string;
   witness1FullName?: string;
@@ -219,10 +220,10 @@ export const agreementService = {
     }
   },
 
-  // Admin action: Approve, Reject
+  // Admin action: Approve, Reject, Request Revision
   async updateStatus(
     id: string, 
-    status: 'Approved' | 'Rejected', 
+    status: 'Approved' | 'Rejected' | 'revision_requested', 
     reason?: string
   ): Promise<void> {
     const user = auth.currentUser;
@@ -237,13 +238,23 @@ export const agreementService = {
 
     const updatePayload: Partial<Agreement> = {
       status,
-      approvedBy: status === 'Approved' ? user.email || user.uid : undefined,
-      approvedAt: status === 'Approved' ? new Date().toISOString() : undefined,
-      rejectionReason: status === 'Rejected' ? reason : undefined,
-      certificateNumber: certNumber,
-      adminStamp: status === 'Approved',
-      adminStampUrl: status === 'Approved' ? '/src/assets/images/amaan_official_seal_1779425535310.png' : undefined,
     };
+    
+    if (status === 'Approved') {
+        updatePayload.approvedBy = user.email || user.uid;
+        updatePayload.approvedAt = new Date().toISOString();
+        updatePayload.certificateNumber = certNumber;
+        updatePayload.adminStamp = true;
+        updatePayload.adminStampUrl = '/amaan_official_seal.png';
+    } 
+    
+    if (status === 'Rejected') {
+        updatePayload.rejectionReason = reason;
+    }
+    
+    if (status === 'revision_requested') {
+        updatePayload.revisionRequestedReason = reason;
+    }
 
     if (status === 'Approved') {
       try {
