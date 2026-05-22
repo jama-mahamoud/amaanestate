@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -32,6 +33,8 @@ export default function PWAInstallPrompt() {
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
       }
+    } else {
+      toast("Installation is not currently available in this browser.");
     }
   };
 
