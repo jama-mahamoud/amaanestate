@@ -249,18 +249,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Vehicles Section */}
-      <section className="py-16 border-b border-white/5 relative">
-        <div className="container mx-auto px-4 relative z-10">
-          <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">Active Vehicles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {vehicles.filter(v => v.status === 'active').map(vehicle => (
-              <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Main Listings Body */}
       {listingsLoading ? (
         <div className="flex justify-center py-24">
@@ -391,6 +379,18 @@ export default function Home() {
                   </div>
                 </>
               )}
+            </div>
+          </section>
+
+          {/* Vehicles Section */}
+          <section className="py-16 border-b border-white/5 relative">
+            <div className="container mx-auto px-4 relative z-10">
+              <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">Active Vehicles</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {vehicles.filter(v => v.status === 'active').map(vehicle => (
+                  <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
+                ))}
+              </div>
             </div>
           </section>
         </>
