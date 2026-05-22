@@ -103,10 +103,38 @@ export default function DashboardArticles() {
                        <p className="text-lg font-bold text-white tabular-nums">{article.views}</p>
                     </td>
                     <td className="p-8 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" asChild className="w-12 h-12 rounded-xl hover:bg-white/10 hover:text-white"><Link to={`/news/${article.id}`}><Eye size={18} /></Link></Button>
-                        <Button variant="ghost" size="icon" asChild className="w-12 h-12 rounded-xl hover:bg-white/10 hover:text-luxury-gold"><Link to={`/dashboard/articles/edit/${article.id}`}><Edit3 size={18} /></Link></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(article.id)} className="w-12 h-12 rounded-xl hover:bg-red-500/10 hover:text-red-500"><Trash2 size={18} /></Button>
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          asChild
+                          className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
+                        >
+                          <Link to={`/news/${article.id}`}>
+                            <Eye size={14} />
+                            <span>View</span>
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          asChild
+                          className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+                        >
+                          <Link to={`/dashboard/articles/edit/${article.id}`}>
+                            <Edit3 size={14} />
+                            <span>Edit</span>
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+                          onClick={() => handleDelete(article.id)}
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </Button>
                       </div>
                     </td>
                   </motion.tr>

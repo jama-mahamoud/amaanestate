@@ -1,12 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, BedDouble, Bath, Square, ArrowRight, ShieldCheck } from 'lucide-react';
+import { 
+  MapPin, 
+  BedDouble, 
+  Bath, 
+  Square, 
+  ArrowRight, 
+  ShieldCheck, 
+  Calendar, 
+  Gauge, 
+  Fuel, 
+  Car, 
+  Settings 
+} from 'lucide-react';
 import { motion } from 'motion/react';
-import { Property } from '@/types';
 import { useSettings } from '@/contexts/SettingsContext';
 
 interface PropertyCardProps {
-  property: Property;
+  property: any;
   isHovered?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -14,10 +25,18 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) {
   const { formatPriceConverted } = useSettings();
-  const mainImage = property.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop';
+  const isVehicle = (property.category || '').toString().toLowerCase().trim() === 'vehicle';
+  
+  const mainImage = property.images?.[0] || (isVehicle 
+    ? 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop'
+    : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop'
+  );
+
   const displayPrice = typeof property.price === 'number' 
     ? formatPriceConverted(property.price, property.currency || 'ETB') 
     : property.price;
+
+  const targetLink = isVehicle ? `/vehicles/${property.id}` : `/properties/${property.id}`;
 
   return (
     <motion.div
@@ -29,7 +48,7 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <Link to={`/properties/${property.id}`}>
+      <Link to={targetLink}>
         <div className={`glass-card rounded-[2rem] overflow-hidden flex flex-col h-full transition-all duration-350 border-1 ${
           isHovered ? 'border-[#C5A059] ring-2 ring-[#C5A059]/30 translate-y-[-4px] shadow-[#C5A059]/10' : 'border-white/5 shadow-none'
         }`}>
@@ -66,7 +85,7 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
-                  {property.subcategory || 'Premium Property'}
+                  {property.subcategory || (isVehicle ? 'Elite Automobile' : 'Premium Property')}
                 </span>
                 <h3 className="text-xl font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1">
                   {property.title}
@@ -79,29 +98,64 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
               <span className="line-clamp-1">{property.city}, {property.location}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
-                <div className="flex items-center gap-2">
-                  <BedDouble size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{property.beds || '-'}</span>
+            {/* Conditional Metadata Specs */}
+            {isVehicle ? (
+              <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
+                {(property.year || property.metadata?.year) && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Year</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-luxury-gold" />
+                      <span className="text-sm font-bold text-white/80">{property.year || property.metadata?.year}</span>
+                    </div>
+                  </div>
+                )}
+                {(property.mileage || property.metadata?.mileage) && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Mileage</span>
+                    <div className="flex items-center gap-2">
+                      <Gauge size={14} className="text-luxury-gold animate-pulse" />
+                      <span className="text-sm font-bold text-white/80">{property.mileage || property.metadata?.mileage}</span>
+                    </div>
+                  </div>
+                )}
+                {(property.fuelType || property.transmission || property.metadata?.fuelType) && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Drivetrain</span>
+                    <div className="flex items-center gap-2">
+                      <Fuel size={14} className="text-luxury-gold" />
+                      <span className="text-sm font-bold text-white/80 capitalize">
+                        {property.fuelType || property.transmission || property.metadata?.fuelType}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
+                  <div className="flex items-center gap-2">
+                    <BedDouble size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.beds || '-'}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
+                  <div className="flex items-center gap-2">
+                    <Bath size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.baths || '-'}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
+                  <div className="flex items-center gap-2">
+                    <Square size={14} className="text-luxury-gold" />
+                    <span className="text-sm font-bold text-white/80">{property.size || '-'}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
-                <div className="flex items-center gap-2">
-                  <Bath size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{property.baths || '-'}</span>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
-                <div className="flex items-center gap-2">
-                  <Square size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{property.size || '-'}</span>
-                </div>
-              </div>
-            </div>
+            )}
             
             <div className="mt-auto flex items-center justify-between">
               <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">

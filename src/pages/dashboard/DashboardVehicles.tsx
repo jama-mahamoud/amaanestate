@@ -158,15 +158,16 @@ export default function DashboardVehicles() {
                       <p className="text-lg font-display font-bold text-white tabular-nums">{displayPrice(vehicle.price, vehicle.currency)}</p>
                     </td>
                     <td className="p-8 text-right">
-                      <div className="flex items-center justify-end gap-3 md:opacity-20 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
                         <Button 
                           variant="ghost" 
-                          size="icon" 
-                          className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-white"
+                          size="sm" 
+                          className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
                           onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                          title="View"
+                          title="View Vehicle"
                         >
-                          <Eye size={18} />
+                          <Eye size={14} />
+                          <span>View</span>
                         </Button>
                         
                         {(() => {
@@ -185,24 +186,26 @@ export default function DashboardVehicles() {
                               <>
                                 <Button 
                                   variant="ghost" 
-                                  size="icon" 
-                                  className="w-10 h-10 rounded-xl hover:bg-white/10 hover:text-luxury-gold"
+                                  size="sm" 
+                                  className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
                                   onClick={() => {
                                     setSelectedVehicle(vehicle);
                                     setIsModalOpen(true);
                                   }}
-                                  title="Edit"
+                                  title="Edit Vehicle"
                                 >
-                                  <Edit3 size={18} />
+                                  <Edit3 size={14} />
+                                  <span>Edit</span>
                                 </Button>
                                 <Button 
                                   variant="ghost" 
-                                  size="icon" 
-                                  className="w-10 h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive"
+                                  size="sm" 
+                                  className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
                                   onClick={() => handleDelete(vehicle.id)}
-                                  title="Delete"
+                                  title="Delete Vehicle"
                                 >
-                                  <Trash2 size={18} />
+                                  <Trash2 size={14} />
+                                  <span>Delete</span>
                                 </Button>
                               </>
                             );

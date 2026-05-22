@@ -20,7 +20,7 @@ import {
   and
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { Listing, ListingCategory, ListingStatus, ListingType, ProfessionalService, ServiceStatus } from '../types';
+import { Listing, ListingCategory, ListingStatus, ListingType } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/utils';
 
 export interface ListingFilter {
@@ -288,48 +288,6 @@ export const listingService = {
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'listings');
       return [];
-    }
-  },
-
-  async getProfessionalServices(category?: string, status: ServiceStatus = 'active') {
-    const servicesRef = collection(db, 'professionalServices');
-    const constraints: QueryConstraint[] = [where('status', '==', status)];
-
-    if (category && category !== 'All') {
-      constraints.push(where('category', '==', category));
-    }
-
-    try {
-      const q = query(servicesRef, ...constraints);
-      const snapshot = await getDocs(q);
-      const services = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as ProfessionalService[];
-      
-      services.sort((a, b) => {
-        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();
-        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
-        return bTime - aTime;
-      });
-      return services;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'professionalServices');
-      return [];
-    }
-  },
-
-  async getProfessionalServiceById(id: string): Promise<ProfessionalService | null> {
-    const serviceRef = doc(db, 'professionalServices', id);
-    try {
-      const snapshot = await getDoc(serviceRef);
-      if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data() } as ProfessionalService;
-      }
-      return null;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `professionalServices/${id}`);
-      return null;
     }
   },
 

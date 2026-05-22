@@ -274,8 +274,11 @@ export const agreementService = {
     }
 
     try {
+      console.log(`Attempting updateDoc for ${id} with payload:`, JSON.stringify(updatePayload));
       await updateDoc(docRef, updatePayload);
+      console.log(`updateDoc successful for ${id}`);
     } catch (error) {
+      console.error(`updateDoc FAILED for ${id}. Error object:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `agreements/${id}`);
     }
   }

@@ -25,7 +25,6 @@ const Home = lazy(() => import('./pages/Home'));
 const Agreements = lazy(() => import('./pages/Agreements'));
 const AdminAgreements = lazy(() => import('./pages/admin/AdminAgreements'));
 const PublicVerification = lazy(() => import('./pages/verify/PublicVerification'));
-const Properties = lazy(() => import('./pages/Properties'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 const VehicleDetails = lazy(() => import('./pages/VehicleDetails'));
@@ -79,7 +78,8 @@ export default function App() {
                 <Route index element={<Home />} />
                 
                 {/* Properties Module */}
-                <Route path="properties" element={<Properties />} />
+                <Route path="properties" element={<Home />} />
+                <Route path="marketplace" element={<Home />} />
                 <Route path="properties/:id" element={<PropertyDetails />} />
                 <Route path="properties/create" element={<CreateProperty />} />
                 <Route path="properties/edit/:id" element={<EditProperty />} />

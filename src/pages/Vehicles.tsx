@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, MapPin, Loader2, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +10,22 @@ import { useListings } from '@/hooks/useListings';
 import { ListingCategory, ListingType, VehicleListing } from '@/types';
 
 export default function Vehicles() {
-  const [currentCategory, setCurrentCategory] = useState('All');
-  const [currentType, setCurrentType] = useState('All');
-  const [currentCurrency, setCurrentCurrency] = useState('All');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentCategory = searchParams.get('category') || searchParams.get('subcategory') || searchParams.get('type') || 'All';
+  const currentType = searchParams.get('listingType') || 'All';
+  const currentCurrency = searchParams.get('currency') || 'All';
   const [searchQuery, setSearchQuery] = useState('');
+
+  const updateFilter = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value === 'All') {
+      newParams.delete(key);
+    } else {
+      newParams.set(key, value);
+    }
+    setSearchParams(newParams);
+  };
 
   const filters = useMemo(() => ({
     category: 'vehicle' as ListingCategory,
@@ -26,7 +39,14 @@ export default function Vehicles() {
   const filteredVehicles = useMemo(() => {
     let result = listings;
     if (currentCategory !== 'All') {
-      result = result.filter(v => v.subcategory === currentCategory);
+      const catLower = currentCategory.toLowerCase().trim();
+      const catSingular = catLower.endsWith('s') ? catLower.slice(0, -1) : catLower;
+      result = result.filter(v => {
+        const item = v as any;
+        const sub = (item.subcategory || '').toLowerCase().trim();
+        const type = (item.type || '').toLowerCase().trim();
+        return sub === catLower || sub === catSingular || type === catLower || type === catSingular;
+      });
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -75,7 +95,7 @@ export default function Vehicles() {
                 {['All', 'sale', 'rent'].map(type => (
                   <button 
                     key={type}
-                    onClick={() => setCurrentType(type)}
+                    onClick={() => updateFilter('listingType', type)}
                     className={`h-11 md:h-12 px-6 md:px-8 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
                       currentType === type ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
                     }`}
@@ -89,7 +109,7 @@ export default function Vehicles() {
                 {['All', 'ETB', 'USD'].map(cur => (
                   <button 
                     key={cur}
-                    onClick={() => setCurrentCurrency(cur)}
+                    onClick={() => updateFilter('currency', cur)}
                     className={`h-11 md:h-12 px-5 md:px-6 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
                       currentCurrency === cur ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
                     }`}
@@ -108,9 +128,9 @@ export default function Vehicles() {
             {['All', 'SUV', 'Sedan', 'Truck', 'Lux', 'Bus'].map(cat => (
               <button
                 key={cat}
-                onClick={() => setCurrentCategory(cat)}
+                onClick={() => updateFilter('category', cat)}
                 className={`px-8 py-4 rounded-xl text-[10px] uppercase font-bold tracking-[0.15em] whitespace-nowrap border transition-all duration-300 ${
-                  currentCategory === cat 
+                  currentCategory.toLowerCase() === cat.toLowerCase() 
                     ? 'bg-luxury-gold border-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' 
                     : 'bg-white/5 border-transparent text-white/30 hover:text-white hover:bg-white/10'
                 }`}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '@/lib/firebase';
 import { agreementService, Agreement } from '@/services/agreementService';
+import { moderationService } from '@/services/moderationService';
 import { userService } from '@/services/userService';
 import { generateAgreementPDF } from '@/lib/agreements';
 import { 
@@ -26,7 +27,8 @@ import {
   Stamp,
   MoreVertical,
   QrCode,
-  FileSignature
+  FileSignature,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +104,27 @@ export default function AdminAgreements() {
     } catch (err) {
       console.error(`Approval failed for ID: ${id}`, err);
       toast.error(`Certification protocol failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this agreement? This action cannot be undone.")) return;
+    
+    setIsProcessing(true);
+    try {
+      console.log("Delete started for agreement:", id);
+      const success = await moderationService.deleteDocument('agreements', id);
+      if (success) {
+        toast.success("Agreement deleted successfully");
+        await fetchAgreements();
+      } else {
+        throw new Error("Failed to delete agreement");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error(error instanceof Error ? error.message : "Delete failed");
     } finally {
       setIsProcessing(false);
     }
@@ -186,10 +209,10 @@ export default function AdminAgreements() {
   });
 
   const stats = {
-    pending: agreements.filter(a => a.status === 'Pending Approval').length,
-    approved: agreements.filter(a => a.status === 'Approved').length,
-    rejected: agreements.filter(a => a.status === 'Rejected').length,
-    revisions: agreements.filter(a => a.status === 'revision_requested').length,
+    pending: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'pending approval').length,
+    approved: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'approved').length,
+    rejected: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'rejected').length,
+    revisions: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'revision_requested').length,
     total: agreements.length
   };
 
@@ -357,25 +380,75 @@ export default function AdminAgreements() {
                         </span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="w-10 h-10 rounded-xl hover:bg-white/10 transition-all text-white/60 hover:text-luxury-gold"
+                            className="w-8 h-8 rounded-lg hover:bg-white/10 transition-all text-white/40 hover:text-white"
                             onClick={() => {
                               setSelectedAgreement(item);
                               setIsReviewModalOpen(true);
                             }}
+                            title="View Agreement"
                           >
-                            <Eye size={18} />
+                            <Eye size={16} />
+                          </Button>
+
+                          {item.status && item.status.toString().toLowerCase().trim() === 'pending approval' && (
+                            <>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="w-8 h-8 rounded-lg hover:bg-emerald-500/10 transition-all text-white/40 hover:text-emerald-500"
+                                onClick={() => handleApprove(item.agreementId)}
+                                title="Certify & Release"
+                              >
+                                <Check size={16} />
+                              </Button>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="w-8 h-8 rounded-lg hover:bg-red-500/10 transition-all text-white/40 hover:text-red-500"
+                                onClick={() => {
+                                  setSelectedAgreement(item);
+                                  setIsRejectModalOpen(true);
+                                }}
+                                title="Terminate Filing"
+                              >
+                                <X size={16} />
+                              </Button>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="w-8 h-8 rounded-lg hover:bg-blue-500/10 transition-all text-white/40 hover:text-blue-500"
+                                onClick={() => {
+                                  setSelectedAgreement(item);
+                                  setIsRevisionModalOpen(true);
+                                }}
+                                title="Request Revision"
+                              >
+                                <FileSignature size={16} />
+                              </Button>
+                            </>
+                          )}
+                          
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="w-8 h-8 rounded-lg hover:bg-white/10 transition-all text-white/40 hover:text-white"
+                            onClick={() => downloadPDF(item)}
+                            title="Download PDF"
+                          >
+                            <Download size={16} />
                           </Button>
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="w-10 h-10 rounded-xl hover:bg-white/10 transition-all text-white/60 hover:text-white"
-                            onClick={() => downloadPDF(item)}
+                            className="w-8 h-8 rounded-lg hover:bg-red-900/20 transition-all text-white/40 hover:text-red-500"
+                            onClick={() => handleDelete(item.agreementId)}
+                            title="Delete Agreement"
                           >
-                            <Download size={18} />
+                            <Trash2 size={16} />
                           </Button>
                         </div>
                       </td>
@@ -647,7 +720,7 @@ export default function AdminAgreements() {
                 </div>
                 
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  {selectedAgreement.status === 'Pending Approval' && (
+                  {selectedAgreement.status && selectedAgreement.status.toString().toLowerCase().trim() === 'pending approval' && (
                     <>
                       <Button 
                         variant="ghost" 
