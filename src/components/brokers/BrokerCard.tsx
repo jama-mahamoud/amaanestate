@@ -77,7 +77,7 @@ export default function BrokerCard({ broker, index = 0 }: { broker: Broker; inde
             </Button>
           </div>
           <Button className="w-full bg-white/5 hover:bg-[#C5A059] text-white hover:text-black border border-white/10 transition-all mt-2" asChild>
-            <Link to={`/brokers/${broker.id}`}>
+            <Link to={`/agents/${broker.id}`}>
               View Profile
               <ArrowUpRight size={16} className="ml-2" />
             </Link>

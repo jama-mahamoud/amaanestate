@@ -61,6 +61,7 @@ const MAIN_CATEGORIES: MainCategory[] = [
 ];
 
 export default function ProfessionalServices() {
+  const [activeServiceTab, setActiveMainTab] = useState<'experts' | 'jobs' | 'academy'>('experts');
   const [activeMainCategory, setActiveMainCategory] = useState<string>('All');
   const [activeSubcategory, setActiveSubcategory] = useState<string>('All');
   const [currentCity, setCurrentCity] = useState<string>('All');
@@ -225,151 +226,322 @@ export default function ProfessionalServices() {
       </section>
 
       {/* Main Registry Explorer Screen */}
-      <div ref={registryRef} className="container mx-auto px-4 max-w-7xl pt-20">
+      <div ref={registryRef} className="container mx-auto px-4 max-w-7xl pt-16">
         
-        {/* Superior Integrated Search & Filters */}
-        <div className="mb-12">
-          <div className="bg-luxury-black/90 backdrop-blur-xl border border-white/5 p-4 rounded-3xl shadow-2xl flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-              <Input 
-                placeholder="Search experts, skills, certifications..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-0 h-12 pl-12 rounded-xl text-md placeholder:text-white/20 focus-visible:ring-0 text-white w-full"
-              />
-            </div>
-            <div className="w-px h-8 bg-white/10 hidden md:block" />
-            
-            {/* Region Selector */}
-            <div className="flex items-center gap-2 w-full md:w-auto self-stretch">
-              <MapPin size={16} className="text-[#C5A059] ml-2 hidden md:block" />
-              <select 
-                value={currentCity}
-                onChange={(e) => {
-                  setCurrentCity(e.target.value);
-                  setActiveSubcategory('All');
-                }}
-                className="bg-black border border-white/5 md:border-0 rounded-xl h-12 px-4 text-white appearance-none cursor-pointer focus:outline-none focus:ring-0 w-full md:w-52 text-xs font-bold uppercase tracking-widest text-white/80"
-              >
-                {cities.map(city => (
-                  <option key={city} value={city} className="bg-black">
-                    {city === 'All' ? '📌 ALL REGIONS' : `📍 ${city.toUpperCase()}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
-          {/* Main Category Accordion System */}
-          <div className="mt-8 space-y-3">
-            <div className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059] ml-1">
-              Select Major Sector
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {MAIN_CATEGORIES.map(cat => {
-                const isSelected = activeMainCategory === cat.id;
-                const IconComponent = cat.icon;
-                return (
-                  <button 
-                    key={cat.id}
-                    className={`rounded-2xl border transition-all duration-300 text-left cursor-pointer group p-4 flex flex-col justify-between min-h-[105px] ${
-                      isSelected 
-                        ? 'bg-gradient-to-br from-[#C5A059]/10 to-transparent border-[#C5A059] shadow-[0_4px_25px_rgba(197,160,89,0.06)]' 
-                        : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
-                    }`}
-                    onClick={() => {
-                      setActiveMainCategory(cat.id);
+        {/* Dynamic Global Services Sub-Navigation Tabs */}
+        <div className="flex border-b border-white/5 mb-12 gap-8 justify-center overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setActiveMainTab('experts')}
+            className={`pb-4 px-2 text-sm uppercase font-bold tracking-[0.2em] transition-all whitespace-nowrap border-b-2 ${
+              activeServiceTab === 'experts'
+                ? 'border-[#C5A059] text-white'
+                : 'border-transparent text-white/40 hover:text-white/70'
+            }`}
+          >
+            Certified Experts
+          </button>
+          <button
+            onClick={() => setActiveMainTab('jobs')}
+            className={`pb-4 px-2 text-sm uppercase font-bold tracking-[0.2em] transition-all whitespace-nowrap border-b-2 ${
+              activeServiceTab === 'jobs'
+                ? 'border-[#C5A059] text-white'
+                : 'border-transparent text-white/40 hover:text-white/70'
+            }`}
+          >
+            Jobs & Gigs Board
+          </button>
+          <button
+            onClick={() => setActiveMainTab('academy')}
+            className={`pb-4 px-2 text-sm uppercase font-bold tracking-[0.2em] transition-all whitespace-nowrap border-b-2 ${
+              activeServiceTab === 'academy'
+                ? 'border-[#C5A059] text-white'
+                : 'border-transparent text-white/40 hover:text-white/70'
+            }`}
+          >
+            Amaan Academy
+          </button>
+        </div>
+
+        {activeServiceTab === 'experts' && (
+          <div>
+            {/* Superior Integrated Search & Filters */}
+            <div className="mb-12">
+              <div className="bg-luxury-black/90 backdrop-blur-xl border border-white/5 p-4 rounded-3xl shadow-2xl flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                  <Input 
+                    placeholder="Search experts, skills, certifications..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-0 h-12 pl-12 rounded-xl text-md placeholder:text-white/20 focus-visible:ring-0 text-white w-full"
+                  />
+                </div>
+                <div className="w-px h-8 bg-white/10 hidden md:block" />
+                
+                {/* Region Selector */}
+                <div className="flex items-center gap-2 w-full md:w-auto self-stretch">
+                  <MapPin size={16} className="text-[#C5A059] ml-2 hidden md:block" />
+                  <select 
+                    value={currentCity}
+                    onChange={(e) => {
+                      setCurrentCity(e.target.value);
                       setActiveSubcategory('All');
                     }}
+                    className="bg-black border border-white/5 md:border-0 rounded-xl h-12 px-4 text-white appearance-none cursor-pointer focus:outline-none focus:ring-0 w-full md:w-52 text-xs font-bold uppercase tracking-widest text-white/80"
                   >
-                    <div className="flex justify-between items-start w-full">
-                      <div className={`p-2 rounded-xl transition-colors ${isSelected ? 'bg-[#C5A059] text-black' : 'bg-white/5 text-white/60 group-hover:text-white'}`}>
-                        <IconComponent size={16} />
-                      </div>
-                      <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#C5A059] animate-pulse' : 'bg-white/10'}`} />
-                    </div>
-                    <div className="mt-3">
-                      <h4 className="font-display font-bold text-sm text-white group-hover:text-[#C5A059] transition-colors">{cat.name}</h4>
-                      <p className="text-[10px] text-white/40 line-clamp-1 mt-0.5">{cat.description}</p>
-                    </div>
-                  </button>
-                );
-              })}
+                    {cities.map(city => (
+                      <option key={city} value={city} className="bg-black">
+                        {city === 'All' ? '📌 ALL REGIONS' : `📍 ${city.toUpperCase()}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Main Category Accordion System */}
+              <div className="mt-8 space-y-3">
+                <div className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059] ml-1">
+                  Select Major Sector
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {MAIN_CATEGORIES.map(cat => {
+                    const isSelected = activeMainCategory === cat.id;
+                    const IconComponent = cat.icon;
+                    return (
+                      <button 
+                        key={cat.id}
+                        className={`rounded-2xl border transition-all duration-300 text-left cursor-pointer group p-4 flex flex-col justify-between min-h-[105px] ${
+                          isSelected 
+                            ? 'bg-gradient-to-br from-[#C5A059]/10 to-transparent border-[#C5A059] shadow-[0_4px_25px_rgba(197,160,89,0.06)]' 
+                            : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
+                        }`}
+                        onClick={() => {
+                          setActiveMainCategory(cat.id);
+                          setActiveSubcategory('All');
+                        }}
+                      >
+                        <div className="flex justify-between items-start w-full">
+                          <div className={`p-2 rounded-xl transition-colors ${isSelected ? 'bg-[#C5A059] text-black' : 'bg-white/5 text-white/60 group-hover:text-white'}`}>
+                            <IconComponent size={16} />
+                          </div>
+                          <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#C5A059] animate-pulse' : 'bg-white/10'}`} />
+                        </div>
+                        <div className="mt-3">
+                          <h4 className="font-display font-bold text-sm text-white group-hover:text-[#C5A059] transition-colors">{cat.name}</h4>
+                          <p className="text-[10px] text-white/40 line-clamp-1 mt-0.5">{cat.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Subcategory Horizontal Chips Scrollway */}
+              {activeMainCategory !== 'All' && (
+                <div className="mt-6 border-t border-white/5 pt-4">
+                  <div className="text-[9px] uppercase font-bold tracking-widest text-[#C5A059] mb-3 ml-1">
+                    Refine Specialties
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+                    <button
+                      onClick={() => setActiveSubcategory('All')}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider whitespace-nowrap transition-all duration-200 border ${
+                        activeSubcategory === 'All'
+                          ? 'bg-[#C5A059] border-[#C5A059] text-black'
+                          : 'bg-white/10 border-white/5 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      All {MAIN_CATEGORIES.find(m => m.id === activeMainCategory)?.name}
+                    </button>
+                    {MAIN_CATEGORIES.find(m => m.id === activeMainCategory)?.subcategories.map(sub => (
+                      <button
+                        key={sub}
+                        onClick={() => setActiveSubcategory(sub)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider whitespace-nowrap transition-all duration-200 border ${
+                          activeSubcategory === sub
+                            ? 'bg-[#C5A059] border-[#C5A059] text-black'
+                            : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
+                        }`}
+                      >
+                        {sub}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Results Counter */}
+            <div className="flex justify-between items-center mb-6 px-1">
+              <p className="text-white/40 text-xs uppercase font-extrabold tracking-widest">
+                 {filteredPros.length} Experts Currently Active & Verified
+              </p>
+              {activeMainCategory !== 'All' && (
+                <button 
+                  onClick={() => { setActiveMainCategory('All'); setActiveSubcategory('All'); }}
+                  className="text-xs text-[#C5A059] hover:underline"
+                >
+                  Reset Filters
+                </button>
+              )}
+            </div>
+
+            {/* Experts Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <AnimatePresence mode="popLayout">
+                {loading ? (
+                  Array.from({length: 4}).map((_, i) => (
+                    <div key={i} className="h-96 rounded-[2.5rem] bg-white/5 animate-pulse border border-white/5"></div>
+                  ))
+                ) : filteredPros.length > 0 ? (
+                  filteredPros.map(pro => (
+                    <ProfessionalCard key={pro.id} professional={pro} />
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 flex flex-col items-center text-center">
+                    <Users size={64} className="text-white/10 mb-6" />
+                    <h3 className="text-2xl font-bold mb-2">No experts found in this category</h3>
+                    <p className="text-white/40 mb-8 max-w-sm">Try choosing another region, adjusting your filters, or resetting search.</p>
+                    <Button onClick={() => { setActiveMainCategory('All'); setActiveSubcategory('All'); setCurrentCity('All'); setSearchQuery(''); }} variant="outline" className="rounded-xl">Clear All Criteria</Button>
+                  </div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
+        )}
 
-          {/* Subcategory Horizontal Chips Scrollway */}
-          {activeMainCategory !== 'All' && (
-            <div className="mt-6 border-t border-white/5 pt-4">
-              <div className="text-[9px] uppercase font-bold tracking-widest text-[#C5A059] mb-3 ml-1">
-                Refine Specialties
+        {activeServiceTab === 'jobs' && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+              <div>
+                <h2 className="text-3xl font-display font-bold text-white mb-2">Opportunities & Gigs Board</h2>
+                <p className="text-white/60 text-sm">Review open project briefs, hiring requests, or freelance construction gigs across the Somali Region.</p>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-                <button
-                  onClick={() => setActiveSubcategory('All')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider whitespace-nowrap transition-all duration-200 border ${
-                    activeSubcategory === 'All'
-                      ? 'bg-[#C5A059] border-[#C5A059] text-black'
-                      : 'bg-white/10 border-white/5 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  All {MAIN_CATEGORIES.find(m => m.id === activeMainCategory)?.name}
-                </button>
-                {MAIN_CATEGORIES.find(m => m.id === activeMainCategory)?.subcategories.map(sub => (
-                  <button
-                    key={sub}
-                    onClick={() => setActiveSubcategory(sub)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider whitespace-nowrap transition-all duration-200 border ${
-                      activeSubcategory === sub
-                        ? 'bg-[#C5A059] border-[#C5A059] text-black'
-                        : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                ))}
-              </div>
+              <Button onClick={() => alert("Hiring portal configuration is fully optimized on request.")} className="bg-[#C5A059] text-black hover:bg-white font-bold h-12 px-6 rounded-xl">
+                Post an Active Gig
+              </Button>
             </div>
-          )}
-        </div>
 
-        {/* Results Counter */}
-        <div className="flex justify-between items-center mb-6 px-1">
-          <p className="text-white/40 text-xs uppercase font-extrabold tracking-widest">
-             {filteredPros.length} Experts Currently Active & Verified
-          </p>
-          {activeMainCategory !== 'All' && (
-            <button 
-              onClick={() => { setActiveMainCategory('All'); setActiveSubcategory('All'); }}
-              className="text-xs text-[#C5A059] hover:underline"
-            >
-              Reset Filters
-            </button>
-          )}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {[
+                {
+                  title: 'Experienced Civil/Survey Engineer',
+                  company: 'AmaanEstate Verified Project Node',
+                  location: 'Jigjiga HQ',
+                  type: 'Full-Time Contract',
+                  budget: '80,000 ETB / Month',
+                  description: 'Required to audit spatial boundary coordinates on newly registered plots. Standard equipment checks and deeds maps reconciliation experience is mandatory.',
+                  skills: ['Surveying', 'GIS Mapping', 'AutoCAD']
+                },
+                {
+                  title: 'Real Estate Legal Auditor / Conveyancer',
+                  company: 'Horn-Commercial Legal Desk',
+                  location: 'Dire Dawa Office',
+                  type: 'Project Gig',
+                  budget: '120,000 ETB / Project',
+                  description: 'Review and draft escrow sales deeds and custom residential lease clauses according to the regional land acts. High precision and fast dispatch loops are required.',
+                  skills: ['Estate Law', 'Deeds Checks', 'Escrow Structuring']
+                },
+                {
+                  title: 'Interior Space Design & 3D Architectural Renderer',
+                  company: 'Somali Luxury Living Real Estate',
+                  location: 'Jigjiga HQ',
+                  type: 'Freelance Gig',
+                  budget: '45,000 ETB / Unit',
+                  description: 'Produce photorealistic interior renders for high-end luxury villas in Hodan district. Work alongside verified brokers and land development engineers.',
+                  skills: ['Blender/V-Ray', 'Architecture', 'Asset Renders']
+                },
+                {
+                  title: 'HVAC Plumbing Technical Quality Assessor',
+                  company: 'Horn Systems Engineering Ltd',
+                  location: 'Berbera Outpost',
+                  type: 'Part-Time Gig',
+                  budget: '15,000 ETB / Inspection',
+                  description: 'Execute deep mechanical, water distribution, and sewage piping inspections for newly built multi-family apartments seeking Amaan Certification Stamps.',
+                  skills: ['Building Codes', 'Plumbing', 'Compliance']
+                }
+              ].map((job, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:border-[#C5A059]/30 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <span className="text-[10px] uppercase font-bold tracking-widest bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-white/60">
+                        {job.type}
+                      </span>
+                      <span className="text-xs font-black text-[#C5A059]">{job.budget}</span>
+                    </div>
+                    <h3 className="text-xl font-bold font-display text-white mb-2">{job.title}</h3>
+                    <p className="text-white/40 text-xs mb-4">{job.company} — <strong className="text-[#C5A059]">{job.location}</strong></p>
+                    <p className="text-white/60 text-sm leading-relaxed mb-6">{job.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {job.skills.map(s => <span key={s} className="bg-white/5 border border-white/5 px-2.5 py-1 rounded-lg text-[10px] uppercase tracking-wider text-white/60">{s}</span>)}
+                    </div>
+                  </div>
+                  <Button onClick={() => alert(`Application for: "${job.title}" has been securely logged.`)} variant="outline" className="w-full border-white/10 hover:bg-[#C5A059] hover:text-black hover:border-[#C5A059] transition-all rounded-xl h-11 text-xs font-bold uppercase tracking-widest">
+                    Submit Proposal Draft
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Experts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <AnimatePresence mode="popLayout">
-            {loading ? (
-              Array.from({length: 4}).map((_, i) => (
-                <div key={i} className="h-96 rounded-[2.5rem] bg-white/5 animate-pulse border border-white/5"></div>
-              ))
-            ) : filteredPros.length > 0 ? (
-              filteredPros.map(pro => (
-                <ProfessionalCard key={pro.id} professional={pro} />
-              ))
-            ) : (
-              <div className="col-span-full py-20 flex flex-col items-center text-center">
-                <Users size={64} className="text-white/10 mb-6" />
-                <h3 className="text-2xl font-bold mb-2">No experts found in this category</h3>
-                <p className="text-white/40 mb-8 max-w-sm">Try choosing another region, adjusting your filters, or resetting search.</p>
-                <Button onClick={() => { setActiveMainCategory('All'); setActiveSubcategory('All'); setCurrentCity('All'); setSearchQuery(''); }} variant="outline" className="rounded-xl">Clear All Criteria</Button>
-              </div>
-            )}
-          </AnimatePresence>
-        </div>
+        {activeServiceTab === 'academy' && (
+          <div className="space-y-8">
+            <div className="pb-6 border-b border-white/5">
+              <h2 className="text-3xl font-display font-bold text-white mb-2">Amaan Academy Certification</h2>
+              <p className="text-white/60 text-sm">Professional real estate masterclasses, legal compliance prep, and broker training programs.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: 'Deeds & Land Registry Act (Masterclass)',
+                  badge: 'Law Certificate',
+                  duration: '6 Weeks Duration',
+                  instructor: 'Amaan Legal compliance Team',
+                  price: 'Free for Registered Agents',
+                  description: 'Deep dive into local waraaqaha land deed checking systems, physical registration protocols, and land surveying maps reading in Somali Regional state.'
+                },
+                {
+                  title: 'Islamic Inheritance Finance & Estate Planning',
+                  badge: 'Islamic Jurisprudence',
+                  duration: '4 Weeks Duration',
+                  instructor: 'Sheikh Ibrahim & Real Estate Panel',
+                  price: '15,000 ETB / Seat',
+                  description: 'Learn certified ethical parameters and legal formulas regarding estate partitions, asset shares, and inheritance compliance under regional frameworks.'
+                },
+                {
+                  title: 'Premium Real Estate Broker Operations',
+                  badge: 'MLS Accreditation',
+                  duration: '8 Weeks Duration',
+                  instructor: 'Amaan Business Strategy Board',
+                  price: 'Free for Active Brokers',
+                  description: 'Get fully accredited! This certification course teaches double-deed prevention audits, escrow parameters, listing optimization, and mobile rendering.'
+                }
+              ].map((course, idx) => (
+                <div key={idx} className="bg-[#111111] border border-white/10 p-6 rounded-[2rem] hover:border-[#C5A059]/30 transition-colors flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <span className="text-[10px] uppercase font-bold tracking-widest bg-[#C5A059]/10 border border-[#C5A059]/20 px-3 py-1 rounded-xl text-[#C5A059]">
+                        {course.badge}
+                      </span>
+                      <span className="text-[10px] font-bold text-white/50">{course.duration}</span>
+                    </div>
+                    <h3 className="text-xl font-bold font-display text-white mb-2">{course.title}</h3>
+                    <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold mb-4">{course.instructor}</p>
+                    <p className="text-white/60 text-xs leading-relaxed mb-6">{course.description}</p>
+                  </div>
+                  <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-4">
+                    <span className="text-xs font-bold text-[#C5A059]">{course.price}</span>
+                    <Button onClick={() => alert(`Registration for course: "${course.title}" successfully logged.`)} className="bg-white/5 hover:bg-white text-white hover:text-black font-bold h-10 px-4 rounded-lg text-[10px] uppercase tracking-wider">
+                      Register Course
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Trust and Registry Recruitment Section */}

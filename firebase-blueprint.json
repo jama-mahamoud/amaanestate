@@ -143,6 +143,26 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "fullName", "phone", "whatsapp", "email", "region", "city", "officeAddress", "status", "isVerified", "createdAt"]
+    },
+    "Agreement": {
+      "title": "Agreement",
+      "description": "Legal agreement for property/vehicle transactions",
+      "type": "object",
+      "properties": {
+        "agreementId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["propertySale", "propertyRental", "vehicleSale", "vehicleRental", "commission"] },
+        "status": { "type": "string", "enum": ["active", "completed", "cancelled"] },
+        "partyA": { "type": "object" },
+        "partyB": { "type": "object" },
+        "assetInfo": { "type": "object" },
+        "terms": { "type": "string" },
+        "qrCode": { "type": "string" },
+        "pdfUrl": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["agreementId", "date", "type", "status", "partyA", "partyB", "assetInfo", "terms", "createdAt"]
     }
   },
   "firestore": {
@@ -239,6 +259,10 @@
         }
       },
       "description": "Confidential and verified anti-fraud legal audit records per broker"
+    },
+    "/agreements/{agreementId}": {
+      "schema": "Agreement",
+      "description": "Collection of legal agreements"
     }
   }
 }

@@ -8,14 +8,13 @@ import { useSettings } from '@/contexts/SettingsContext';
 import AmaanLogo from '../brand/AmaanLogo';
 import MegaMenu from './MegaMenu';
 
-const MobileAccordionItem = ({ title, sections, setMobileMenuOpen }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const MobileAccordionItem = ({ title, sections, setMobileMenuOpen, isOpen, onToggle }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void, isOpen: boolean, onToggle: () => void }) => {
   const { t } = useSettings();
   
   return (
-    <div className="border-b border-white/5 py-4 w-full text-left">
+    <div className="border-b border-white/5 py-6 w-full text-left">
       <button 
-        onClick={() => setIsOpen(!isOpen)} 
+        onClick={onToggle} 
         className="w-full flex justify-between items-center text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all"
       >
         <span>{t(title)}</span>
@@ -30,11 +29,11 @@ const MobileAccordionItem = ({ title, sections, setMobileMenuOpen }: { title: st
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="py-4 space-y-6">
+            <div className="py-4 space-y-4">
               {sections.map((section, idx) => (
-                <div key={idx} className="flex flex-col gap-3">
-                  <h3 className="text-luxury-gold text-[10px] font-bold uppercase tracking-widest">{t(section.title)}</h3>
-                  <ul className="flex flex-col gap-3 pl-3 border-l border-white/10">
+                <div key={idx} className="flex flex-col gap-2">
+                  <h3 className="text-luxury-gold text-xs font-bold uppercase tracking-[0.2em]">{t(section.title)}</h3>
+                  <ul className="flex flex-col gap-1 pl-4 border-l border-white/10">
                     {section.items.map((item: any, i: number) => (
                       <li key={i}>
                         <Link 
@@ -59,6 +58,7 @@ const MobileAccordionItem = ({ title, sections, setMobileMenuOpen }: { title: st
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [currDropdownOpen, setCurrDropdownOpen] = useState(false);
@@ -150,89 +150,20 @@ export default function Navbar() {
       ]
     },
     {
-      title: 'Brokers & Registry',
+      title: 'Agents & Registry',
       sections: [
         {
-          title: 'Broker Network',
+          title: 'Agent Network',
           items: [
-            { title: 'Verified Brokers', href: '/brokers?type=verified' },
-            { title: 'Premium Agents', href: '/brokers?type=premium' },
-            { title: 'Commercial Brokers', href: '/brokers?type=commercial' },
+            { title: 'Verified Agents', href: '/agents' },
+            { title: 'Apply to Register', href: '/agents/apply' },
           ]
         },
         {
-          title: 'Registry',
+          title: 'Broker Registry',
           items: [
-            { title: 'Broker Registry', href: '/brokers/registry' },
-            { title: 'Verification', href: '/brokers/verification' },
-            { title: 'Become Broker', href: '/brokers/apply' },
-          ]
-        }
-      ]
-    },
-    {
-      title: 'Experts & Services',
-      sections: [
-        {
-          title: 'Construction',
-          items: [
-            { title: 'Engineers', href: '/services?type=engineer' },
-            { title: 'Architects', href: '/services?type=architect' },
-            { title: 'Builders', href: '/services?type=builder' },
-          ]
-        },
-        {
-          title: 'Professional',
-          items: [
-            { title: 'Lawyers', href: '/services?type=lawyer' },
-            { title: 'Interior Designers', href: '/services?type=designer' },
-            { title: 'Contractors', href: '/services?type=contractor' },
-          ]
-        },
-        {
-          title: 'Access',
-          items: [
-            { title: 'Become Expert', href: '/become-pro' },
-          ]
-        }
-      ]
-    },
-    {
-      title: 'Jobs & Gigs',
-      sections: [
-        {
-          title: 'Employment',
-          items: [
-            { title: 'Full-time Jobs', href: '/opportunities?type=job' },
-            { title: 'Remote Jobs', href: '/opportunities?type=remote' },
-          ]
-        },
-        {
-          title: 'Freelance',
-          items: [
-            { title: 'Project Gigs', href: '/opportunities?type=gig' },
-            { title: 'Post a Job', href: '/opportunities/post' },
-          ]
-        }
-      ]
-    },
-    {
-      title: 'Academy & Authority',
-      sections: [
-        {
-          title: 'Learning',
-          items: [
-            { title: 'All Courses', href: '/academy?type=course' },
-            { title: 'Scholarships', href: '/academy?type=scholarship' },
-          ]
-        },
-        {
-          title: 'Market Intelligence',
-          items: [
-            { title: 'Market Reports', href: '/news?cat=market' },
-            { title: 'Investment News', href: '/news?cat=investment' },
-            { title: 'Legal Updates', href: '/news?cat=legal' },
-            { title: 'Authority Insights', href: '/authority' },
+            { title: 'Agent List', href: '/agents' },
+            { title: 'Verify Badge Check', href: '/agents' },
           ]
         }
       ]
@@ -240,13 +171,10 @@ export default function Navbar() {
   ];
 
   const navLinks = [
-    { name: 'Home', path: '/' },
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
-    { name: 'Brokers & Registry', path: '/brokers' },
-    { name: 'Experts & Services', path: '/services' },
-    { name: 'Jobs & Gigs', path: '/opportunities' },
-    { name: 'Academy & Authority', path: '/academy' },
+    { name: 'Agents', path: '/agents' },
+    { name: 'News', path: '/news' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
@@ -370,12 +298,13 @@ export default function Navbar() {
         </div>
         
         {/* Desktop Nav - Centered strictly */}
-        <nav className="hidden xl:flex items-center gap-2 2xl:gap-5 justify-center flex-none">
+        <nav className="hidden xl:flex items-center gap-6 2xl:gap-8 justify-center flex-none">
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} />
           ))}
-          <Link to="/about" className="text-[10px] uppercase font-bold tracking-[0.1em] text-white/60 transition-all hover:text-luxury-gold p-2 whitespace-nowrap">{t('About')}</Link>
-          <Link to="/contact" className="text-[10px] uppercase font-bold tracking-[0.1em] text-white/60 transition-all hover:text-luxury-gold p-2 whitespace-nowrap">{t('Contact')}</Link>
+          <Link to="/about" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('About')}</Link>
+          <Link to="/agreements" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('Agreements')}</Link>
+          <Link to="/contact" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('Contact')}</Link>
         </nav>
 
         {/* Desktop Actions - Right matched width */}
@@ -438,11 +367,19 @@ export default function Navbar() {
             <div className="flex-1 overflow-y-auto px-6 py-4 no-scrollbar">
               <nav className="flex flex-col gap-2 pb-8">
                 {menuData.map((menu) => (
-                  <MobileAccordionItem key={menu.title} title={menu.title} sections={menu.sections} setMobileMenuOpen={setMobileMenuOpen} />
+                  <MobileAccordionItem 
+                    key={menu.title} 
+                    title={menu.title} 
+                    sections={menu.sections} 
+                    setMobileMenuOpen={setMobileMenuOpen} 
+                    isOpen={activeAccordion === menu.title}
+                    onToggle={() => setActiveAccordion(activeAccordion === menu.title ? null : menu.title)}
+                  />
                 ))}
 
-                <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-4 border-b border-white/5">{t('About')}</Link>
-                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-4 border-b border-white/5">{t('Contact')}</Link>
+                <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('About')}</Link>
+                <Link to="/agreements" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Agreements')}</Link>
+                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Contact')}</Link>
               </nav>
               
               <div className="pt-4 pb-12 flex flex-col space-y-4">

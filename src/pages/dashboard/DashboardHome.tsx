@@ -1,23 +1,29 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, 
-  Activity, Heart, Copy, Check, ShieldCheck, Sparkles, Bell, AlertCircle, Share2
+  Activity, Heart, Copy, Check, ShieldCheck, Sparkles, Bell, AlertCircle, Share2,
+  FileSignature, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/services/userService';
+import { Agreement, agreementService } from '@/services/agreementService';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useListings } from '@/hooks/useListings';
 import { Property } from '@/types';
 
 export default function DashboardHome() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { openListingModal } = useDashboard();
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'notifications' | 'compliance' | 'referrals' | 'favorites'>('notifications');
+  const [pendingAgreements, setPendingAgreements] = useState<Agreement[]>([]);
+
+  const isAdmin = profile?.role === 'admin';
 
   // Simulated live notification items
   const [notifications, setNotifications] = useState([
@@ -50,10 +56,16 @@ export default function DashboardHome() {
     const loadStats = async () => {
       const data = await userService.getGlobalStats();
       setStats(data);
+      
+      if (isAdmin) {
+        const allAgreements = await agreementService.getAllAgreements();
+        setPendingAgreements(allAgreements.filter(a => a.status === 'Pending Approval'));
+      }
+      
       setLoading(false);
     };
     loadStats();
-  }, []);
+  }, [isAdmin]);
 
   const statCards = useMemo(() => [
     { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+8%' },
@@ -85,6 +97,25 @@ export default function DashboardHome() {
           <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">Enterprise Security Index Mode: Secure & Encrypted</p>
         </div>
         <div className="flex gap-4">
+           {isAdmin && pendingAgreements.length > 0 && (
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="glass-card px-8 py-4 rounded-2xl relative overflow-hidden flex items-center gap-6 border border-amber-500/20 bg-amber-500/[0.03] group cursor-pointer"
+               onClick={() => navigate('/dashboard/agreements')}
+             >
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                  <FileSignature size={20} />
+                </div>
+                <div>
+                   <p className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 font-bold">Pending Approvals</p>
+                   <p className="text-sm font-black tracking-tight text-white flex items-center gap-2">
+                     {pendingAgreements.length} Agreements Awaiting Review
+                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                   </p>
+                </div>
+             </motion.div>
+           )}
            <div className="glass-card px-8 py-4 rounded-2xl relative overflow-hidden flex items-center gap-4 border border-white/5 bg-white/[0.01]">
               <div className="absolute top-0 right-0 w-16 h-16 bg-luxury-gold/5 blur-xl rounded-full" />
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -420,9 +451,10 @@ export default function DashboardHome() {
               </h3>
               <div className="space-y-6 relative z-10">
                 {[
-                  { city: 'Jigjiga Capital', share: '45%', color: 'bg-[#C5A059]' },
-                  { city: 'Dire Dawa Transit', share: '30%', color: 'bg-white/40' },
-                  { city: 'Addis Linkage', share: '25%', color: 'bg-white/10' },
+                  { city: 'Jigjiga Province', share: '45%', color: 'bg-[#C5A059]' },
+                  { city: 'Dire Dawa Region', share: '25%', color: 'bg-white/40' },
+                  { city: 'Hargeisa Hub', share: '18%', color: 'bg-white/20' },
+                  { city: 'Mogadishu Coastal', share: '12%', color: 'bg-white/10' },
                 ].map((item, i) => (
                   <div key={i} className="space-y-2">
                      <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em]">

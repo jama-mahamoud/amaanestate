@@ -113,7 +113,7 @@ export default function Login() {
                 <input type="checkbox" className="w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
                 Preserve Session
               </label>
-              <Link to="/forgot-password" className="text-luxury-gold/60 hover:text-luxury-gold transition-colors underline underline-offset-4 decoration-luxury-gold/20">
+              <Link to="/auth/forgot-password" className="text-luxury-gold/60 hover:text-luxury-gold transition-colors underline underline-offset-4 decoration-luxury-gold/20">
                 Inquiry Assistance
               </Link>
             </div>
@@ -154,7 +154,7 @@ export default function Login() {
                   Are you a high-net-worth individual or enterprise seeking elite management?
                 </p>
                 <Button asChild variant="outline" className="w-full border-luxury-gold/30 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-16 rounded-2xl font-bold uppercase tracking-widest text-xs">
-                  <Link to="/register">Register New Account</Link>
+                  <Link to="/auth/register">Register New Account</Link>
                 </Button>
               </div>
             </div>

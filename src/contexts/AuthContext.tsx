@@ -8,7 +8,8 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
@@ -59,6 +60,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string) => Promise<void>;
+  passwordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -213,8 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await updateProfile(userCredential.user, { displayName: name });
   };
 
+  const passwordReset = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, logout, signInWithGoogle, signIn, signUp }}>
+    <AuthContext.Provider value={{ user, profile, loading, logout, signInWithGoogle, signIn, signUp, passwordReset }}>
       {children}
     </AuthContext.Provider>
   );

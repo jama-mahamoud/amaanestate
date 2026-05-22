@@ -11,7 +11,10 @@ import {
   X,
   Plus,
   Briefcase,
-  ShieldCheck
+  ShieldCheck,
+  Heart,
+  FileSignature,
+  User
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -40,7 +43,7 @@ function DashboardContent() {
   };
 
   const navItems = [
-    { name: 'Portfolio', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
   ];
 
   const currentRole = profile?.role?.toString().trim().toLowerCase();
@@ -49,10 +52,13 @@ function DashboardContent() {
 
   if (isAdmin) {
     navItems.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+    navItems.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
   }
 
-  navItems.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
-  navItems.push({ name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+  navItems.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+  navItems.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+  navItems.push({ name: 'Favorites', path: '/dashboard/favorites', icon: <Heart size={18} /> });
+  navItems.push({ name: 'Profile', path: '/dashboard/profile', icon: <User size={18} /> });
 
   if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });

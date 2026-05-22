@@ -58,7 +58,7 @@ export const listingService = {
        filterConstraints.push(where('status', '==', filters.status));
     }
 
-    if (filters.category && !filters.subcategory) {
+    if (filters.category) {
       filterConstraints.push(where('category', '==', filters.category));
     }
 
@@ -68,7 +68,7 @@ export const listingService = {
     
     // Updated to subcategory
     if (filters.subcategory && filters.subcategory !== 'All') {
-      filterConstraints.push(where('subcategory', '==', filters.subcategory.toLowerCase()));
+      filterConstraints.push(where('subcategory', '==', filters.subcategory.trim().toLowerCase()));
     }
 
     if (filters.currency && filters.currency !== 'All') {

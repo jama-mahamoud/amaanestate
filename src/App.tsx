@@ -22,6 +22,9 @@ function PageFallback() {
 
 // Lazy Loaded Base Pages
 const Home = lazy(() => import('./pages/Home'));
+const Agreements = lazy(() => import('./pages/Agreements'));
+const AdminAgreements = lazy(() => import('./pages/admin/AdminAgreements'));
+const PublicVerification = lazy(() => import('./pages/verify/PublicVerification'));
 const Properties = lazy(() => import('./pages/Properties'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
@@ -30,19 +33,22 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const News = lazy(() => import('./pages/News'));
 const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
-const AgentRegistration = lazy(() => import('./pages/AgentRegistration'));
-const ProfessionalServices = lazy(() => import('./pages/ProfessionalServices'));
-const ProfessionalDetails = lazy(() => import('./pages/ProfessionalDetails'));
-const ProfessionalRegistration = lazy(() => import('./pages/ProfessionalRegistration'));
-const BrokerRegistry = lazy(() => import('./pages/brokers/BrokerRegistry'));
-const BrokerApplication = lazy(() => import('./pages/brokers/BrokerApplication'));
-const AgencyRegistration = lazy(() => import('./pages/brokers/AgencyRegistration'));
-const BrokerDetails = lazy(() => import('./pages/brokers/BrokerDetails'));
+// Verified Agents Module
+const AgentsList = lazy(() => import('./pages/agents/AgentsList'));
+const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
+const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
+
+// Product Custom Editors
+const EditProperty = lazy(() => import('./pages/EditProperty'));
+const CreateVehicle = lazy(() => import('./pages/CreateVehicle'));
+const EditVehicle = lazy(() => import('./pages/EditVehicle'));
+
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 // Lazy Loaded Auth Pages
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 // Lazy Loaded Dashboard
 const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout'));
@@ -57,6 +63,10 @@ const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
 const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
 const CreateProperty = lazy(() => import('./pages/CreateProperty'));
 
+// Additional Dashboard Sub-Modules
+const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
+const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
+
 export default function App() {
   return (
     <HelmetProvider>
@@ -65,31 +75,44 @@ export default function App() {
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<RootLayout />}>
-                {/* Public Routes */}
+                {/* Public Base & Website Routes */}
                 <Route index element={<Home />} />
+                
+                {/* Properties Module */}
                 <Route path="properties" element={<Properties />} />
                 <Route path="properties/:id" element={<PropertyDetails />} />
                 <Route path="properties/create" element={<CreateProperty />} />
+                <Route path="properties/edit/:id" element={<EditProperty />} />
+                <Route path="agreements" element={<Agreements />} />
+                <Route path="admin/agreements" element={<AdminAgreements />} />
+                <Route path="verify/:id" element={<PublicVerification />} />
+                
+                {/* Vehicles Module */}
                 <Route path="vehicles" element={<Vehicles />} />
                 <Route path="vehicles/:id" element={<VehicleDetails />} />
+                <Route path="vehicles/create" element={<CreateVehicle />} />
+                <Route path="vehicles/edit/:id" element={<EditVehicle />} />
+
+                {/* Agents Module */}
+                <Route path="agents" element={<AgentsList />} />
+                <Route path="agents/:id" element={<AgentDetails />} />
+                <Route path="agents/apply" element={<AgentApply />} />
+
+
+                {/* Other Services and Pages */}
                 <Route path="news" element={<News />} />
                 <Route path="news/:id" element={<ArticleDetails />} />
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
-                <Route path="become-agent" element={<AgentRegistration />} />
-                <Route path="services" element={<ProfessionalServices />} />
-                <Route path="professionals/:id" element={<ProfessionalDetails />} />
-                <Route path="become-pro" element={<ProfessionalRegistration />} />
-                <Route path="brokers" element={<BrokerRegistry />} />
-                <Route path="brokers/:id" element={<BrokerDetails />} />
-                <Route path="brokers/apply" element={<BrokerApplication />} />
-                <Route path="agency-register" element={<AgencyRegistration />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />
                 
                 {/* Auth Routes - Public Only */}
                 <Route element={<PublicRoute />}>
                   <Route path="login" element={<Login />} />
                   <Route path="register" element={<Register />} />
+                  <Route path="auth/login" element={<Login />} />
+                  <Route path="auth/register" element={<Register />} />
+                  <Route path="auth/forgot-password" element={<ForgotPassword />} />
                 </Route>
               </Route>
 
@@ -103,7 +126,10 @@ export default function App() {
                   <Route path="articles" element={<DashboardArticles />} />
                   <Route path="articles/create" element={<CreateArticle />} />
                   <Route path="articles/edit/:id" element={<EditArticle />} />
+                  <Route path="agreements" element={<AdminAgreements />} />
                   <Route path="users" element={<DashboardUsers />} />
+                  <Route path="favorites" element={<DashboardFavorites />} />
+                  <Route path="profile" element={<DashboardProfile />} />
                   <Route path="settings" element={<DashboardSettings />} />
                 </Route>
               </Route>
