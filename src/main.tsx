@@ -13,7 +13,8 @@ if (typeof window !== 'undefined') {
       errorStr.includes('WebSocket') || 
       errorStr.includes('[vite]') || 
       errorStr.includes('failed to connect to websocket') ||
-      errorStr.includes('WebSocket closed')
+      errorStr.includes('WebSocket closed') ||
+      errorStr.includes('WebSocket closed without opened')
     ) {
       // Quietly log to avoid modal or overlay crashes
       console.warn('[Vite Dev WebSocket Suppressed]', ...args);
@@ -29,7 +30,8 @@ if (typeof window !== 'undefined') {
       reasonStr.includes('WebSocket') || 
       reasonStr.includes('[vite]') || 
       reasonStr.includes('websocket') ||
-      reasonStr.includes('reconnect')
+      reasonStr.includes('reconnect') ||
+      reasonStr.includes('closed without opened')
     ) {
       event.preventDefault(); // Swallow unhandled websocket disconnect promises
       console.warn('[Vite WebSocket Rejection Suppressed]', reasonStr);

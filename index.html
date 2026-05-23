@@ -28,7 +28,7 @@
       };
       window.addEventListener('unhandledrejection', event => {
         const reason = String(event.reason).toLowerCase();
-        if (reason.includes('websocket') || reason.includes('vite')) {
+        if (reason.includes('websocket') || reason.includes('vite') || reason.includes('closed without opened')) {
           console.warn('[Vite Promise Suppressed]', event.reason);
           return;
         }

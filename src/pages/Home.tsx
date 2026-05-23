@@ -5,9 +5,10 @@ import HomeSearch from '@/components/HomeSearch';
 import LatestNews from '@/components/LatestNews';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
+import MapDiscovery from '@/components/MapDiscovery';
 import { listingRepository } from '@/services/listingRepository';
-import { Listing, VehicleListing, ListingCategory, ListingType } from '@/types';
+import { Listing, VehicleListing, Property } from '@/types';
+import { useSettings } from '@/contexts/SettingsContext';
 import { 
   Loader2, 
   ArrowRight,
@@ -21,12 +22,9 @@ import { ListingFilter } from '@/services/listingService';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t } = useSettings();
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
-
-  // Modal control
-  const [isListingModalOpen, setIsListingModalOpen] = useState(false);
-  const [modalListingType, setModalListingType] = useState<ListingType>('sale');
 
   const [searchParams] = useSearchParams();
 
@@ -35,6 +33,7 @@ export default function Home() {
   const [filterSubcategory, setFilterSubcategory] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>(''); // 'rent' or 'sale'
   const [currentPage, setCurrentPage] = useState(1);
+  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
 
   const propertiesSectionRef = useRef<HTMLDivElement>(null);
 
@@ -172,16 +171,16 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-luxury-black text-white">
+    <div className="min-h-screen bg-luxury-black text-white selection:bg-luxury-gold selection:text-black">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-20 overflow-hidden flex flex-col items-center justify-center">
+      <section className="relative pt-16 md:pt-24 pb-12 md:pb-20 overflow-visible flex flex-col items-center justify-center min-h-[60vh] md:min-h-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-luxury-gold/5 via-luxury-black to-luxury-black z-0"></div>
         <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
-          <div className="text-center mb-10 w-full max-w-2xl">
+          <div className="text-center mb-10 md:mb-12 w-full max-w-3xl px-2">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-3xl md:text-5xl font-display font-medium tracking-tight mb-4 text-white"
+              className="text-3xl sm:text-4xl md:text-6xl font-display font-medium tracking-tight mb-4 md:mb-6 text-white leading-tight"
             >
               Find your next luxury home
             </motion.h1>
@@ -189,42 +188,17 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-white/50 text-sm font-bold uppercase tracking-[0.2em]"
+              className="text-white/50 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] px-4"
             >
               Verified real estate and mobility solutions
             </motion.p>
           </div>
           
-          <div className="w-full max-w-3xl">
+          <div className="w-full max-w-4xl">
             <HomeSearch onSearch={handleSearch} />
-            
-            {/* Quick Action Buttons */}
-            <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => { setModalListingType('sale'); setIsListingModalOpen(true); }}
-                className="flex-1 bg-white text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-[#C5A059] transition-all"
-              >
-                Sell Now
-              </button>
-              <button 
-                onClick={() => { setModalListingType('rent'); setIsListingModalOpen(true); }}
-                className="flex-1 bg-white/10 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-[#C5A059] transition-all"
-              >
-                Rent Now
-              </button>
-            </div>
           </div>
         </div>
       </section>
-
-      {/* Modal for creating a property listing */}
-      <ListingCreationModal
-        isOpen={isListingModalOpen}
-        onClose={() => setIsListingModalOpen(false)}
-        category="property"
-        defaultListingType={modalListingType}
-      />
-
 
       {/* Main Listings Body */}
       {listingsLoading ? (
@@ -261,37 +235,49 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Dynamic Filter Badges & Feedback Indicator */}
+              {/* Dynamic Filter Badges & Feedback Indicator (Sticky) */}
               {(filterCity || filterSubcategory || filterStatus) && (
-                <div className="mb-6 p-4 bg-white/[0.02] border border-white/10 rounded-xl flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-white/50">Active Filters:</span>
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="sticky top-24 z-30 mb-12 p-3 md:p-5 bg-[#0D0D0D]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all"
+                >
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                      <Sparkles size={12} className="text-luxury-gold animate-pulse" />
+                      <span className="text-[10px] uppercase font-black tracking-[0.2em] text-white/40">Active Selection</span>
+                    </div>
+
                     {filterCity && (
-                      <span className="px-3 py-1 bg-[#C5A059]/10 border border-[#C5A059]/20 text-[#C5A059] text-[11px] font-bold uppercase rounded-lg">
+                      <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
+                        <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
                         City: {filterCity}
                       </span>
                     )}
                     {filterSubcategory && (
-                      <span className="px-3 py-1 bg-[#C5A059]/10 border border-[#C5A059]/20 text-[#C5A059] text-[11px] font-bold uppercase rounded-lg">
-                        Category: {filterSubcategory}
+                      <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
+                        <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
+                        Type: {filterSubcategory}
                       </span>
                     )}
                     {filterStatus && (
-                      <span className="px-3 py-1 bg-[#C5A059]/10 border border-[#C5A059]/20 text-[#C5A059] text-[11px] font-bold uppercase rounded-lg">
-                        Status: For {filterStatus === 'rent' ? 'Rent' : 'Sale'}
+                      <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
+                        <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
+                        For {filterStatus === 'rent' ? 'Rent' : 'Sale'}
                       </span>
                     )}
                   </div>
                   <button
                     onClick={handleResetFilters}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-[#C5A059] hover:text-black hover:border-transparent rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-red-500/5 border border-red-500/10 hover:bg-red-500 hover:text-white hover:border-transparent rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 cursor-pointer shadow-lg shadow-red-500/5 group"
                   >
-                    <XCircle size={14} /> Clear Search
+                    <XCircle size={14} className="group-hover:rotate-90 transition-transform duration-500" /> 
+                    Reset View
                   </button>
-                </div>
+                </motion.div>
               )}
 
-              {/* Balanced Equal Sized Layout: 4 Desktop, 2 Tablet, 1 Mobile */}
+              {/* Normalized Luxury Grid Layout */}
               {allProperties.length === 0 ? (
                 <div className="text-center py-24 bg-white/[0.01] border border-white/5 rounded-2xl text-white/40 font-display text-xs uppercase tracking-widest backdrop-blur-md flex flex-col items-center justify-center gap-4">
                   <p>No matching active properties found.</p>
@@ -303,8 +289,8 @@ export default function Home() {
                   </button>
                 </div>
               ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                <div className="space-y-12">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 items-stretch justify-center">
                     {displayedProperties.map(property => (
                       <div key={property.id} className="flex h-full">
                         <PropertyCard property={property} />
@@ -312,33 +298,31 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* Pagination Controls & CTA Bar */}
-                  <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8">
-                    {/* View All Properties / Reset Filters Golden CTA */}
-                    <button 
-                      onClick={handleResetFilters} 
-                      className="flex items-center gap-2 px-8 py-3.5 bg-luxury-gold text-luxury-black font-bold uppercase tracking-widest text-[11px] rounded-xl hover:bg-white hover:text-luxury-black transition-all duration-300 w-full sm:w-auto justify-center shadow-lg shadow-luxury-gold/10 cursor-pointer"
-                    >
-                      <span>Show All Properties</span>
-                      <ArrowRight size={14} />
-                    </button>
+                  {/* Desktop / Tab Pagination controls */}
+                  {totalPages > 1 && (
+                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-white/5 pt-12">
+                      <button 
+                        onClick={handleResetFilters} 
+                        className="flex items-center gap-2 px-10 py-4 bg-luxury-gold text-luxury-black font-black uppercase tracking-widest text-[11px] rounded-2xl hover:bg-white hover:text-luxury-black transition-all duration-500 w-full sm:w-auto justify-center shadow-2xl shadow-luxury-gold/20 cursor-pointer group"
+                      >
+                        <span className="group-hover:mr-2 transition-all">Explore Marketplace</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
 
-                    {/* Desktop / Tab Pagination controls */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
                             setCurrentPage(p => Math.max(1, p - 1));
                             propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }}
                           disabled={safeCurrentPage === 1}
-                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/70 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                          className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/70 disabled:opacity-20 disabled:pointer-events-none transition-all cursor-pointer"
                         >
-                          <ChevronLeft size={16} />
+                          <ChevronLeft size={20} />
                         </button>
                         
-                        <div className="text-xs font-mono uppercase text-white/50 px-3">
-                          Page <span className="text-white font-bold">{safeCurrentPage}</span> of <span className="text-white font-bold">{totalPages}</span>
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-white/30 px-4">
+                          <span className="text-white font-black">{safeCurrentPage}</span> <span className="mx-2">/</span> <span className="text-white/60">{totalPages}</span>
                         </div>
 
                         <button
@@ -347,14 +331,14 @@ export default function Home() {
                             propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }}
                           disabled={safeCurrentPage === totalPages}
-                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/70 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                          className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/70 disabled:opacity-20 disabled:pointer-events-none transition-all cursor-pointer"
                         >
-                          <ChevronRight size={16} />
+                          <ChevronRight size={20} />
                         </button>
                       </div>
-                    )}
-                  </div>
-                </>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </section>

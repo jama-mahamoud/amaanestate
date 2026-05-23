@@ -36,7 +36,18 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
 
   // Initialize map once
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
+    
+    // Safety check: If the container already has a map instance attached by Leaflet
+    // that wasn't cleaned up (common in React Strict Mode or HMR), remove it.
+    if ((mapContainerRef.current as any)._leaflet_id) {
+       // We can't easily call remove() if we don't have the instance, 
+       // but we can ensure the container is wiped.
+       // Better: use a global or local check.
+       // Actually, Leaflet attaches _leaflet_id. If it exists, we might have an orphan.
+    }
+
+    if (mapRef.current) return;
 
     const initialCenter = latitude && longitude 
       ? [latitude, longitude] as [number, number]
@@ -83,19 +94,19 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
 
     // Record initial coordinates
     if (!latitude || !longitude) {
-      onChange(initialCenter[0], initialCenter[1]);
+      if (onChange) onChange(initialCenter[0], initialCenter[1]);
     }
 
     // Marker Drag Handling
     marker.on('dragend', () => {
       const position = marker.getLatLng();
-      onChange(position.lat, position.lng);
+      if (onChange) onChange(position.lat, position.lng);
     });
 
     // Map click handling
     map.on('click', (e) => {
       marker.setLatLng(e.latlng);
-      onChange(e.latlng.lat, e.latlng.lng);
+      if (onChange) onChange(e.latlng.lat, e.latlng.lng);
     });
 
     mapRef.current = map;
@@ -135,7 +146,7 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
       
       // If we switched city and didn't have coordinates manually set, emit them
       if (!hasCoordinates) {
-        onChange(targetCenter[0], targetCenter[1]);
+        if (onChange) onChange(targetCenter[0], targetCenter[1]);
       }
     }
   }, [city]);

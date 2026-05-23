@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Loader2, Check, MapPin, Building2, Bed, Bath, Hash, 
-  ChevronRight, ChevronLeft, ShieldCheck, Info, FileText, 
-  AlertCircle, Sparkles, Upload, Car, Compass, ListTodo, ShieldAlert,
-  Image as ImageIcon
+  Loader2, Check, MapPin, Building2, ChevronRight, ChevronLeft, 
+  Upload, Car, Home, Compass, Trees, Building, Sparkles, 
+  Key, BadgePlus, DollarSign, Image as ImageIcon, CheckCircle2,
+  Bed, Bath, Ruler, CarFront, Sofa, Zap, XCircle
 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 import { collection, doc } from 'firebase/firestore';
@@ -24,1376 +24,551 @@ import { motion, AnimatePresence } from 'motion/react';
 interface ListingCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  category: ListingCategory;
+  category?: ListingCategory;
   onSuccess?: () => void;
   listingToEdit?: any;
   defaultListingType?: ListingType;
 }
 
-export default function ListingCreationModal({ isOpen, onClose, category, onSuccess, listingToEdit, defaultListingType }: ListingCreationModalProps) {
+type StepId = 'purpose' | 'type' | 'location' | 'details' | 'images' | 'review';
+
+export default function ListingCreationModal({ isOpen, onClose, category: propCategory, onSuccess, listingToEdit, defaultListingType }: ListingCreationModalProps) {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<number>(0);
 
-  // Legal verification file attachments
-  const [ownershipCertificateFiles, setOwnershipCertificateFiles] = useState<File[]>([]);
-  const [titleDeedFiles, setTitleDeedFiles] = useState<File[]>([]);
-  const [sellerNationalIdFiles, setSellerNationalIdFiles] = useState<File[]>([]);
+  const steps: StepId[] = ['purpose', 'type', 'location', 'details', 'images', 'review'];
 
   const [formData, setFormData] = useState({
+    listingType: 'sale' as ListingType,
+    assetClass: 'House', // House, Apartment, Land, Commercial, Vehicle
     title: '',
     description: '',
-    price: '',
-    currency: 'ETB',
-    city: category === 'property' ? 'Jigjiga' : '',
-    location: '',
-    listingType: defaultListingType || 'sale' as ListingType,
-    subcategory: category === 'property' ? 'Apartment' : 'SUV',
-
-    // Vehicle specific
-    year: new Date().getFullYear().toString(),
-    mileage: '',
-    fuelType: 'Petrol' as any,
-    transmission: 'Automatic' as any,
-
-    // Household specific (Villas, Apartments, etc.)
     beds: '',
     baths: '',
     size: '',
-    furnished: 'No',
     parking: 'No',
-
-    // Land specific fields
-    plotType: 'Freehold',
-    zoningType: 'Residential',
-    roadAccess: 'No',
-    waterAccess: 'No',
-    electricityNearby: 'No',
-    cornerPlot: 'No',
-    boundaryDescription: '',
-    surveyReference: '',
-    terrain: 'Flat',
-    fenced: 'No',
+    furnished: 'No',
     landUse: 'Residential',
-
-    // Commercial specific fields
-    parkingSpaces: '',
+    roadAccess: 'No',
+    boundaryDescription: '',
     floorsCount: '',
     powerCapacity: '',
+    parkingSpaces: '',
     securitySystems: 'No',
-
-    // Location spec
+    make: '',
+    model: '',
+    year: new Date().getFullYear().toString(),
+    mileage: '',
+    fuelType: 'Petrol',
+    transmission: 'Automatic',
+    price: '',
+    currency: 'ETB',
+    city: 'Jigjiga',
     district: '',
     landmark: '',
     latitude: undefined as number | undefined,
     longitude: undefined as number | undefined,
-
-    // Legal & Safety Verification IDs (Step 6)
-    legalReferenceNumber: '',
-    governmentRegistryNumber: '',
-    associatedBrokerId: ''
   });
 
+  const actualCategory = formData.assetClass === 'Vehicle' ? 'vehicle' : 'property';
+
   useEffect(() => {
-    if (listingToEdit) {
-      setFormData({
-        title: listingToEdit.title || '',
-        description: listingToEdit.description || '',
-        price: listingToEdit.price?.toString() || '',
-        currency: listingToEdit.currency || 'ETB',
-        city: listingToEdit.city || '',
-        location: listingToEdit.location || '',
-        listingType: listingToEdit.listingType || 'sale',
-        subcategory: listingToEdit.subcategory || '',
-
-        // Vehicle specific
-        year: listingToEdit.year?.toString() || new Date().getFullYear().toString(),
-        mileage: listingToEdit.mileage || '',
-        fuelType: listingToEdit.fuelType || 'Petrol',
-        transmission: listingToEdit.transmission || 'Automatic',
-
-        // Household specific (Villas, Apartments, etc.)
-        beds: listingToEdit.features?.beds?.toString() || listingToEdit.beds?.toString() || '',
-        baths: listingToEdit.features?.baths?.toString() || listingToEdit.baths?.toString() || '',
-        size: listingToEdit.features?.size || listingToEdit.size || '',
-        furnished: listingToEdit.features?.furnished || 'No',
-        parking: listingToEdit.features?.parking || 'No',
-
-        // Land specific fields
-        plotType: listingToEdit.features?.plotType || 'Freehold',
-        zoningType: listingToEdit.features?.zoningType || 'Residential',
-        roadAccess: listingToEdit.features?.roadAccess ? 'Yes' : 'No',
-        waterAccess: listingToEdit.features?.waterAccess ? 'Yes' : 'No',
-        electricityNearby: listingToEdit.features?.electricityNearby ? 'Yes' : 'No',
-        cornerPlot: listingToEdit.features?.cornerPlot ? 'Yes' : 'No',
-        boundaryDescription: listingToEdit.features?.boundaryDescription || '',
-        surveyReference: listingToEdit.features?.surveyReference || '',
-        terrain: listingToEdit.features?.terrain || 'Flat',
-        fenced: listingToEdit.features?.fenced ? 'Yes' : 'No',
-        landUse: listingToEdit.features?.landUse || 'Residential',
-
-        // Commercial specific fields
-        parkingSpaces: listingToEdit.features?.parkingSpaces?.toString() || '',
-        floorsCount: listingToEdit.features?.floorsCount?.toString() || '',
-        powerCapacity: listingToEdit.features?.powerCapacity || '',
-        securitySystems: listingToEdit.features?.securitySystems ? 'Yes' : 'No',
-
-        // Location spec
-        district: listingToEdit.district || '',
-        landmark: listingToEdit.landmark || '',
-        latitude: listingToEdit.latitude,
-        longitude: listingToEdit.longitude,
-
-        // Legal & Safety Verification IDs (Step 6)
-        legalReferenceNumber: listingToEdit.legalReferenceNumber || '',
-        governmentRegistryNumber: listingToEdit.governmentRegistryNumber || '',
-        associatedBrokerId: listingToEdit.associatedBrokerId || ''
-      });
-      setCurrentStep(1);
-    } else {
-      setFormData({
-        title: '',
-        description: '',
-        price: '',
-        currency: 'ETB',
-        city: category === 'property' ? 'Jigjiga' : '',
-        location: '',
-        listingType: defaultListingType || 'sale',
-        subcategory: category === 'property' ? 'Apartment' : 'SUV',
-        year: new Date().getFullYear().toString(),
-        mileage: '',
-        fuelType: 'Petrol',
-        transmission: 'Automatic',
-        beds: '',
-        baths: '',
-        size: '',
-        furnished: 'No',
-        parking: 'No',
-        plotType: 'Freehold',
-        zoningType: 'Residential',
-        roadAccess: 'No',
-        waterAccess: 'No',
-        electricityNearby: 'No',
-        cornerPlot: 'No',
-        boundaryDescription: '',
-        surveyReference: '',
-        terrain: 'Flat',
-        fenced: 'No',
-        landUse: 'Residential',
-        parkingSpaces: '',
-        floorsCount: '',
-        powerCapacity: '',
-        securitySystems: 'No',
-        district: '',
-        landmark: '',
-        latitude: undefined,
-        longitude: undefined,
-        legalReferenceNumber: '',
-        governmentRegistryNumber: '',
-        associatedBrokerId: ''
-      });
-      setCurrentStep(1);
-    }
-  }, [listingToEdit, isOpen, category, defaultListingType]);
-
-
-  // Calculate dynamic steps based on listing category
-  const getSteps = () => {
-    if (category === 'property') {
-      return [
-        { id: 1, label: 'Basic Info' },
-        { id: 2, label: 'Property Details' },
-        { id: 3, label: 'Location' },
-        { id: 4, label: 'Photos' },
-        { id: 5, label: 'Description' },
-        { id: 6, label: 'Verification' },
-        { id: 7, label: 'Review & Publish' }
-      ];
-    } else {
-      return [
-        { id: 1, label: 'Basic Info' },
-        { id: 2, label: 'Vehicle Details' },
-        { id: 3, label: 'Location' },
-        { id: 4, label: 'Photos' },
-        { id: 5, label: 'Description' },
-        { id: 6, label: 'Review & Publish' }
-      ];
-    }
-  };
-
-  const steps = getSteps();
-
-  React.useEffect(() => {
     if (isOpen) {
-      setCurrentStep(1);
-      setFormData(prev => ({
-        ...prev,
-        title: '',
-        description: '',
-        price: '',
-        city: category === 'property' ? 'Jigjiga' : 'Jigjiga',
-        subcategory: category === 'property' ? 'Apartment' : 'SUV',
-        listingType: 'sale',
-        district: '',
-        landmark: '',
-        latitude: undefined,
-        longitude: undefined,
-        legalReferenceNumber: '',
-        governmentRegistryNumber: '',
-        associatedBrokerId: ''
-      }));
-      setSelectedFiles([]);
-      setOwnershipCertificateFiles([]);
-      setTitleDeedFiles([]);
-      setSellerNationalIdFiles([]);
-      setError(null);
+      if (listingToEdit) {
+        setFormData({
+          assetClass: listingToEdit.subcategory || (listingToEdit.category === 'vehicle' ? 'Vehicle' : 'House'),
+          listingType: listingToEdit.listingType || 'sale',
+          title: listingToEdit.title || '',
+          description: listingToEdit.description || '',
+          beds: listingToEdit.features?.beds?.toString() || listingToEdit.beds?.toString() || '',
+          baths: listingToEdit.features?.baths?.toString() || listingToEdit.baths?.toString() || '',
+          size: listingToEdit.features?.size || listingToEdit.size || '',
+          parking: listingToEdit.features?.parking || 'No',
+          furnished: listingToEdit.features?.furnished || 'No',
+          landUse: listingToEdit.features?.landUse || 'Residential',
+          roadAccess: listingToEdit.features?.roadAccess ? 'Yes' : 'No',
+          boundaryDescription: listingToEdit.features?.boundaryDescription || '',
+          floorsCount: listingToEdit.features?.floorsCount?.toString() || '',
+          powerCapacity: listingToEdit.features?.powerCapacity || '',
+          parkingSpaces: listingToEdit.features?.parkingSpaces?.toString() || '',
+          securitySystems: listingToEdit.features?.securitySystems ? 'Yes' : 'No',
+          make: listingToEdit.make || '',
+          model: listingToEdit.model || '',
+          year: listingToEdit.year?.toString() || new Date().getFullYear().toString(),
+          mileage: listingToEdit.mileage || '',
+          fuelType: listingToEdit.fuelType || 'Petrol',
+          transmission: listingToEdit.transmission || 'Automatic',
+          price: listingToEdit.price?.toString() || '',
+          currency: listingToEdit.currency || 'ETB',
+          city: listingToEdit.city || 'Jigjiga',
+          district: listingToEdit.district || '',
+          landmark: listingToEdit.landmark || '',
+          latitude: listingToEdit.latitude,
+          longitude: listingToEdit.longitude,
+        });
+        setCurrentStep(0);
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          assetClass: propCategory === 'vehicle' ? 'Vehicle' : 'House',
+          listingType: defaultListingType || 'sale',
+          title: '', description: '', price: '', beds: '', baths: '', size: '',
+          make: '', model: '', mileage: '', district: '', landmark: ''
+        }));
+        setSelectedFiles([]);
+        setCurrentStep(0);
+        setError(null);
+      }
     }
-  }, [category, isOpen]);
+  }, [isOpen, listingToEdit, propCategory, defaultListingType]);
 
-  const handleNextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
     }
   };
 
-  // Step-by-Step Inline Field Validation Guidelines
   const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.title.trim() !== '' && formData.price.trim() !== '' && formData.subcategory.trim() !== '';
-      case 2:
-        if (category === 'vehicle') {
-          return formData.mileage.trim() !== '' && formData.year.trim() !== '';
-        } else {
-          // If property subcategory is not Land, require Size
-          return formData.size.trim() !== '';
-        }
-      case 3:
-        if (category === 'property') {
-          return formData.city.trim() !== '' && formData.district.trim() !== '' && formData.landmark.trim() !== '';
-        }
-        return formData.city.trim() !== '';
-      case 4:
-        return selectedFiles.length > 0;
-      case 5:
-        return formData.description.trim().length >= 10;
-      case 6:
-        // All legal claims verification fields are completely optional
-        return true;
-      case 7:
-        return true;
-      default:
-        return false;
+    const step = steps[currentStep];
+    switch (step) {
+      case 'purpose': return !!formData.listingType;
+      case 'type': return !!formData.assetClass;
+      case 'location': return !!formData.city && !!formData.district;
+      case 'details': 
+        if (formData.assetClass === 'Vehicle') return !!formData.make && !!formData.model && !!formData.year && !!formData.price;
+        return !!formData.price && !!formData.size;
+      case 'images': return selectedFiles.length > 0 || (listingToEdit && listingToEdit.images?.length > 0);
+      case 'review': return true;
+      default: return false;
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!user) return;
-
-    if (selectedFiles.length === 0 && !listingToEdit) {
-      setError('At least one primary listing photograph is required.');
-      setCurrentStep(4);
-      return;
-    }
-
     setLoading(true);
     setUploading(true);
     setError(null);
 
     try {
-      // 1. Pre-generate / Use existing Listing ID
       const newListingId = listingToEdit ? listingToEdit.id : doc(collection(db, 'listings')).id;
-
-      // 2. Upload main images to Cloudinary if selected, otherwise keep existing
       let uploadedImages = listingToEdit?.metadata?.imageMetas || [];
       let imagesUrls = listingToEdit?.images || [];
 
       if (selectedFiles.length > 0) {
-        const newlyUploaded = await storageService.uploadListingImages(
-          newListingId, 
-          selectedFiles,
-          (progressMap) => {
-            const values = Object.values(progressMap);
-            const totalProgress = values.length > 0 
-              ? values.reduce((a, b) => a + b, 0) / selectedFiles.length 
-              : 0;
-            setUploadProgress(totalProgress);
-          }
-        );
-        uploadedImages = newlyUploaded;
-        imagesUrls = newlyUploaded.map(img => img.url);
+        uploadedImages = await storageService.uploadListingImages(newListingId, selectedFiles);
+        imagesUrls = uploadedImages.map((img: any) => img.url);
       }
 
-      // 3. Prepare full payload structure
       const listingData: any = {
-        category,
-        title: formData.title,
+        category: actualCategory,
+        title: formData.title || `${formData.assetClass} in ${formData.city}`,
         description: formData.description,
         price: Number(formData.price),
         currency: formData.currency,
         city: formData.city,
         location: formData.district ? `${formData.district}, ${formData.city}` : formData.city,
         listingType: formData.listingType,
-        subcategory: formData.subcategory,
+        subcategory: formData.assetClass,
         images: imagesUrls,
-        metadata: {
-          imageMetas: uploadedImages
-        }
+        metadata: { imageMetas: uploadedImages }
       };
 
-      if (category === 'vehicle') {
+      if (actualCategory === 'vehicle') {
+        listingData.make = formData.make;
+        listingData.model = formData.model;
         listingData.year = Number(formData.year);
         listingData.mileage = formData.mileage;
         listingData.fuelType = formData.fuelType;
         listingData.transmission = formData.transmission;
-      } else if (category === 'property') {
-        listingData.beds = Number(formData.beds) || 0;
-        listingData.baths = Number(formData.baths) || 0;
+      } else {
         listingData.size = formData.size;
         listingData.district = formData.district;
         listingData.landmark = formData.landmark;
         listingData.latitude = formData.latitude;
         listingData.longitude = formData.longitude;
         listingData.region = formData.city;
-
-        // Populate structured features
-        const features: any = {
-          size: formData.size,
-          beds: Number(formData.beds) || 0,
-          baths: Number(formData.baths) || 0,
-        };
-
-        if (formData.furnished && formData.furnished !== 'No') features.furnished = formData.furnished;
-        if (formData.parking && formData.parking !== 'No') features.parking = formData.parking;
-
-        // Custom Land attributes
-        if (formData.subcategory === 'Land') {
-          if (formData.plotType) features.plotType = formData.plotType;
-          if (formData.zoningType) features.zoningType = formData.zoningType;
+        
+        const features: any = { size: formData.size };
+        if (formData.assetClass === 'House' || formData.assetClass === 'Apartment') {
+          features.beds = Number(formData.beds) || 0;
+          features.baths = Number(formData.baths) || 0;
+          if (formData.furnished !== 'No') features.furnished = formData.furnished;
+          if (formData.parking !== 'No') features.parking = formData.parking;
+        } else if (formData.assetClass === 'Land') {
+          features.landUse = formData.landUse;
           if (formData.roadAccess === 'Yes') features.roadAccess = true;
-          if (formData.waterAccess === 'Yes') features.waterAccess = true;
-          if (formData.electricityNearby === 'Yes') features.electricityNearby = true;
-          if (formData.cornerPlot === 'Yes') features.cornerPlot = true;
           if (formData.boundaryDescription) features.boundaryDescription = formData.boundaryDescription;
-          if (formData.surveyReference) features.surveyReference = formData.surveyReference;
-          if (formData.terrain && formData.terrain !== 'Flat') features.terrain = formData.terrain;
-          if (formData.fenced === 'Yes') features.fenced = true;
-          if (formData.landUse) features.landUse = formData.landUse;
-        }
-
-        // Custom Commercial attributes
-        if (formData.subcategory === 'Commercial') {
-          if (formData.parkingSpaces && Number(formData.parkingSpaces) > 0) features.parkingSpaces = Number(formData.parkingSpaces);
-          if (formData.floorsCount && Number(formData.floorsCount) > 0) features.floorsCount = Number(formData.floorsCount);
+        } else if (formData.assetClass === 'Commercial') {
+          if (formData.floorsCount) features.floorsCount = Number(formData.floorsCount);
+          if (formData.parkingSpaces) features.parkingSpaces = Number(formData.parkingSpaces);
           if (formData.powerCapacity) features.powerCapacity = formData.powerCapacity;
           if (formData.securitySystems === 'Yes') features.securitySystems = true;
         }
-
         listingData.features = features;
-
-        // If listing is for property Sale, handle mandatory legal certificate uploads!
-        if (formData.listingType === 'sale') {
-          listingData.legalReferenceNumber = formData.legalReferenceNumber;
-          listingData.governmentRegistryNumber = formData.governmentRegistryNumber;
-          listingData.associatedBrokerId = formData.associatedBrokerId;
-
-          // Generate randomized registry reference lookup code
-          if (!listingToEdit?.legalListingId) {
-            const yearStamp = new Date().getFullYear();
-            const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-            const cityPrefix = formData.city ? formData.city.substring(0,3).toUpperCase() : 'JIG';
-            listingData.legalListingId = `AE-${cityPrefix}-LND-${yearStamp}-${randomSuffix}`;
-          } else {
-            listingData.legalListingId = listingToEdit.legalListingId;
-          }
-          
-          listingData.legalChecked = listingToEdit?.legalChecked || false;
-          listingData.ownershipVerified = listingToEdit?.ownershipVerified || false;
-
-          let ownershipUrl = listingToEdit?.legalOwnershipCertificateUrl || "";
-          let deedUrl = listingToEdit?.legalTitleDeedUrl || "";
-          let nationalIdUrl = listingToEdit?.sellerNationalIdUrl || "";
-
-          // Perform actual dynamic file uploads for credential security files
-          if (ownershipCertificateFiles.length > 0) {
-            const uploaded = await storageService.uploadListingImages(newListingId, ownershipCertificateFiles);
-            if (uploaded.length > 0) ownershipUrl = uploaded[0].url;
-          }
-          if (titleDeedFiles.length > 0) {
-            const uploaded = await storageService.uploadListingImages(newListingId, titleDeedFiles);
-            if (uploaded.length > 0) deedUrl = uploaded[0].url;
-          }
-          if (sellerNationalIdFiles.length > 0) {
-            const uploaded = await storageService.uploadListingImages(newListingId, sellerNationalIdFiles);
-            if (uploaded.length > 0) nationalIdUrl = uploaded[0].url;
-          }
-
-          listingData.legalOwnershipCertificateUrl = ownershipUrl;
-          listingData.legalTitleDeedUrl = deedUrl;
-          listingData.sellerNationalIdUrl = nationalIdUrl;
-        }
       }
 
-      // 4. Save/Update listing
       if (listingToEdit) {
-        const success = await listingService.updateListing(listingToEdit.id, listingData, profile?.role === 'admin');
-        if (!success) throw new Error('Unresolved document updating failure.');
+        await listingService.updateListing(listingToEdit.id, listingData, profile?.role === 'admin');
       } else {
-        const finalListingId = await listingService.createListingWithId(newListingId, listingData);
-        if (!finalListingId) throw new Error('Unresolved document insertion failure.');
+        await listingService.createListingWithId(newListingId, listingData);
       }
 
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Operation failed. Verify connections and retry.');
+      setError(err.message || 'Failed to complete listing creation.');
     } finally {
       setLoading(false);
       setUploading(false);
-      setUploadProgress(0);
     }
   };
 
-  const formattedPrice = formData.price
-    ? formatPrice(Number(formData.price), formData.currency)
-    : 'Not Set';
+  const renderProgress = () => {
+    const progress = ((currentStep + 1) / steps.length) * 100;
+    return (
+      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          className="h-full bg-luxury-gold shadow-[0_0_15px_rgba(197,160,89,0.5)]"
+        />
+      </div>
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0D0D0D] border border-white/10 text-white max-w-5xl rounded-[2.5rem] p-0 overflow-hidden shadow-2xl shadow-black/80">
-        <div className="flex flex-col md:flex-row h-full max-h-[92vh]">
+      <DialogContent className="bg-luxury-black border border-white/10 text-white max-w-4xl p-0 overflow-hidden shadow-2xl rounded-3xl">
+        <div className="flex flex-col h-[600px] max-h-[90vh]">
           
-          {/* Left Summary Sidebar */}
-          <div className="md:w-[28%] bg-neutral-950 p-8 border-r border-white/5 flex flex-col justify-between hidden md:flex shrink-0">
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <Building2 className="text-[#C5A059]" size={20} />
-                <span className="text-white font-display font-extrabold uppercase text-[11px] tracking-widest">Amaan Network MLS</span>
+          {/* Header */}
+          <div className="px-6 py-6 border-b border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-luxury-gold/10 border border-luxury-gold/20 flex items-center justify-center text-luxury-gold">
+                  <BadgePlus size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">List Your Asset</h2>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40">Step {currentStep + 1} of {steps.length}</p>
+                </div>
               </div>
-
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C5A059] block">WIZARD STEPS</span>
-                <p className="text-lg font-display font-black text-white">
-                  Step {currentStep} of {steps.length}
-                </p>
-              </div>
-
-              {/* Steps timeline indicator list */}
-              <div className="mt-8 space-y-4">
-                {steps.map((s) => (
-                  <div key={s.id} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border ${
-                      s.id < currentStep 
-                        ? 'bg-[#C5A059] border-[#C5A059] text-black' 
-                        : s.id === currentStep 
-                        ? 'bg-[#0D0D0D] border-[#C5A059] text-[#C5A059] shadow-[0_0_10px_rgba(197,160,89,0.2)]'
-                        : 'bg-[#0D0D0D] border-white/10 text-white/30'
-                    }`}>
-                      {s.id < currentStep ? <Check size={10} className="stroke-[3]" /> : s.id}
-                    </div>
-                    <div>
-                      <span className={`text-[10px] font-black uppercase tracking-wider ${
-                        s.id === currentStep ? 'text-[#C5A059]' : 'text-white/30'
-                      }`}>
-                        {s.label}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <XCircle size={20} className="text-white/40" />
+              </button>
             </div>
-
-            <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck size={16} className="text-[#C5A059] shrink-0 mt-0.5" />
-                <p className="text-[10px] text-white/50 leading-relaxed">
-                  All listings are digitally indexed within 48 hours following security compliance confirmation.
-                </p>
-              </div>
-            </div>
+            {renderProgress()}
           </div>
 
-          {/* Right dynamic content workspace */}
-          <div className="flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar max-h-[92vh]">
-            
-            {/* Header section with category specific labels */}
-            <div className="p-6 md:p-8 border-b border-white/5 bg-neutral-950/40 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">
-                  {category === 'property' ? 'ESTATE ASSET INVENTORY' : 'VEHICLE ASSET INVENTORY'}
-                </p>
-                <h3 className="text-xl md:text-2xl font-display font-black tracking-tight text-white mt-1">
-                  Create New {category === 'property' ? 'Property' : 'Vehicle'} Listing
-                </h3>
-              </div>
-              <Button onClick={onClose} variant="ghost" className="rounded-xl text-white/40 hover:text-white h-9 px-3">
-                Cancel
-              </Button>
-            </div>
-
-            {/* Steps Container Area */}
-            <div className="p-6 md:p-10 flex-1">
-              <AnimatePresence mode="wait">
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="max-w-2xl mx-auto"
+              >
                 
-                {/* STEP 1: Property Type & Basic Info */}
-                {currentStep === 1 && (
-                  <motion.div
-                    key="step1"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">Categorization & Pricing</h4>
-                      <p className="text-white/40 text-[11px]">Primary listing categorization details and expected valuation metrics.</p>
+                {/* Step 1: Purpose */}
+                {steps[currentStep] === 'purpose' && (
+                  <div className="space-y-6">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2">What is your goal?</h3>
+                      <p className="text-white/40 text-sm">Select whether you want to sell or rent this asset.</p>
                     </div>
-
-                    <div className="space-y-4">
-                      {/* Sub-category dropdown */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Asset Classification Type</label>
-                        <Select 
-                          value={formData.subcategory} 
-                          onValueChange={(val) => setFormData({ ...formData, subcategory: val, beds: '', baths: '', size: '' })}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { id: 'sale', label: 'For Sale', desc: 'One-time purchase', icon: DollarSign },
+                        { id: 'rent', label: 'For Rent', desc: 'Recurring lease', icon: Key },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            setFormData({ ...formData, listingType: p.id as ListingType });
+                            setTimeout(handleNext, 200);
+                          }}
+                          className={`p-6 rounded-2xl border text-left transition-all ${
+                            formData.listingType === p.id 
+                            ? 'border-luxury-gold bg-luxury-gold/5' 
+                            : 'border-white/5 bg-white/5 hover:border-white/20'
+                          }`}
                         >
-                          <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-[#C5A059]/30 text-white">
-                            <SelectValue placeholder="Select sub-classification" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                            {category === 'property' ? (
-                              <>
-                                <SelectItem value="Apartment">Apartment Suite</SelectItem>
-                                <SelectItem value="Villa">Villa Residence</SelectItem>
-                                <SelectItem value="Commercial">Commercial Facility</SelectItem>
-                                <SelectItem value="Land">Vacant / Land Registry</SelectItem>
-                                <SelectItem value="House">Residential House</SelectItem>
-                              </>
-                            ) : (
-                              <>
-                                <SelectItem value="SUV">SUV</SelectItem>
-                                <SelectItem value="Sedan">Sedan</SelectItem>
-                                <SelectItem value="Truck">Logistical Truck</SelectItem>
-                                <SelectItem value="Lux">Luxury / Performance</SelectItem>
-                                <SelectItem value="Bus">Bus Transport</SelectItem>
-                              </>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Property Title */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Title</label>
-                        <Input 
-                          placeholder={category === 'property' ? "e.g. Elegant 5-Bedroom Villa with Gated Perimeter" : "e.g. Toyota Land Cruiser V8 Premium"} 
-                          value={formData.title} 
-                          onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-                          className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                          required 
-                        />
-                      </div>
-
-                      {/* Market Value / Pricing and Intent */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Market Value</label>
-                          <div className="flex gap-2">
-                            <Input 
-                              type="number" 
-                              placeholder="e.g. 2500000" 
-                              value={formData.price} 
-                              onChange={(e) => setFormData({ ...formData, price: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 flex-1 text-white" 
-                              required 
-                            />
-                            <select
-                              value={formData.currency}
-                              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                              className="bg-[#0c0c0c] border border-white/10 h-12 w-24 rounded-xl focus:ring-1 focus:ring-[#C5A059]/30 focus:border-[#C5A059]/30 text-white px-2 cursor-pointer font-bold text-xs"
-                            >
-                              <option value="ETB" className="bg-[#0d0d0d] text-white">ETB</option>
-                              <option value="USD" className="bg-[#0d0d0d] text-white">USD</option>
-                            </select>
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                            formData.listingType === p.id ? 'bg-luxury-gold text-black' : 'bg-white/5 text-white/60'
+                          }`}>
+                            <p.icon size={24} />
                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Listing Allocation Intention</label>
-                          <div className="grid grid-cols-2 gap-2 h-12 p-1.5 bg-white/5 rounded-xl border border-white/10">
-                            <button
-                              type="button"
-                              onClick={() => setFormData({ ...formData, listingType: 'sale' })}
-                              className={`rounded-lg transition-all font-black text-[10px] uppercase tracking-wider ${
-                                formData.listingType === 'sale' ? 'bg-[#C5A059] text-black' : 'text-white/40 hover:text-white'
-                              }`}
-                            >
-                              For Sale
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setFormData({ ...formData, listingType: 'rent' })}
-                              className={`rounded-lg transition-all font-black text-[10px] uppercase tracking-wider ${
-                                formData.listingType === 'rent' ? 'bg-[#C5A059] text-black' : 'text-white/40 hover:text-white'
-                              }`}
-                            >
-                              For Rent
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                          <h4 className="text-lg font-bold mb-1">{p.label}</h4>
+                          <p className="text-xs text-white/40">{p.desc}</p>
+                        </button>
+                      ))}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
-                {/* STEP 2: Conditional Property Details */}
-                {currentStep === 2 && (
-                  <motion.div
-                    key="step2"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">
-                        {category === 'property' ? 'Conditional Specifications' : 'Technical Specifications'}
-                      </h4>
-                      <p className="text-white/40 text-[11px]">Specify precise characteristics depending on structural classification parameters.</p>
+                {/* Step 2: Type */}
+                {steps[currentStep] === 'type' && (
+                  <div className="space-y-6">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2">Asset Type</h3>
+                      <p className="text-white/40 text-sm">Select the category that best fits your asset.</p>
                     </div>
-
-                    <div className="space-y-6">
-                      
-                      {category === 'vehicle' ? (
-                        /* VEHICLE SPECIFIC FORM FIELDS */
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Manufacturing Year</label>
-                            <Input 
-                              type="number"
-                              placeholder="2024" 
-                              value={formData.year} 
-                              onChange={(e) => setFormData({ ...formData, year: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl"
-                            />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[
+                        { id: 'House', label: 'House', icon: Home },
+                        { id: 'Apartment', label: 'Apartment', icon: Building },
+                        { id: 'Land', label: 'Land', icon: Compass },
+                        { id: 'Commercial', label: 'Comm.', icon: Building2 },
+                        { id: 'Vehicle', label: 'Vehicle', icon: CarFront },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setFormData({ ...formData, assetClass: t.id });
+                            setTimeout(handleNext, 200);
+                          }}
+                          className={`p-5 rounded-2xl border flex flex-col items-center gap-3 transition-all ${
+                            formData.assetClass === t.id 
+                            ? 'border-luxury-gold bg-luxury-gold/5' 
+                            : 'border-white/5 bg-white/5 hover:border-white/20'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            formData.assetClass === t.id ? 'bg-luxury-gold text-black' : 'bg-white/5 text-white/60'
+                          }`}>
+                            <t.icon size={20} />
                           </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Mileage Reading (km)</label>
-                            <Input 
-                              placeholder="e.g. 15,000" 
-                              value={formData.mileage} 
-                              onChange={(e) => setFormData({ ...formData, mileage: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Engine Fuel System</label>
-                            <Select 
-                              value={formData.fuelType} 
-                              onValueChange={(val) => setFormData({ ...formData, fuelType: val })}
-                            >
-                              <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-white">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                                <SelectItem value="Petrol">Petrol</SelectItem>
-                                <SelectItem value="Diesel">Diesel</SelectItem>
-                                <SelectItem value="Electric">Electric EV</SelectItem>
-                                <SelectItem value="Hybrid">Hybrid</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Transmission Mode</label>
-                            <Select 
-                              value={formData.transmission} 
-                              onValueChange={(val) => setFormData({ ...formData, transmission: val })}
-                            >
-                              <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-white">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                                <SelectItem value="Automatic">Automatic Transmission</SelectItem>
-                                <SelectItem value="Manual">Manual Stick Shift</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                      ) : formData.subcategory === 'Land' ? (
-                        /* DYNAMIC LAND CATEGORY SPECIFIC FORM FIELDS */
-                        <div className="space-y-4">
-                          <div className="p-4 bg-white/5 border border-[#C5A059]/20 rounded-xl text-xs text-white/70 leading-relaxed flex gap-2">
-                            <Sparkles size={16} className="text-[#C5A059] shrink-0" />
-                            <span>Optimizing list container layout for Land Registry documents.</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Total Plot Area Size</label>
-                              <Input 
-                                placeholder="e.g. 400 sqm" 
-                                value={formData.size} 
-                                onChange={(e) => setFormData({ ...formData, size: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl"
-                                required
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Land Use Allocation</label>
-                              <Select 
-                                value={formData.landUse} 
-                                onValueChange={(val) => setFormData({ ...formData, landUse: val })}
-                              >
-                                <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-white">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                                  <SelectItem value="Residential">Residential Development</SelectItem>
-                                  <SelectItem value="Commercial">Commercial/Retail Use</SelectItem>
-                                  <SelectItem value="Agriculture">Agricultural Production</SelectItem>
-                                  <SelectItem value="Industrial">Heavy / Light Industrial</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Title Ownership Type</label>
-                              <Select 
-                                value={formData.plotType} 
-                                onValueChange={(val) => setFormData({ ...formData, plotType: val })}
-                              >
-                                <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-white">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                                  <SelectItem value="Freehold">Freehold (Mulkiya Permanent)</SelectItem>
-                                  <SelectItem value="Leasehold">Leasehold Agreement</SelectItem>
-                                  <SelectItem value="Customary">Customary Clan Transfer</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Zoning Standard</label>
-                              <Select 
-                                value={formData.zoningType} 
-                                onValueChange={(val) => setFormData({ ...formData, zoningType: val })}
-                              >
-                                <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-white">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                                  <SelectItem value="Residential">Zone A (Residential)</SelectItem>
-                                  <SelectItem value="Commercial">Zone B (Commercial Business)</SelectItem>
-                                  <SelectItem value="Mixed">Zone C (Mixed Residential/Retail)</SelectItem>
-                                  <SelectItem value="Agricultural">Zone D (Farmland/Unzoned)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Road Access</label>
-                              <Select value={formData.roadAccess} onValueChange={(val) => setFormData({ ...formData, roadAccess: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-10 rounded-lg"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Groundwater</label>
-                              <Select value={formData.waterAccess} onValueChange={(val) => setFormData({ ...formData, waterAccess: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-10 rounded-lg"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Grid Electricity</label>
-                              <Select value={formData.electricityNearby} onValueChange={(val) => setFormData({ ...formData, electricityNearby: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-10 rounded-lg"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block font-sans">Plot is Fenced</label>
-                              <Select value={formData.fenced} onValueChange={(val) => setFormData({ ...formData, fenced: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-10 rounded-lg"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Survey Stamp Reference ID (Optional)</label>
-                              <Input 
-                                placeholder="e.g. SRV-2026-X8" 
-                                value={formData.surveyReference} 
-                                onChange={(e) => setFormData({ ...formData, surveyReference: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-11 rounded-xl text-xs"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Terrain Properties</label>
-                              <Select value={formData.terrain} onValueChange={(val) => setFormData({ ...formData, terrain: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Flat">Flat Plateau Plain</SelectItem><SelectItem value="Sloped">Sloped Terrain</SelectItem><SelectItem value="Hilly">Hilly Landscape</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-
-                      ) : formData.subcategory === 'Commercial' ? (
-                        /* DYNAMIC COMMERCIAL FACILITY SPECIFIC FORM FIELDS */
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Floor Area Size (e.g. sqm)</label>
-                              <Input 
-                                placeholder="e.g. 500 sqm" 
-                                value={formData.size} 
-                                onChange={(e) => setFormData({ ...formData, size: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl"
-                                required
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Power Connection Grid Capacity</label>
-                              <Input 
-                                placeholder="e.g. 100 kW Triple Phase" 
-                                value={formData.powerCapacity} 
-                                onChange={(e) => setFormData({ ...formData, powerCapacity: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Dedicated Parking Spots</label>
-                              <Input 
-                                type="number"
-                                placeholder="e.g. 12" 
-                                value={formData.parkingSpaces} 
-                                onChange={(e) => setFormData({ ...formData, parkingSpaces: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Floors Count</label>
-                              <Input 
-                                type="number"
-                                placeholder="e.g. 3" 
-                                value={formData.floorsCount} 
-                                onChange={(e) => setFormData({ ...formData, floorsCount: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">CCTV & Specialized Access Systems</label>
-                            <Select value={formData.securitySystems} onValueChange={(val) => setFormData({ ...formData, securitySystems: val })}>
-                              <SelectTrigger className="bg-white/5 border-white/10 h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                              <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes (Full CCTV Perimeter Active)</SelectItem><SelectItem value="No">No / Not Confirmed</SelectItem></SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                      ) : (
-                        /* RESIDENTIAL HOMES, VILLAS & APARTMENTS SPECIFIC FORM FIELDS */
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Total Built Size</label>
-                              <Input 
-                                placeholder="e.g. 180 sqm" 
-                                value={formData.size} 
-                                onChange={(e) => setFormData({ ...formData, size: e.target.value })} 
-                                className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                                required
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Bedrooms</label>
-                                <Input 
-                                  type="number"
-                                  placeholder="0" 
-                                  value={formData.beds} 
-                                  onChange={(e) => setFormData({ ...formData, beds: e.target.value })} 
-                                  className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Bathrooms</label>
-                                <Input 
-                                  type="number"
-                                  placeholder="0" 
-                                  value={formData.baths} 
-                                  onChange={(e) => setFormData({ ...formData, baths: e.target.value })} 
-                                  className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Fully Furnished State</label>
-                              <Select value={formData.furnished} onValueChange={(val) => setFormData({ ...formData, furnished: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes (Furnished Residence)</SelectItem><SelectItem value="No">No (Unfurnished)</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Dedicated Parking Space</label>
-                              <Select value={formData.parking} onValueChange={(val) => setFormData({ ...formData, parking: val })}>
-                                <SelectTrigger className="bg-white/5 border-white/10 h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-neutral-950"><SelectItem value="Yes">Yes (Secure Garage / Driveway)</SelectItem><SelectItem value="No">No / Street only</SelectItem></SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                          <span className="text-[10px] font-bold uppercase tracking-widest">{t.label}</span>
+                        </button>
+                      ))}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
-                {/* STEP 3: Geographic Location & Map Allocation */}
-                {currentStep === 3 && (
-                  <motion.div
-                    key="step3"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">Location Details</h4>
-                      <p className="text-white/40 text-[11px]">Pinpoint exact neighborhood coordinates, districts, and streets.</p>
+                {/* Step 3: Location */}
+                {steps[currentStep] === 'location' && (
+                  <div className="space-y-6">
+                    <div className="text-center md:text-left text-sm">
+                      <h3 className="text-2xl font-bold mb-2">Location</h3>
+                      <p className="text-white/40">Where is the asset located?</p>
                     </div>
-
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Primary Region</label>
-                          <Select 
-                            value={formData.city || 'Jigjiga'} 
-                            onValueChange={(val) => setFormData({ ...formData, city: val })}
-                          >
-                            <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-[#C5A059]/30 text-white">
-                              <SelectValue placeholder="Select city/region" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-white/40 ml-1">City</label>
+                          <Select value={formData.city} onValueChange={v => setFormData({...formData, city: v})}>
+                            <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12">
+                              <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-neutral-950 border-white/10 text-white">
-                              <SelectItem value="Jigjiga">Jigjiga Region</SelectItem>
-                              <SelectItem value="Dire Dawa">Dire Dawa Region</SelectItem>
-                              <SelectItem value="Addis Ababa">Addis Ababa Area</SelectItem>
-                              <SelectItem value="Godey">Godey Region</SelectItem>
+                            <SelectContent className="bg-luxury-black border-white/10 text-white">
+                              {['Mogadishu', 'Hargeisa', 'Jigjiga', 'Bosaso', 'Garowe', 'Kismayo', 'Baidoa'].map(c => (
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">District / Xaafad</label>
-                          <Input 
-                            placeholder="e.g. Hodan" 
-                            value={formData.district} 
-                            onChange={(e) => setFormData({ ...formData, district: e.target.value })} 
-                            className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                            required 
-                          />
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-white/40 ml-1">District</label>
+                          <Input value={formData.district} onChange={e => setFormData({...formData, district: e.target.value})} className="bg-white/5 border-white/10 rounded-xl h-12" placeholder="e.g. Hodan" />
                         </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Street Landmark Reference</label>
-                          <Input 
-                            placeholder="e.g. Beside Shabelle Radio Station" 
-                            value={formData.landmark} 
-                            onChange={(e) => setFormData({ ...formData, landmark: e.target.value })} 
-                            className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30"
-                            required 
-                          />
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Landmark</label>
+                          <Input value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="bg-white/5 border-white/10 rounded-xl h-12" placeholder="Near..." />
                         </div>
                       </div>
-
-                      {category === 'property' && (
-                        <div className="space-y-3 pt-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#C5A059] block ml-1">Pinpoint Mapping (Interactive)</label>
-                          <MapPicker 
-                            city={formData.city || 'Jigjiga'} 
-                            latitude={formData.latitude} 
-                            longitude={formData.longitude} 
-                            onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
-                          />
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 bg-neutral-950 border border-white/5 rounded-xl">
-                              <p className="text-[9px] text-white/30 uppercase tracking-wider font-bold">Latitude</p>
-                              <p className="text-[#C5A059] text-xs font-mono font-bold mt-0.5">
-                                {formData.latitude ? formData.latitude.toFixed(6) : 'Auto-detected'}
-                              </p>
-                            </div>
-                            <div className="p-3 bg-neutral-950 border border-white/5 rounded-xl">
-                              <p className="text-[9px] text-white/30 uppercase tracking-wider font-bold">Longitude</p>
-                              <p className="text-[#C5A059] text-xs font-mono font-bold mt-0.5">
-                                {formData.longitude ? formData.longitude.toFixed(6) : 'Auto-detected'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* STEP 4: Media Gallery Drop File Upload */}
-                {currentStep === 4 && (
-                  <motion.div
-                    key="step4"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">Visual Media Assets</h4>
-                      <p className="text-white/40 text-[11px]">Upload representative high-contrast landscape format photography.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <ImageUpload 
-                        onImagesChange={setSelectedFiles} 
-                        maxFiles={category === 'vehicle' ? 8 : 12}
-                        label="Property Photographs"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* STEP 5: Strategic Narrative Description */}
-                {currentStep === 5 && (
-                  <motion.div
-                    key="step5"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">Property Description</h4>
-                      <p className="text-white/40 text-[11px]">Explain water configurations, immediate perimeter security structures, and backup facilities.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1 flex items-center justify-between">
-                          <span>Listing Description Strategic Text</span>
-                          <span className="text-[9px] text-white/30 lowercase font-mono">{formData.description.trim().length} Chars</span>
-                        </label>
-                        <Textarea 
-                          placeholder="Describe the unique characteristics, secure steel perimeters, proximity to urban centers, water wells, active reserve tanks..." 
-                          value={formData.description} 
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                          className="bg-white/5 border-white/10 min-h-[180px] rounded-xl focus-visible:ring-[#C5A059]/30 py-4 text-white text-sm leading-relaxed" 
-                          required 
+                      <div className="h-[240px] rounded-2xl overflow-hidden border border-white/10 relative">
+                        <MapPicker 
+                          latitude={formData.latitude}
+                          longitude={formData.longitude}
+                          city={formData.city}
+                          onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
                         />
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
-                {/* STEP 6: Anti-Fraud Regulatory Ownership Verification (Sale Land/Housing only) */}
-                {currentStep === 6 && category === 'property' && (
-                  <motion.div
-                    key="step6"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div className="flex gap-3 items-start">
-                      <div className="w-10 h-10 rounded-xl bg-[#C5A059]/10 flex items-center justify-center shrink-0 text-[#C5A059]">
-                        <ShieldCheck size={20} />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-white">Regulatory Legal Registry Validation (Optional)</h4>
-                        <p className="text-[#C5A059] text-[11px] mt-0.5 font-semibold">Optional legal verification documents can be submitted to improve trust and verification status. These are not required for initial property listing.</p>
-                      </div>
+                {/* Step 4: Details */}
+                {steps[currentStep] === 'details' && (
+                  <div className="space-y-6">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2">Details & Price</h3>
+                      <p className="text-white/40 text-sm">Provide basic info and the asking price.</p>
                     </div>
 
-                    <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl text-xs text-white/60 leading-relaxed">
-                      Waraaqaha iyo mulkiyada can be uploaded if available to secure a <strong className="text-[#C5A059]">Verified Badge</strong>. You can safely skip these upload requirements and publish your listing immediately.
-                    </div>
-
-                    {formData.listingType === 'rent' ? (
-                      <div className="p-6 border border-white/5 bg-white/[0.01] rounded-2xl space-y-3">
-                        <p className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                          <Check size={14} className="stroke-[3]" /> Rent listings are exempt from checks
-                        </p>
-                        <p className="text-white/50 text-[11px] leading-relaxed">
-                          Properties allocated for active monthly lease/rent do not require waraaqaha land registry uploads. You may proceed and optionally fill standard references to elevate buyer confidence.
-                        </p>
-                        
-                        <div className="pt-2 border-t border-white/5 space-y-3">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 block">Broker ID Code (Optional)</label>
-                            <Input 
-                              placeholder="e.g. BROKER-JIG-123 (Optional)" 
-                              value={formData.associatedBrokerId} 
-                              onChange={(e) => setFormData({ ...formData, associatedBrokerId: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl text-white" 
-                            />
-                          </div>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Listing Title</label>
+                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. Modern Villa" />
                       </div>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Legal Reference Number (Waraaqaha) (Optional)</label>
-                            <Input 
-                              placeholder="e.g. 104/2026-XJL (Optional)" 
-                              value={formData.legalReferenceNumber} 
-                              onChange={(e) => setFormData({ ...formData, legalReferenceNumber: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 text-white" 
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Govt Registry Stamp ID (Optional)</label>
-                            <Input 
-                              placeholder="e.g. REG-782 (Optional)" 
-                              value={formData.governmentRegistryNumber} 
-                              onChange={(e) => setFormData({ ...formData, governmentRegistryNumber: e.target.value })} 
-                              className="bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-[#C5A059]/30 text-white" 
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 ml-1">Broker ID Code (Optional)</label>
-                          <Input 
-                            placeholder="e.g. BROKER-JIG-123 (Optional)" 
-                            value={formData.associatedBrokerId} 
-                            onChange={(e) => setFormData({ ...formData, associatedBrokerId: e.target.value })} 
-                            className="bg-white/5 border-white/10 h-12 rounded-xl text-white" 
-                          />
-                        </div>
-
-                        {/* File inputs for verification deeds */}
-                        <div className="space-y-4 pt-4 border-t border-white/5">
-                          <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Verification Ownership Certificate (JPEG/PNG) (Optional)</label>
-                            <ImageUpload onImagesChange={setOwnershipCertificateFiles} maxFiles={1} label="Ownership Cert File (Optional)" />
-                          </div>
-                          <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Land Title Deed (JPEG/PNG) (Optional)</label>
-                            <ImageUpload onImagesChange={setTitleDeedFiles} maxFiles={1} label="Title Deed File (Optional)" />
-                          </div>
-                          <div>
-                            <label className="text-[10px] uppercase font-bold text-white/40 block mb-2 tracking-wider">Upload Seller Identity Verification ID card (JPEG/PNG) (Optional)</label>
-                            <ImageUpload onImagesChange={setSellerNationalIdFiles} maxFiles={1} label="Ident Passport File (Optional)" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* STEP 7: Comprehensive Live Review Summary page */}
-                {((currentStep === 7 && category === 'property') || (currentStep === 6 && category === 'vehicle')) && (
-                  <motion.div
-                    key="step7"
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -15 }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">Final Clearance Registry</h4>
-                      <p className="text-white/40 text-[11px]">Review full mapped data values before executing secure multi-node publication.</p>
-                    </div>
-
-                    <div className="border border-white/10 rounded-2xl overflow-hidden bg-neutral-950">
                       
-                      {/* Sub-header mock grid thumbnail */}
-                      <div className="aspect-video relative bg-neutral-900 border-b border-white/5 flex items-center justify-center">
-                        {selectedFiles.length > 0 ? (
-                          <img 
-                            src={URL.createObjectURL(selectedFiles[0])} 
-                            alt="Primary Display Asset Tag" 
-                            className="w-full h-full object-cover" 
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Price</label>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="number" 
+                            value={formData.price} 
+                            onChange={e => setFormData({...formData, price: e.target.value})} 
+                            className="bg-white/5 border-white/10 h-12 rounded-xl flex-1" 
+                            placeholder="Price" 
                           />
-                        ) : (
-                          <div className="text-white/20 flex flex-col items-center">
-                            <ImageIcon size={32} />
-                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1">No Primary Asset Art</span>
-                          </div>
-                        )}
-                        <span className="absolute top-3 right-3 bg-[#C5A059] text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full">
-                          {formData.listingType === 'sale' ? 'FOR SALE' : 'FOR LEASE'}
-                        </span>
+                          <Select value={formData.currency} onValueChange={v => setFormData({...formData, currency: v})}>
+                            <SelectTrigger className="w-24 bg-white/5 border-white/10 h-12 rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-luxury-black border-white/10 text-white">
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="ETB">ETB</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
 
-                      {/* Info Review Body */}
-                      <div className="p-6 space-y-4">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                          <div>
-                            <span className="text-[9px] uppercase font-black text-[#C5A059] tracking-widest bg-[#C5A059]/10 px-2.5 py-1 rounded">
-                              {formData.subcategory}
-                            </span>
-                            <h5 className="text-xl font-display font-bold text-white mt-2 leading-tight">
-                              {formData.title || 'Untitled Asset Name'}
-                            </h5>
-                            <p className="text-white/40 text-xs mt-1 flex items-center gap-1">
-                              <MapPin size={12} className="text-[#C5A059]" /> {formData.district ? `${formData.district}, ${formData.city}` : formData.city}
-                            </p>
+                      {formData.assetClass !== 'Vehicle' ? (
+                        <>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Size (m²)</label>
+                            <Input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. 150" />
                           </div>
-                          <div>
-                            <p className="text-white/30 text-[9px] uppercase tracking-widest font-black text-right">EXPECTED VALUATION</p>
-                            <p className="text-[#C5A059] font-display font-black text-2xl mt-0.5">{formattedPrice}</p>
-                          </div>
-                        </div>
-
-                        {/* Attribute Grid lists */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-y border-white/5 py-4 my-2">
-                          {category === 'vehicle' ? (
+                          {(formData.assetClass === 'House' || formData.assetClass === 'Apartment') && (
                             <>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Year</p><p className="text-white text-xs font-bold mt-0.5">{formData.year}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Mileage</p><p className="text-white text-xs font-bold mt-0.5">{formData.mileage} km</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Engine</p><p className="text-white text-xs font-bold mt-0.5">{formData.fuelType}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Transmission</p><p className="text-white text-xs font-bold mt-0.5">{formData.transmission}</p></div>
-                            </>
-                          ) : formData.subcategory === 'Land' ? (
-                            <>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Plot size</p><p className="text-white text-xs font-bold mt-0.5">{formData.size}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Land use</p><p className="text-white text-xs font-bold mt-0.5">{formData.landUse}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Plot Type</p><p className="text-white text-xs font-bold mt-0.5">{formData.plotType}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Road access</p><p className="text-white text-xs font-bold mt-0.5">{formData.roadAccess}</p></div>
-                            </>
-                          ) : formData.subcategory === 'Commercial' ? (
-                            <>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Area size</p><p className="text-white text-xs font-bold mt-0.5">{formData.size}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Parking Spots</p><p className="text-white text-xs font-bold mt-0.5">{formData.parkingSpaces || '0'}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Floors</p><p className="text-white text-xs font-bold mt-0.5">{formData.floorsCount || '1'}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Grid Capacity</p><p className="text-white text-xs font-bold mt-0.5">{formData.powerCapacity || 'N/A'}</p></div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Area size</p><p className="text-white text-xs font-bold mt-0.5">{formData.size}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Bedrooms</p><p className="text-white text-xs font-bold mt-0.5">{formData.beds || '0'}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Bathrooms</p><p className="text-white text-xs font-bold mt-0.5">{formData.baths || '0'}</p></div>
-                              <div className="p-2.5 bg-white/[0.02] rounded-xl"><p className="text-[8px] text-white/30 uppercase font-black">Parking</p><p className="text-white text-xs font-bold mt-0.5">{formData.parking}</p></div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Beds</label>
+                                <Input type="number" value={formData.beds} onChange={e => setFormData({...formData, beds: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="0" />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Baths</label>
+                                <Input type="number" value={formData.baths} onChange={e => setFormData({...formData, baths: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="0" />
+                              </div>
                             </>
                           )}
-                        </div>
-
-                        {/* Description field */}
-                        <div className="space-y-1">
-                          <p className="text-[9px] text-white/30 uppercase tracking-widest font-black">Strategic Overview Narrative</p>
-                          <p className="text-white/70 text-xs leading-relaxed truncate-2-lines">{formData.description || 'No description provided.'}</p>
-                        </div>
-
-                        {/* Legal validation references summary */}
-                        {category === 'property' && formData.listingType === 'sale' && (
-                          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between gap-4 mt-2">
-                            <div className="flex items-center gap-2">
-                              <ShieldCheck className="text-emerald-400 shrink-0" size={18} />
-                              <div>
-                                <p className="text-emerald-400 font-bold text-xs uppercase tracking-wider">Legal Validation Certified</p>
-                                <p className="text-white/40 text-[9px]">Ref No: {formData.legalReferenceNumber} | Govt Stamp: {formData.governmentRegistryNumber}</p>
-                              </div>
-                            </div>
-                            <span className="text-[8px] text-emerald-400/80 font-black tracking-widest uppercase border border-emerald-400/20 px-2 py-0.5 rounded bg-emerald-500/5">
-                              PASSED
-                            </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Make</label>
+                            <Input value={formData.make} onChange={e => setFormData({...formData, make: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" />
                           </div>
-                        )}
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Model</label>
+                            <Input value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Description</label>
+                      <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[100px] bg-white/5 border-white/10 rounded-xl resize-none py-3" placeholder="Tell us more..." />
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5: Images */}
+                {steps[currentStep] === 'images' && (
+                  <div className="space-y-6">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2">Images</h3>
+                      <p className="text-white/40 text-sm">Upload up to 8 photos of your asset.</p>
+                    </div>
+                    <ImageUpload 
+                      onImagesChange={files => setSelectedFiles(files)}
+                      maxFiles={8}
+                      existingImages={listingToEdit?.images || []}
+                    />
+                  </div>
+                )}
+
+                {/* Step 6: Review */}
+                {steps[currentStep] === 'review' && (
+                  <div className="space-y-6">
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                        <CheckCircle2 size={32} strokeWidth={1} />
+                      </div>
+                      <h3 className="text-2xl font-bold mb-1">Verify Listing</h3>
+                      <p className="text-white/40 text-sm">Review your data before publishing.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+                      <div className="flex justify-between items-start border-b border-white/5 pb-4">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Asset</p>
+                          <p className="font-bold">{formData.title || `${formData.assetClass} in ${formData.city}`}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Price</p>
+                          <p className="font-bold text-luxury-gold">{formatPrice(Number(formData.price), formData.currency)}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Location</p>
+                          <p className="text-sm">{formData.district}, {formData.city}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Type</p>
+                          <p className="text-sm font-bold uppercase">{formData.listingType} | {formData.assetClass}</p>
+                        </div>
                       </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
-            {/* Error notifications */}
-            {error && (
-              <div className="mx-6 md:mx-10 mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-xs">
-                <AlertCircle size={16} className="shrink-0" /> {error}
-              </div>
-            )}
-
-            {/* Footer stepper navigation controls */}
-            <div className="p-6 md:p-8 border-t border-white/5 bg-neutral-950/40 flex items-center justify-between gap-4">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={handlePrevStep}
-                disabled={currentStep === 1 || loading}
-                className="rounded-xl text-white/50 hover:text-white uppercase text-[10px] tracking-widest font-bold flex items-center gap-1 isDisabled:opacity-35 select-none"
-              >
-                <ChevronLeft size={14} /> Back
-              </Button>
-
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/30 font-bold hidden sm:inline select-none">
-                  Step {currentStep} / {steps.length}
-                </span>
-
-                {currentStep < steps.length ? (
-                  <Button 
-                    type="button" 
-                    onClick={handleNextStep}
-                    disabled={!isStepValid()}
-                    className="bg-[#C5A059] hover:bg-white text-black font-bold uppercase text-[10px] tracking-widest h-12 px-6 rounded-xl flex items-center gap-1 transition-all"
-                  >
-                    Continue <ChevronRight size={14} />
-                  </Button>
-                ) : (
-                  <Button 
-                    type="button" 
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="bg-[#C5A059] hover:bg-white text-black font-black uppercase text-[10px] tracking-widest h-12 px-8 rounded-xl flex items-center gap-1.5 transition-all shadow-xl shadow-[#C5A059]/10"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="animate-spin" size={14} /> 
-                        <span>{uploading ? `${Math.round(uploadProgress)}%` : 'Publishing...'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check size={14} /> 
-                        <span>Publish {category === 'property' ? 'Property' : 'Vehicle'}</span>
-                      </>
+                    {error && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-bold text-center">
+                        {error}
+                      </div>
                     )}
-                  </Button>
+                  </div>
                 )}
-              </div>
-            </div>
 
+              </motion.div>
+            </AnimatePresence>
           </div>
+
+          {/* Footer */}
+          <div className="px-6 py-6 border-t border-white/10 flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={handleBack} 
+              disabled={currentStep === 0 || loading}
+              className="px-6 h-12 text-white/60 hover:text-white hover:bg-white/5"
+            >
+              Back
+            </Button>
+
+            <div className="flex gap-2">
+              {currentStep < steps.length - 1 ? (
+                <Button 
+                  onClick={handleNext}
+                  disabled={!isStepValid()}
+                  className="h-12 px-10 bg-luxury-gold text-black hover:bg-white font-bold"
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={loading || !isStepValid()}
+                  className="h-12 px-10 bg-white text-black hover:bg-luxury-gold font-bold"
+                >
+                  {loading ? <Loader2 size={20} className="animate-spin" /> : 'Publish Listing'}
+                </Button>
+              )}
+            </div>
+          </div>
+
         </div>
       </DialogContent>
     </Dialog>

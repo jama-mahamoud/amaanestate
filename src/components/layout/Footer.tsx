@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
-import AmaanLogo from '../brand/AmaanLogo';
+import BrandLogo from '../brand/BrandLogo';
 
 export default function Footer() {
   return (
@@ -11,11 +11,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           
           <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-2 group outline-none">
-              <AmaanLogo size="sm" />
-              <span className="font-display font-bold text-2xl tracking-tight">
-                Amaan<span className="text-luxury-gold">Estate</span>
-              </span>
+            <Link to="/" className="flex items-center group outline-none">
+              <BrandLogo size="sm" layout="horizontal" />
             </Link>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
               Redefining luxury real estate in the Somali Region of Ethiopia. Discover premium properties and vehicles with unmatched transparency and professional service.

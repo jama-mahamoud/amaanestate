@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 import AmaanLogo from '@/components/brand/AmaanLogo';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -87,9 +88,8 @@ function DashboardContent() {
       <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-[#0a0a0a] border-r border-white/5 transform transition-transform duration-500 ease-luxury lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           <div className="p-10 flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <AmaanLogo size="sm" />
-              <span className="font-display font-bold text-2xl tracking-tighter">Amaan<span className="gold-text-gradient">Estate</span></span>
+            <Link to="/" className="flex items-center group">
+              <BrandLogo size="sm" />
             </Link>
             <Button variant="ghost" size="icon" className="lg:hidden text-white/60 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />

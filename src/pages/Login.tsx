@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AmaanLogo from '@/components/brand/AmaanLogo';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -51,9 +51,8 @@ export default function Login() {
 
       <div className="w-full max-lg relative z-10">
         <div className="flex justify-center mb-16">
-            <Link to="/" className="flex flex-col items-center select-none gap-4 group">
-               <AmaanLogo size="lg" />
-               <span className="text-sm font-display font-bold tracking-[0.4em] uppercase text-white/50 group-hover:text-luxury-gold transition-colors duration-300">AmaanEstate</span>
+            <Link to="/" className="flex flex-col items-center select-none group">
+               <BrandLogo size="lg" layout="stacked" />
             </Link>
         </div>
 

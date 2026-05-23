@@ -38,10 +38,17 @@ export default function PropertyDetailMap({ property }: PropertyDetailMapProps) 
   }, []);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
+    
+    // Safety: Ensure no leftover map instance before creating a new one
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
 
     const coords: [number, number] = [lat, lng];
 
+    // Create a new map instance
     const map = L.map(mapContainerRef.current, {
       center: coords,
       zoom: 15,

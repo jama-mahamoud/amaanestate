@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import AmaanLogo from '../brand/AmaanLogo';
+import BrandLogo from '../brand/BrandLogo';
 import MegaMenu from './MegaMenu';
 
 const MobileAccordionItem = ({ title, sections, setMobileMenuOpen, isOpen, onToggle }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void, isOpen: boolean, onToggle: () => void }) => {
@@ -289,11 +290,8 @@ export default function Navbar() {
       }`}>
         {/* LOGO AREA - Left matched width */}
         <div className="flex items-center gap-2 shrink-0 xl:flex-1 mt-[-3px]">
-          <Link to="/" className="flex items-center space-x-2 md:space-x-2.5 group outline-none">
-            <AmaanLogo size="xxs" />
-            <span className="font-display font-bold text-base md:text-lg tracking-tighter text-white whitespace-nowrap">
-              Amaan<span className="gold-text-gradient bg-clip-text">Estate</span>
-            </span>
+          <Link to="/" className="flex items-center group outline-none">
+            <BrandLogo size="xxs" variant={isLightTheme ? 'white' : 'gold'} />
           </Link>
         </div>
         

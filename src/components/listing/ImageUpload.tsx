@@ -28,7 +28,9 @@ export default function ImageUpload({ onImagesChange, maxFiles = 10, existingIma
 
   // Synchronize state with parent component via useEffect safely after render
   useEffect(() => {
-    onImagesChange(previews.map(p => p.file));
+    if (onImagesChange && typeof onImagesChange === 'function') {
+      onImagesChange(previews.map(p => p.file));
+    }
   }, [previews, onImagesChange]);
 
   const handleFiles = useCallback((files: FileList | null) => {
