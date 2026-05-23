@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Phone, MapPin, MessageSquare, Send, Clock, CheckCircle2, Loader2, Landmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export default function Contact() {
     message: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       toast.error('Please fill in all required fields');
@@ -30,7 +30,6 @@ export default function Contact() {
     }
 
     setLoading(true);
-    console.log('Dispatching correspondence...', formData);
 
     try {
       const authUserId = user?.uid || null;
@@ -44,12 +43,7 @@ export default function Contact() {
         userId: authUserId
       };
 
-      console.log('--- CONTACT SUBMISSION ATTEMPT ---');
-      console.log('Current Auth User ID:', authUserId);
-      console.log('Submission Payload:', submissionData);
-      
       const docRef = await addDoc(collection(db, 'contactMessages'), submissionData);
-      console.log('Submission success, document ID:', docRef.id);
       
       setSuccess(true);
       toast.success('Inquiry dispatched successfully');
@@ -62,16 +56,11 @@ export default function Contact() {
       });
     } catch (error: any) {
       console.error('Contact submission CRITICAL failure:', error);
-      console.error('Error details:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack
-      });
       toast.error(`Failed to dispatch inquiry: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData, user?.uid]);
 
   return (
     <div className="min-h-screen bg-luxury-black pt-28 pb-20 overflow-hidden relative">

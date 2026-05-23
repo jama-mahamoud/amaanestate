@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -25,7 +25,6 @@ export default function DashboardHome() {
 
   const isAdmin = profile?.role === 'admin';
 
-  // Simulated live notification items
   const [notifications, setNotifications] = useState([
     { id: '1', title: 'Buyer Inquiry Received', body: 'Abdirahman Yusuf requested a private video tour of Jigjiga Villa Ref #192.', time: '3 mins ago', type: 'inquiry', unread: true },
     { id: '2', title: 'Land Deed Validated', body: 'Legal title deed audit for plot Godey River Bank cleared regulatory check successfully.', time: '2 hours ago', type: 'compliance', unread: true },
@@ -33,18 +32,15 @@ export default function DashboardHome() {
     { id: '4', title: 'Referral Link Visited', body: 'A diaspora user in Minneapolis registered using your invite. Est commission locked.', time: '2 days ago', type: 'referral', unread: false }
   ]);
 
-  // Handle Mark Notifications as Read
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-  };
+  }, []);
 
-  // Saved Listings mockup (from default listings)
   const { listings } = useListings({ limit: 4 });
   const mockSavedProperties = useMemo(() => {
-    return listings.slice(0, 2) as Property[];
+    return (listings || []).slice(0, 2) as Property[];
   }, [listings]);
 
-  // Global statistic figures
   const [stats, setStats] = useState({
     properties: 0,
     vehicles: 0,
@@ -53,38 +49,43 @@ export default function DashboardHome() {
   });
 
   useEffect(() => {
+    let active = true;
     const loadStats = async () => {
       try {
         const data = await userService.getGlobalStats();
-        setStats(data);
+        if (active) setStats(data);
         
         if (isAdmin) {
           const allAgreements = await agreementService.getAllAgreements();
-          setPendingAgreements(allAgreements.filter(a => a.status === 'Pending Approval'));
+          if (active) setPendingAgreements(allAgreements.filter(a => a.status === 'Pending Approval'));
         }
       } catch (error) {
         console.error("Failed to load dashboard statistics:", error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     loadStats();
+    return () => { active = false; };
   }, [isAdmin]);
 
   const statCards = useMemo(() => [
-    { label: 'Active Listings', value: stats.properties, icon: <Home />, change: '+8%' },
-    { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car />, change: '+5%' },
-    { label: 'Certified Agents', value: stats.agents, icon: <Users />, change: '+4' },
-    { label: 'Market Users', value: stats.users, icon: <TrendingUp />, change: '+12%' },
-  ], [stats.properties, stats.vehicles, stats.agents, stats.users]);
+    { label: 'Active Listings', value: stats.properties, icon: <Home size={18} />, change: '+8%' },
+    { label: 'Vehicle Inventory', value: stats.vehicles, icon: <Car size={18} />, change: '+5%' },
+    { label: 'Certified Agents', value: stats.agents, icon: <Users size={18} />, change: '+4' },
+    { label: 'Market Users', value: stats.users, icon: <TrendingUp size={18} />, change: '+12%' },
+  ], [stats]);
 
-  // Copy referral link action
-  const referralLink = `https://amaanestate.com/verify?ref=${user?.uid?.slice(0, 8) || 'amaan888'}`;
-  const handleCopyLink = () => {
+  const referralLink = useMemo(() => 
+    `https://amaanestate.com/verify?ref=${user?.uid?.slice(0, 8) || 'amaan888'}`,
+    [user?.uid]
+  );
+
+  const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }, [referralLink]);
 
   return (
     <div className="space-y-12">

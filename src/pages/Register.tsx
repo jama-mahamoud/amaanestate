@@ -17,7 +17,7 @@ export default function Register() {
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -35,9 +35,9 @@ export default function Register() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, confirmPassword, name, signUp, navigate]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = React.useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
@@ -48,7 +48,7 @@ export default function Register() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [signInWithGoogle, navigate]);
 
   return (
     <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">

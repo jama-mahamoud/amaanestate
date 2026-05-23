@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import HomeSearch from '@/components/HomeSearch';
 import LatestNews from '@/components/LatestNews';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
-import MapDiscovery from '@/components/MapDiscovery';
-import { listingRepository } from '@/services/listingRepository';
+import { listingService } from '@/services/listingService';
 import { Listing, VehicleListing, Property } from '@/types';
 import { useSettings } from '@/contexts/SettingsContext';
 import { 
@@ -28,43 +27,42 @@ export default function Home() {
 
   const [searchParams] = useSearchParams();
 
-  // Home-page state based filtering to completely avoid navigating to a secondary marketplace filter page
+  // Home-page state based filtering
   const [filterCity, setFilterCity] = useState<string>('');
   const [filterSubcategory, setFilterSubcategory] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>(''); // 'rent' or 'sale'
+  const [filterStatus, setFilterStatus] = useState<string>(''); 
   const [currentPage, setCurrentPage] = useState(1);
-  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
 
   const propertiesSectionRef = useRef<HTMLDivElement>(null);
 
-  // Synchronize URL search parameters onto homepage filters for seamless header menu/navigation links
+  // Synchronize URL search parameters onto homepage filters
   useEffect(() => {
     const cityParam = searchParams.get('city') || '';
     const subcatParam = searchParams.get('subcategory') || searchParams.get('category') || '';
     const typeParam = searchParams.get('listingType') || searchParams.get('status') || '';
 
-    // Only apply if parameters are defined
     if (cityParam || subcatParam || typeParam) {
       if (cityParam) setFilterCity(cityParam);
       if (subcatParam && subcatParam.toLowerCase() !== 'vehicle') setFilterSubcategory(subcatParam);
       if (typeParam) setFilterStatus(typeParam === 'rent' || typeParam === 'rented' ? 'rent' : 'sale');
       
       setCurrentPage(1);
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
+      return () => clearTimeout(timer);
     }
   }, [searchParams]);
 
-  // Load all listings using the repository. This includes robust legacy document normalization (data.status || 'active')
+  // Load all listings using the unified listingService
   useEffect(() => {
     let active = true;
     const fetchAllData = async () => {
       setListingsLoading(true);
       try {
-        const data = await listingRepository.fetchListings();
+        const { listings } = await listingService.getListings({ limit: 200 });
         if (active) {
-          setAllListings(data);
+          setAllListings(listings);
         }
       } catch (err) {
         console.error('Error fetching listings for Homepage:', err);
@@ -81,23 +79,21 @@ export default function Home() {
   }, []);
 
   // Separate properties and vehicles based on category
-  const properties = allListings.filter(item => item.category === "property");
-  const vehicles = allListings.filter(item => item.category === "vehicle");
-  
-  // Visibility and basic validation filters
-  const visibleProperties = properties.filter(
-    item =>
-      (item.status === "active" || item.status === "approved" || (item as any).visibility === "public" || (item as any).approved === true) &&
-      (item.price || 0) > 0
-  );
-
-  // Debug logs
-  console.log("Properties:", properties);
-  console.log("Visible properties:", visibleProperties);
-  console.log("Vehicles:", vehicles);
+  const { visibleProperties, vehicles } = useMemo(() => {
+    const propertiesList = allListings.filter(item => item.category === "property");
+    const vehiclesList = allListings.filter(item => item.category === "vehicle");
+    
+    // Visibility and basic validation filters
+    const visible = propertiesList.filter(
+      item =>
+        (item.status === "active" || item.status === "approved" || (item as any).visibility === "public" || (item as any).approved === true)
+    );
+    
+    return { visibleProperties: visible, vehicles: vehiclesList };
+  }, [allListings]);
 
   // Handle HomeSearch component filters
-  const handleSearch = (filters: ListingFilter) => {
+  const handleSearch = useCallback((filters: ListingFilter) => {
     const categoryVal = (filters.category || '').toString().toLowerCase().trim();
     if (categoryVal === 'vehicle') {
       const params = new URLSearchParams();
@@ -107,7 +103,6 @@ export default function Home() {
       return;
     }
 
-    // Set filters locally for seamless client-side filtering on the Homepage
     setFilterCity(filters.city || '');
     setFilterSubcategory(filters.subcategory || '');
     if (filters.listingType) {
@@ -117,57 +112,57 @@ export default function Home() {
     }
     setCurrentPage(1);
 
-    // Scroll smoothly to the general overview section
     setTimeout(() => {
       propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
-  };
+  }, [navigate]);
 
-  // Clear all filters back to the initial state
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setFilterCity('');
     setFilterSubcategory('');
     setFilterStatus('');
     setCurrentPage(1);
-  };
+  }, []);
 
-  // 1. Filter matched properties dynamically
-  const allProperties = visibleProperties.filter(item => {
-    // A. Subcategory match (House, Villa, Apartment, Land, Commercial, Rental)
-    if (filterSubcategory) {
-      const itemSub = (item.subcategory || '').toLowerCase().trim();
-      const querySub = filterSubcategory.toLowerCase().trim();
-      if (querySub === 'rental') {
-        const itemType = (item.listingType || '').toLowerCase().trim();
-        if (itemType !== 'rent' && itemSub !== 'rental') return false;
-      } else {
-        if (!itemSub.includes(querySub) && !querySub.includes(itemSub)) return false;
+  // Filter matched properties dynamically
+  const allProperties = useMemo(() => {
+    return visibleProperties.filter(item => {
+      if (filterSubcategory) {
+        const itemSub = (item.subcategory || '').toLowerCase().trim();
+        const querySub = filterSubcategory.toLowerCase().trim();
+        if (querySub === 'rental') {
+          const itemType = (item.listingType || '').toLowerCase().trim();
+          if (itemType !== 'rent' && itemSub !== 'rental') return false;
+        } else {
+          if (!itemSub.includes(querySub) && !querySub.includes(itemSub)) return false;
+        }
       }
-    }
 
-    // B. City match
-    if (filterCity) {
-      const itemCity = (item.city || '').toLowerCase().trim();
-      const queryCity = filterCity.toLowerCase().trim();
-      if (itemCity !== queryCity) return false;
-    }
+      if (filterCity) {
+        const itemCity = (item.city || '').toLowerCase().trim();
+        const queryCity = filterCity.toLowerCase().trim();
+        if (itemCity !== queryCity) return false;
+      }
 
-    // C. Listing Type match (Status: sale or rent)
-    if (filterStatus) {
-      const itemType = (item.listingType || '').toLowerCase().trim();
-      const queryType = filterStatus.toLowerCase().trim();
-      if (itemType !== queryType) return false;
-    }
+      if (filterStatus) {
+        const itemType = (item.listingType || '').toLowerCase().trim();
+        const queryType = filterStatus.toLowerCase().trim();
+        if (itemType !== queryType) return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [visibleProperties, filterSubcategory, filterCity, filterStatus]);
 
-  // Pagination parameters for clean desktop grid (4 columns)
   const ITEMS_PER_PAGE = 8;
-  const totalPages = Math.ceil(allProperties.length / ITEMS_PER_PAGE) || 1;
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const displayedProperties = allProperties.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const { totalPages, safeCurrentPage, displayedProperties } = useMemo(() => {
+    const total = Math.ceil(allProperties.length / ITEMS_PER_PAGE) || 1;
+    const safePage = Math.min(currentPage, total);
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    const displayed = allProperties.slice(start, start + ITEMS_PER_PAGE);
+    
+    return { totalPages: total, safeCurrentPage: safePage, displayedProperties: displayed };
+  }, [allProperties, currentPage]);
 
 
   return (

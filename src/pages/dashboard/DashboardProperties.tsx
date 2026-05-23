@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Property } from '@/types';
-import DashboardEmptyState from '@/components/DashboardEmptyState';
+import EmptyState from '@/components/EmptyState';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
@@ -233,7 +233,9 @@ export default function DashboardProperties() {
             </table>
           </div>
         ) : (
-          <DashboardEmptyState 
+          <EmptyState 
+            variant="dashed"
+            showPlusIcon
             title="Portfolio Enrolled" 
             description={error ? "Our database is temporarily unavailable." : "Your catalog is currently waiting for your first listing upload. Begin by publishing a new property."} 
             actionLabel="Create Property Listing"

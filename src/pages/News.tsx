@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Helmet } from 'react-helmet-async';
@@ -19,13 +19,17 @@ export default function News() {
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
+    let active = true;
     articleService.getArticles().then(data => {
-      setArticles(data);
-      setLoading(false);
+      if (active) {
+        setArticles(data);
+        setLoading(false);
+      }
     }).catch(err => {
       console.error("Failed to fetch articles:", err);
-      setLoading(false);
+      if (active) setLoading(false);
     });
+    return () => { active = false; };
   }, []);
 
   const filteredArticles = useMemo(() => {
@@ -33,17 +37,22 @@ export default function News() {
     return articles.filter(a => a.category === activeCategory);
   }, [articles, activeCategory]);
 
-  const featuredArticle = featuredArticleFrom(filteredArticles);
-  const regularArticles = filteredArticles.filter(a => a.published && a.id !== featuredArticle?.id);
+  const featuredArticle = useMemo(() => {
+    const featuredArticleFrom = (items: Article[]) => {
+      return items.find(a => a.isFeatured && a.published) || items.find(a => a.published);
+    };
+    return featuredArticleFrom(filteredArticles);
+  }, [filteredArticles]);
 
-  function featuredArticleFrom(items: Article[]) {
-    return items.find(a => a.isFeatured && a.published) || items.find(a => a.published);
-  }
+  const regularArticles = useMemo(() => 
+    filteredArticles.filter(a => a.published && a.id !== featuredArticle?.id), 
+    [filteredArticles, featuredArticle]
+  );
 
-  const formatDate = (dateValue: any) => {
+  const formatDate = useCallback((dateValue: any) => {
     if (!dateValue || !dateValue.seconds) return 'Recently';
     return new Date(dateValue.seconds * 1000).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
-  };
+  }, []);
 
   if (loading) return <div className="text-white text-center pt-40 min-h-screen bg-black">Loading market intelligence...</div>;
 

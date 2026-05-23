@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { VehicleListing } from '@/types';
-import DashboardEmptyState from '@/components/DashboardEmptyState';
+import EmptyState from '@/components/EmptyState';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
@@ -225,7 +225,9 @@ export default function DashboardVehicles() {
             </table>
           </div>
         ) : (
-          <DashboardEmptyState 
+          <EmptyState 
+            variant="dashed"
+            showPlusIcon
             title="Fleet Registry Ready" 
             description={error ? "Our mobility registry is temporarily indisposed." : "The mobility database is initialized and ready for input. Catalog the first unit to begin tracking."} 
             actionLabel="Catalog New Unit"

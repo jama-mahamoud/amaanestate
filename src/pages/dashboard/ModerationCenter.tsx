@@ -38,24 +38,31 @@ export default function ModerationCenter() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    let active = true;
+    
     // Initial fetch
-    loadStats();
+    if (active) loadStats();
 
     // Subscribe to real-time changes
     const unsubscribe = moderationService.subscribeToStats((newStats) => {
-      setStats(newStats);
-      setLoadingStats(false);
+      if (active) {
+        setStats(newStats);
+        setLoadingStats(false);
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     setLoadingStats(true);
     const data = await moderationService.getModerationStats();
     setStats(data);
     setLoadingStats(false);
-  };
+  }, []);
 
   const isAdmin = profile?.role === 'admin';
 
@@ -73,13 +80,13 @@ export default function ModerationCenter() {
     );
   }
 
-  const tabs = [
+  const tabs = React.useMemo(() => [
     { id: 'listings', label: 'Listing Assets', icon: <LayoutList size={18} />, count: stats.pendingListings },
     { id: 'professionals', label: 'Pro Vetting', icon: <Users size={18} />, count: stats.pendingProfessionals },
     { id: 'brokers', label: 'Legal Audits', icon: <ShieldCheck size={18} />, count: 0 },
     { id: 'articles', label: 'News Intelligence', icon: <FileText size={18} />, count: stats.totalArticles },
     { id: 'inquiries', label: 'Comm Inbound', icon: <MessageSquare size={18} />, count: stats.totalInquiries },
-  ];
+  ], [stats]);
 
   return (
     <div className="space-y-12">

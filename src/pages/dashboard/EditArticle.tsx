@@ -13,15 +13,19 @@ export default function EditArticle() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     if (id) {
       articleService.getArticleById(id).then(data => {
-        setArticle(data);
-        setLoading(false);
+        if (active) {
+          setArticle(data);
+          setLoading(false);
+        }
       }).catch(err => {
         console.error("Failed to fetch article:", err);
-        setLoading(false);
+        if (active) setLoading(false);
       });
     }
+    return () => { active = false; };
   }, [id]);
 
   if (loading) return <div className="p-20 text-center text-white/30 uppercase font-bold tracking-widest animate-pulse">Loading report data...</div>;

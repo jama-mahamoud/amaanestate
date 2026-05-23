@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { 
@@ -9,15 +9,10 @@ import {
   MapPin, 
   MessageCircle, 
   Phone, 
-  Home as HomeIcon, 
-  Car, 
   SlidersHorizontal, 
   Award, 
   Users,
-  Target,
-  Sparkles,
-  Zap,
-  CheckCircle2
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +28,6 @@ export default function AgentsList() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Tab/Search selections
   const [activeTab, setActiveTab] = useState<'agencies' | 'brokers'>('agencies');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('All');
@@ -42,57 +36,62 @@ export default function AgentsList() {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const fetchAllEcosystemData = async () => {
       try {
-        const brokerData = await brokerService.getVerifiedBrokers();
-        const agencyData = await brokerService.getVerifiedAgencies();
+        const [brokerData, agencyData, listingsSnap] = await Promise.all([
+          brokerService.getVerifiedBrokers(),
+          brokerService.getVerifiedAgencies(),
+          getDocs(collection(db, 'listings'))
+        ]);
         
-        // Fetch listings to calculate accurate client-side counters
-        const listingsSnap = await getDocs(collection(db, 'listings'));
-        const listingsList = listingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Listing));
-        
-        setBrokers(brokerData);
-        setAgencies(agencyData);
-        setListings(listingsList);
+        if (active) {
+          const listingsList = listingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Listing));
+          setBrokers(brokerData);
+          setAgencies(agencyData);
+          setListings(listingsList);
+        }
       } catch (error) {
         console.error("Failed to load ecosystem directories:", error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetchAllEcosystemData();
+    return () => { active = false; };
   }, []);
 
-  // Compute live counters per ownerId
-  const getOwnerCounts = (ownerId: string) => {
-    const matched = listings.filter(l => l.ownerId === ownerId);
-    return {
-      total: matched.length,
-      properties: matched.filter(l => l.category === 'property').length,
-      vehicles: matched.filter(l => l.category === 'vehicle').length,
-    };
-  };
+  const ownerCounts = useMemo(() => {
+    const counts: Record<string, { total: number, properties: number, vehicles: number }> = {};
+    listings.forEach(l => {
+      const oid = l.ownerId;
+      if (!counts[oid]) counts[oid] = { total: 0, properties: 0, vehicles: 0 };
+      counts[oid].total++;
+      if (l.category === 'property') counts[oid].properties++;
+      if (l.category === 'vehicle') counts[oid].vehicles++;
+    });
+    return counts;
+  }, [listings]);
 
-  // Cities extracted
+  const getOwnerMetadata = useCallback((ownerId: string) => {
+    return ownerCounts[ownerId] || { total: 0, properties: 0, vehicles: 0 };
+  }, [ownerCounts]);
+
   const cities = useMemo(() => {
     const brokerCities = brokers.map(b => b.city || '').filter(Boolean);
     const agencyCities = agencies.map(a => (a as any).city || 'Jigjiga').filter(Boolean);
     return ['All', ...Array.from(new Set([...brokerCities, ...agencyCities]))];
   }, [brokers, agencies]);
 
-  // Filters for Agencies
   const filteredAgencies = useMemo(() => {
     return agencies.filter(agency => {
-      // Basic Search on City / Name
-      const matchQuery = (agency.agencyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (agency.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (agency.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchQuery = !searchQuery || 
+                         (agency.agencyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                          ((agency as any).city || 'Jigjiga').toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchCity = selectedCity === 'All' || ((agency as any).city || 'Jigjiga').toLowerCase() === selectedCity.toLowerCase();
       
-      // Property type counts
-      const counts = getOwnerCounts(agency.ownerId);
+      const counts = getOwnerMetadata(agency.ownerId);
       const matchType = selectedPropType === 'All' || 
                         (selectedPropType === 'property' && counts.properties > 0) ||
                         (selectedPropType === 'vehicle' && counts.vehicles > 0);
@@ -101,19 +100,16 @@ export default function AgentsList() {
 
       return matchQuery && matchCity && matchType && matchVerified;
     });
-  }, [agencies, searchQuery, selectedCity, selectedPropType, verifiedOnly, listings]);
+  }, [agencies, searchQuery, selectedCity, selectedPropType, verifiedOnly, getOwnerMetadata]);
 
-  // Filters for Brokers
   const filteredBrokers = useMemo(() => {
     return brokers.filter(broker => {
-      const matchQuery = (broker.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (broker.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (broker.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (broker.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchQuery = !searchQuery || 
+                         (broker.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (broker.city || '').toLowerCase().includes(searchQuery.toLowerCase());
                          
       const matchCity = selectedCity === 'All' || (broker.city || '').toLowerCase() === selectedCity.toLowerCase();
       
-      // Listings held
       const matchType = selectedPropType === 'All' || 
                         (selectedPropType === 'property' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'property')) ||
                         (selectedPropType === 'vehicle' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'vehicle'));
@@ -271,7 +267,7 @@ export default function AgentsList() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredAgencies.map((agency) => {
-                const counts = getOwnerCounts(agency.ownerId);
+                const counts = getOwnerMetadata(agency.ownerId);
                 const brokerCount = brokers.filter(b => (b.companyName || '').toLowerCase().trim() === agency.agencyName.toLowerCase().trim()).length;
                 
                 return (

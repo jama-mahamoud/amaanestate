@@ -22,8 +22,24 @@ export function useListing(id: string | undefined) {
   }, [id]);
 
   useEffect(() => {
-    fetchListing();
-  }, [fetchListing]);
+    let active = true;
+    
+    setLoading(true);
+    setError(null);
+    listingService.getListingById(id || '').then(data => {
+      if (active) {
+        setListing(data);
+        setLoading(false);
+      }
+    }).catch(err => {
+      if (active) {
+        setError(err.message || 'Failed to fetch listing details');
+        setLoading(false);
+      }
+    });
+
+    return () => { active = false; };
+  }, [id]);
 
   return { listing, loading, error, refresh: fetchListing };
 }

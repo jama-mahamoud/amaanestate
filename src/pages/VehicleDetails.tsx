@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
@@ -27,7 +27,7 @@ export default function VehicleDetails() {
   const isAdmin = profile?.role?.toString().toLowerCase().trim() === 'admin';
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleToggleFeature = async () => {
+  const handleToggleFeature = React.useCallback(async () => {
     if (!vehicle) return;
     try {
       const success = await listingService.updateListing(vehicle.id, { isFeatured: !vehicle.isFeatured }, true);
@@ -40,9 +40,9 @@ export default function VehicleDetails() {
     } catch (err) {
       toast.error('Failed to update feature status');
     }
-  };
+  }, [vehicle, refresh]);
 
-  const handleStatusChange = async (newStatus: any) => {
+  const handleStatusChange = React.useCallback(async (newStatus: any) => {
     if (!vehicle) return;
     try {
       const success = await listingService.updateListing(vehicle.id, { status: newStatus }, true);
@@ -55,7 +55,7 @@ export default function VehicleDetails() {
     } catch (err) {
       toast.error('Failed to update status');
     }
-  };
+  }, [vehicle, refresh]);
 
   if (loading) {
     return (

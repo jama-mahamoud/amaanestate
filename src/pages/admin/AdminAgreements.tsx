@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
 type TabType = 'Pending Approval' | 'Approved' | 'Rejected' | 'revision_requested';
@@ -56,38 +56,48 @@ export default function AdminAgreements() {
 
   // Authentication & admin check
   useEffect(() => {
+    let active = true;
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (user) {
         try {
           const profile = await userService.getUserProfile(user.uid);
-          if (profile && profile.role === 'admin') {
-            setIsAdmin(true);
-            fetchAgreements();
-          } else {
-            setIsAdmin(false);
-            setLoading(false);
+          if (active) {
+            if (profile && profile.role === 'admin') {
+              setIsAdmin(true);
+              fetchAgreements(active);
+            } else {
+              setIsAdmin(false);
+              setLoading(false);
+            }
           }
         } catch (e) {
           console.error("Auth check failed", e);
+          if (active) {
+            setIsAdmin(false);
+            setLoading(false);
+          }
+        }
+      } else {
+        if (active) {
           setIsAdmin(false);
           setLoading(false);
         }
-      } else {
-        setIsAdmin(false);
-        setLoading(false);
       }
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, []);
 
-  const fetchAgreements = async () => {
+  const fetchAgreements = async (active = true) => {
     try {
       const allList = await agreementService.getAllAgreements();
-      setAgreements(allList);
+      if (active) setAgreements(allList);
     } catch (err) {
       toast.error("Failed to fetch agreements ledger");
     } finally {
-      setLoading(false);
+      if (active) setLoading(false);
     }
   };
 
@@ -184,37 +194,44 @@ export default function AdminAgreements() {
     }
   };
 
-  const filteredItems = agreements.filter(item => {
-    // Robust comparison against activeTab
-    const itemStatus = (item.status || '').toLowerCase().trim();
-    const tabStatus = activeTab.toLowerCase().trim();
-    
-    // Specifically handle "Pending Approval" vs "pending"
-    const tabStatusMapping: Record<string, string> = {
-      'pending approval': 'pending approval',
-      'approved': 'approved',
-      'rejected': 'rejected',
-      'revision_requested': 'revision_requested'
-    };
+  const filteredItems = React.useMemo(() => {
+    return agreements.filter(item => {
+      // Robust comparison against activeTab
+      const itemStatus = (item.status || '').toLowerCase().trim();
+      const tabStatus = activeTab.toLowerCase().trim();
+      
+      // Specifically handle "Pending Approval" vs "pending"
+      const tabStatusMapping: Record<string, string> = {
+        'pending approval': 'pending approval',
+        'approved': 'approved',
+        'rejected': 'rejected',
+        'revision_requested': 'revision_requested'
+      };
 
-    const matchesTab = itemStatus === tabStatusMapping[tabStatus];
-    
-    const matchesSearch = searchTerm === '' || 
-      item.agreementId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.agreementTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.parties.partyA.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.parties.partyB.fullName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesTab && matchesSearch;
-  });
+      const matchesTab = itemStatus === tabStatusMapping[tabStatus];
+      
+      const q = searchTerm.toLowerCase();
+      const matchesSearch = searchTerm === '' || 
+        (item.agreementId || '').toLowerCase().includes(q) ||
+        (item.agreementTitle || '').toLowerCase().includes(q) ||
+        (item.parties.partyA.fullName || '').toLowerCase().includes(q) ||
+        (item.parties.partyB.fullName || '').toLowerCase().includes(q);
+      
+      return matchesTab && matchesSearch;
+    });
+  }, [agreements, activeTab, searchTerm]);
 
-  const stats = {
-    pending: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'pending approval').length,
-    approved: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'approved').length,
-    rejected: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'rejected').length,
-    revisions: agreements.filter(a => (a.status || '').toString().toLowerCase().trim() === 'revision_requested').length,
-    total: agreements.length
-  };
+  const stats = React.useMemo(() => {
+    const s = { pending: 0, approved: 0, rejected: 0, revisions: 0, total: agreements.length };
+    agreements.forEach(a => {
+      const status = (a.status || '').toString().toLowerCase().trim();
+      if (status === 'pending approval') s.pending++;
+      else if (status === 'approved') s.approved++;
+      else if (status === 'rejected') s.rejected++;
+      else if (status === 'revision_requested') s.revisions++;
+    });
+    return s;
+  }, [agreements]);
 
   if (loading) {
     return (

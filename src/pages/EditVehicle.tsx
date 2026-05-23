@@ -12,20 +12,22 @@ export default function EditVehicle() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const fetchListing = async () => {
       if (!id) return;
       try {
         const data = await listingService.getListingById(id);
-        if (data && data.category === 'vehicle') {
+        if (active && data && data.category === 'vehicle') {
           setListing(data);
         }
       } catch (err) {
         console.error("Failed to fetch vehicle details for editing:", err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetchListing();
+    return () => { active = false; };
   }, [id]);
 
   if (loading) {

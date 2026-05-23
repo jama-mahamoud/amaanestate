@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { brokerService } from '@/services/brokerService';
 import { useListings } from '@/hooks/useListings';
@@ -72,35 +72,37 @@ export default function AgentDetails() {
 
   // Load profile details
   useEffect(() => {
+    let active = true;
     const fetchProfile = async () => {
       if (!id) return;
       try {
         const allBrokers = await brokerService.getAllBrokers();
-        setBrokersList(allBrokers);
+        if (active) setBrokersList(allBrokers);
 
         if (id.startsWith('agency_')) {
           const realId = id.replace('agency_', '');
           const found = await brokerService.getAgency(realId);
-          if (found) {
+          if (found && active) {
             setAgency(found);
           }
         } else {
           const verifiedOnes = await brokerService.getVerifiedBrokers();
           const found = verifiedOnes.find(b => b.id === id);
-          if (found) {
+          if (found && active) {
             setBroker(found);
           } else {
             const b = await brokerService.getBroker(id);
-            if (b) setBroker(b);
+            if (b && active) setBroker(b);
           }
         }
       } catch (error) {
         console.error("Failed to load details profile:", error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetchProfile();
+    return () => { active = false; };
   }, [id]);
 
   // Load & Persist Reviews from Local Storage
@@ -135,7 +137,7 @@ export default function AgentDetails() {
   }, [id, broker, agency]);
 
   // Handle Review Submission
-  const handleAddReview = (e: React.FormEvent) => {
+  const handleAddReview = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!newAuthor.trim() || !newComment.trim()) {
       toast.error("Please fill in your name and comment.");
@@ -158,7 +160,7 @@ export default function AgentDetails() {
     setNewComment('');
     setNewRating(5);
     toast.success("Thank you! Your feedback has been registered.");
-  };
+  }, [id, newAuthor, newComment, newRating, reviews]);
 
   // Compute overall dynamic rating average
   const averageRating = useMemo(() => {

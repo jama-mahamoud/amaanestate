@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { agreementService, Agreement } from '@/services/agreementService';
 import { generateAgreementPDF } from '@/lib/agreements';
@@ -6,17 +6,11 @@ import {
   ShieldCheck, 
   ShieldAlert,
   Loader2, 
-  Calendar, 
-  MapPin, 
-  Coins, 
-  Printer, 
-  Download,
-  AlertCircle,
-  FileText,
   Clock,
-  QrCode,
   CornerDownRight,
-  ChevronLeft
+  ChevronLeft,
+  Printer,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -27,18 +21,22 @@ export default function PublicVerification() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     if (id) {
       setLoading(true);
       agreementService.getAgreement(id)
         .then(res => {
-          setAgreement(res);
-          setLoading(false);
+          if (active) {
+            setAgreement(res);
+            setLoading(false);
+          }
         })
         .catch(err => {
           console.error("Error fetching verified agreement record:", err);
-          setLoading(false);
+          if (active) setLoading(false);
         });
     }
+    return () => { active = false; };
   }, [id]);
 
   const handleDownloadPDF = () => {
@@ -62,6 +60,19 @@ export default function PublicVerification() {
       alert("Error loading PDF preview window.");
     }
   };
+
+  const { isApproved, isRejected, isPending, isProperty, isVehicle, priceVal } = useMemo(() => {
+    if (!agreement) return { isApproved: false, isRejected: false, isPending: false, isProperty: false, isVehicle: false, priceVal: 0 };
+    
+    return {
+      isApproved: agreement.status === 'Approved',
+      isRejected: agreement.status === 'Rejected',
+      isPending: agreement.status === 'Pending Approval',
+      isProperty: agreement.agreementType.startsWith('property'),
+      isVehicle: agreement.agreementType.startsWith('vehicle'),
+      priceVal: agreement.assetInfo.property?.price || agreement.assetInfo.vehicle?.price || 0
+    };
+  }, [agreement]);
 
   if (loading) {
     return (
@@ -91,14 +102,6 @@ export default function PublicVerification() {
       </div>
     );
   }
-
-  const isApproved = agreement.status === 'Approved';
-  const isRejected = agreement.status === 'Rejected';
-  const isPending = agreement.status === 'Pending Approval';
-  
-  const isProperty = agreement.agreementType.startsWith('property');
-  const isVehicle = agreement.agreementType.startsWith('vehicle');
-  const priceVal = agreement.assetInfo.property?.price || agreement.assetInfo.vehicle?.price || 0;
 
   return (
     <div className="pt-32 pb-20 min-h-screen bg-luxury-black text-white px-4">

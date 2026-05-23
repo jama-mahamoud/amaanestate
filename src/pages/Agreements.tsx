@@ -141,18 +141,19 @@ export default function Agreements() {
 
   // Generate unique ID, Contract number and QR Code automatically when preview is triggered
   useEffect(() => {
+    let active = true;
     if (preview) {
       let currentId = previewId;
       if (!currentId) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         currentId = Array.from({ length: 20 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-        setPreviewId(currentId);
+        if (active) setPreviewId(currentId);
       }
 
       const year = formData.date ? formData.date.split('-')[0] : new Date().getFullYear().toString();
       const partialId = currentId.slice(0, 8).toUpperCase();
       const contractNo = `AE-${year}-${partialId}`;
-      setContractNumber(contractNo);
+      if (active) setContractNumber(contractNo);
 
       const verificationUrl = `${window.location.origin}/verify/${currentId}?contract=${contractNo}&status=Pending%20Approval&date=${formData.date}`;
       
@@ -165,17 +166,20 @@ export default function Agreements() {
         }
       })
       .then(url => {
-        setQrCodeDataUrl(url);
+        if (active) setQrCodeDataUrl(url);
       })
       .catch(err => {
         console.error("Failed to generate QR Code on overview page:", err);
       });
     } else {
       // Clear out on preview exit so a fresh one is built next turn
-      setPreviewId('');
-      setContractNumber('');
-      setQrCodeDataUrl('');
+      if (active) {
+        setPreviewId('');
+        setContractNumber('');
+        setQrCodeDataUrl('');
+      }
     }
+    return () => { active = false; };
   }, [preview, formData.date, previewId]);
 
   const downloadQRCode = () => {
@@ -189,14 +193,18 @@ export default function Agreements() {
   };
 
   useEffect(() => {
+    let active = true;
     const unsub = auth.onAuthStateChanged(user => {
-      setCurrentUser(user);
+      if (active) setCurrentUser(user);
     });
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, []);
 
   // Set default Title when agreement type changes
-  const handleTypeChange = (value: typeof formData.agreementType, langOverride?: string) => {
+  const handleTypeChange = React.useCallback((value: typeof formData.agreementType, langOverride?: string) => {
     let title = '';
     const currentLang = langOverride || language;
     switch(value) {
@@ -221,7 +229,7 @@ export default function Agreements() {
       agreementType: value,
       agreementTitle: title
     }));
-  };
+  }, [language]);
 
   // Run dynamic title generator and legal clauses sync when language or type changes
   useEffect(() => {
@@ -237,7 +245,7 @@ export default function Agreements() {
         setFormData(prev => ({ ...prev, legalClauses: DEFAULT_LEGAL_CLAUSES_EN }));
       }
     }
-  }, [language]);
+  }, [language, formData.agreementType, handleTypeChange]);
 
   // Mouse / Touch drawing logic for Party A Signature
   const startDrawingA = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {

@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'motion/react';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
-import { Link } from 'react-router-dom';
-
-import DashboardEmptyState from '@/components/DashboardEmptyState';
+import { Link, useNavigate } from 'react-router-dom';
+import EmptyState from '@/components/EmptyState';
 
 export default function DashboardArticles() {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -146,11 +146,13 @@ export default function DashboardArticles() {
             </table>
           </div>
         ) : (
-          <DashboardEmptyState 
+          <EmptyState 
+            variant="dashed"
+            showPlusIcon
             title="Editorial Void" 
             description="The regional intelligence database is awaiting content integration. Draft your first report to secure the record." 
             actionLabel="Draft New Report"
-            onAction={() => window.location.href = '/dashboard/articles/create'}
+            onAction={() => navigate('/dashboard/articles/create')}
             icon={<FileText size={48} />}
           />
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Building2, 
@@ -84,25 +84,57 @@ export default function AgenciesBrokersManagement() {
   }, []);
 
   // Filter application / items
-  const pendingAgencies = agencies.filter(a => a.status === 'pending');
-  const pendingBrokers = brokers.filter(b => b.status === 'pending');
-  
-  const verifiedAgencies = agencies.filter(a => a.status === 'approved' || (a as any).status === 'verified' || a.verified === true);
-  const verifiedBrokers = brokers.filter(b => b.status === 'approved' || (b as any).status === 'verified' || b.isVerified === true);
+  const { pendingAgencies, pendingBrokers, verifiedAgencies, verifiedBrokers } = useMemo(() => {
+    return {
+      pendingAgencies: agencies.filter(a => a.status === 'pending'),
+      pendingBrokers: brokers.filter(b => b.status === 'pending'),
+      verifiedAgencies: agencies.filter(a => a.status === 'approved' || (a as any).status === 'verified' || a.verified === true),
+      verifiedBrokers: brokers.filter(b => b.status === 'approved' || (b as any).status === 'verified' || b.isVerified === true),
+    };
+  }, [agencies, brokers]);
+
+  // Compute listing counts for faster lookup
+  const listingMetadata = useMemo(() => {
+    const agencyCounts: Record<string, { total: number, property: number, vehicle: number }> = {};
+    const brokerCounts: Record<string, number> = {};
+    const agencyTeamCounts: Record<string, number> = {};
+
+    listings.forEach(l => {
+      const oid = l.ownerId;
+      if (!agencyCounts[oid]) agencyCounts[oid] = { total: 0, property: 0, vehicle: 0 };
+      agencyCounts[oid].total++;
+      if (l.category === 'property') agencyCounts[oid].property++;
+      if (l.category === 'vehicle') agencyCounts[oid].vehicle++;
+
+      if (l.associatedBrokerId) {
+        brokerCounts[l.associatedBrokerId] = (brokerCounts[l.associatedBrokerId] || 0) + 1;
+      }
+    });
+
+    brokers.forEach(b => {
+      if (b.companyName) {
+        const cname = b.companyName.toLowerCase().trim();
+        agencyTeamCounts[cname] = (agencyTeamCounts[cname] || 0) + 1;
+      }
+    });
+
+    return { agencyCounts, brokerCounts, agencyTeamCounts };
+  }, [listings, brokers]);
 
   // Listing Counts helpers
   const getAgencyListingsCount = (ownerId: string, category?: 'property' | 'vehicle') => {
-    const matched = listings.filter(l => l.ownerId === ownerId);
-    if (!category) return matched.length;
-    return matched.filter(l => l.category === category).length;
+    const meta = listingMetadata.agencyCounts[ownerId];
+    if (!meta) return 0;
+    if (!category) return meta.total;
+    return meta[category] || 0;
   };
 
   const getBrokerListingsCount = (brokerId: string) => {
-    return listings.filter(l => l.associatedBrokerId === brokerId || l.ownerId === brokerId).length;
+    return listingMetadata.brokerCounts[brokerId] || 0;
   };
 
   const getAgencyBrokersCount = (agencyName: string) => {
-    return brokers.filter(b => (b.companyName || '').toLowerCase().trim() === agencyName.toLowerCase().trim()).length;
+    return listingMetadata.agencyTeamCounts[agencyName.toLowerCase().trim()] || 0;
   };
 
   // Actions

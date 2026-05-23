@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { userService } from '@/services/userService';
 import { UserProfile } from '@/types';
-import DashboardEmptyState from '@/components/DashboardEmptyState';
+import EmptyState from '@/components/EmptyState';
 
 export default function DashboardUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -13,15 +13,15 @@ export default function DashboardUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = async (active: boolean) => {
     setLoading(true);
     try {
       const data = await userService.getAllUsers();
-      setUsers(data);
+      if (active) setUsers(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load user registry.');
+      if (active) setError(err.message || 'Failed to load user registry.');
     } finally {
-      setLoading(false);
+      if (active) setLoading(false);
     }
   };
 
@@ -29,14 +29,16 @@ export default function DashboardUsers() {
     if (!searchQuery) return users;
     const q = searchQuery.toLowerCase();
     return users.filter(u => 
-      u.displayName.toLowerCase().includes(q) || 
-      u.email.toLowerCase().includes(q) ||
-      u.role.toLowerCase().includes(q)
+      (u.displayName || '').toLowerCase().includes(q) || 
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.role || '').toLowerCase().includes(q)
     );
   }, [users, searchQuery]);
 
   useEffect(() => {
-    loadUsers();
+    let active = true;
+    loadUsers(active);
+    return () => { active = false; };
   }, []);
 
   return (
@@ -165,7 +167,9 @@ export default function DashboardUsers() {
             </table>
           </div>
         ) : (
-          <DashboardEmptyState 
+          <EmptyState 
+            variant="dashed"
+            showPlusIcon
             title="Registry Empty" 
             description={error || "The identity database is currently offline. No institutional entities have been authorized for network access."} 
             actionLabel="Authorize New Entity"

@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, MessageCircle, Sun, Moon, ChevronDown, Check } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import AmaanLogo from '../brand/AmaanLogo';
 import BrandLogo from '../brand/BrandLogo';
 import MegaMenu from './MegaMenu';
 
@@ -89,7 +88,7 @@ export default function Navbar() {
     }
   }, [isLightTheme]);
 
-  const menuData = [
+  const menuData = useMemo(() => [
     {
       title: 'Properties',
       sections: [
@@ -169,16 +168,48 @@ export default function Navbar() {
         }
       ]
     }
-  ];
+  ], []);
 
-  const navLinks = [
+  const navLinks = useMemo(() => [
     { name: 'Properties', path: '/properties' },
     { name: 'Vehicles', path: '/vehicles' },
     { name: 'Agents', path: '/agents' },
     { name: 'News', path: '/news' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
-  ];
+  ], []);
+
+  const toggleLangDropdown = useCallback(() => {
+    setLangDropdownOpen(prev => !prev);
+    setCurrDropdownOpen(false);
+  }, []);
+
+  const toggleCurrDropdown = useCallback(() => {
+    setCurrDropdownOpen(prev => !prev);
+    setLangDropdownOpen(false);
+  }, []);
+
+  const selectLanguage = useCallback((lang: string) => {
+    setLanguage(lang as any);
+    setLangDropdownOpen(false);
+  }, [setLanguage]);
+
+  const selectCurrency = useCallback((curr: string) => {
+    setCurrency(curr as any);
+    setCurrDropdownOpen(false);
+  }, [setCurrency]);
+
+  const toggleTheme = useCallback(() => {
+    setIsLightTheme(prev => !prev);
+  }, []);
+
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen(prev => !prev);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
 
   return (
     <header 
@@ -206,7 +237,7 @@ export default function Navbar() {
             <div className="relative">
               <div 
                 className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
-                onClick={() => { setLangDropdownOpen(!langDropdownOpen); setCurrDropdownOpen(false); }}
+                onClick={toggleLangDropdown}
               >
                 <span className="mb-[-1px]">🌐 {language === 'en' ? 'EN' : 'SOM'}</span> <ChevronDown size={10} />
               </div>
@@ -219,14 +250,14 @@ export default function Navbar() {
                     className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
                   >
                     <button 
-                      onClick={() => { setLanguage('en'); setLangDropdownOpen(false); }}
+                      onClick={() => selectLanguage('en')}
                       className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
                     >
                       <span>English</span>
                       {language === 'en' && <Check size={12} className="text-luxury-gold" />}
                     </button>
                     <button 
-                      onClick={() => { setLanguage('so'); setLangDropdownOpen(false); }}
+                      onClick={() => selectLanguage('so')}
                       className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
                     >
                       <span>Soomaali</span>
@@ -241,7 +272,7 @@ export default function Navbar() {
             <div className="relative">
               <div 
                 className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
-                onClick={() => { setCurrDropdownOpen(!currDropdownOpen); setLangDropdownOpen(false); }}
+                onClick={toggleCurrDropdown}
               >
                 <span className="mb-[-1px]">💱 {currency}</span> <ChevronDown size={10} />
               </div>
@@ -254,14 +285,14 @@ export default function Navbar() {
                     className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
                   >
                     <button 
-                      onClick={() => { setCurrency('ETB'); setCurrDropdownOpen(false); }}
+                      onClick={() => selectCurrency('ETB')}
                       className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
                     >
                       <span>ETB (Birr)</span>
                       {currency === 'ETB' && <Check size={12} className="text-luxury-gold" />}
                     </button>
                     <button 
-                      onClick={() => { setCurrency('USD'); setCurrDropdownOpen(false); }}
+                      onClick={() => selectCurrency('USD')}
                       className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
                     >
                       <span>USD ($)</span>
@@ -309,7 +340,7 @@ export default function Navbar() {
         <div className="hidden xl:flex items-center gap-6 shrink-0 xl:flex-1 justify-end">
           {/* Custom Theme Switcher */}
           <button 
-            onClick={() => setIsLightTheme(!isLightTheme)}
+            onClick={toggleTheme}
             className="w-10 h-10 rounded-full bg-white/5 border border-white/5 hover:border-luxury-gold/30 hover:bg-white/10 flex items-center justify-center text-luxury-gold transition-all cursor-pointer"
             aria-label="Toggle luxury themes"
           >
@@ -324,7 +355,7 @@ export default function Navbar() {
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 xl:hidden">
           <button 
-            onClick={() => setIsLightTheme(!isLightTheme)}
+            onClick={toggleTheme}
             className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-luxury-gold cursor-pointer"
             aria-label="Toggle themes"
           >
@@ -332,7 +363,7 @@ export default function Navbar() {
           </button>
           <button 
             className="p-2 text-white/70 hover:text-white transition-colors" 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={toggleMobileMenu}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -351,12 +382,12 @@ export default function Navbar() {
           >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-2">
-                 <AmaanLogo size="xxs" />
+                 <BrandLogo size="xxs" layout="icon" />
                  <span className="font-display font-bold text-base text-white">Menu</span>
               </div>
               <button 
                 className="text-white/50 hover:text-luxury-gold transition-colors p-2" 
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
               >
                 <X size={24} />
               </button>
@@ -375,22 +406,22 @@ export default function Navbar() {
                   />
                 ))}
 
-                <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('About')}</Link>
-                <Link to="/agreements" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Agreements')}</Link>
-                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Contact')}</Link>
+                <Link to="/about" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('About')}</Link>
+                <Link to="/agreements" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Agreements')}</Link>
+                <Link to="/contact" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Contact')}</Link>
               </nav>
               
               <div className="pt-4 pb-12 flex flex-col space-y-4">
                 <div className="flex gap-2">
                   <Button 
-                    onClick={() => setLanguage(language === 'en' ? 'so' : 'en')}
+                    onClick={() => selectLanguage(language === 'en' ? 'so' : 'en')}
                     variant="outline" 
                     className="flex-1 border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
                   >
                     🌐 {language === 'en' ? t('SOM') : t('EN')}
                   </Button>
                   <Button 
-                    onClick={() => setCurrency(currency === 'ETB' ? 'USD' : 'ETB')}
+                    onClick={() => selectCurrency(currency === 'ETB' ? 'USD' : 'ETB')}
                     variant="outline" 
                     className="flex-1 border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
                   >
@@ -399,7 +430,7 @@ export default function Navbar() {
                 </div>
 
                 <Button 
-                  onClick={() => setIsLightTheme(!isLightTheme)}
+                  onClick={toggleTheme}
                   variant="outline" 
                   className="w-full border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
                 >
@@ -408,15 +439,15 @@ export default function Navbar() {
 
                 {user ? (
                    <Button asChild variant="outline" className="w-full border-luxury-gold/20 bg-luxury-gold/5 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]">
-                      <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>{t('My Dashboard')}</Link>
+                      <Link to="/dashboard" onClick={closeMobileMenu}>{t('My Dashboard')}</Link>
                    </Button>
                 ) : (
                   <Button asChild variant="outline" className="w-full border-white/5 bg-white/5 text-white hover:bg-luxury-gold hover:text-luxury-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]">
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('Sign In')}</Link>
+                    <Link to="/login" onClick={closeMobileMenu}>{t('Sign In')}</Link>
                   </Button>
                 )}
                 <Button asChild className="w-full bg-luxury-gold text-luxury-black h-14 rounded-xl font-bold text-sm shadow-xl shadow-luxury-gold/10">
-                  <Link to="/become-pro" onClick={() => setMobileMenuOpen(false)}>{t('Join Us')}</Link>
+                  <Link to="/become-pro" onClick={closeMobileMenu}>{t('Join Us')}</Link>
                 </Button>
               </div>
             </div>

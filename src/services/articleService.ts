@@ -18,9 +18,25 @@ import { handleFirestoreError, OperationType } from '@/lib/utils';
 import { Article } from '@/types';
 
 const ARTICLES_COLLECTION = 'articles';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const articlesCache: { [key: string]: CacheEntry<Article[]> } = {};
+const articleDetailCache: { [key: string]: CacheEntry<Article> } = {};
 
 export const articleService = {
   async getArticles(category?: string, language?: string, publishedOnly: boolean = true) {
+    const cacheKey = `list_${category || 'all'}_${language || 'all'}_${publishedOnly}`;
+    const cached = articlesCache[cacheKey];
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+
     try {
       // Fetch all articles to perform safe, client-side, backwards-compatible, and index-free filtering
       const q = query(collection(db, ARTICLES_COLLECTION));
@@ -40,7 +56,7 @@ export const articleService = {
         });
       }
       
-      if (category) {
+      if (category && category !== 'All') {
         docs = docs.filter(art => art.category === category);
       }
       
@@ -49,11 +65,14 @@ export const articleService = {
       }
 
       // Client-side sort safely handling multiple Date/Timestamp formats
-      return docs.sort((a, b) => {
-        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt instanceof Date ? a.createdAt.getTime() : 0);
-        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt instanceof Date ? b.createdAt.getTime() : 0);
+      const sortedDocs = docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt instanceof Date ? a.createdAt.getTime() : (typeof a.createdAt === 'number' ? a.createdAt : 0));
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt instanceof Date ? b.createdAt.getTime() : (typeof b.createdAt === 'number' ? b.createdAt : 0));
         return bTime - aTime;
       });
+
+      articlesCache[cacheKey] = { data: sortedDocs, timestamp: Date.now() };
+      return sortedDocs;
     } catch (error) {
       console.error('Error fetching articles safely (falling back to empty list):', error);
       return []; // Safe return to avoid crashing the loader thread
@@ -61,11 +80,18 @@ export const articleService = {
   },
 
   async getArticleById(id: string) {
+    const cached = articleDetailCache[id];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+
     try {
       const docRef = doc(db, ARTICLES_COLLECTION, id);
       const snapshot = await getDoc(docRef);
       if (!snapshot.exists()) return null;
-      return { id: snapshot.id, ...snapshot.data() } as Article;
+      const data = { id: snapshot.id, ...snapshot.data() } as Article;
+      articleDetailCache[id] = { data, timestamp: Date.now() };
+      return data;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `${ARTICLES_COLLECTION}/${id}`);
       return null;

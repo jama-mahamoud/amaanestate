@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Calendar, User, Clock, ArrowLeft, Share2, Facebook, Twitter, Linkedin, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
 
@@ -17,24 +17,32 @@ export default function ArticleDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     if (id) {
       const fetchArticle = async () => {
         let data = await articleService.getArticleById(id);
         if (!data) {
           data = await articleService.getArticleBySlug(id);
         }
-        setArticle(data);
         
-        if (data) {
-           const allArticles = await articleService.getArticles();
-           setRelatedArticles(allArticles.filter(a => a.id !== data.id).slice(0, 3));
+        if (active) {
+          setArticle(data);
+          if (data) {
+             const allArticles = await articleService.getArticles();
+             if (active) setRelatedArticles(allArticles.filter(a => a.id !== data.id).slice(0, 3));
+          }
+          setLoading(false);
         }
-
-        setLoading(false);
       };
       fetchArticle();
     }
+    return () => { active = false; };
   }, [id]);
+
+  const formatDate = useCallback((dateValue: any) => {
+    if (!dateValue || !dateValue.seconds) return 'Recently Published';
+    return new Date(dateValue.seconds * 1000).toLocaleDateString();
+  }, []);
 
   if (loading) return <div className="min-h-screen bg-luxury-black flex items-center justify-center text-white">Loading intelligence report...</div>;
 
@@ -50,11 +58,6 @@ export default function ArticleDetails() {
       </div>
     );
   }
-
-  const formatDate = (dateValue: any) => {
-    if (!dateValue || !dateValue.seconds) return 'Recently Published';
-    return new Date(dateValue.seconds * 1000).toLocaleDateString();
-  };
 
   return (
     <div className="min-h-screen bg-luxury-black pb-20">

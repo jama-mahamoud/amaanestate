@@ -10,7 +10,7 @@ import Editor from './Editor';
 import ImageUpload from './ImageUpload';
 import GalleryUpload from './GalleryUpload';
 import TagsInput from './TagsInput';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Eye, Save, Globe, Info } from 'lucide-react';
 
 export default function ArticleForm({ initialData }: { initialData?: Article }) {

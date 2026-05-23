@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Shield, BadgeCheck, Bell, Save, Mail, Map, Calendar, Loader2, Building2, Eye, EyeOff, FileText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,14 @@ export default function DashboardProfile() {
   const isAgencyRole = profile?.role === 'agency';
 
   useEffect(() => {
+    let active = true;
     const fetchAgencyData = async () => {
       if (isAgencyRole && user?.uid) {
         setLoading(true);
         try {
           const allAgencies = await brokerService.getAllAgencies();
           const found = allAgencies.find(a => a.ownerId === user.uid);
-          if (found) {
+          if (found && active) {
             setAgency(found);
             setAgencyName(found.agencyName);
             setEmail(found.email);
@@ -46,14 +47,15 @@ export default function DashboardProfile() {
         } catch (error) {
           console.error("Error loading agency details", error);
         } finally {
-          setLoading(false);
+          if (active) setLoading(false);
         }
       }
     };
     fetchAgencyData();
+    return () => { active = false; };
   }, [isAgencyRole, user?.uid]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = useCallback(async () => {
     setLoading(true);
     try {
       if (isAgencyRole && agency) {
@@ -90,14 +92,15 @@ export default function DashboardProfile() {
         }
       }
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      const timer = setTimeout(() => setSuccess(false), 3000);
+      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Failed to update credentials:", error);
       alert("Error saving profile details.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [agency, agencyName, email, isAgencyRole, license, logo, logoFiles.length, phone, user?.uid, visibility]);
 
   return (
     <div className="space-y-12">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, ArrowRight, Clock } from 'lucide-react';
@@ -7,7 +7,7 @@ import { Article } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-export default function LatestNews() {
+const LatestNews = memo(() => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -72,12 +72,14 @@ export default function LatestNews() {
                 <button 
                   onClick={scrollLeft}
                   className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/70 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all bg-luxury-black/50"
+                  aria-label="Previous articles"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button 
                   onClick={scrollRight}
                   className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/70 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all bg-luxury-black/50"
+                  aria-label="Next articles"
                 >
                   <ChevronRight size={20} />
                 </button>
@@ -113,6 +115,7 @@ export default function LatestNews() {
                   src={article.featuredImage || `https://images.unsplash.com/photo-1582407947304-fd86f1289c54?auto=format&fit=crop&q=80&w=1000`} 
                   alt={article.title}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
                 />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-luxury-gold text-black uppercase tracking-wider text-[10px] font-bold border-none">
@@ -134,7 +137,7 @@ export default function LatestNews() {
                 </h3>
                 
                 <p className="text-white/60 text-sm line-clamp-3 mb-6 flex-1">
-                  {article.summary || article.content.substring(0, 150) + '...'}
+                  {article.summary || article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...'}
                 </p>
                 
                 <div className="mt-auto pt-4 border-t border-white/5">
@@ -152,4 +155,8 @@ export default function LatestNews() {
       </div>
     </section>
   );
-}
+});
+
+LatestNews.displayName = 'LatestNews';
+
+export default LatestNews;

@@ -15,7 +15,7 @@ export default function Login() {
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -28,9 +28,9 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, signIn, navigate]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = React.useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
@@ -41,7 +41,7 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [signInWithGoogle, navigate]);
 
   return (
     <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">

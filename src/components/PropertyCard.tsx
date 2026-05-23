@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useSettings } from '@/contexts/SettingsContext';
+import React, { memo } from 'react';
 
 interface PropertyCardProps {
   property: any;
@@ -23,7 +24,7 @@ interface PropertyCardProps {
   onMouseLeave?: () => void;
 }
 
-export default function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) {
+const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) => {
   const { formatPriceConverted } = useSettings();
   const isVehicle = (property.category || '').toString().toLowerCase().trim() === 'vehicle';
   
@@ -170,4 +171,6 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
       </Link>
     </motion.div>
   );
-}
+});
+
+export default PropertyCard;

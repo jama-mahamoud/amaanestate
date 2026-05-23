@@ -14,15 +14,14 @@ import {
   ShieldCheck,
   Heart,
   FileSignature,
-  User
+  User as UserIcon
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
-import AmaanLogo from '@/components/brand/AmaanLogo';
 import BrandLogo from '@/components/brand/BrandLogo';
 
 function DashboardContent() {
@@ -32,58 +31,60 @@ function DashboardContent() {
   const { user, profile, logout, loading } = useAuth();
   const { isListingModalOpen, closeListingModal, openListingModal, listingCategory } = useDashboard();
 
-  if (loading) return null; // Or a loading spinner
-
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
       navigate('/login');
     } catch (error) {
       console.error('Failed to log out', error);
     }
-  };
+  }, [logout, navigate]);
 
-  const navItems = [
-    { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-  ];
+  const navItems = useMemo(() => {
+    const items = [
+      { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    ];
 
-  const currentRole = profile?.role?.toString().trim().toLowerCase();
-  const isAdmin = currentRole === 'admin' || currentRole === 'administrator' || profile?.role === 'admin';
-  const isAgency = currentRole === 'agency' || profile?.role === 'agency';
-  const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
+    const currentRole = profile?.role?.toString().trim().toLowerCase();
+    const isAdmin = currentRole === 'admin' || profile?.role === 'admin';
+    const isAgency = currentRole === 'agency' || profile?.role === 'agency';
+    const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
 
-  if (isAdmin) {
-    navItems.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
-    navItems.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
-    navItems.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
-  }
+    if (isAdmin) {
+      items.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+      items.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
+      items.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
+    }
 
-  if (isAgency) {
-    navItems.push({ name: 'Agency Profile', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
-    navItems.push({ name: 'Listings', path: '/dashboard/properties', icon: <Home size={18} /> });
-  } else {
-    navItems.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
-    navItems.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
-  }
-  
-  navItems.push({ name: 'Favorites', path: '/dashboard/favorites', icon: <Heart size={18} /> });
-  if (!isAgency) {
-      navItems.push({ name: 'Profile', path: '/dashboard/profile', icon: <User size={18} /> });
-  }
+    if (isAgency) {
+      items.push({ name: 'Agency Profile', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
+      items.push({ name: 'Listings', path: '/dashboard/properties', icon: <Home size={18} /> });
+    } else {
+      items.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+      items.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+    }
+    
+    items.push({ name: 'Favorites', path: '/dashboard/favorites', icon: <Heart size={18} /> });
+    if (!isAgency) {
+        items.push({ name: 'Profile', path: '/dashboard/profile', icon: <UserIcon size={18} /> });
+    }
 
-  if (isEditor) {
-    navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
-  }
+    if (isEditor) {
+      items.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
+    }
 
-  if (isAdmin) {
-    navItems.push({ name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> });
-  }
+    if (isAdmin) {
+      items.push({ name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> });
+    }
 
-  navItems.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> });
+    items.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> });
+    return items;
+  }, [profile?.role]);
+
+  if (loading) return null;
 
   return (
     <div className="flex min-h-screen bg-luxury-black text-white selection:bg-luxury-gold/30">
-      {/* Sidebar stays same ... */}
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-[#0a0a0a] border-r border-white/5 transform transition-transform duration-500 ease-luxury lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">

@@ -14,7 +14,7 @@ export default function ForgotPassword() {
   const [submitted, setSubmitted] = useState(false);
   const { passwordReset } = useAuth();
 
-  const handleReset = async (e: React.FormEvent) => {
+  const handleReset = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -32,7 +32,7 @@ export default function ForgotPassword() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, passwordReset]);
 
   return (
     <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">

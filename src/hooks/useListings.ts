@@ -39,29 +39,32 @@ export function useListings(initialFilters: ListingFilter = {}) {
 
   // Initial fetch when core filters change
   useEffect(() => {
+    let active = true;
+    
     // Reset state for new filter query
     setListings([]);
     setLastDoc(undefined);
     setHasMore(true);
     
-    // We can't call fetchListings directly because it depends on lastDoc
-    // and would trigger itself. So we call service directly for initial load.
     const initialFetch = async () => {
       setLoading(true);
       setError(null);
       try {
         const result = await listingService.getListings(initialFilters);
+        if (!active) return;
         setListings(result.listings);
         setLastDoc(result.lastDoc);
         setHasMore(result.listings.length === (initialFilters.limit || 20));
       } catch (err: any) {
+        if (!active) return;
         setError(err.message || 'Failed to fetch listings');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     
     initialFetch();
+    return () => { active = false; };
   }, [
     initialFilters.category, 
     initialFilters.listingType, 

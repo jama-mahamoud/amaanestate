@@ -17,7 +17,8 @@ import {
   DocumentData,
   QueryDocumentSnapshot,
   or,
-  and
+  and,
+  Timestamp
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Listing, ListingCategory, ListingStatus, ListingType } from '../types';
@@ -38,7 +39,32 @@ export interface ListingFilter {
   ownerId?: string;
 }
 
+// Basic in-memory cache for fetch results
+const listingCache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
 export const listingService = {
+  /**
+   * Internal normalization for legacy documents and consistency
+   */
+  normalizeListing(data: any, id: string): Listing {
+    const status = data.status || 'active';
+    const normalizedStatus = (status === 'approved' || (data.visibility === 'public') || (data.approved === true)) ? 'active' : status;
+
+    return {
+      ...data,
+      id,
+      status: normalizedStatus as ListingStatus,
+      category: data.category || 'property',
+      price: Number(data.price) || 0,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt : (data.createdAt ? Timestamp.fromDate(new Date(data.createdAt)) : Timestamp.now()),
+      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt : (data.updatedAt ? Timestamp.fromDate(new Date(data.updatedAt)) : Timestamp.now()),
+      // Fallbacks for legacy fields
+      listingType: data.listingType || data.type || 'sale',
+      images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
+    };
+  },
+
   async getListings(filters: ListingFilter = {}) {
     const listingsRef = collection(db, 'listings');
     const filterConstraints: any[] = [];
@@ -106,7 +132,7 @@ export const listingService = {
     if (filters.limit) {
       queryConstraints.push(limit(filters.limit));
     } else {
-      queryConstraints.push(limit(20)); // Default page size
+      queryConstraints.push(limit(100)); // Larger limit for better responsiveness
     }
 
     if (filters.lastDoc) {
@@ -117,10 +143,7 @@ export const listingService = {
       const q = query(listingsRef, ...queryConstraints);
       const snapshot = await getDocs(q);
       
-      const listings = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Listing[];
+      const listings = snapshot.docs.map(doc => this.normalizeListing(doc.data(), doc.id));
 
       // Client-side sort
       listings.sort((a, b) => {
@@ -144,7 +167,7 @@ export const listingService = {
     try {
       const snapshot = await getDoc(listingRef);
       if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data() } as Listing;
+        return this.normalizeListing(snapshot.data(), snapshot.id);
       }
       return null;
     } catch (error) {
@@ -284,10 +307,7 @@ export const listingService = {
 
     try {
       const snapshot = await getDocs(q);
-      const docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Listing[];
+      const docs = snapshot.docs.map(doc => this.normalizeListing(doc.data(), doc.id));
       // Client-side sort by createdAt descending since we removed orderBy clause to avoid index issues
       return docs.sort((a, b) => {
         const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now();

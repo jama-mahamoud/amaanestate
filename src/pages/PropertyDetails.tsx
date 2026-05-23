@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -33,7 +33,7 @@ export default function PropertyDetails() {
   const isAdmin = profile?.role?.toString().toLowerCase().trim() === 'admin';
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleToggleFeature = async () => {
+  const handleToggleFeature = useCallback(async () => {
     if (!property) return;
     try {
       const success = await listingService.updateListing(property.id, { isFeatured: !property.isFeatured }, true);
@@ -46,9 +46,9 @@ export default function PropertyDetails() {
     } catch (err) {
       toast.error('Failed to update feature status');
     }
-  };
+  }, [property, refresh]);
 
-  const handleStatusChange = async (newStatus: any) => {
+  const handleStatusChange = useCallback(async (newStatus: any) => {
     if (!property) return;
     try {
       const success = await listingService.updateListing(property.id, { status: newStatus }, true);
@@ -61,7 +61,7 @@ export default function PropertyDetails() {
     } catch (err) {
       toast.error('Failed to update status');
     }
-  };
+  }, [property, refresh]);
 
   // State Management for Interactive Overlays
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -79,7 +79,8 @@ export default function PropertyDetails() {
   const [scheduleStatus, setScheduleStatus] = useState<'idle' | 'success'>('idle');
 
   // Load similar listings
-  const { listings: allListings } = useListings({ category: 'property' });
+  const listingsFilters = useMemo(() => ({ category: 'property' as const }), []);
+  const { listings: allListings } = useListings(listingsFilters);
 
   const similarListings = useMemo(() => {
     if (!property) return [];
@@ -98,9 +99,6 @@ export default function PropertyDetails() {
       'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
     ];
   }, [property]);
-
-  // Mocked for display if needed but really we should only show items from listing.
-  // We will stop using designLandmarks based on city.
 
   // Handle Mortgage Calculators
   const mortgageResult = useMemo(() => {
@@ -134,13 +132,13 @@ export default function PropertyDetails() {
   }, [property]);
 
   // Submit visit booking
-  const handleScheduleVisit = (e: React.FormEvent) => {
+  const handleScheduleVisit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!visitingDate || !visitingTime || !visitingName || !visitingPhone) {
       return;
     }
     setScheduleStatus('success');
-  };
+  }, [visitingDate, visitingTime, visitingName, visitingPhone]);
 
   if (loading) {
     return (
