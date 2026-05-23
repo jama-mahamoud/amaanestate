@@ -27,9 +27,10 @@ interface ListingCreationModalProps {
   category: ListingCategory;
   onSuccess?: () => void;
   listingToEdit?: any;
+  defaultListingType?: ListingType;
 }
 
-export default function ListingCreationModal({ isOpen, onClose, category, onSuccess, listingToEdit }: ListingCreationModalProps) {
+export default function ListingCreationModal({ isOpen, onClose, category, onSuccess, listingToEdit, defaultListingType }: ListingCreationModalProps) {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -50,22 +51,22 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     currency: 'ETB',
     city: category === 'property' ? 'Jigjiga' : '',
     location: '',
-    listingType: 'sale' as ListingType,
+    listingType: defaultListingType || 'sale' as ListingType,
     subcategory: category === 'property' ? 'Apartment' : 'SUV',
-    
+
     // Vehicle specific
     year: new Date().getFullYear().toString(),
     mileage: '',
     fuelType: 'Petrol' as any,
     transmission: 'Automatic' as any,
-    
+
     // Household specific (Villas, Apartments, etc.)
     beds: '',
     baths: '',
     size: '',
     furnished: 'No',
     parking: 'No',
-    
+
     // Land specific fields
     plotType: 'Freehold',
     zoningType: 'Residential',
@@ -78,7 +79,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
     terrain: 'Flat',
     fenced: 'No',
     landUse: 'Residential',
-    
+
     // Commercial specific fields
     parkingSpaces: '',
     floorsCount: '',
@@ -108,20 +109,20 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         location: listingToEdit.location || '',
         listingType: listingToEdit.listingType || 'sale',
         subcategory: listingToEdit.subcategory || '',
-        
+
         // Vehicle specific
         year: listingToEdit.year?.toString() || new Date().getFullYear().toString(),
         mileage: listingToEdit.mileage || '',
         fuelType: listingToEdit.fuelType || 'Petrol',
         transmission: listingToEdit.transmission || 'Automatic',
-        
+
         // Household specific (Villas, Apartments, etc.)
         beds: listingToEdit.features?.beds?.toString() || listingToEdit.beds?.toString() || '',
         baths: listingToEdit.features?.baths?.toString() || listingToEdit.baths?.toString() || '',
         size: listingToEdit.features?.size || listingToEdit.size || '',
         furnished: listingToEdit.features?.furnished || 'No',
         parking: listingToEdit.features?.parking || 'No',
-        
+
         // Land specific fields
         plotType: listingToEdit.features?.plotType || 'Freehold',
         zoningType: listingToEdit.features?.zoningType || 'Residential',
@@ -134,7 +135,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         terrain: listingToEdit.features?.terrain || 'Flat',
         fenced: listingToEdit.features?.fenced ? 'Yes' : 'No',
         landUse: listingToEdit.features?.landUse || 'Residential',
-        
+
         // Commercial specific fields
         parkingSpaces: listingToEdit.features?.parkingSpaces?.toString() || '',
         floorsCount: listingToEdit.features?.floorsCount?.toString() || '',
@@ -161,7 +162,7 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
         currency: 'ETB',
         city: category === 'property' ? 'Jigjiga' : '',
         location: '',
-        listingType: 'sale',
+        listingType: defaultListingType || 'sale',
         subcategory: category === 'property' ? 'Apartment' : 'SUV',
         year: new Date().getFullYear().toString(),
         mileage: '',
@@ -197,7 +198,8 @@ export default function ListingCreationModal({ isOpen, onClose, category, onSucc
       });
       setCurrentStep(1);
     }
-  }, [listingToEdit, isOpen, category]);
+  }, [listingToEdit, isOpen, category, defaultListingType]);
+
 
   // Calculate dynamic steps based on listing category
   const getSteps = () => {

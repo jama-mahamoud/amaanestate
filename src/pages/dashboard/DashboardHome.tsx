@@ -54,15 +54,19 @@ export default function DashboardHome() {
 
   useEffect(() => {
     const loadStats = async () => {
-      const data = await userService.getGlobalStats();
-      setStats(data);
-      
-      if (isAdmin) {
-        const allAgreements = await agreementService.getAllAgreements();
-        setPendingAgreements(allAgreements.filter(a => a.status === 'Pending Approval'));
+      try {
+        const data = await userService.getGlobalStats();
+        setStats(data);
+        
+        if (isAdmin) {
+          const allAgreements = await agreementService.getAllAgreements();
+          setPendingAgreements(allAgreements.filter(a => a.status === 'Pending Approval'));
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard statistics:", error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     loadStats();
   }, [isAdmin]);

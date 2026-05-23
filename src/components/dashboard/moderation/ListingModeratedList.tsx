@@ -21,7 +21,7 @@ import { moderationService } from '@/services/moderationService';
 import { toast } from 'sonner';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 
-type ModerationStatus = 'pending' | 'active' | 'rejected' | 'suspended';
+type ModerationStatus = 'pending' | 'active' | 'sold' | 'rented' | 'rejected' | 'suspended';
 
 export default function ListingModeratedList() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -159,7 +159,7 @@ export default function ListingModeratedList() {
     <div className="space-y-8">
       {/* Status Bar */}
       <div className="flex flex-wrap gap-3">
-        {(['pending', 'active', 'rejected', 'suspended'] as const).map((s) => (
+        {(['pending', 'active', 'sold', 'rented', 'rejected', 'suspended'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}

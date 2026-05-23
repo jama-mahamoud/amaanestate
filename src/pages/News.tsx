@@ -22,6 +22,9 @@ export default function News() {
     articleService.getArticles().then(data => {
       setArticles(data);
       setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch articles:", err);
+      setLoading(false);
     });
   }, []);
 

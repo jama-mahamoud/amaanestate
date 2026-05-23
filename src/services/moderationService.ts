@@ -97,8 +97,8 @@ export const moderationService = {
     
     // For stats, we'll use a listener on the collections and re-fetch counts
     // This is more efficient than listening to every doc for simple counts
-    const unsubListings = onSnapshot(listingsRef, () => this.getModerationStats().then(callback));
-    const unsubProApps = onSnapshot(proAppsRef, () => this.getModerationStats().then(callback));
+    const unsubListings = onSnapshot(listingsRef, () => this.getModerationStats().then(callback).catch(err => console.error("Error in moderation stats:", err)));
+    const unsubProApps = onSnapshot(proAppsRef, () => this.getModerationStats().then(callback).catch(err => console.error("Error in moderation stats:", err)));
     
     return () => {
       unsubListings();
@@ -180,8 +180,8 @@ export const moderationService = {
     try {
       console.log(`Approving listing ${id}...`);
       await updateDoc(listingRef, {
-        status: 'active',
-        isVisible: true,
+        status: 'approved',
+        visibility: 'public',
         isVerified: true,
         verificationStatus: 'verified',
         updatedAt: serverTimestamp()
@@ -283,13 +283,15 @@ export const moderationService = {
       updatedAt: serverTimestamp() 
     });
 
-    // 2. Update user role
+    // 2. Update user role (Safety: Never update logged-in admin role)
     const userRef = doc(db, 'users', userId);
-    batch.update(userRef, { 
-      role: 'verified_professional', 
-      isVerified: true,
-      proStatus: 'active'
-    });
+    if (userId !== auth.currentUser?.uid) {
+      batch.update(userRef, { 
+        role: 'verified_professional', 
+        isVerified: true,
+        proStatus: 'active'
+      });
+    }
 
     // 3. Create/Update professional service
     // This is what queries normally look for (Expert Pros section)

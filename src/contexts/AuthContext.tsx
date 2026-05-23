@@ -191,7 +191,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (err) {
+        console.error("Logout error:", err);
+    }
   };
 
   const signInWithGoogle = async () => {
@@ -202,21 +206,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const domain = window.location.hostname;
         throw new Error(`The domain "${domain}" is not authorized in your Firebase Project. Please go to Firebase Console > Authentication > Settings > Authorized Domains and add "${domain}".`);
       }
+      console.error("Google sign-in error:", error);
       throw error;
     }
   };
 
   const signIn = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+    } catch (err) {
+        console.error("Sign-in error:", err);
+        throw err;
+    }
   };
 
   const signUp = async (email: string, pass: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(userCredential.user, { displayName: name });
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(userCredential.user, { displayName: name });
+    } catch (err) {
+        console.error("Sign-up error:", err);
+        throw err;
+    }
   };
 
   const passwordReset = async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
+    try {
+        await sendPasswordResetEmail(auth, email);
+    } catch (err) {
+        console.error("Password reset error:", err);
+        throw err;
+    }
   };
 
   return (

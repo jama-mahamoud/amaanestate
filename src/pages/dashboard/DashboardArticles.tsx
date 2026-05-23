@@ -17,6 +17,9 @@ export default function DashboardArticles() {
     articleService.getArticles(undefined, undefined, false).then(data => {
       setArticles(data);
       setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch articles:", err);
+      setLoading(false);
     });
   }, []);
 

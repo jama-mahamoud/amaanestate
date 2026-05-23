@@ -22,6 +22,9 @@ export default function LatestNews() {
       }).slice(0, 8);
       setArticles(sorted);
       setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch articles:", err);
+      setLoading(false);
     });
   }, []);
 

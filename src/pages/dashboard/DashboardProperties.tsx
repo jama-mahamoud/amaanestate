@@ -156,7 +156,7 @@ export default function DashboardProperties() {
                     <td className="p-8">
                       <div className="flex items-center gap-3">
                          <div className={`w-1.5 h-1.5 rounded-full ${
-                           property.status === 'active' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
+                           (property.status === 'active' || property.status === 'approved') ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
                            property.status === 'pending' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/20'
                          }`} />
                          <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{property.status}</span>

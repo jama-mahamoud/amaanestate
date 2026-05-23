@@ -239,6 +239,15 @@ export const listingService = {
       delete cleanData.ownershipVerified;
       delete cleanData.isFeatured;
     }
+
+    // Normalize approved workflow flags for double-checked data consistency
+    if (cleanData.status === 'active' || cleanData.status === 'approved') {
+      cleanData.status = 'approved';
+      (cleanData as any).visibility = 'public';
+      (cleanData as any).approved = true;
+      (cleanData as any).publishedAt = new Date().toISOString();
+    }
+
     try {
       await updateDoc(listingRef, {
         ...cleanData,

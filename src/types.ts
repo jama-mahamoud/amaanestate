@@ -1,5 +1,5 @@
 export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
-export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended' | 'rejected';
+export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended' | 'rejected' | 'approved';
 export type ListingType = 'sale' | 'rent';
 
 export interface Listing {
@@ -17,6 +17,7 @@ export interface Listing {
   createdBy?: string;
   createdByRole?: string;
   status: ListingStatus;
+  visibility?: 'public' | 'private';
   isFeatured?: boolean;
   isVerified?: boolean;
   verificationStatus?: 'pending' | 'verified' | 'rejected';
@@ -131,7 +132,7 @@ export interface Professional {
   isVerified: boolean;
 }
 
-export type UserRole = 'admin' | 'editor' | 'agent' | 'verified_professional' | 'normal_user';
+export type UserRole = 'admin' | 'editor' | 'agent' | 'agency' | 'verified_professional' | 'normal_user';
 
 export interface UserProfile {
   uid: string;
@@ -177,6 +178,7 @@ export interface Broker {
   officeAddress: string;
   companyName?: string;
   businessLicenseNumber?: string;
+  licenseNumber?: string;
   numberOfAgents?: number;
   companyDescription?: string;
   website?: string;
@@ -199,6 +201,27 @@ export interface Broker {
 
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
   isVerified: boolean;
+  visibility?: boolean;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface Agency {
+  id: string;
+  agencyId: string;
+  agencyName: string;
+  ownerId: string;
+  email: string;
+  phone: string;
+  license: string;
+  logo: string;
+  documents: string[];
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  verified: boolean;
+  isVerified?: boolean; // duplicate for cross-compatibility
+  visibility: boolean;
+  city?: string;
+  region?: string;
   createdAt: any;
   updatedAt?: any;
 }

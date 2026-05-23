@@ -1,177 +1,388 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ArrowUpRight, Search } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  ArrowUpRight, 
+  Search, 
+  Building2, 
+  MapPin, 
+  MessageCircle, 
+  Phone, 
+  Home as HomeIcon, 
+  Car, 
+  SlidersHorizontal, 
+  Award, 
+  Users,
+  Target,
+  Sparkles,
+  Zap,
+  CheckCircle2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { brokerService } from '@/services/brokerService';
-import { Broker } from '@/types';
+import { Broker, Agency, Listing } from '@/types';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import BrokerCard from '@/components/brokers/BrokerCard';
 
 export default function AgentsList() {
   const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Tab/Search selections
+  const [activeTab, setActiveTab] = useState<'agencies' | 'brokers'>('agencies');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('All');
-  const [selectedCompany, setSelectedCompany] = useState('All');
-  const [verifiedOnly, setVerifiedOnly] = useState(true); // Default to verified only
-  const [sortBy, setSortBy] = useState('experience');
+  const [selectedPropType, setSelectedPropType] = useState('All');
+  const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
-    const fetchBrokers = async () => {
+    const fetchAllEcosystemData = async () => {
       try {
-        const data = await brokerService.getVerifiedBrokers();
-        setBrokers(data);
+        const brokerData = await brokerService.getVerifiedBrokers();
+        const agencyData = await brokerService.getVerifiedAgencies();
+        
+        // Fetch listings to calculate accurate client-side counters
+        const listingsSnap = await getDocs(collection(db, 'listings'));
+        const listingsList = listingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Listing));
+        
+        setBrokers(brokerData);
+        setAgencies(agencyData);
+        setListings(listingsList);
       } catch (error) {
-        console.error("Failed to load brokers", error);
+        console.error("Failed to load ecosystem directories:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchBrokers();
+    fetchAllEcosystemData();
   }, []);
 
-  const cities = useMemo(() => ['All', ...Array.from(new Set(brokers.map(b => b.city || '').filter(Boolean)))], [brokers]);
-  const companies = useMemo(() => ['All', ...Array.from(new Set(brokers.map(b => b.companyName || '').filter(Boolean)))], [brokers]);
-  
+  // Compute live counters per ownerId
+  const getOwnerCounts = (ownerId: string) => {
+    const matched = listings.filter(l => l.ownerId === ownerId);
+    return {
+      total: matched.length,
+      properties: matched.filter(l => l.category === 'property').length,
+      vehicles: matched.filter(l => l.category === 'vehicle').length,
+    };
+  };
+
+  // Cities extracted
+  const cities = useMemo(() => {
+    const brokerCities = brokers.map(b => b.city || '').filter(Boolean);
+    const agencyCities = agencies.map(a => (a as any).city || 'Jigjiga').filter(Boolean);
+    return ['All', ...Array.from(new Set([...brokerCities, ...agencyCities]))];
+  }, [brokers, agencies]);
+
+  // Filters for Agencies
+  const filteredAgencies = useMemo(() => {
+    return agencies.filter(agency => {
+      // Basic Search on City / Name
+      const matchQuery = (agency.agencyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (agency.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (agency.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         ((agency as any).city || 'Jigjiga').toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchCity = selectedCity === 'All' || ((agency as any).city || 'Jigjiga').toLowerCase() === selectedCity.toLowerCase();
+      
+      // Property type counts
+      const counts = getOwnerCounts(agency.ownerId);
+      const matchType = selectedPropType === 'All' || 
+                        (selectedPropType === 'property' && counts.properties > 0) ||
+                        (selectedPropType === 'vehicle' && counts.vehicles > 0);
+
+      const matchVerified = !verifiedOnly || agency.verified === true || (agency as any).isVerified === true;
+
+      return matchQuery && matchCity && matchType && matchVerified;
+    });
+  }, [agencies, searchQuery, selectedCity, selectedPropType, verifiedOnly, listings]);
+
+  // Filters for Brokers
   const filteredBrokers = useMemo(() => {
-    let result = brokers.filter(b => 
-      (b.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.companyName || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    if (selectedCity !== 'All') {
-      result = result.filter(b => b.city === selectedCity);
-    }
-    
-    if (selectedCompany !== 'All') {
-      result = result.filter(b => b.companyName === selectedCompany);
-    }
-    
-    if (verifiedOnly) {
-      result = result.filter(b => b.isVerified);
-    }
-    
-    if (sortBy === 'experience') {
-      result.sort((a, b) => (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0));
-    }
-    
-    return result;
-  }, [brokers, searchQuery, selectedCity, selectedCompany, verifiedOnly, sortBy]);
+    return brokers.filter(broker => {
+      const matchQuery = (broker.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (broker.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (broker.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (broker.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+                         
+      const matchCity = selectedCity === 'All' || (broker.city || '').toLowerCase() === selectedCity.toLowerCase();
+      
+      // Listings held
+      const matchType = selectedPropType === 'All' || 
+                        (selectedPropType === 'property' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'property')) ||
+                        (selectedPropType === 'vehicle' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'vehicle'));
+
+      const matchVerified = !verifiedOnly || broker.isVerified === true;
+
+      return matchQuery && matchCity && matchType && matchVerified;
+    });
+  }, [brokers, searchQuery, selectedCity, selectedPropType, verifiedOnly, listings]);
 
   return (
-    <div className="pt-24 pb-20 min-h-screen bg-luxury-black text-white">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        
-        {/* Trust Banner */}
-        <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 rounded-xl p-4 flex items-center gap-4 mb-8">
-          <ShieldCheck className="text-[#C5A059] shrink-0" size={24} />
-          <p className="text-[#C5A059] text-xs md:text-sm font-semibold uppercase tracking-widest leading-relaxed">
-            Every registered agent undergoes identity verification, license audit, and background checks.
+    <div className="pt-24 pb-24 min-h-screen bg-[#070707] text-white">
+      {/* Search Header Hero (Zillow style) */}
+      <section className="relative py-20 overflow-hidden border-b border-white/5 bg-[radial-gradient(ellipse_at_top,rgba(197,160,89,0.04),transparent)]">
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.8),#070707)] pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10 space-y-6">
+          <div className="inline-flex items-center gap-2 bg-[#C5A059]/10 border border-[#C5A059]/35 px-4.5 py-1.5 rounded-full text-[10px] tracking-[0.25em] font-black uppercase text-[#C5A059]">
+            <Sparkles size={11} className="animate-spin" /> AmaanEstate Elite Network
+          </div>
+          <h1 className="text-4xl md:text-6xl font-display font-light text-white tracking-tight">
+            A great agent makes <br className="hidden md:block" />
+            <span className="font-bold gold-text-gradient">all the difference</span>
+          </h1>
+          <p className="text-white/50 text-base md:text-lg max-w-xl mx-auto font-light">
+            Find a real estate agent, brokerage corporation, or licensed commercial advisor handling certified deeds across the region.
           </p>
+
+          {/* Search Bar Zone */}
+          <div className="max-w-2xl mx-auto mt-10">
+            <div className="bg-[#111] p-1.5 rounded-[1.5rem] md:rounded-full border border-white/10 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center gap-1.5">
+              <div className="relative flex-1 flex items-center min-w-0">
+                <Search className="absolute left-5 text-white/40 shrink-0" size={18} />
+                <Input 
+                  placeholder="City, neighborhood, or ZIP code"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-0 pl-13 h-12 md:h-14 text-white text-sm focus-visible:ring-0 placeholder:text-white/30 w-full"
+                />
+              </div>
+              <div className="flex gap-1.5 px-1.5 md:px-0">
+                <Button 
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  variant="outline"
+                  className={`flex-1 md:flex-none bg-white/5 text-white/80 hover:bg-white/10 hover:text-white border-white/5 h-11 md:h-12 rounded-xl md:rounded-full px-4 text-[10px] font-bold uppercase tracking-widest gap-2 transition-all ${showAdvanced ? 'border-luxury-gold/50 bg-luxury-gold/5' : ''}`}
+                >
+                  <SlidersHorizontal size={14} /> <span>Filters</span>
+                </Button>
+                <Button className="flex-1 md:flex-none bg-[#C5A059] hover:bg-white text-black h-11 md:h-12 px-6 rounded-xl md:rounded-full font-bold uppercase tracking-wider text-[10px]">
+                  Search
+                </Button>
+              </div>
+            </div>
+
+            {/* Advanced Filters Panel */}
+            <AnimatePresence>
+              {showAdvanced && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mt-3 text-left bg-[#111]/80 backdrop-blur-md border border-white/5 rounded-2xl p-4 md:p-6 space-y-4 shadow-xl"
+                >
+                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase tracking-widest font-black text-white/40 ml-1">Location</label>
+                      <select 
+                        value={selectedCity}
+                        onChange={e => setSelectedCity(e.target.value)}
+                        className="w-full bg-white/5 border border-white/5 h-10 md:h-12 rounded-lg md:rounded-xl px-3 text-[11px] font-bold text-white focus:outline-none focus:border-[#C5A059] transition-colors"
+                      >
+                        {cities.map(c => (
+                          <option key={c} value={c} className="bg-[#111]">{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase tracking-widest font-black text-white/40 ml-1">Specialty</label>
+                      <select 
+                        value={selectedPropType}
+                        onChange={e => setSelectedPropType(e.target.value)}
+                        className="w-full bg-white/5 border border-white/5 h-10 md:h-12 rounded-lg md:rounded-xl px-3 text-[11px] font-bold text-white focus:outline-none focus:border-[#C5A059] transition-colors"
+                      >
+                        <option value="All" className="bg-[#111]">All Types</option>
+                        <option value="property" className="bg-[#111]">Real Estate</option>
+                        <option value="vehicle" className="bg-[#111]">Automotive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row md:items-center justify-between border-t border-white/5 pt-4 gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <input 
+                        type="checkbox" 
+                        id="verifyFilter"
+                        checked={verifiedOnly}
+                        onChange={e => setVerifiedOnly(e.target.checked)}
+                        className="h-4 w-4 rounded border-white/10 bg-white/5 text-[#C5A059] focus:outline-none checked:bg-[#C5A059]"
+                      />
+                      <label htmlFor="verifyFilter" className="text-[10px] font-bold uppercase tracking-wider text-white/60 cursor-pointer select-none">
+                        Verified professionals only
+                      </label>
+                    </div>
+
+                    <p className="text-[9px] text-[#C5A059] font-mono leading-none tracking-widest uppercase opacity-70">
+                      {filteredAgencies.length + filteredBrokers.length} specialists matched
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Catalog View */}
+      <section className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+        
+        {/* Toggle between Corporate Agency lists vs Brokers lists */}
+        <div className="flex justify-center gap-4 mb-14">
+          <button
+            onClick={() => setActiveTab('agencies')}
+            className={`px-8 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] font-black transition-all ${
+              activeTab === 'agencies'
+                ? 'bg-[#C5A059] text-black shadow-xl shadow-[#C5A059]/10'
+                : 'bg-white/5 text-white/65 hover:text-white border border-white/5'
+            }`}
+          >
+            🏢 Approved Agencies ({filteredAgencies.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('brokers')}
+            className={`px-8 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] font-black transition-all ${
+              activeTab === 'brokers'
+                ? 'bg-[#C5A059] text-black shadow-xl shadow-[#C5A059]/10'
+                : 'bg-white/5 text-white/65 hover:text-white border border-white/5'
+            }`}
+          >
+            🏛 Verified Brokers ({filteredBrokers.length})
+          </button>
         </div>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Verified Agents & Brokers</h1>
-            <p className="text-white/60 max-w-xl text-lg">
-              Connect with legally certified, high-end real estate specialists and regional agents. Secure, transparent, and direct transactions.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-            <Button asChild className="bg-[#C5A059] text-black hover:bg-white transition-colors h-12 w-full sm:w-auto font-bold tracking-wide">
-              <Link to="/agents/apply">
-                Apply as Verified Agent <ArrowUpRight size={18} className="ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-12 shadow-2xl flex flex-wrap gap-4 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-            <Input 
-              placeholder="Search by name, city, or specialization..." 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-12 bg-white/5 border border-white/5 h-12 rounded-xl focus:border-[#C5A059] text-white"
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-4 items-center w-full lg:w-auto">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase font-bold tracking-widest text-white/40">Region / City</span>
-              <select 
-                value={selectedCity} 
-                onChange={e => setSelectedCity(e.target.value)}
-                className="bg-white/5 border border-white/5 rounded-xl h-12 px-4 text-sm text-white focus:outline-none focus:border-[#C5A059] transition-colors"
-              >
-                {cities.map(c => <option key={c} value={c} className="bg-luxury-black">{c}</option>)}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase font-bold tracking-widest text-[#C5A059]">Affiliated Agency</span>
-              <select 
-                value={selectedCompany} 
-                onChange={e => setSelectedCompany(e.target.value)}
-                className="bg-white/5 border border-white/5 rounded-xl h-12 px-4 text-sm text-white focus:outline-none focus:border-[#C5A059] transition-colors"
-              >
-                {companies.map(c => <option key={c} value={c} className="bg-luxury-black">{c}</option>)}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase font-bold tracking-widest text-white/40">Sort Order</span>
-              <select 
-                value={sortBy} 
-                onChange={e => setSortBy(e.target.value)}
-                className="bg-white/5 border border-white/5 rounded-xl h-12 px-4 text-sm text-white focus:outline-none focus:border-[#C5A059] transition-colors"
-              >
-                <option value="experience" className="bg-luxury-black">Years of Experience</option>
-                <option value="name" className="bg-luxury-black">Alphabetical (A-Z)</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2 mt-5">
-              <input 
-                type="checkbox" 
-                id="verifiedOnly"
-                checked={verifiedOnly}
-                onChange={e => setVerifiedOnly(e.target.checked)}
-                className="rounded border-white/10 bg-white/5 text-[#C5A059] h-5 w-5 focus:outline-none focus:ring-0 checked:bg-[#C5A059]"
-              />
-              <label htmlFor="verifiedOnly" className="text-xs uppercase font-bold tracking-widest text-white/80 select-none cursor-pointer">
-                Strict Audited ONLY
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Directory Listings */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-3xl h-64 animate-pulse" />
+              <div key={i} className="bg-white/5 border border-white/10 rounded-3xl h-80 animate-pulse" />
             ))}
           </div>
-        ) : filteredBrokers.length === 0 ? (
-          <div className="text-center py-20 pointer-events-none">
-            <p className="text-white/40 text-sm uppercase tracking-widest font-bold">No certified agents matching criteria found.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredBrokers.map((broker) => (
-              <BrokerCard key={broker.id} broker={broker} />
-            ))}
-          </div>
-        )}
+        ) : activeTab === 'agencies' ? (
+          filteredAgencies.length === 0 ? (
+            <div className="text-center py-20 bg-white/[0.01] border border-white/5 rounded-3xl p-10">
+              <Building2 className="text-[#C5A059]/20 w-16 h-16 mx-auto mb-4" />
+              <p className="text-white/40 text-sm uppercase tracking-widest font-black">No matching active agency firms found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredAgencies.map((agency) => {
+                const counts = getOwnerCounts(agency.ownerId);
+                const brokerCount = brokers.filter(b => (b.companyName || '').toLowerCase().trim() === agency.agencyName.toLowerCase().trim()).length;
+                
+                return (
+                  <motion.div
+                    key={agency.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="group bg-[#111] border border-white/5 hover:border-[#C5A059]/30 rounded-[2.5rem] overflow-hidden transition-all duration-500 relative flex flex-col justify-between"
+                  >
+                    <div className="p-8">
+                      {/* Logo & Headline */}
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/10 shrink-0 relative flex items-center justify-center border border-white/15">
+                          {agency.logo ? (
+                            <img src={agency.logo} alt={agency.agencyName} className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="text-[#C5A059] w-8 h-8" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-display font-bold text-white group-hover:text-[#C5A059] transition-colors leading-tight truncate">
+                            {agency.agencyName}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-white/50 text-xs mt-1.5">
+                            <MapPin size={12} className="text-[#C5A059]" />
+                            <span className="truncate">{agency.city || 'Jigjiga HQ'}, Horn of Africa</span>
+                          </div>
+                          
+                          {/* Rich Badge Check */}
+                          <div className="mt-2.5 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+                            <ShieldCheck size={10} /> Verified agency
+                          </div>
+                        </div>
+                      </div>
 
-      </div>
+                      <p className="text-white/55 text-xs font-light leading-relaxed mb-8">
+                        Professional agency brokerage certified to register legal land plots, deed agreements, and premium properties with security warranty.
+                      </p>
+
+                      {/* Count Metrics Grid */}
+                      <div className="grid grid-cols-3 gap-2 bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-center mb-6">
+                        <div>
+                          <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Listings</p>
+                          <span className="text-white text-base font-bold font-mono">{counts.total}</span>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold">Properties</p>
+                          <span className="text-white text-base font-bold font-mono">{counts.properties}</span>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-[#C5A059] uppercase tracking-widest font-bold">Team</p>
+                          <span className="text-[#C5A059] text-base font-bold font-mono">{brokerCount}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-8 pb-8 pt-0 border-t border-white/5 mt-auto">
+                      <div className="flex gap-2.5 pt-6">
+                        <Button variant="outline" className="flex-1 bg-transparent border-white/10 text-white hover:bg-white/5 text-[10px] font-black uppercase tracking-widest" asChild>
+                          <a href={`tel:${agency.phone || '+251910012794'}`}>
+                            <Phone size={12} className="mr-1 text-emerald-500" /> Call
+                          </a>
+                        </Button>
+                        <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest" asChild>
+                          <a href={`https://wa.me/${(agency.phone || '').replace(/\D/g, '') || '251910012794'}?text=Hello%20${agency.agencyName},%20I%20found%20your%20agency%20on%20AmaanEstate.`} target="_blank" rel="noopener noreferrer">
+                            <MessageCircle size={14} className="mr-1.5" /> WhatsApp
+                          </a>
+                        </Button>
+                      </div>
+                      <Button className="w-full bg-white/5 hover:bg-[#C5A059] text-white hover:text-black border border-white/10 mt-3 text-[10px] rounded-xl font-bold uppercase tracking-widest h-11" asChild>
+                        <Link to={`/agents/agency_${agency.id}`}>
+                          View Public Profile <ArrowUpRight size={14} className="ml-1" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          filteredBrokers.length === 0 ? (
+            <div className="text-center py-20 bg-white/[0.01] border border-white/5 rounded-3xl p-10">
+              <Users className="text-[#C5A059]/20 w-16 h-16 mx-auto mb-4" />
+              <p className="text-white/40 text-sm uppercase tracking-widest font-black">No matching active agents found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredBrokers.map((broker) => (
+                <BrokerCard key={broker.id} broker={broker} />
+              ))}
+            </div>
+          )
+        )}
+      </section>
+
+      {/* Footer Support Banner */}
+      <section className="max-w-4xl mx-auto px-4 mt-12 text-center">
+        <div className="bg-[#111] border border-white/5 p-10 rounded-[2.5rem] space-y-4">
+          <Award size={32} className="text-[#C5A059] mx-auto" />
+          <h4 className="text-xl font-display font-semibold">Are you an independent broker or firm?</h4>
+          <p className="text-white/50 text-xs max-w-sm mx-auto">
+            Promote your Listings, complete compliance audits, and unlock premium brand exposure across our official network.
+          </p>
+          <Button asChild className="bg-[#C5A059] hover:bg-white text-black text-xs font-bold uppercase tracking-wider h-11 px-6 rounded-xl mt-2">
+            <Link to="/agents/apply">Apply for Verification</Link>
+          </Button>
+        </div>
+      </section>
+
     </div>
   );
 }

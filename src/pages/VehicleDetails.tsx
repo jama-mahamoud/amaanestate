@@ -127,6 +127,8 @@ export default function VehicleDetails() {
                   >
                     <option value="pending" className="bg-luxury-black">PENDING</option>
                     <option value="active" className="bg-luxury-black">ACTIVE</option>
+                    <option value="sold" className="bg-luxury-black">SOLD</option>
+                    <option value="rented" className="bg-luxury-black">RENTED</option>
                     <option value="rejected" className="bg-luxury-black">REJECTED</option>
                     <option value="suspended" className="bg-luxury-black">SUSPENDED</option>
                   </select>

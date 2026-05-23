@@ -17,81 +17,95 @@ interface HomeSearchProps {
 export default function HomeSearch({ onSearch }: HomeSearchProps) {
   const [category, setCategory] = useState<string>('');
   const [city, setCity] = useState<string>('');
-  const [status, setStatus] = useState<string>('');
+  const [listingType, setListingType] = useState<string>('');
   const [type, setType] = useState<string>('');
 
   const handleSearch = () => {
+    let resolvedCategory: any = undefined;
+    let resolvedSubcategory: string | undefined = type === 'all' ? undefined : type;
+
+    if (type === 'vehicle') {
+        resolvedCategory = 'vehicle';
+        resolvedSubcategory = undefined;
+    } else if (['house', 'land', 'commercial'].includes(type || '')) {
+        resolvedCategory = 'property';
+    }
+
     onSearch({
-        category: category ? (category as any) : undefined,
+        category: resolvedCategory,
         city: city ? city : undefined,
-        status: status ? (status as any) : undefined,
-        subcategory: type ? type : undefined,
+        listingType: listingType ? (listingType as any) : undefined,
+        subcategory: resolvedSubcategory,
     });
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-white/10 w-full max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+    <div className="bg-[#1A1A1A]/80 backdrop-blur-xl rounded-[2rem] md:rounded-full p-4 md:p-3 shadow-2xl border border-white/10 w-full max-w-5xl mx-auto overflow-hidden">
+      <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-1">
         
-        {/* Category */}
-        <div className="space-y-2">
-            <label className="text-white/50 text-xs font-bold uppercase tracking-widest ml-1">Category</label>
-            <Select value={category} onValueChange={(v) => { setCategory(v); setType(''); }}>
-                <SelectTrigger className="bg-white/5 border-0 h-12 rounded-xl text-white">
-                    <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-luxury-black border-white/10 text-white">
-                    <SelectItem value="property">Properties</SelectItem>
-                    <SelectItem value="vehicle">Vehicles</SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
-
         {/* City */}
-        <div className="space-y-2">
-            <label className="text-white/50 text-xs font-bold uppercase tracking-widest ml-1">City</label>
-            <Select value={city} onValueChange={setCity}>
-                <SelectTrigger className="bg-white/5 border-0 h-12 rounded-xl text-white">
-                    <SelectValue placeholder="Select City" />
-                </SelectTrigger>
-                <SelectContent className="bg-luxury-black border-white/10 text-white max-h-[300px]">
-                    {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-            </Select>
+        <div className="relative group flex-1 min-w-0">
+          <Select value={city} onValueChange={setCity}>
+            <SelectTrigger className="bg-transparent border-0 h-12 md:h-14 rounded-2xl md:rounded-full text-white hover:bg-white/5 transition-all px-4 md:px-6 ring-0 focus:ring-0 focus:outline-none">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-[10px] text-luxury-gold font-bold uppercase tracking-widest leading-none mb-1 opacity-70">Location</span>
+                <SelectValue placeholder="Select City" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white max-h-[300px] rounded-2xl">
+              {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 h-8 w-[1px] bg-white/10" />
         </div>
 
         {/* Type */}
-        <div className="space-y-2">
-            <label className="text-white/50 text-xs font-bold uppercase tracking-widest ml-1">Type</label>
-            <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="bg-white/5 border-0 h-12 rounded-xl text-white">
-                    <SelectValue placeholder="Select Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-luxury-black border-white/10 text-white">
-                    {category !== 'vehicle' && ['House', 'Villa', 'Apartment', 'Land', 'Commercial', 'Office', 'Warehouse'].map(t => <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>)}
-                {category !== 'property' && ['Car', 'Truck', 'Motorcycle'].map(t => <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>)}
-                </SelectContent>
-            </Select>
+        <div className="relative group flex-1 min-w-0">
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="bg-transparent border-0 h-12 md:h-14 rounded-2xl md:rounded-full text-white hover:bg-white/5 transition-all px-4 md:px-6 ring-0 focus:ring-0 focus:outline-none">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-[10px] text-luxury-gold font-bold uppercase tracking-widest leading-none mb-1 opacity-70">Property Type</span>
+                <SelectValue placeholder="All Types" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="house">Houses</SelectItem>
+              <SelectItem value="land">Land</SelectItem>
+              <SelectItem value="rental">Rentals</SelectItem>
+              <SelectItem value="commercial">Commercial</SelectItem>
+              <SelectItem value="vehicle">Vehicles</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 h-8 w-[1px] bg-white/10" />
         </div>
 
-        {/* Status */}
-        <div className="space-y-2">
-            <label className="text-white/50 text-xs font-bold uppercase tracking-widest ml-1">Status</label>
-            <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="bg-white/5 border-0 h-12 rounded-xl text-white">
-                    <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-luxury-black border-white/10 text-white">
-                    <SelectItem value="active">For Sale</SelectItem>
-                    <SelectItem value="rented">For Rent</SelectItem>
-                </SelectContent>
-            </Select>
+        {/* Listing Type / Buy/Rent */}
+        <div className="relative group flex-1 min-w-0">
+          <Select value={listingType} onValueChange={setListingType}>
+            <SelectTrigger className="bg-transparent border-0 h-12 md:h-14 rounded-2xl md:rounded-full text-white hover:bg-white/5 transition-all px-4 md:px-6 ring-0 focus:ring-0 focus:outline-none">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-[10px] text-luxury-gold font-bold uppercase tracking-widest leading-none mb-1 opacity-70">Listing Type</span>
+                <SelectValue placeholder="Buy / Rent" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
+              <SelectItem value="sale">For Sale</SelectItem>
+              <SelectItem value="rent">For Rent</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         {/* Search Button */}
-        <Button onClick={handleSearch} className="bg-[#C5A059] text-black hover:bg-white h-12 rounded-xl font-bold uppercase tracking-widest flex items-center gap-2 w-full">
-            <Search size={18} /> Search
-        </Button>
+        <div className="col-span-2 md:w-auto md:pl-2">
+          <Button 
+            onClick={handleSearch} 
+            className="bg-luxury-gold text-black hover:bg-white h-12 md:h-14 w-full md:w-14 rounded-xl md:rounded-full font-bold transition-all duration-300 flex items-center justify-center p-0 md:aspect-square group"
+          >
+            <Search className="group-hover:scale-110 transition-transform" size={20} />
+            <span className="md:hidden ml-2 uppercase tracking-widest text-xs">Search Listings</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

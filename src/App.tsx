@@ -65,6 +65,7 @@ const CreateProperty = lazy(() => import('./pages/CreateProperty'));
 // Additional Dashboard Sub-Modules
 const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
 const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
+const AgenciesBrokersManagement = lazy(() => import('./pages/dashboard/AgenciesBrokersManagement'));
 
 export default function App() {
   return (
@@ -128,6 +129,7 @@ export default function App() {
                   <Route path="articles/edit/:id" element={<EditArticle />} />
                   <Route path="agreements" element={<AdminAgreements />} />
                   <Route path="users" element={<DashboardUsers />} />
+                  <Route path="agencies-brokers" element={<AgenciesBrokersManagement />} />
                   <Route path="favorites" element={<DashboardFavorites />} />
                   <Route path="profile" element={<DashboardProfile />} />
                   <Route path="settings" element={<DashboardSettings />} />

@@ -78,26 +78,26 @@ export default function Vehicles() {
 
       <div className="container mx-auto px-4">
         {/* Marketplace Shell */}
-        <div className="glass-card p-4 md:p-8 rounded-[2rem] md:rounded-[2.5rem] mb-12 md:mb-20 shadow-2xl">
-          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 mb-6 md:mb-8">
+        <div className="glass-card p-4 md:p-6 rounded-[2rem] md:rounded-full mb-8 md:mb-16 shadow-2xl overflow-hidden border-white/5">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
             <div className="relative flex-1 group">
-              <Search className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={22} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
               <Input 
-                placeholder="Search the fleet... (e.g. Land Cruiser)" 
+                placeholder="Search the fleet..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border-0 h-14 md:h-16 pl-14 md:pl-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-base md:text-lg w-full"
+                className="bg-white/5 border-0 h-12 md:h-14 pl-14 rounded-xl md:rounded-full text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/20 text-sm w-full transition-all"
               />
             </div>
             
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex bg-white/5 rounded-xl md:rounded-2xl p-1.5 border border-white/5 w-fit">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+              <div className="flex bg-white/5 rounded-xl md:rounded-full p-1 border border-white/5 shrink-0">
                 {['All', 'sale', 'rent'].map(type => (
                   <button 
                     key={type}
                     onClick={() => updateFilter('listingType', type)}
-                    className={`h-11 md:h-12 px-6 md:px-8 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
-                      currentType === type ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
+                    className={`h-9 md:h-11 px-6 md:px-7 rounded-lg md:rounded-full text-[9px] uppercase font-bold tracking-widest transition-all whitespace-nowrap ${
+                      currentType === type ? 'bg-luxury-gold text-black shadow-lg shadow-luxury-gold/20' : 'hover:bg-white/5 text-white/40'
                     }`}
                   >
                     {type}
@@ -105,13 +105,13 @@ export default function Vehicles() {
                 ))}
               </div>
 
-              <div className="flex bg-white/5 rounded-xl md:rounded-2xl p-1.5 border border-white/5 w-fit">
+              <div className="flex bg-white/5 rounded-xl md:rounded-full p-1 border border-white/5 shrink-0">
                 {['All', 'ETB', 'USD'].map(cur => (
                   <button 
                     key={cur}
                     onClick={() => updateFilter('currency', cur)}
-                    className={`h-11 md:h-12 px-5 md:px-6 rounded-lg md:rounded-xl text-[9px] md:text-[10px] uppercase font-bold tracking-widest transition-all ${
-                      currentCurrency === cur ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' : 'hover:bg-white/5 text-white/40'
+                    className={`h-9 md:h-11 px-5 md:px-6 rounded-lg md:rounded-full text-[9px] uppercase font-bold tracking-widest transition-all whitespace-nowrap ${
+                      currentCurrency === cur ? 'bg-luxury-gold text-black shadow-lg shadow-luxury-gold/20' : 'hover:bg-white/5 text-white/40'
                     }`}
                   >
                     {cur}
@@ -121,18 +121,18 @@ export default function Vehicles() {
             </div>
           </div>
 
-          <div className="h-0.5 bg-white/5 mb-8"></div>
+          <div className="hidden md:block h-[1px] bg-white/5 my-4"></div>
 
           {/* Categories Bar */}
-          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex gap-2 overflow-x-auto pt-4 md:pt-0 pb-1 no-scrollbar scroll-smooth">
             {['All', 'SUV', 'Sedan', 'Truck', 'Lux', 'Bus'].map(cat => (
               <button
                 key={cat}
                 onClick={() => updateFilter('category', cat)}
-                className={`px-8 py-4 rounded-xl text-[10px] uppercase font-bold tracking-[0.15em] whitespace-nowrap border transition-all duration-300 ${
+                className={`shrink-0 px-6 py-2.5 rounded-lg md:rounded-full text-[9px] uppercase font-bold tracking-[0.15em] whitespace-nowrap border transition-all duration-300 ${
                   currentCategory.toLowerCase() === cat.toLowerCase() 
-                    ? 'bg-luxury-gold border-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/10' 
-                    : 'bg-white/5 border-transparent text-white/30 hover:text-white hover:bg-white/10'
+                    ? 'bg-luxury-gold border-luxury-gold text-black shadow-md shadow-luxury-gold/10' 
+                    : 'bg-white/5 border-white/5 text-white/30 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {cat}

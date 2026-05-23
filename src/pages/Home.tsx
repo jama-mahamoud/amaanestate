@@ -5,15 +5,11 @@ import HomeSearch from '@/components/HomeSearch';
 import LatestNews from '@/components/LatestNews';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
+import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { listingRepository } from '@/services/listingRepository';
-import { Listing, VehicleListing } from '@/types';
+import { Listing, VehicleListing, ListingCategory, ListingType } from '@/types';
 import { 
   Loader2, 
-  Home as HomeIcon, 
-  Compass, 
-  Key, 
-  Building, 
-  Car, 
   ArrowRight,
   Gem,
   ChevronLeft,
@@ -27,6 +23,10 @@ export default function Home() {
   const navigate = useNavigate();
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+
+  // Modal control
+  const [isListingModalOpen, setIsListingModalOpen] = useState(false);
+  const [modalListingType, setModalListingType] = useState<ListingType>('sale');
 
   const [searchParams] = useSearchParams();
 
@@ -42,13 +42,13 @@ export default function Home() {
   useEffect(() => {
     const cityParam = searchParams.get('city') || '';
     const subcatParam = searchParams.get('subcategory') || searchParams.get('category') || '';
-    const statusParam = searchParams.get('status') || searchParams.get('listingType') || '';
+    const typeParam = searchParams.get('listingType') || searchParams.get('status') || '';
 
     // Only apply if parameters are defined
-    if (cityParam || subcatParam || statusParam) {
+    if (cityParam || subcatParam || typeParam) {
       if (cityParam) setFilterCity(cityParam);
       if (subcatParam && subcatParam.toLowerCase() !== 'vehicle') setFilterSubcategory(subcatParam);
-      if (statusParam) setFilterStatus(statusParam === 'rent' || statusParam === 'rented' ? 'rent' : 'sale');
+      if (typeParam) setFilterStatus(typeParam === 'rent' || typeParam === 'rented' ? 'rent' : 'sale');
       
       setCurrentPage(1);
       setTimeout(() => {
@@ -88,7 +88,7 @@ export default function Home() {
   // Visibility and basic validation filters
   const visibleProperties = properties.filter(
     item =>
-      (item.status === "active") &&
+      (item.status === "active" || item.status === "approved" || (item as any).visibility === "public" || (item as any).approved === true) &&
       (item.price || 0) > 0
   );
 
@@ -111,36 +111,11 @@ export default function Home() {
     // Set filters locally for seamless client-side filtering on the Homepage
     setFilterCity(filters.city || '');
     setFilterSubcategory(filters.subcategory || '');
-    if (filters.status) {
-      setFilterStatus(filters.status === 'rented' ? 'rent' : 'sale');
+    if (filters.listingType) {
+      setFilterStatus(filters.listingType === 'rent' ? 'rent' : 'sale');
     } else {
       setFilterStatus('');
     }
-    setCurrentPage(1);
-
-    // Scroll smoothly to the general overview section
-    setTimeout(() => {
-      propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
-  };
-
-  // Handle Quick Category Buttons
-  const handleQuickFilter = (category: string) => {
-    if (category === 'vehicle') {
-      navigate('/vehicles');
-      return;
-    }
-
-    setFilterCity('');
-    setFilterStatus('');
-
-    if (category === 'rental') {
-      setFilterSubcategory('rental');
-      setFilterStatus('rent');
-    } else {
-      setFilterSubcategory(category);
-    }
-    
     setCurrentPage(1);
 
     // Scroll smoothly to the general overview section
@@ -199,55 +174,57 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-20 pb-20 overflow-hidden flex flex-col items-center justify-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-luxury-gold/5 via-luxury-black to-luxury-black z-0"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
+        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
+          <div className="text-center mb-10 w-full max-w-2xl">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-display font-medium tracking-tight mb-8"
+              className="text-3xl md:text-5xl font-display font-medium tracking-tight mb-4 text-white"
             >
-              Discover <span className="text-luxury-gold">Premium</span> Assets
+              Find your next luxury home
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-white/40 text-sm font-bold uppercase tracking-[0.2em]"
+              className="text-white/50 text-sm font-bold uppercase tracking-[0.2em]"
             >
-              VERIFIED REAL ESTATE & MOBILITY SOLUTIONS
+              Verified real estate and mobility solutions
             </motion.p>
           </div>
           
-          <HomeSearch onSearch={handleSearch} />
-
-          {/* Quick Category Navigation Row */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-4 mt-12 max-w-4xl mx-auto px-4"
-          >
-            {[
-              { label: 'Houses', category: 'house', icon: <HomeIcon size={16} /> },
-              { label: 'Land', category: 'land', icon: <Compass size={16} /> },
-              { label: 'Rentals', category: 'rental', icon: <Key size={16} /> },
-              { label: 'Commercial', category: 'commercial', icon: <Building size={16} /> },
-              { label: 'Vehicles', category: 'vehicle', icon: <Car size={16} /> }
-            ].map(cat => (
+          <div className="w-full max-w-3xl">
+            <HomeSearch onSearch={handleSearch} />
+            
+            {/* Quick Action Buttons */}
+            <div className="flex gap-4 mt-6">
               <button 
-                key={cat.label} 
-                onClick={() => handleQuickFilter(cat.category)}
-                className="flex items-center gap-2.5 px-6 py-3 bg-white/5 border border-white/5 hover:border-luxury-gold/30 rounded-2xl text-xs font-bold uppercase tracking-wider text-white/85 hover:text-white hover:bg-white/10 transition-all duration-300 shadow-xl cursor-pointer"
+                onClick={() => { setModalListingType('sale'); setIsListingModalOpen(true); }}
+                className="flex-1 bg-white text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-[#C5A059] transition-all"
               >
-                <span className="text-luxury-gold">{cat.icon}</span>
-                <span>{cat.label}</span>
+                Sell Now
               </button>
-            ))}
-          </motion.div>
+              <button 
+                onClick={() => { setModalListingType('rent'); setIsListingModalOpen(true); }}
+                className="flex-1 bg-white/10 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-[#C5A059] transition-all"
+              >
+                Rent Now
+              </button>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Modal for creating a property listing */}
+      <ListingCreationModal
+        isOpen={isListingModalOpen}
+        onClose={() => setIsListingModalOpen(false)}
+        category="property"
+        defaultListingType={modalListingType}
+      />
+
 
       {/* Main Listings Body */}
       {listingsLoading ? (
@@ -387,7 +364,7 @@ export default function Home() {
             <div className="container mx-auto px-4 relative z-10">
               <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">Active Vehicles</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {vehicles.filter(v => v.status === 'active').map(vehicle => (
+                {vehicles.filter(v => (v.status === 'active') || (v.status === 'approved' && v.visibility === 'public')).map(vehicle => (
                   <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
                 ))}
               </div>

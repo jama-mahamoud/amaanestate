@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/contexts/SettingsContext';
+import { FormWizard } from '@/components/ui/FormWizard';
 
 const DEFAULT_LEGAL_CLAUSES_EN = `1. TITLE OWNERSHIP: Party A represents and guarantees they hold legitimate and unrestrained ownership rights of the designated asset, free of any prior security interest, encumbrance, or ongoing litigation.
 
@@ -650,6 +651,54 @@ export default function Agreements() {
       alert("Error initiating print system.");
     }
   };
+
+  const renderAgreementType = (data: any, setData: any) => (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-2xl font-display font-bold text-white mb-2">{t("Agreement Type")}</h3>
+        <p className="text-white/40 text-xs">{t("Select the regulatory deed scheme that governs your asset transfer.")}</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {AgreementTypes.map(type => (
+          <button
+            key={type.value}
+            type="button"
+            onClick={() => handleTypeChange(type.value as any)}
+            className={`p-6 rounded-2xl border transition-all duration-300 text-left space-y-2 ${
+              data.agreementType === type.value
+                ? 'bg-[#C5A059]/10 border-[#C5A059]'
+                : 'bg-white/5 border-white/5 hover:border-white/20'
+            }`}
+          >
+            <span className={`block font-bold ${data.agreementType === type.value ? 'text-[#C5A059]' : 'text-white'}`}>
+              {t(type.label)}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderPartiesInfo = (data: any, setData: any) => (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-display font-bold text-white">{t("Parties Information")}</h3>
+      <div className="space-y-4">
+        <Input placeholder={t("Party A Full Name")} value={data.partyA_fullName} onChange={e => setData({...data, partyA_fullName: e.target.value})} className="h-14 bg-white/5 border-white/10 rounded-2xl" />
+        <Input placeholder={t("Party A Phone")} value={data.partyA_phone} onChange={e => setData({...data, partyA_phone: e.target.value})} className="h-14 bg-white/5 border-white/10 rounded-2xl" />
+        {/* Add more party inputs here */}
+      </div>
+    </div>
+  );
+
+  const wizardSteps = [
+    { id: 'type', title: 'Agreement Type', component: renderAgreementType },
+    { id: 'parties', title: 'Parties Information', component: renderPartiesInfo },
+    { id: 'asset', title: 'Asset Details', component: (data: any, setData: any) => <div>Asset Component</div> },
+    { id: 'terms', title: 'Terms & Conditions', component: (data: any, setData: any) => <div>Terms Component</div> },
+    { id: 'documents', title: 'Documents/Attachments', component: (data: any, setData: any) => <div>Documents Component</div> },
+    { id: 'review', title: 'Review & Confirm', component: (data: any, setData: any) => <div>Review Component</div> },
+  ];
 
   if (submittedId) {
     return (

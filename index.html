@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <title>AmaanEstate</title>
-    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#000000" />
     <link rel="apple-touch-icon" href="/house_luxury_icon.png" />
   </head>
@@ -13,10 +12,26 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       window.onerror = function(message, source, lineno, colno, error) {
+        const msg = String(message).toLowerCase();
+        // Silence Vite/WebSocket/HMR benign errors in development
+        if (
+          msg.includes('websocket') || 
+          msg.includes('vite') || 
+          msg.includes('hmr') || 
+          msg.includes('socket')
+        ) {
+          console.warn('[Vite Dev Suppressed]', message);
+          return;
+        }
         console.error('Global Error:', { message, source, lineno, colno, error });
-        document.body.innerHTML += '<div style="position:fixed;bottom:0;left:0;background:red;color:white;padding:10px;z-index:9999;">Error: ' + message + '</div>';
+        document.body.innerHTML += '<div style="position:fixed;bottom:0;left:0;background:red;color:white;padding:10px;z-index:9999;font-size:10px;max-width:300px;">Internal Exception: ' + message + '</div>';
       };
       window.addEventListener('unhandledrejection', event => {
+        const reason = String(event.reason).toLowerCase();
+        if (reason.includes('websocket') || reason.includes('vite')) {
+          console.warn('[Vite Promise Suppressed]', event.reason);
+          return;
+        }
         console.error('Unhandled Promise Rejection:', event.reason);
       });
     </script>

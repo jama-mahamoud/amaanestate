@@ -17,6 +17,9 @@ export default function EditArticle() {
       articleService.getArticleById(id).then(data => {
         setArticle(data);
         setLoading(false);
+      }).catch(err => {
+        console.error("Failed to fetch article:", err);
+        setLoading(false);
       });
     }
   }, [id]);

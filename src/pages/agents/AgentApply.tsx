@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, Upload, ChevronRight, Scale, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Upload, ChevronRight, Scale, AlertCircle, FileText, CheckCircle2, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ export default function AgentApply() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [applyType, setApplyType] = useState<'individual' | 'agency'>('individual');
 
   const [formData, setFormData] = useState({
     fullName: user?.displayName || '',
@@ -26,10 +27,14 @@ export default function AgentApply() {
     city: 'Jigjiga',
     officeAddress: '',
 
+    // Broker Specific
     yearsOfExperience: '',
     areasOfOperation: '',
     propertySpecialization: '',
     languagesSpoken: 'Somali, English',
+
+    // Agency Specific
+    agencyName: '',
 
     agreement: false
   });
@@ -38,6 +43,7 @@ export default function AgentApply() {
   const [businessLicenseFiles, setBusinessLicenseFiles] = useState<File[]>([]);
   const [brokerCertificateFiles, setBrokerCertificateFiles] = useState<File[]>([]);
   const [profilePhotoFiles, setProfilePhotoFiles] = useState<File[]>([]);
+  const [companyLogoFiles, setCompanyLogoFiles] = useState<File[]>([]);
 
   if (authLoading) {
     return (
@@ -54,7 +60,7 @@ export default function AgentApply() {
           <ShieldCheck className="w-16 h-16 text-[#C5A059] mx-auto mb-6" />
           <h2 className="text-3xl font-display font-semibold mb-4">Verification Required</h2>
           <p className="text-white/60 mb-8 max-w-sm mx-auto">
-            Please log in or sign up with an authenticated account to start your background verification and apply as a certified agent.
+            Please log in or sign up with an authenticated account to start your background verification and apply as a certified agent/agency.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-[#C5A059] text-black">
@@ -101,25 +107,37 @@ export default function AgentApply() {
 
     setLoading(true);
     try {
-      await brokerService.applyForBroker(user.uid, {
-        fullName: formData.fullName,
-        phone: formData.phone,
-        whatsapp: formData.whatsapp,
-        email: formData.email,
-        region: formData.region,
-        city: formData.city,
-        officeAddress: formData.officeAddress,
-        
-        governmentIdUrl: governmentIdFiles.length > 0 ? "uploaded_gov_id_url" : "",
-        businessLicenseUrl: businessLicenseFiles.length > 0 ? "uploaded_license_url" : "",
-        brokerCertificateUrl: brokerCertificateFiles.length > 0 ? "uploaded_cert_url" : "",
-        profilePhotoUrl: profilePhotoFiles.length > 0 ? "uploaded_photo_url" : "",
+      if (applyType === 'individual') {
+        await brokerService.applyForBroker(user.uid, {
+          type: 'individual',
+          fullName: formData.fullName,
+          phone: formData.phone,
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          region: formData.region,
+          city: formData.city,
+          officeAddress: formData.officeAddress,
+          
+          governmentIdUrl: governmentIdFiles.length > 0 ? "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=300&q=80" : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=300&q=80",
+          businessLicenseUrl: businessLicenseFiles.length > 0 ? "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=300&q=80" : "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=300&q=80",
+          brokerCertificateUrl: brokerCertificateFiles.length > 0 ? "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=300&q=80" : "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=300&q=80",
+          profilePhotoUrl: profilePhotoFiles.length > 0 ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
 
-        yearsOfExperience: Number(formData.yearsOfExperience) || 0,
-        areasOfOperation: formData.areasOfOperation.split(',').map(s => s.trim()),
-        propertySpecialization: formData.propertySpecialization.split(',').map(s => s.trim()),
-        languagesSpoken: formData.languagesSpoken.split(',').map(s => s.trim()),
-      });
+          yearsOfExperience: Number(formData.yearsOfExperience) || 0,
+          areasOfOperation: formData.areasOfOperation.split(',').map(s => s.trim()),
+          propertySpecialization: formData.propertySpecialization.split(',').map(s => s.trim()),
+          languagesSpoken: formData.languagesSpoken.split(',').map(s => s.trim()),
+        });
+      } else {
+        await brokerService.applyForAgency(user.uid, {
+          agencyName: formData.agencyName || formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          license: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=300&q=80",
+          logo: companyLogoFiles.length > 0 ? "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80" : "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80",
+          documents: ["https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=300&q=80"]
+        });
+      }
       setSubmitted(true);
     } catch (error) {
       console.error(error);
@@ -139,11 +157,48 @@ export default function AgentApply() {
             <ShieldCheck size={14} />
             <span>AmaanEstate Compliance Officer</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Certified Agent Application</h1>
-          <p className="text-white/60 text-sm max-w-md mx-auto">
-            Become a legally verified real estate agent or land broker on the Horn of Africa. Access premium tools, contracts and user leads safely.
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Certified Registry Application</h1>
+          <p className="text-white/60 text-sm max-w-sm mx-auto">
+            Become a legally verified real estate agent, independent broker, or corporate agency on the Horn of Africa.
           </p>
         </div>
+
+        {/* Action: Select Application Mode at Step 1 */}
+        {step === 1 && (
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <button
+              type="button"
+              onClick={() => setApplyType('individual')}
+              className={`p-6 rounded-[2rem] border text-left transition-all duration-300 flex flex-col items-start gap-4 ${
+                applyType === 'individual'
+                  ? 'bg-[#C5A059] border-[#C5A059] text-black shadow-lg shadow-[#C5A059]/15'
+                  : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
+              }`}
+            >
+              <User size={24} />
+              <div>
+                <p className="font-bold text-sm uppercase tracking-wider block">Independent Broker</p>
+                <span className="text-[10px] leading-tight block mt-1">Apply as an individual certified market operator</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setApplyType('agency')}
+              className={`p-6 rounded-[2rem] border text-left transition-all duration-300 flex flex-col items-start gap-4 ${
+                applyType === 'agency'
+                  ? 'bg-[#C5A059] border-[#C5A059] text-black shadow-lg shadow-[#C5A059]/15'
+                  : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
+              }`}
+            >
+              <Building2 size={24} />
+              <div>
+                <p className="font-bold text-sm uppercase tracking-wider block">Agency Corporation</p>
+                <span className="text-[10px] leading-tight block mt-1">Apply as a licensed brokerage or corporate firm</span>
+              </div>
+            </button>
+          </div>
+        )}
 
         {/* Steps Gauge */}
         <div className="flex items-center justify-between mb-8 relative">
@@ -156,7 +211,7 @@ export default function AgentApply() {
                 {s}
               </div>
               <span className={`text-[10px] uppercase tracking-widest font-bold ${step >= s ? 'text-[#C5A059]' : 'text-white/40'}`}>
-                {s === 1 ? 'Personal ID' : s === 2 ? 'Audit Docs' : 'Agreement'}
+                {s === 1 ? 'Primary Details' : s === 2 ? 'Audit Docs' : 'Agreement'}
               </span>
             </div>
           ))}
@@ -168,19 +223,33 @@ export default function AgentApply() {
             {step === 1 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span>Step 1: Contact & Personal Registry</span>
+                  <span>Step 1: Contact & Legal Identity</span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Full Name</label>
-                    <Input 
-                      required 
-                      value={formData.fullName} 
-                      onChange={e => setFormData({...formData, fullName: e.target.value})}
-                      placeholder="e.g., Mahdi Omar"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
+                  {applyType === 'agency' ? (
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">Agency / Brand Corporate Name</label>
+                      <Input 
+                        required 
+                        value={formData.agencyName} 
+                        onChange={e => setFormData({...formData, agencyName: e.target.value})}
+                        placeholder="e.g., Somali Lands Development Ltd"
+                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">Full Legal Name</label>
+                      <Input 
+                        required 
+                        value={formData.fullName} 
+                        onChange={e => setFormData({...formData, fullName: e.target.value})}
+                        placeholder="e.g., Mahdi Omar"
+                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                      />
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label className="text-xs uppercase font-bold tracking-widest text-white/60">Registry Email</label>
                     <Input 
@@ -193,7 +262,7 @@ export default function AgentApply() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Phone Line</label>
+                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Official Phone Line</label>
                     <Input 
                       required 
                       value={formData.phone} 
@@ -202,18 +271,22 @@ export default function AgentApply() {
                       className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
                     />
                   </div>
+                  
+                  {applyType === 'individual' && (
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">WhatsApp Line</label>
+                      <Input 
+                        required 
+                        value={formData.whatsapp} 
+                        onChange={e => setFormData({...formData, whatsapp: e.target.value})}
+                        placeholder="e.g., +251 911 223 344"
+                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                      />
+                    </div>
+                  )}
+
                   <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">WhatsApp Line</label>
-                    <Input 
-                      required 
-                      value={formData.whatsapp} 
-                      onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-                      placeholder="e.g., +251 911 223 344"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">City</label>
+                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Operational Province / City</label>
                     <Input 
                       required 
                       value={formData.city} 
@@ -222,12 +295,12 @@ export default function AgentApply() {
                       className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Office Address (Optional)</label>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Main Office Corporate Address</label>
                     <Input 
                       value={formData.officeAddress} 
                       onChange={e => setFormData({...formData, officeAddress: e.target.value})}
-                      placeholder="e.g., Somali Region Commercial Towers"
+                      placeholder="e.g., Somali Region Commercial Towers, Block #B, Jigjiga"
                       className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
                     />
                   </div>
@@ -240,59 +313,72 @@ export default function AgentApply() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-4">
                   <span>Step 2: Legal Documentation & Credentials</span>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Years of Experience</label>
-                    <Input 
-                      type="number" 
-                      required 
-                      value={formData.yearsOfExperience} 
-                      onChange={e => setFormData({...formData, yearsOfExperience: e.target.value})}
-                      placeholder="e.g., 5"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Sectors / Specialization (comma separated)</label>
-                    <Input 
-                      required 
-                      value={formData.propertySpecialization} 
-                      onChange={e => setFormData({...formData, propertySpecialization: e.target.value})}
-                      placeholder="e.g., Land plots, Luxury villas, Commercial"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Operational Cities / Neighborhoods</label>
-                    <Input 
-                      required 
-                      value={formData.areasOfOperation} 
-                      onChange={e => setFormData({...formData, areasOfOperation: e.target.value})}
-                      placeholder="e.g., Hodan District, Jigjiga HQ, Dire Dawa"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                </div>
+                
+                {applyType === 'individual' ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Years of Experience</label>
+                        <Input 
+                          type="number" 
+                          required 
+                          value={formData.yearsOfExperience} 
+                          onChange={e => setFormData({...formData, yearsOfExperience: e.target.value})}
+                          placeholder="e.g., 5"
+                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Sectors / Specialization (comma separated)</label>
+                        <Input 
+                          required 
+                          value={formData.propertySpecialization} 
+                          onChange={e => setFormData({...formData, propertySpecialization: e.target.value})}
+                          placeholder="e.g., Land plots, Luxury villas, Commercial"
+                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Operational Neighborhoods</label>
+                        <Input 
+                          required 
+                          value={formData.areasOfOperation} 
+                          onChange={e => setFormData({...formData, areasOfOperation: e.target.value})}
+                          placeholder="e.g., Hodan District, Jigjiga HQ, Dire Dawa"
+                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-4 pt-4 border-t border-white/10">
-                  <p className="text-xs uppercase font-bold tracking-widest text-[#C5A059]">Credentials Upload (National ID or Business License)</p>
-                  
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                    <span className="text-[11px] uppercase font-bold text-white/60 block">1. Government Photo Identity (Passport / Regional ID)</span>
-                    <ImageUpload 
-                      onImagesChange={setGovernmentIdFiles} 
-                      maxFiles={1} 
-                    />
-                  </div>
+                    <div className="space-y-4 pt-4 border-t border-white/10">
+                      <p className="text-xs uppercase font-bold tracking-widest text-[#C5A059]">Credentials Upload (National ID or Business License)</p>
+                      
+                      <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
+                        <span className="text-[11px] uppercase font-bold text-white/60 block">1. Government Photo Identity (Passport / Regional ID)</span>
+                        <ImageUpload onImagesChange={setGovernmentIdFiles} maxFiles={1} />
+                      </div>
 
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                    <span className="text-[11px] uppercase font-bold text-white/60 block">2. Profile Photo (Visible in Registry Directory)</span>
-                    <ImageUpload 
-                      onImagesChange={setProfilePhotoFiles} 
-                      maxFiles={1} 
-                    />
+                      <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
+                        <span className="text-[11px] uppercase font-bold text-white/60 block">2. Profile Photo (Visible in Registry Directory)</span>
+                        <ImageUpload onImagesChange={setProfilePhotoFiles} maxFiles={1} />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-xs text-white/60">Please provide corporate licensing certificates and supporting deeds to verified the operating entity.</p>
+                    
+                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
+                      <span className="text-[11px] uppercase font-bold text-white/60 block">1. Corporate Business registration/License Document</span>
+                      <ImageUpload onImagesChange={setBusinessLicenseFiles} maxFiles={1} />
+                    </div>
+
+                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
+                      <span className="text-[11px] uppercase font-bold text-white/60 block">2. Official Corporate Logo</span>
+                      <ImageUpload onImagesChange={setCompanyLogoFiles} maxFiles={1} />
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -310,7 +396,7 @@ export default function AgentApply() {
                     className="mt-1 h-5 w-5 bg-white/5 border-white/10 text-[#C5A059] focus:ring-0 checked:bg-[#C5A059]"
                   />
                   <label htmlFor="chk-agreeterm" className="text-white/60 text-xs leading-relaxed select-none cursor-pointer">
-                    I state that all documents and information uploaded are legally valid. I permit AmaanEstate’s Compliance Board to run regional criminal record, address validation, and license audits under Ethiopian/regional frameworks.
+                    I state that all documents and information uploaded are legally valid. I permit AmaanEstate’s Compliance Board to run regional criminal record, address validation, and license audits under Ethiopian/regional frameworks to enforce double-allocation safety.
                   </label>
                 </div>
               </motion.div>

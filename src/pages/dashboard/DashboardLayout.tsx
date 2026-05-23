@@ -47,18 +47,28 @@ function DashboardContent() {
   ];
 
   const currentRole = profile?.role?.toString().trim().toLowerCase();
-  const isAdmin = currentRole === 'admin' || currentRole === 'administrator';
-  const isEditor = isAdmin || currentRole === 'editor';
+  const isAdmin = currentRole === 'admin' || currentRole === 'administrator' || profile?.role === 'admin';
+  const isAgency = currentRole === 'agency' || profile?.role === 'agency';
+  const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
 
   if (isAdmin) {
     navItems.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+    navItems.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
     navItems.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
   }
 
-  navItems.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
-  navItems.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+  if (isAgency) {
+    navItems.push({ name: 'Agency Profile', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
+    navItems.push({ name: 'Listings', path: '/dashboard/properties', icon: <Home size={18} /> });
+  } else {
+    navItems.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+    navItems.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+  }
+  
   navItems.push({ name: 'Favorites', path: '/dashboard/favorites', icon: <Heart size={18} /> });
-  navItems.push({ name: 'Profile', path: '/dashboard/profile', icon: <User size={18} /> });
+  if (!isAgency) {
+      navItems.push({ name: 'Profile', path: '/dashboard/profile', icon: <User size={18} /> });
+  }
 
   if (isEditor) {
     navItems.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
