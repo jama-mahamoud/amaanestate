@@ -58,7 +58,7 @@ export const moderationService = {
         totalArticlesCount,
         totalInquiriesCount
       ] = await Promise.all([
-        getCountFromServer(query(listingsRef, where('status', '==', 'pending'))),
+        getCountFromServer(query(listingsRef, where('status', 'in', ['pending', 'PENDING']))),
         getCountFromServer(query(proAppsRef, where('status', 'in', ['pending', 'pending_review']))),
         getCountFromServer(query(usersRef, where('role', '==', 'verified_professional'))),
         getCountFromServer(listingsRef),
@@ -109,7 +109,7 @@ export const moderationService = {
   /**
    * Real-time subscription for listings
    */
-  subscribeToListings(callback: (listings: Listing[]) => void, status: ListingStatus = 'pending', category?: ListingCategory) {
+  subscribeToListings(callback: (listings: Listing[]) => void, status: ListingStatus = 'PENDING', category?: ListingCategory) {
     const listingsRef = collection(db, 'listings');
     let constraints: any[] = [where('status', '==', status)];
     
@@ -136,7 +136,7 @@ export const moderationService = {
   /**
    * Fetch listings pending approval
    */
-  async getPendingListings(category?: ListingCategory, status: ListingStatus = 'pending') {
+  async getPendingListings(category?: ListingCategory, status: ListingStatus = 'PENDING') {
     const listingsRef = collection(db, 'listings');
     const constraints = [where('status', '==', status)];
     
@@ -180,10 +180,10 @@ export const moderationService = {
     try {
       console.log(`Approving listing ${id}...`);
       await updateDoc(listingRef, {
-        status: 'approved',
+        status: 'ACTIVE',
         visibility: 'public',
         isVerified: true,
-        verificationStatus: 'verified',
+        verificationStatus: 'VERIFIED',
         updatedAt: serverTimestamp()
       });
       return true;
@@ -202,9 +202,9 @@ export const moderationService = {
     try {
       console.log(`Rejecting listing ${id}...`);
       await updateDoc(listingRef, {
-        status: 'rejected',
+        status: 'SUSPENDED',
         isVisible: false,
-        verificationStatus: 'rejected',
+        verificationStatus: 'REJECTED',
         updatedAt: serverTimestamp()
       });
       return true;

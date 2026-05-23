@@ -1,5 +1,6 @@
 export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
-export type ListingStatus = 'pending' | 'active' | 'sold' | 'rented' | 'archived' | 'suspended' | 'rejected' | 'approved';
+export type ListingStatus = 'DRAFT' | 'PENDING' | 'VERIFIED' | 'ACTIVE' | 'SUSPENDED';
+export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
 export type ListingType = 'sale' | 'rent';
 
 export interface Listing {
@@ -20,7 +21,7 @@ export interface Listing {
   visibility?: 'public' | 'private';
   isFeatured?: boolean;
   isVerified?: boolean;
-  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  verificationStatus?: VerificationStatus;
   legalChecked?: boolean;
   ownershipVerified?: boolean;
   legalListingId?: string;
@@ -44,6 +45,8 @@ export interface Listing {
   nearbyPlacesString?: string;
   createdAt: any;
   updatedAt?: any;
+  trustScore?: number;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
 export interface Property extends Listing {

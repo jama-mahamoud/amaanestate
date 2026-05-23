@@ -438,6 +438,11 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                           longitude={formData.longitude}
                           city={formData.city}
                           onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                          onAddressChange={(address) => setFormData(prev => ({
+                            ...prev,
+                            city: address.city || prev.city,
+                            district: address.district || prev.district,
+                          }))}
                         />
                       </div>
                     </div>

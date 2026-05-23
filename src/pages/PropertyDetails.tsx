@@ -347,8 +347,8 @@ export default function PropertyDetails() {
             {/* Core Blueprint Parameters */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-10 border-y border-white/5 bg-white/[0.01] px-6 rounded-2xl">
               {[
-                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: (property.beds !== undefined ? property.beds : 'Not Provided') + ' Rooms' },
-                { icon: <Bath size={24} />, label: 'Bathrooms', value: (property.baths !== undefined ? property.baths : 'Not Provided') + ' Baths' },
+                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: (property.beds !== undefined && property.beds !== null ? property.beds : 'Not Provided') + ' Rooms' },
+                { icon: <Bath size={24} />, label: 'Bathrooms', value: (property.baths !== undefined && property.baths !== null ? property.baths : 'Not Provided') + ' Baths' },
                 { icon: <Square size={24} />, label: 'Metric Area', value: property.size || 'Not Provided' },
                 { icon: <Calendar size={24} />, label: 'Compliance Year', value: property.complianceYear || 'Not provided' },
               ].map((item, i) => (

@@ -15,9 +15,5 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
-    server: {
-      // Disable file watching to save CPU during agent edits and preserve system stability.
-      watch: null,
-    },
   };
 });

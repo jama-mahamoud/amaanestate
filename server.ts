@@ -241,37 +241,11 @@ async function startServer() {
     if (process.env.NODE_ENV !== "production") {
       const vite = await createViteServer({
         server: { 
-          middlewareMode: true,
-          hmr: { server }
+          middlewareMode: true
         },
-        appType: "custom",
+        appType: "spa",
       });
       app.use(vite.middlewares);
-
-      // Dedicated catch-all handler inside Express to read and transform index.html
-      // This guarantees the @vitejs/plugin-react preamble is successfully detected
-      app.get("*", async (req, res, next) => {
-        const url = req.originalUrl.split("?")[0];
-        if (url.startsWith("/api")) {
-          return next();
-        }
-        
-        // Exclude typical non-HTML static assets so they can fall through to Vite module handler or express.static
-        const ext = path.extname(url).toLowerCase();
-        const nonHtmlAssets = [".js", ".jsx", ".ts", ".tsx", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".json", ".map", ".wasm"];
-        if (ext && nonHtmlAssets.includes(ext)) {
-          return next();
-        }
-
-        try {
-          let template = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
-          template = await vite.transformIndexHtml(req.originalUrl, template);
-          res.status(200).set({ "Content-Type": "text/html" }).end(template);
-        } catch (e: any) {
-          vite.ssrFixStacktrace(e);
-          next(e);
-        }
-      });
     } else {
       const distPath = path.join(process.cwd(), "dist");
       app.use(express.static(distPath));
@@ -290,33 +264,9 @@ async function startServer() {
         server: { 
           middlewareMode: true
         },
-        appType: "custom",
+        appType: "spa",
       });
       app.use(vite.middlewares);
-
-      // Dedicated catch-all handler for Vercel development mode
-      app.get("*", async (req, res, next) => {
-        const url = req.originalUrl.split("?")[0];
-        if (url.startsWith("/api")) {
-          return next();
-        }
-        
-        // Exclude typical non-HTML static assets so they can fall through to Vite module handler or express.static
-        const ext = path.extname(url).toLowerCase();
-        const nonHtmlAssets = [".js", ".jsx", ".ts", ".tsx", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".json", ".map", ".wasm"];
-        if (ext && nonHtmlAssets.includes(ext)) {
-          return next();
-        }
-
-        try {
-          let template = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
-          template = await vite.transformIndexHtml(req.originalUrl, template);
-          res.status(200).set({ "Content-Type": "text/html" }).end(template);
-        } catch (e: any) {
-          vite.ssrFixStacktrace(e);
-          next(e);
-        }
-      });
     } else {
       const distPath = path.join(process.cwd(), "dist");
       app.use(express.static(distPath));

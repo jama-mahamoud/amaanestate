@@ -32,7 +32,7 @@ export default function AgentsList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('All');
   const [selectedPropType, setSelectedPropType] = useState('All');
-  const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
@@ -96,7 +96,11 @@ export default function AgentsList() {
                         (selectedPropType === 'property' && counts.properties > 0) ||
                         (selectedPropType === 'vehicle' && counts.vehicles > 0);
 
-      const matchVerified = !verifiedOnly || agency.verified === true || (agency as any).isVerified === true;
+      const isNotBanned = agency.status !== 'rejected' && agency.status !== 'suspended' && (agency as any).status !== 'SUSPENDED';
+      const isApproved = agency.status === 'approved' || (agency.status as any) === 'verified' || (agency.status as any) === 'ACTIVE' || (agency.status as any) === 'active' || (agency.status as any) === 'VERIFIED';
+      const isActuallyVerified = agency.verified === true || (agency as any).isVerified === true || isApproved;
+      
+      const matchVerified = isNotBanned && (!verifiedOnly || isActuallyVerified);
 
       return matchQuery && matchCity && matchType && matchVerified;
     });
@@ -114,7 +118,11 @@ export default function AgentsList() {
                         (selectedPropType === 'property' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'property')) ||
                         (selectedPropType === 'vehicle' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'vehicle'));
 
-      const matchVerified = !verifiedOnly || broker.isVerified === true;
+      const isNotBanned = broker.status !== 'rejected' && broker.status !== 'suspended' && (broker as any).status !== 'SUSPENDED';
+      const isApproved = broker.status === 'approved' || (broker.status as any) === 'verified' || (broker.status as any) === 'ACTIVE' || (broker.status as any) === 'active' || (broker.status as any) === 'VERIFIED';
+      const isActuallyVerified = broker.isVerified === true || (broker as any).verified === true || isApproved;
+      
+      const matchVerified = isNotBanned && (!verifiedOnly || isActuallyVerified);
 
       return matchQuery && matchCity && matchType && matchVerified;
     });
@@ -238,7 +246,7 @@ export default function AgentsList() {
                 : 'bg-white/5 text-white/65 hover:text-white border border-white/5'
             }`}
           >
-            🏢 Approved Agencies ({filteredAgencies.length})
+            🏢 Corporate Agencies ({filteredAgencies.length})
           </button>
           <button
             onClick={() => setActiveTab('brokers')}
@@ -248,7 +256,7 @@ export default function AgentsList() {
                 : 'bg-white/5 text-white/65 hover:text-white border border-white/5'
             }`}
           >
-            🏛 Verified Brokers ({filteredBrokers.length})
+            🏛 Independent Brokers ({filteredBrokers.length})
           </button>
         </div>
 

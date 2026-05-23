@@ -23,6 +23,7 @@ import {
 import { db, auth } from '../lib/firebase';
 import { Listing, ListingCategory, ListingStatus, ListingType } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/utils';
+import { trustService } from './trustService'; 
 
 export interface ListingFilter {
   category?: ListingCategory;
@@ -48,13 +49,19 @@ export const listingService = {
    * Internal normalization for legacy documents and consistency
    */
   normalizeListing(data: any, id: string): Listing {
-    const status = data.status || 'active';
-    const normalizedStatus = (status === 'approved' || (data.visibility === 'public') || (data.approved === true)) ? 'active' : status;
+    let status = data.status || 'DRAFT';
+    
+    // Legacy mapping
+    if (status === 'pending' || status === 'PENDING') status = 'PENDING';
+    else if (status === 'active' || status === 'approved' || status === 'ACTIVE') status = 'ACTIVE';
+    else if (status === 'suspended' || status === 'SUSPENDED') status = 'SUSPENDED';
+    else if (status === 'rejected' || status === 'REJECTED') status = 'SUSPENDED'; // Treat rejected as suspended for now
+    else status = 'DRAFT';
 
     return {
       ...data,
       id,
-      status: normalizedStatus as ListingStatus,
+      status: status as ListingStatus,
       category: data.category || 'property',
       price: Number(data.price) || 0,
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt : (data.createdAt ? Timestamp.fromDate(new Date(data.createdAt)) : Timestamp.now()),
@@ -79,9 +86,10 @@ export const listingService = {
 
     // Default to active listings if no status is specified
     if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
-       filterConstraints.push(where('status', '==', 'active'));
+       filterConstraints.push(where('status', 'in', ['active', 'approved', 'ACTIVE']));
     } else if (filters.status) {
-       filterConstraints.push(where('status', '==', filters.status));
+       const statusOptions = Array.from(new Set([filters.status, filters.status.toLowerCase(), filters.status.toUpperCase()]));
+       filterConstraints.push(where('status', 'in', statusOptions));
     }
 
     if (filters.category) {
@@ -195,10 +203,10 @@ export const listingService = {
       ownerId: auth.currentUser.uid,
       createdBy: auth.currentUser.uid,
       createdByRole: userRole,
-      status: 'pending', 
+      status: 'PENDING', 
       isFeatured: false, 
       isVerified: false,
-      verificationStatus: 'pending',
+      verificationStatus: 'PENDING',
       legalChecked: false,
       ownershipVerified: false,
       createdAt: serverTimestamp(),
@@ -233,10 +241,10 @@ export const listingService = {
       ownerId: auth.currentUser.uid,
       createdBy: auth.currentUser.uid,
       createdByRole: userRole,
-      status: 'pending', 
+      status: 'PENDING', 
       isFeatured: false, 
       isVerified: false,
-      verificationStatus: 'pending',
+      verificationStatus: 'PENDING',
       legalChecked: false,
       ownershipVerified: false,
       createdAt: serverTimestamp(),
@@ -254,22 +262,21 @@ export const listingService = {
 
   async updateListing(id: string, data: Partial<Listing>, asAdmin: boolean = false) {
     const listingRef = doc(db, 'listings', id);
-    const cleanData = { ...data };
-    if (!asAdmin) {
-      delete cleanData.isVerified;
-      delete cleanData.verificationStatus;
-      delete cleanData.legalChecked;
-      delete cleanData.ownershipVerified;
-      delete cleanData.isFeatured;
+    const snapshot = await getDoc(listingRef);
+    const currentListing = snapshot.exists() ? this.normalizeListing(snapshot.data(), id) as Listing : {} as Listing;
+    
+    // Enforcement: non-admins cannot set status to VERIFIED or ACTIVE
+    if (!asAdmin && (data.status === 'VERIFIED' || data.status === 'ACTIVE')) {
+      delete data.status;
     }
 
-    // Normalize approved workflow flags for double-checked data consistency
-    if (cleanData.status === 'active' || cleanData.status === 'approved') {
-      cleanData.status = 'approved';
-      (cleanData as any).visibility = 'public';
-      (cleanData as any).approved = true;
-      (cleanData as any).publishedAt = new Date().toISOString();
-    }
+    const cleanData = { ...data };
+    
+    // Calculate Trust Score
+    const updatedListing = { ...currentListing, ...cleanData } as Listing;
+    const trustResults = trustService.calculateTrustScore(updatedListing);
+    cleanData.trustScore = trustResults.trustScore;
+    cleanData.riskLevel = trustResults.riskLevel;
 
     try {
       await updateDoc(listingRef, {

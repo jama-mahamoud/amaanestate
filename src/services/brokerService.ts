@@ -50,23 +50,7 @@ export const brokerService = {
       const qAll = query(collection(db, 'brokers'));
       const querySnapshot = await getDocs(qAll);
       const allBrokers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Broker));
-      
-      return allBrokers.filter(broker => {
-        const isApprovedStatus = 
-          broker.status === 'approved' || 
-          (broker.status as string) === 'verified' ||
-          (broker as any).status === 'active' || 
-          (broker as any).approved === true;
-          
-        const isVerifiedCheck = 
-          broker.isVerified === true || 
-          (broker as any).verified === true || 
-          isApprovedStatus;
-          
-        const isVisible = (broker as any).visibility !== false;
-
-        return isApprovedStatus && isVerifiedCheck && isVisible;
-      });
+      return allBrokers;
     } catch (error) {
       console.error('All verified broker fetching attempts failed:', error);
       return [];
@@ -186,18 +170,7 @@ export const brokerService = {
     try {
       const qAll = query(collection(db, 'agencies'));
       const querySnapshot = await getDocs(qAll);
-      const allAgencies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agency));
-      
-      return allAgencies.filter(agency => {
-        const isApproved = 
-          agency.status === 'approved' || 
-          (agency.status as string) === 'verified' || 
-          (agency as any).verified === true || 
-          (agency as any).approved === true;
-          
-        const isVisible = agency.visibility !== false;
-        return isApproved && isVisible;
-      });
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Agency));
     } catch (fallbackError) {
       console.error('All verified agency fetching attempts failed:', fallbackError);
       return [];

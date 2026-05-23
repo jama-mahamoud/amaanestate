@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { MapPin, Info } from 'lucide-react';
+import axios from 'axios';
 
 interface MapPickerProps {
   city: string;
   latitude: number | undefined;
   longitude: number | undefined;
   onChange: (lat: number, lng: number) => void;
+  onAddressChange?: (addressData: { city?: string; district?: string; address?: string }) => void;
 }
 
 const CITY_COORDINATES: Record<string, [number, number]> = {
@@ -18,10 +20,29 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 
 const DEFAULT_COORDS: [number, number] = [9.35, 42.8]; // Jigjiga
 
-export default function MapPicker({ city, latitude, longitude, onChange }: MapPickerProps) {
+export default function MapPicker({ city, latitude, longitude, onChange, onAddressChange }: MapPickerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+
+  const fetchAddress = async (lat: number, lng: number) => {
+    try {
+      const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const { address } = response.data;
+      
+      const newAddress = {
+        city: address.city || address.town || address.village || address.county || '',
+        district: address.suburb || address.district || address.neighbourhood || '',
+        address: response.data.display_name || ''
+      };
+      
+      if (onAddressChange) {
+        onAddressChange(newAddress);
+      }
+    } catch (error) {
+      console.error("Reverse geocoding failed", error);
+    }
+  };
 
   // Inject Leaflet CSS dynamically if it isn't already present
   useEffect(() => {
@@ -38,15 +59,6 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
   useEffect(() => {
     if (!mapContainerRef.current) return;
     
-    // Safety check: If the container already has a map instance attached by Leaflet
-    // that wasn't cleaned up (common in React Strict Mode or HMR), remove it.
-    if ((mapContainerRef.current as any)._leaflet_id) {
-       // We can't easily call remove() if we don't have the instance, 
-       // but we can ensure the container is wiped.
-       // Better: use a global or local check.
-       // Actually, Leaflet attaches _leaflet_id. If it exists, we might have an orphan.
-    }
-
     if (mapRef.current) return;
 
     const initialCenter = latitude && longitude 
@@ -99,6 +111,9 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
       // Record initial coordinates
       if (!latitude || !longitude) {
         if (onChange) onChange(initialCenter[0], initialCenter[1]);
+        fetchAddress(initialCenter[0], initialCenter[1]);
+      } else {
+         fetchAddress(initialCenter[0], initialCenter[1]);
       }
 
       // Marker Drag Handling
@@ -106,6 +121,7 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
         if (!marker) return;
         const position = marker.getLatLng();
         if (onChange) onChange(position.lat, position.lng);
+        fetchAddress(position.lat, position.lng);
       });
 
       // Map click handling
@@ -113,6 +129,7 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
         if (!marker) return;
         marker.setLatLng(e.latlng);
         if (onChange) onChange(e.latlng.lat, e.latlng.lng);
+        fetchAddress(e.latlng.lat, e.latlng.lng);
       });
 
       mapRef.current = map;
@@ -160,6 +177,7 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
       // If we switched city and didn't have coordinates manually set, emit them
       if (!hasCoordinates) {
         if (onChange) onChange(targetCenter[0], targetCenter[1]);
+        fetchAddress(targetCenter[0], targetCenter[1]);
       }
     }
   }, [city]);

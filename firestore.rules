@@ -259,13 +259,24 @@ service cloud.firestore {
     }
 
     // Verified Broker Registry & Applications
+    match /agencies/{agencyId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn()
+        && incoming().get('status', 'pending') == 'pending'
+        && incoming().get('isVerified', false) == false;
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && isOwner(existing().get('ownerId', ''))
+        && incoming().get('status', 'pending') == existing().get('status', 'pending')
+        && incoming().get('isVerified', false) == existing().get('isVerified', false)
+      );
+      allow delete: if isAdmin();
+    }
+
     match /brokers/{brokerId} {
-      allow get: if resource.data.get('status', 'pending') == 'approved' 
-        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
-        || isAdmin();
-      allow list: if resource.data.get('status', 'pending') == 'approved' 
-        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
-        || isAdmin();
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn()
         && isValidBroker(incoming())
         && incoming().get('status', 'pending') == 'pending'

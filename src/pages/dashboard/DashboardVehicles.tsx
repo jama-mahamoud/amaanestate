@@ -148,8 +148,8 @@ export default function DashboardVehicles() {
                     <td className="p-8">
                       <div className="flex items-center gap-3">
                          <div className={`w-1.5 h-1.5 rounded-full ${
-                           vehicle.status === 'active' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
-                           vehicle.status === 'pending' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                           vehicle.status === 'ACTIVE' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 
+                           vehicle.status === 'PENDING' ? 'bg-luxury-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
                          }`} />
                          <span className="text-[10px] uppercase font-black tracking-widest text-white/40">{vehicle.status}</span>
                       </div>

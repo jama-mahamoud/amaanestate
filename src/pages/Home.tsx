@@ -18,6 +18,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
+import { Link } from 'react-router-dom';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ export default function Home() {
     // Visibility and basic validation filters
     const visible = propertiesList.filter(
       item =>
-        (item.status === "active" || item.status === "approved" || (item as any).visibility === "public" || (item as any).approved === true)
+        (item.status === "ACTIVE" || (item as any).visibility === "public" || (item as any).approved === true)
     );
     
     return { visibleProperties: visible, vehicles: vehiclesList };
@@ -192,11 +193,12 @@ export default function Home() {
             </motion.p>
           </div>
           
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-4xl mb-12">
             <HomeSearch onSearch={handleSearch} />
           </div>
         </div>
       </section>
+
 
       {/* Main Listings Body */}
       {listingsLoading ? (
@@ -346,7 +348,7 @@ export default function Home() {
             <div className="container mx-auto px-4 relative z-10">
               <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">Active Vehicles</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {vehicles.filter(v => (v.status === 'active') || (v.status === 'approved' && v.visibility === 'public')).map(vehicle => (
+                {vehicles.filter(v => v.status === 'ACTIVE' || (v as any).visibility === 'public').map(vehicle => (
                   <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
                 ))}
               </div>

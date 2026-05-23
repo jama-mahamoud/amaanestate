@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Heart,
   FileSignature,
-  User as UserIcon
+  User as UserIcon,
+  Sparkles
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,9 @@ function DashboardContent() {
       items.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
       items.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
       items.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
+      items.push({ name: 'Trust Intelligence Engine', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
+      items.push({ name: 'Verification Center', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
+      items.push({ name: 'Risk Monitoring', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
     }
 
     if (isAgency) {

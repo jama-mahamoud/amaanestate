@@ -65,15 +65,6 @@ export default function Navbar() {
   const { user } = useAuth();
   const { language, setLanguage, currency, setCurrency, t } = useSettings();
   
-  // Premium Theme Engine State Synchronized with Storage
-  const [isLightTheme, setIsLightTheme] = useState(() => {
-    try {
-      return localStorage.getItem('theme') === 'light';
-    } catch (e) {
-      console.warn("Theme storage access failed:", e);
-      return false;
-    }
-  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,20 +73,6 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    try {
-      if (isLightTheme) {
-        document.body.classList.add('theme-light');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.body.classList.remove('theme-light');
-        localStorage.setItem('theme', 'dark');
-      }
-    } catch (e) {
-      console.warn("Theme storage write failed:", e);
-    }
-  }, [isLightTheme]);
 
   const menuData = useMemo(() => [
     {
@@ -207,10 +184,6 @@ export default function Navbar() {
     setCurrency(curr as any);
     setCurrDropdownOpen(false);
   }, [setCurrency]);
-
-  const toggleTheme = useCallback(() => {
-    setIsLightTheme(prev => !prev);
-  }, []);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen(prev => !prev);
@@ -331,7 +304,7 @@ export default function Navbar() {
         {/* LOGO AREA - Left matched width */}
         <div className="flex items-center gap-2 shrink-0 xl:flex-1 mt-[-3px]">
           <Link to="/" className="flex items-center group outline-none">
-            <BrandLogo size="xxs" variant={isLightTheme ? 'white' : 'gold'} />
+            <BrandLogo size="xxs" variant="gold" />
           </Link>
         </div>
         
@@ -347,15 +320,6 @@ export default function Navbar() {
 
         {/* Desktop Actions - Right matched width */}
         <div className="hidden xl:flex items-center gap-6 shrink-0 xl:flex-1 justify-end">
-          {/* Custom Theme Switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/5 hover:border-luxury-gold/30 hover:bg-white/10 flex items-center justify-center text-luxury-gold transition-all cursor-pointer"
-            aria-label="Toggle luxury themes"
-          >
-            {isLightTheme ? <Moon size={16} className="text-neutral-800" /> : <Sun size={16} />}
-          </button>
-
           <Button asChild className="luxury-button shadow-luxury-gold/10">
             <Link to="/agents/apply">{t('Join Us')}</Link>
           </Button>
@@ -363,13 +327,6 @@ export default function Navbar() {
 
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 xl:hidden">
-          <button 
-            onClick={toggleTheme}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-luxury-gold cursor-pointer"
-            aria-label="Toggle themes"
-          >
-            {isLightTheme ? <Moon size={16} className="text-[#0a0a0a]" /> : <Sun size={16} />}
-          </button>
           <button 
             className="p-2 text-white/70 hover:text-white transition-colors" 
             onClick={toggleMobileMenu}
@@ -437,14 +394,6 @@ export default function Navbar() {
                     💱 {currency === 'ETB' ? t('USD') : t('ETB')}
                   </Button>
                 </div>
-
-                <Button 
-                  onClick={toggleTheme}
-                  variant="outline" 
-                  className="w-full border-white/5 bg-white/5 text-luxury-gold hover:bg-[#C5A059] hover:text-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]"
-                >
-                  {t('Theme')}: {t(isLightTheme ? 'Switch to Dark' : 'Switch to Light')}
-                </Button>
 
                 {user ? (
                    <Button asChild variant="outline" className="w-full border-luxury-gold/20 bg-luxury-gold/5 text-luxury-gold hover:bg-luxury-gold hover:text-luxury-black transition-all h-14 rounded-xl font-bold uppercase tracking-widest text-[10px]">

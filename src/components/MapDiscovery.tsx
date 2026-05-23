@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { Property } from '@/types';
+import { Listing } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, X, ArrowUpRight, BedDouble, Bath, Square, Sparkles } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import L from 'leaflet';
 
 interface MapDiscoveryProps {
-  properties: Property[];
+  properties: Listing[];
   selectedCity?: string;
   hoveredPropertyId?: string | null;
   onHoverMarker?: (id: string | null) => void;
@@ -26,7 +26,7 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 
 const DEFAULT_COORDS: [number, number] = [9.35, 42.8]; // Jigjiga
 
-const getPropertyCoords = (prop: Property, index: number): [number, number] => {
+const getPropertyCoords = (prop: Listing, index: number): [number, number] => {
   if (prop.latitude !== undefined && prop.longitude !== undefined) {
     return [prop.latitude, prop.longitude];
   }
@@ -47,7 +47,7 @@ export default function MapDiscovery({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Listing | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(12);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -177,7 +177,7 @@ export default function MapDiscovery({
 
     interface MapCluster {
       center: [number, number];
-      items: Property[];
+      items: Listing[];
     }
 
     const clusters: MapCluster[] = [];
@@ -404,15 +404,15 @@ export default function MapDiscovery({
               <div className="grid grid-cols-3 gap-2 py-4 border-t border-white/5 text-center">
                 <div className="bg-white/5 p-2 rounded-lg">
                   <BedDouble size={14} className="text-[#C5A059] mx-auto mb-1 opacity-60" />
-                  <p className="text-[10px] text-white/60 font-bold">{selectedProperty.beds || '-'} Beds</p>
+                  <p className="text-[10px] text-white/60 font-bold">{selectedProperty.features?.beds || '-'} Beds</p>
                 </div>
                 <div className="bg-white/5 p-2 rounded-lg">
                   <Bath size={14} className="text-[#C5A059] mx-auto mb-1 opacity-60" />
-                  <p className="text-[10px] text-white/60 font-bold">{selectedProperty.baths || '-'} Baths</p>
+                  <p className="text-[10px] text-white/60 font-bold">{selectedProperty.features?.baths || '-'} Baths</p>
                 </div>
                 <div className="bg-white/5 p-2 rounded-lg">
                   <Square size={14} className="text-[#C5A059] mx-auto mb-1 opacity-60" />
-                  <p className="text-[10px] text-white/60 font-bold truncate">{selectedProperty.size || '-'}</p>
+                  <p className="text-[10px] text-white/60 font-bold truncate">{selectedProperty.features?.size || '-'}</p>
                 </div>
               </div>
             </div>

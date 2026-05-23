@@ -16,18 +16,18 @@ import {
   Edit3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Listing } from '@/types';
+import { Listing, ListingStatus } from '@/types';
 import { moderationService } from '@/services/moderationService';
 import { toast } from 'sonner';
 import ListingCreationModal from '@/components/listing/ListingCreationModal';
 
-type ModerationStatus = 'pending' | 'active' | 'sold' | 'rented' | 'rejected' | 'suspended';
+type ModerationStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 
 export default function ListingModeratedList() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<ModerationStatus>('pending');
+  const [statusFilter, setStatusFilter] = useState<ModerationStatus>('PENDING');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
@@ -42,7 +42,7 @@ export default function ListingModeratedList() {
         setListings(data);
         setLoading(false);
       },
-      statusFilter as any,
+      statusFilter as ListingStatus,
       undefined
     );
 
@@ -159,7 +159,7 @@ export default function ListingModeratedList() {
     <div className="space-y-8">
       {/* Status Bar */}
       <div className="flex flex-wrap gap-3">
-        {(['pending', 'active', 'sold', 'rented', 'rejected', 'suspended'] as const).map((s) => (
+        {(['PENDING', 'ACTIVE', 'SUSPENDED'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -267,7 +267,7 @@ export default function ListingModeratedList() {
 
               {/* Actions */}
               <div className="flex flex-row lg:flex-col gap-3 w-full lg:w-48 shrink-0">
-                 {statusFilter === 'pending' && (
+                 {statusFilter === 'PENDING' && (
                    <>
                     <Button 
                         onClick={() => handleApprove(listing.id)}
@@ -287,10 +287,10 @@ export default function ListingModeratedList() {
                    </>
                  )}
                  
-                 {statusFilter !== 'pending' && (
+                 {statusFilter !== 'PENDING' && (
                    <Button 
                       onClick={() => handleApprove(listing.id)} // Re-approve / Reset to active
-                      disabled={actioningId === listing.id || listing.status === 'active'}
+                      disabled={actioningId === listing.id || listing.status === 'ACTIVE'}
                       className="flex-1 bg-white/5 text-white/60 hover:bg-luxury-gold hover:text-black h-12 rounded-xl font-bold text-[9px] uppercase tracking-widest"
                    >
                       Set Active
@@ -300,7 +300,7 @@ export default function ListingModeratedList() {
                  <div className="flex gap-2">
                     <Button 
                         onClick={() => handleSuspend(listing.id)}
-                        disabled={actioningId === listing.id || listing.status === 'suspended'}
+                        disabled={actioningId === listing.id || listing.status === 'SUSPENDED'}
                         variant="ghost"
                         className="flex-1 text-white/20 hover:text-orange-500 bg-white/5 h-12 rounded-xl"
                         title="Suspend"

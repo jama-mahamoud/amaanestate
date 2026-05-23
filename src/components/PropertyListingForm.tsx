@@ -126,7 +126,7 @@ export default function PropertyListingForm() {
                 value={formData.price}
                 onChange={handleChange}
                 placeholder="e.g., 25000000"
-                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:outline-none focus:border-[#C5A059]/50 transition-colors"
+                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-[10px] focus:outline-none focus:border-[#C5A059]/50 transition-colors"
               />
             </div>
 

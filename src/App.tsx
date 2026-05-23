@@ -55,6 +55,9 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout'));
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'));
 const ModerationCenter = lazy(() => import('./pages/dashboard/ModerationCenter'));
+const TrustEngine = lazy(() => import('./pages/admin/TrustEngine'));
+const VerificationCenter = lazy(() => import('./pages/admin/VerificationCenter'));
+const RiskMonitoring = lazy(() => import('./pages/admin/RiskMonitoring'));
 const DashboardProperties = lazy(() => import('./pages/dashboard/DashboardProperties'));
 const DashboardVehicles = lazy(() => import('./pages/dashboard/DashboardVehicles'));
 const DashboardUsers = lazy(() => import('./pages/dashboard/DashboardUsers'));
@@ -134,6 +137,9 @@ export default function App() {
                   <Route path="articles/create" element={<CreateArticle />} />
                   <Route path="articles/edit/:id" element={<EditArticle />} />
                   <Route path="agreements" element={<AdminAgreements />} />
+                  <Route path="trust" element={<TrustEngine />} />
+                  <Route path="verification" element={<VerificationCenter />} />
+                  <Route path="risk" element={<RiskMonitoring />} />
                   <Route path="users" element={<DashboardUsers />} />
                   <Route path="agencies-brokers" element={<AgenciesBrokersManagement />} />
                   <Route path="favorites" element={<DashboardFavorites />} />

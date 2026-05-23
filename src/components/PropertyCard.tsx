@@ -84,6 +84,11 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
                   <ShieldCheck size={10} /> Verified
                 </Badge>
               )}
+              {property.trustScore !== undefined && (
+                 <Badge className="bg-blue-600 text-white border-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-[9px] uppercase tracking-widest font-bold">
+                   Trust: {property.trustScore}%
+                 </Badge>
+              )}
               {property.legalChecked && property.listingType === 'sale' && (
                 <Badge className="bg-[#C5A059] text-black border-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-[9px] uppercase tracking-widest font-bold">
                   <ShieldCheck size={10} /> Legally Verified
@@ -169,7 +174,7 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
             )}
             
             <div className="mt-auto flex items-center justify-between">
-              <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">
+              <p className="text-lg font-semibold text-white group-hover:gold-text-gradient transition-all duration-500">
                 {displayPrice}
               </p>
               <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black transition-all duration-500">
