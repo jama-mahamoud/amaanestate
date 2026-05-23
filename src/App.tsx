@@ -63,6 +63,7 @@ const DashboardArticles = lazy(() => import('./pages/dashboard/DashboardArticles
 const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
 const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
 const CreateProperty = lazy(() => import('./pages/CreateProperty'));
+const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
 // Additional Dashboard Sub-Modules
 const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
@@ -88,6 +89,7 @@ export default function App() {
                 <Route path="properties/:id" element={<PropertyDetails />} />
                 <Route path="properties/create" element={<CreateProperty />} />
                 <Route path="properties/edit/:id" element={<EditProperty />} />
+                <Route path="property-form" element={<PropertyListingFormPage />} />
                 <Route path="agreements" element={<Agreements />} />
                 <Route path="admin/agreements" element={<AdminAgreements />} />
                 <Route path="verify/:id" element={<PublicVerification />} />

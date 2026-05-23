@@ -72,6 +72,10 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
     landmark: '',
     latitude: undefined as number | undefined,
     longitude: undefined as number | undefined,
+    phone: '',
+    whatsapp: '',
+    email: '',
+    nearbyPlaces: '',
   });
 
   const actualCategory = formData.assetClass === 'Vehicle' ? 'vehicle' : 'property';
@@ -109,6 +113,10 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
           landmark: listingToEdit.landmark || '',
           latitude: listingToEdit.latitude,
           longitude: listingToEdit.longitude,
+          phone: listingToEdit.phone || listingToEdit.features?.phone || '',
+          whatsapp: listingToEdit.whatsapp || listingToEdit.features?.whatsapp || '',
+          email: listingToEdit.email || listingToEdit.features?.email || '',
+          nearbyPlaces: listingToEdit.nearbyPlacesString || (Array.isArray(listingToEdit.nearbyPlaces) ? listingToEdit.nearbyPlaces.map((p: any) => `${p.name} (${p.dist || p.distance || '1 km'})`).join(', ') : ''),
         });
         setCurrentStep(0);
       } else {
@@ -117,7 +125,8 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
           assetClass: propCategory === 'vehicle' ? 'Vehicle' : 'House',
           listingType: defaultListingType || 'sale',
           title: '', description: '', price: '', beds: '', baths: '', size: '',
-          make: '', model: '', mileage: '', district: '', landmark: ''
+          make: '', model: '', mileage: '', district: '', landmark: '',
+          phone: '', whatsapp: '', email: '', nearbyPlaces: ''
         }));
         setSelectedFiles([]);
         setCurrentStep(0);
@@ -145,8 +154,8 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
       case 'type': return !!formData.assetClass;
       case 'location': return !!formData.city && !!formData.district;
       case 'details': 
-        if (formData.assetClass === 'Vehicle') return !!formData.make && !!formData.model && !!formData.year && !!formData.price;
-        return !!formData.price && !!formData.size;
+        if (formData.assetClass === 'Vehicle') return !!formData.make && !!formData.model && !!formData.year && !!formData.price && !!formData.phone;
+        return !!formData.price && !!formData.size && !!formData.phone;
       case 'images': return selectedFiles.length > 0 || (listingToEdit && listingToEdit.images?.length > 0);
       case 'review': return true;
       default: return false;
@@ -169,6 +178,31 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
         imagesUrls = uploadedImages.map((img: any) => img.url);
       }
 
+      const parsedNearbyPlaces = (formData.nearbyPlaces || '')
+        .split(',')
+        .map((item: string) => item.trim())
+        .filter(Boolean)
+        .map((item: string) => {
+          const parenMatch = item.match(/\(([^)]+)\)/);
+          let dist = '';
+          let name = item;
+          if (parenMatch) {
+            dist = parenMatch[1];
+            name = item.replace(/\([^)]+\)/, '').trim();
+          } else {
+            const distMatch = item.match(/(\d+\s*(?:km|m|mins|min|miles|hr|hrs|hour|hours))/i);
+            if (distMatch) {
+              dist = distMatch[1];
+              name = item.replace(distMatch[1], '').replace(/at|near/gi, '').trim();
+            }
+          }
+          return {
+            name: name,
+            dist: dist || '1 km',
+            desc: `Located in close range to ${name}`
+          };
+        });
+
       const listingData: any = {
         category: actualCategory,
         title: formData.title || `${formData.assetClass} in ${formData.city}`,
@@ -180,6 +214,11 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
         listingType: formData.listingType,
         subcategory: formData.assetClass,
         images: imagesUrls,
+        phone: formData.phone,
+        whatsapp: formData.whatsapp,
+        email: formData.email,
+        nearbyPlaces: parsedNearbyPlaces,
+        nearbyPlacesString: formData.nearbyPlaces,
         metadata: { imageMetas: uploadedImages }
       };
 
@@ -387,6 +426,11 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                           <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Landmark</label>
                           <Input value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="bg-white/5 border-white/10 rounded-xl h-12" placeholder="Near..." />
                         </div>
+                        <div className="space-y-1.5">
+                          <label id="label-nearby-places-modal" className="text-[10px] uppercase font-bold text-white/40 ml-1">Nearby Places / Landmarks</label>
+                          <Input value={formData.nearbyPlaces} onChange={e => setFormData({...formData, nearbyPlaces: e.target.value})} className="bg-white/5 border-white/10 rounded-xl h-12" placeholder="e.g. Airport (5 mins), Grand Mall (2 km)" />
+                          <p className="text-[9px] text-white/40 leading-relaxed">Enter popular places separated by commas. Optional but highly recommended.</p>
+                        </div>
                       </div>
                       <div className="h-[240px] rounded-2xl overflow-hidden border border-white/10 relative">
                         <MapPicker 
@@ -412,6 +456,22 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                       <div className="space-y-1.5 sm:col-span-2">
                         <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Listing Title</label>
                         <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. Modern Villa" />
+                      </div>
+                      
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <label id="label-phone-modal" className="text-[10px] uppercase font-bold text-luxury-gold ml-1">Direct Contact Phone <span className="text-red-400">*</span></label>
+                        <Input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. +251 911 234 567" />
+                        <p className="text-[9px] text-white/40 leading-relaxed">Direct contact number for calls.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-white/40 ml-1">WhatsApp Number</label>
+                        <Input type="tel" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. +251 911 234 567" />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-white/40 ml-1">Email Address</label>
+                        <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-white/5 border-white/10 h-12 rounded-xl" placeholder="e.g. name@example.com" />
                       </div>
                       
                       <div className="space-y-1.5">
@@ -513,7 +573,7 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                           <p className="font-bold text-luxury-gold">{formatPrice(Number(formData.price), formData.currency)}</p>
                         </div>
                       </div>
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start border-b border-white/5 pb-4">
                         <div>
                           <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Location</p>
                           <p className="text-sm">{formData.district}, {formData.city}</p>
@@ -522,6 +582,18 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                           <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Type</p>
                           <p className="text-sm font-bold uppercase">{formData.listingType} | {formData.assetClass}</p>
                         </div>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Direct Phone</p>
+                          <p className="text-sm font-bold text-luxury-gold">{formData.phone || 'N/A'}</p>
+                        </div>
+                        {formData.nearbyPlaces && (
+                          <div className="text-right max-w-xs">
+                            <p className="text-[10px] uppercase font-bold text-white/40 mb-1">Nearby Landmarks</p>
+                            <p className="text-xs text-white/70 truncate" title={formData.nearbyPlaces}>{formData.nearbyPlaces}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

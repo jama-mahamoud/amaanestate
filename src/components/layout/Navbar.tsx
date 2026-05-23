@@ -340,8 +340,8 @@ export default function Navbar() {
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} />
           ))}
-          <Link to="/about" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('About')}</Link>
           <Link to="/agreements" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('Agreements')}</Link>
+          <Link to="/about" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('About')}</Link>
           <Link to="/contact" className="text-[11px] uppercase font-bold tracking-[0.15em] text-white/60 transition-all hover:text-luxury-gold px-3 whitespace-nowrap">{t('Contact')}</Link>
         </nav>
 
@@ -357,7 +357,7 @@ export default function Navbar() {
           </button>
 
           <Button asChild className="luxury-button shadow-luxury-gold/10">
-            <Link to="/become-pro">{t('Join Us')}</Link>
+            <Link to="/agents/apply">{t('Join Us')}</Link>
           </Button>
         </div>
 
@@ -415,8 +415,8 @@ export default function Navbar() {
                   />
                 ))}
 
-                <Link to="/about" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('About')}</Link>
                 <Link to="/agreements" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Agreements')}</Link>
+                <Link to="/about" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('About')}</Link>
                 <Link to="/contact" onClick={closeMobileMenu} className="text-xl md:text-2xl font-display font-bold text-white hover:text-luxury-gold transition-all py-6 border-b border-white/5">{t('Contact')}</Link>
               </nav>
               
@@ -456,7 +456,7 @@ export default function Navbar() {
                   </Button>
                 )}
                 <Button asChild className="w-full bg-luxury-gold text-luxury-black h-14 rounded-xl font-bold text-sm shadow-xl shadow-luxury-gold/10">
-                  <Link to="/become-pro" onClick={closeMobileMenu}>{t('Join Us')}</Link>
+                  <Link to="/agents/apply" onClick={closeMobileMenu}>{t('Join Us')}</Link>
                 </Button>
               </div>
             </div>

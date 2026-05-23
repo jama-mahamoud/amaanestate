@@ -38,6 +38,10 @@ export interface Listing {
   district?: string;
   landmark?: string;
   region?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  nearbyPlacesString?: string;
   createdAt: any;
   updatedAt?: any;
 }
@@ -70,6 +74,7 @@ export interface Property extends Listing {
     terrain?: string;
     zoningType?: string;
     landUse?: string;
+    phone?: string;
   };
   financing?: {
     minDownPayment?: number;

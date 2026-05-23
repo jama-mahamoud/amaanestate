@@ -10,29 +10,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.onerror = function(message, source, lineno, colno, error) {
-        const msg = String(message || '').toLowerCase();
-        // Silence Vite/WebSocket/HMR benign errors in development
-        if (
-          msg.includes('websocket') || 
-          msg.includes('vite') || 
-          msg.includes('hmr') || 
-          msg.includes('socket') ||
-          msg.includes('closed without opened')
-        ) {
-          console.warn('[Vite Dev Suppressed]', message);
-          return true; // Return true to prevent browser-native error action
-        }
-        console.error('Global Error:', { message, source, lineno, colno, error });
-      };
-      window.addEventListener('unhandledrejection', event => {
-        event.preventDefault(); // Always prevent default to stop native browser-level unhandled promise exception noise
-        const reason = event.reason;
-        const msg = (reason ? (reason.message || reason.stack || String(reason)) : '').toLowerCase();
-        console.warn('[Ambient Async Rejection Suppressed]', reason);
-      });
-    </script>
   </body>
 </html>
 

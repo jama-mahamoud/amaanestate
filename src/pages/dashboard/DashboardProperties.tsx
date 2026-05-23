@@ -122,6 +122,8 @@ export default function DashboardProperties() {
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Description</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Contact</th>
+                  <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Nearby Landmarks</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Status</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Value</th>
                   <th className="p-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Actions</th>
@@ -152,6 +154,12 @@ export default function DashboardProperties() {
                             </div>
                          </div>
                       </div>
+                    </td>
+                    <td className="p-8">
+                       <p className="text-sm font-bold text-luxury-gold">{property.phone || 'N/A'}</p>
+                    </td>
+                    <td className="p-8">
+                      <p className="text-xs text-white/70 max-w-[150px] truncate" title={property.nearbyPlacesString}>{property.nearbyPlacesString || 'N/A'}</p>
                     </td>
                     <td className="p-8">
                       <div className="flex items-center gap-3">

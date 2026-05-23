@@ -93,7 +93,7 @@ export default function AgentApply() {
     );
   }
 
-  const handleSubmit = React.useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) {
       setStep(step + 1);
@@ -145,7 +145,7 @@ export default function AgentApply() {
     } finally {
       setLoading(false);
     }
-  }, [applyType, brokerCertificateFiles.length, businessLicenseFiles.length, companyLogoFiles.length, formData, governmentIdFiles.length, profilePhotoFiles.length, step, user]);
+  };
 
   return (
     <div className="pt-24 pb-20 min-h-screen bg-luxury-black text-white px-4">
