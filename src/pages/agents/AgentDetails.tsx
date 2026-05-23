@@ -109,9 +109,19 @@ export default function AgentDetails() {
   useEffect(() => {
     if (!id) return;
     const key = `amaan_reviews_${id}`;
-    const saved = localStorage.getItem(key);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(key);
+    } catch (e) {
+      console.warn("Storage access failed for reviews:", e);
+    }
+
     if (saved) {
-      setReviews(JSON.parse(saved));
+      try {
+        setReviews(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse reviews:", e);
+      }
     } else {
       // Default Premium Review Seed
       const nameText = broker ? broker.fullName : (agency ? agency.agencyName : 'Official Partner');
@@ -132,7 +142,11 @@ export default function AgentDetails() {
         }
       ];
       setReviews(seedReviews);
-      localStorage.setItem(key, JSON.stringify(seedReviews));
+      try {
+        localStorage.setItem(key, JSON.stringify(seedReviews));
+      } catch (e) {
+        console.warn("Storage write failed for reviews seed:", e);
+      }
     }
   }, [id, broker, agency]);
 
@@ -154,7 +168,11 @@ export default function AgentDetails() {
 
     const updated = [reviewObj, ...reviews];
     setReviews(updated);
-    localStorage.setItem(`amaan_reviews_${id}`, JSON.stringify(updated));
+    try {
+      localStorage.setItem(`amaan_reviews_${id}`, JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Storage write failed on review submit:", e);
+    }
 
     setNewAuthor('');
     setNewComment('');

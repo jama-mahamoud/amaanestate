@@ -6,6 +6,7 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Luxury Brand Fallback for Code-Splitting Suspense Loaders
 function PageFallback() {
@@ -70,10 +71,11 @@ const AgenciesBrokersManagement = lazy(() => import('./pages/dashboard/AgenciesB
 export default function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
+      <ErrorBoundary>
+        <AuthProvider>
+          <SettingsProvider>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
               <Route path="/" element={<RootLayout />}>
                 {/* Public Base & Website Routes */}
                 <Route index element={<Home />} />
@@ -139,6 +141,7 @@ export default function App() {
           </Suspense>
         </SettingsProvider>
       </AuthProvider>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 }

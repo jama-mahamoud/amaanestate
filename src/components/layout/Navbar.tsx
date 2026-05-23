@@ -67,7 +67,12 @@ export default function Navbar() {
   
   // Premium Theme Engine State Synchronized with Storage
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    return localStorage.getItem('theme') === 'light';
+    try {
+      return localStorage.getItem('theme') === 'light';
+    } catch (e) {
+      console.warn("Theme storage access failed:", e);
+      return false;
+    }
   });
 
   useEffect(() => {
@@ -79,12 +84,16 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (isLightTheme) {
-      document.body.classList.add('theme-light');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.body.classList.remove('theme-light');
-      localStorage.setItem('theme', 'dark');
+    try {
+      if (isLightTheme) {
+        document.body.classList.add('theme-light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.body.classList.remove('theme-light');
+        localStorage.setItem('theme', 'dark');
+      }
+    } catch (e) {
+      console.warn("Theme storage write failed:", e);
     }
   }, [isLightTheme]);
 

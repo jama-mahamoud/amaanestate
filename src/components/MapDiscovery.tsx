@@ -132,6 +132,18 @@ export default function MapDiscovery({
     } else {
       setAiAnalysis(null);
     }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          console.warn("Leaflet map removal encountered error:", e);
+        }
+        mapInstanceRef.current = null;
+        markersLayerRef.current = null;
+      }
+    };
   }, [centerCoords, selectedCity]);
 
   // Custom visual clustering and individual pins positioning effect

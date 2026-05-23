@@ -448,19 +448,37 @@ const EXCHANGE_RATE_USD_TO_ETB = 135; // 1 USD = 135 ETB
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
-    return (localStorage.getItem('amaan_language') as Language) || 'en';
+    try {
+      return (localStorage.getItem('amaan_language') as Language) || 'en';
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+      return 'en';
+    }
   });
   
   const [currency, setCurrency] = useState<Currency>(() => {
-    return (localStorage.getItem('amaan_currency') as Currency) || 'ETB';
+    try {
+      return (localStorage.getItem('amaan_currency') as Currency) || 'ETB';
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+      return 'ETB';
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('amaan_language', language);
+    try {
+      localStorage.setItem('amaan_language', language);
+    } catch (e) {
+      console.warn("Storage write failed:", e);
+    }
   }, [language]);
 
   useEffect(() => {
-    localStorage.setItem('amaan_currency', currency);
+    try {
+      localStorage.setItem('amaan_currency', currency);
+    } catch (e) {
+      console.warn("Storage write failed:", e);
+    }
   }, [currency]);
 
   const t = (key: string) => {
