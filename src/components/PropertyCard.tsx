@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useSettings } from '@/contexts/SettingsContext';
+import { usePropertyModal } from '@/contexts/PropertyModalContext';
 import React, { memo } from 'react';
 
 interface PropertyCardProps {
@@ -26,6 +27,7 @@ interface PropertyCardProps {
 
 const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) => {
   const { formatPriceConverted } = useSettings();
+  const { openPropertyModal } = usePropertyModal();
   const isVehicle = (property.category || '').toString().toLowerCase().trim() === 'vehicle';
   
   const mainImage = property.images?.[0] || (isVehicle 
@@ -49,7 +51,15 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <Link to={targetLink}>
+      <Link 
+        to={targetLink}
+        onClick={(e) => {
+          if (!isVehicle) {
+            e.preventDefault();
+            openPropertyModal(property);
+          }
+        }}
+      >
         <div className={`glass-card rounded-[2rem] overflow-hidden flex flex-col h-full transition-all duration-350 border-1 ${
           isHovered ? 'border-[#C5A059] ring-2 ring-[#C5A059]/30 translate-y-[-4px] shadow-[#C5A059]/10' : 'border-white/5 shadow-none'
         }`}>

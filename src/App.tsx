@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { PropertyModalProvider } from './contexts/PropertyModalContext';
 import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
@@ -74,8 +75,9 @@ export default function App() {
       <ErrorBoundary>
         <AuthProvider>
           <SettingsProvider>
-            <Suspense fallback={<PageFallback />}>
-              <Routes>
+            <PropertyModalProvider>
+              <Suspense fallback={<PageFallback />}>
+                <Routes>
               <Route path="/" element={<RootLayout />}>
                 {/* Public Base & Website Routes */}
                 <Route index element={<Home />} />
@@ -139,9 +141,10 @@ export default function App() {
               </Route>
             </Routes>
           </Suspense>
-        </SettingsProvider>
-      </AuthProvider>
-      </ErrorBoundary>
-    </HelmetProvider>
+        </PropertyModalProvider>
+      </SettingsProvider>
+    </AuthProvider>
+    </ErrorBoundary>
+  </HelmetProvider>
   );
 }

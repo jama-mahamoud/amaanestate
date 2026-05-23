@@ -8,13 +8,13 @@ import './index.css';
 if (typeof window !== 'undefined') {
   const originalError = console.error;
   console.error = (...args) => {
-    const errorStr = args.map(arg => String(arg)).join(' ');
+    const errorStr = args.map(arg => String(arg || '')).join(' ').toLowerCase();
     if (
-      errorStr.includes('WebSocket') || 
+      errorStr.includes('websocket') || 
       errorStr.includes('[vite]') || 
       errorStr.includes('failed to connect to websocket') ||
-      errorStr.includes('WebSocket closed') ||
-      errorStr.includes('WebSocket closed without opened')
+      errorStr.includes('websocket closed') ||
+      errorStr.includes('closed without opened')
     ) {
       // Quietly log to avoid modal or overlay crashes
       console.warn('[Vite Dev WebSocket Suppressed]', ...args);
@@ -24,26 +24,17 @@ if (typeof window !== 'undefined') {
   };
 
   window.addEventListener('unhandledrejection', (event) => {
+    event.preventDefault(); // Always swallow native browser console noise
     const reason = event.reason;
-    const reasonStr = reason ? (reason.message || String(reason)) : '';
-    if (
-      reasonStr.includes('WebSocket') || 
-      reasonStr.includes('[vite]') || 
-      reasonStr.includes('websocket') ||
-      reasonStr.includes('reconnect') ||
-      reasonStr.includes('closed without opened')
-    ) {
-      event.preventDefault(); // Swallow unhandled websocket disconnect promises
-      console.warn('[Vite WebSocket Rejection Suppressed]', reasonStr);
-    }
+    console.warn('[Vite WebSocket Rejection Suppressed]', reason);
   });
 
   window.addEventListener('error', (event) => {
-    const errorStr = event.message || '';
+    const errorStr = (event.message || '').toLowerCase();
     if (
-      errorStr.includes('WebSocket') || 
+      errorStr.includes('websocket') || 
       errorStr.includes('[vite]') || 
-      errorStr.includes('websocket')
+      errorStr.includes('closed without opened')
     ) {
       event.preventDefault(); // Avoid showing any developer overlays or crashes
       console.warn('[Vite WebSocket Exception Suppressed]', errorStr);

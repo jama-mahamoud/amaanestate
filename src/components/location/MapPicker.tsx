@@ -53,68 +53,81 @@ export default function MapPicker({ city, latitude, longitude, onChange }: MapPi
       ? [latitude, longitude] as [number, number]
       : (CITY_COORDINATES[city] || DEFAULT_COORDS);
 
-    // Instantiate map
-    const map = L.map(mapContainerRef.current, {
-      center: initialCenter,
-      zoom: 14,
-      zoomControl: false,
-      attributionControl: false,
-    });
+    let map: L.Map | null = null;
+    let marker: L.Marker | null = null;
 
-    // Dark premium custom theme tiles from CartoDB
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-    }).addTo(map);
+    try {
+      // Instantiate map
+      map = L.map(mapContainerRef.current, {
+        center: initialCenter,
+        zoom: 14,
+        zoomControl: false,
+        attributionControl: false,
+      });
 
-    // Zoom buttons in the bottom right corner
-    L.control.zoom({
-      position: 'bottomright'
-    }).addTo(map);
+      // Dark premium custom theme tiles from CartoDB
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+      }).addTo(map);
 
-    // Custom Luxury Pulsing Marker icon
-    const customIcon = L.divIcon({
-      className: 'custom-map-picker-marker',
-      html: `
-        <div class="relative flex items-center justify-center">
-          <div class="absolute w-8 h-8 rounded-full bg-[#C5A059]/40 animate-ping" style="animation-duration: 1.5s"></div>
-          <div class="absolute w-4 h-4 rounded-full bg-[#C5A059] border-2 border-white flex items-center justify-center shadow-lg">
-            <div class="w-1.5 h-1.5 rounded-full bg-black"></div>
+      // Zoom buttons in the bottom right corner
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
+
+      // Custom Luxury Pulsing Marker icon
+      const customIcon = L.divIcon({
+        className: 'custom-map-picker-marker',
+        html: `
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-8 h-8 rounded-full bg-[#C5A059]/40 animate-ping" style="animation-duration: 1.5s"></div>
+            <div class="absolute w-4 h-4 rounded-full bg-[#C5A059] border-2 border-white flex items-center justify-center shadow-lg">
+              <div class="w-1.5 h-1.5 rounded-full bg-black"></div>
+            </div>
           </div>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-    });
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
 
-    // Add Draggable marker
-    const marker = L.marker(initialCenter, {
-      icon: customIcon,
-      draggable: true
-    }).addTo(map);
+      // Add Draggable marker
+      marker = L.marker(initialCenter, {
+        icon: customIcon,
+        draggable: true
+      }).addTo(map);
 
-    // Record initial coordinates
-    if (!latitude || !longitude) {
-      if (onChange) onChange(initialCenter[0], initialCenter[1]);
+      // Record initial coordinates
+      if (!latitude || !longitude) {
+        if (onChange) onChange(initialCenter[0], initialCenter[1]);
+      }
+
+      // Marker Drag Handling
+      marker.on('dragend', () => {
+        if (!marker) return;
+        const position = marker.getLatLng();
+        if (onChange) onChange(position.lat, position.lng);
+      });
+
+      // Map click handling
+      map.on('click', (e) => {
+        if (!marker) return;
+        marker.setLatLng(e.latlng);
+        if (onChange) onChange(e.latlng.lat, e.latlng.lng);
+      });
+
+      mapRef.current = map;
+      markerRef.current = marker;
+    } catch (err) {
+      console.error("Leaflet map initialization failed in MapPicker:", err);
     }
-
-    // Marker Drag Handling
-    marker.on('dragend', () => {
-      const position = marker.getLatLng();
-      if (onChange) onChange(position.lat, position.lng);
-    });
-
-    // Map click handling
-    map.on('click', (e) => {
-      marker.setLatLng(e.latlng);
-      if (onChange) onChange(e.latlng.lat, e.latlng.lng);
-    });
-
-    mapRef.current = map;
-    markerRef.current = marker;
 
     return () => {
       if (mapRef.current) {
-        mapRef.current.remove();
+        try {
+          mapRef.current.remove();
+        } catch (e) {
+          console.warn("Error during Leaflet map cleanup in MapPicker:", e);
+        }
         mapRef.current = null;
         markerRef.current = null;
       }

@@ -99,32 +99,40 @@ export default function MapDiscovery({
 
     // Create Leaflet instance if it doesn't exist
     if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: centerCoords,
-        zoom: 12,
-        zoomControl: false,
-        attributionControl: false,
-      });
+      try {
+        const map = L.map(mapContainerRef.current, {
+          center: centerCoords,
+          zoom: 12,
+          zoomControl: false,
+          attributionControl: false,
+        });
 
-      // Ultra premium Dark/Muted Minimalist Map Tile Layer (CartoDB Dark Matter)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-      }).addTo(map);
+        // Ultra premium Dark/Muted Minimalist Map Tile Layer (CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 20,
+        }).addTo(map);
 
-      // Add zoom control at bottom right to fit luxurious layout
-      L.control.zoom({
-        position: 'bottomright'
-      }).addTo(map);
+        // Add zoom control at bottom right to fit luxurious layout
+        L.control.zoom({
+          position: 'bottomright'
+        }).addTo(map);
 
-      map.on('zoomend', () => {
-        setZoomLevel(map.getZoom());
-      });
+        map.on('zoomend', () => {
+          setZoomLevel(map.getZoom());
+        });
 
-      mapInstanceRef.current = map;
-      markersLayerRef.current = L.layerGroup().addTo(map);
+        mapInstanceRef.current = map;
+        markersLayerRef.current = L.layerGroup().addTo(map);
+      } catch (err) {
+        console.error("Leaflet map initialization failed in MapDiscovery:", err);
+      }
     } else {
       // If map exists, pan smoothly to new center coordinate
-      mapInstanceRef.current.setView(centerCoords, 12, { animate: true, duration: 1.5 });
+      try {
+        mapInstanceRef.current.setView(centerCoords, 12, { animate: true, duration: 1.5 });
+      } catch (e) {
+        console.warn("Leaflet setView failed in MapDiscovery:", e);
+      }
     }
 
     if (selectedCity && selectedCity !== 'All') {

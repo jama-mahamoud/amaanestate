@@ -42,52 +42,65 @@ export default function PropertyDetailMap({ property }: PropertyDetailMapProps) 
     
     // Safety: Ensure no leftover map instance before creating a new one
     if (mapRef.current) {
-      mapRef.current.remove();
+      try {
+        mapRef.current.remove();
+      } catch (e) {
+        console.warn("Error removing existing Leaflet map:", e);
+      }
       mapRef.current = null;
     }
 
     const coords: [number, number] = [lat, lng];
 
-    // Create a new map instance
-    const map = L.map(mapContainerRef.current, {
-      center: coords,
-      zoom: 15,
-      zoomControl: false,
-      attributionControl: false,
-      scrollWheelZoom: false, // Prevent zoom on page scroll unless clicked
-    });
+    let map: L.Map | null = null;
+    try {
+      // Create a new map instance
+      map = L.map(mapContainerRef.current, {
+        center: coords,
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false, // Prevent zoom on page scroll unless clicked
+      });
 
-    // Dark premium custom theme tiles from CartoDB
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-    }).addTo(map);
+      // Dark premium custom theme tiles from CartoDB
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+      }).addTo(map);
 
-    L.control.zoom({
-      position: 'bottomright'
-    }).addTo(map);
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
 
-    // Custom Luxury Pulsing Marker icon
-    const customIcon = L.divIcon({
-      className: 'custom-map-detail-marker',
-      html: `
-        <div class="relative flex items-center justify-center">
-          <div class="absolute w-12 h-12 rounded-full bg-[#C5A059]/35 animate-pulse"></div>
-          <div class="absolute w-10 h-10 rounded-full bg-[#C5A059]/20 animate-ping" style="animation-duration: 2s"></div>
-          <div class="absolute w-5 h-5 rounded-full bg-[#C5A059] border-2 border-white flex items-center justify-center shadow-2xl">
-            <div class="w-2.5 h-2.5 rounded-full bg-black"></div>
+      // Custom Luxury Pulsing Marker icon
+      const customIcon = L.divIcon({
+        className: 'custom-map-detail-marker',
+        html: `
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-12 h-12 rounded-full bg-[#C5A059]/35 animate-pulse"></div>
+            <div class="absolute w-10 h-10 rounded-full bg-[#C5A059]/20 animate-ping" style="animation-duration: 2s"></div>
+            <div class="absolute w-5 h-5 rounded-full bg-[#C5A059] border-2 border-white flex items-center justify-center shadow-2xl">
+              <div class="w-2.5 h-2.5 rounded-full bg-black"></div>
+            </div>
           </div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-    });
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
 
-    L.marker(coords, { icon: customIcon }).addTo(map);
-    mapRef.current = map;
+      L.marker(coords, { icon: customIcon }).addTo(map);
+      mapRef.current = map;
+    } catch (err) {
+      console.error("Leaflet map initialization failed in PropertyDetailMap:", err);
+    }
 
     return () => {
       if (mapRef.current) {
-        mapRef.current.remove();
+        try {
+          mapRef.current.remove();
+        } catch (e) {
+          console.warn("Error during Leaflet map cleanup:", e);
+        }
         mapRef.current = null;
       }
     };
