@@ -169,8 +169,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white selection:bg-luxury-gold selection:text-black">
       {/* Hero Section */}
-      <section className="relative pt-16 md:pt-24 pb-12 md:pb-20 overflow-hidden flex flex-col items-center justify-center min-h-[60vh] md:min-h-0">
-        <div className="absolute inset-0 z-0">
+      <section className="relative pt-16 md:pt-24 pb-12 md:pb-20 flex flex-col items-center justify-center min-h-[60vh] md:min-h-0">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <img src="/homepage_banner.png" alt="Luxury Real Estate" className="w-full h-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-luxury-gold/5 via-luxury-black/90 to-luxury-black"></div>
         </div>

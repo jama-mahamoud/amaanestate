@@ -302,14 +302,14 @@ export default function Navbar() {
         isScrolled ? 'py-4' : 'py-8'
       }`}>
         {/* LOGO AREA - Left matched width */}
-        <div className="flex items-center gap-2 shrink-0 xl:flex-1 mt-[-3px]">
+        <div className="flex items-center gap-2 shrink-0 lg:flex-1 mt-[-3px]">
           <Link to="/" className="flex items-center group outline-none">
             <BrandLogo size="xxs" variant="gold" />
           </Link>
         </div>
         
         {/* Desktop Nav - Centered strictly */}
-        <nav className="hidden xl:flex items-center gap-6 2xl:gap-8 justify-center flex-none">
+        <nav className="hidden lg:flex items-center gap-3 lg:gap-5 justify-center flex-none">
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} />
           ))}
@@ -319,14 +319,14 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop Actions - Right matched width */}
-        <div className="hidden xl:flex items-center gap-6 shrink-0 xl:flex-1 justify-end">
+        <div className="hidden lg:flex items-center gap-6 shrink-0 lg:flex-1 justify-end">
           <Button asChild className="luxury-button shadow-luxury-gold/10">
             <Link to="/agents/apply">{t('Join Us')}</Link>
           </Button>
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="flex items-center gap-4 xl:hidden">
+        <div className="flex items-center gap-4 lg:hidden">
           <button 
             className="p-2 text-white/70 hover:text-white transition-colors" 
             onClick={toggleMobileMenu}
@@ -344,7 +344,7 @@ export default function Navbar() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="xl:hidden fixed inset-y-0 right-0 z-[100] w-full sm:w-[400px] bg-luxury-black border-l border-white/10 flex flex-col h-screen shadow-2xl"
+            className="lg:hidden fixed inset-y-0 right-0 z-[100] w-full sm:w-[400px] bg-luxury-black border-l border-white/10 flex flex-col h-screen shadow-2xl"
           >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-2">

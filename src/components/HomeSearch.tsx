@@ -56,7 +56,7 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
                 </div>
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white max-h-[300px] rounded-2xl">
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white max-h-[300px] rounded-2xl z-[9999]">
               <SelectItem value="all">Everywhere</SelectItem>
               {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
@@ -75,7 +75,7 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
                 </div>
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl z-[9999]">
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="house">Houses</SelectItem>
               <SelectItem value="villa">Villas</SelectItem>
@@ -99,7 +99,7 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
                 </div>
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
+            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl z-[9999]">
               <SelectItem value="sale">For Sale</SelectItem>
               <SelectItem value="rent">For Rent</SelectItem>
             </SelectContent>
