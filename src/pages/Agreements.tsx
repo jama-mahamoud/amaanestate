@@ -271,7 +271,7 @@ export default function Agreements() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = '#111111';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -316,7 +316,7 @@ export default function Agreements() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = '#111111';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -361,7 +361,7 @@ export default function Agreements() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = '#111111';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -406,7 +406,7 @@ export default function Agreements() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = '#111111';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -451,7 +451,7 @@ export default function Agreements() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.strokeStyle = '#FFFFFF';
+    ctx.strokeStyle = '#111111';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -890,12 +890,12 @@ export default function Agreements() {
                   <span className="font-sans text-[9px] text-neutral-400 block font-bold">{t("PARTY A SIGNATURE")}</span>
                   <div className="h-16 bg-neutral-50/50 rounded-xl border border-neutral-200 flex items-center justify-center p-2">
                     {sigTypeA === 'type' ? (
-                      <span className="font-mono italic text-lg text-blue-800 tracking-wide select-none font-bold">
+                      <span className="font-[cursive] font-serif italic text-3xl text-neutral-950 font-black tracking-tighter opacity-90 select-none">
                         {formData.partyA_typedSignature}
                       </span>
                     ) : (
                       formData.partyA_drawnSignature ? (
-                        <img src={formData.partyA_drawnSignature} className="max-h-full max-w-full object-contain filter invert opacity-90" alt="Party A signature" />
+                        <img src={formData.partyA_drawnSignature} className="max-h-full max-w-full object-contain " alt="Party A signature" />
                       ) : (
                         <span className="text-[10px] text-neutral-400">{t("Blank Drawn Signature")}</span>
                       )
@@ -909,12 +909,12 @@ export default function Agreements() {
                   <span className="font-sans text-[9px] text-neutral-400 block font-bold">{t("PARTY B SIGNATURE")}</span>
                   <div className="h-16 bg-neutral-50/50 rounded-xl border border-neutral-200 flex items-center justify-center p-2">
                     {sigTypeB === 'type' ? (
-                      <span className="font-mono italic text-lg text-blue-800 tracking-wide select-none font-bold">
+                      <span className="font-[cursive] font-serif italic text-3xl text-neutral-950 font-black tracking-tighter opacity-90 select-none">
                         {formData.partyB_typedSignature}
                       </span>
                     ) : (
                       formData.partyB_drawnSignature ? (
-                        <img src={formData.partyB_drawnSignature} className="max-h-full max-w-full object-contain filter invert opacity-90" alt="Party B signature" />
+                        <img src={formData.partyB_drawnSignature} className="max-h-full max-w-full object-contain " alt="Party B signature" />
                       ) : (
                         <span className="text-[10px] text-neutral-400">{t("Blank Drawn Signature")}</span>
                       )
@@ -930,12 +930,12 @@ export default function Agreements() {
                     <span className="font-sans text-[9px] text-neutral-400 block font-bold">{t(`Witness ${w}: Full Name + Signature`)}</span>
                     <div className="h-12 bg-neutral-50/50 rounded-xl border border-neutral-200 flex items-center justify-center p-1">
                       {(w === 1 ? sigTypeW1 : w === 2 ? sigTypeW2 : sigTypeW3) === 'type' ? (
-                        <span className="font-mono italic text-sm text-blue-800 tracking-wide select-none font-bold truncate">
+                        <span className="font-[cursive] font-serif italic text-xl text-neutral-950 font-black tracking-tighter opacity-90 select-none truncate">
                           {formData[`witness${w}TypedSignature` as keyof typeof formData]}
                         </span>
                       ) : (
                         formData[`witness${w}DrawnSignature` as keyof typeof formData] ? (
-                          <img src={formData[`witness${w}DrawnSignature` as keyof typeof formData] as string} className="max-h-full max-w-full object-contain filter invert opacity-90" alt={`Witness ${w} signature`} />
+                          <img src={formData[`witness${w}DrawnSignature` as keyof typeof formData] as string} className="max-h-full max-w-full object-contain " alt={`Witness ${w} signature`} />
                         ) : (
                           <span className="text-[8px] text-neutral-400">{t("Blank Signature")}</span>
                         )
@@ -948,12 +948,12 @@ export default function Agreements() {
             </div>
 
             {/* VI. OFFICIAL LEDGER VERIFICATION QR CODE SECTION */}
-            <div className="border-t border-neutral-300 pt-6 space-y-4 font-sans text-sm">
+            <div className="border-t border-neutral-300 pt-6 space-y-4 font-sans text-sm pb-8">
               <h4 className="font-sans font-bold text-neutral-800 uppercase tracking-widest text-[9px] text-center">
                 {t("VI. Digital Registry Ledger Verification")}
               </h4>
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
-                <div className="w-32 h-32 bg-white p-2 rounded-xl shadow-md border border-slate-100 flex items-center justify-center relative transition-transform duration-300 hover:scale-105">
+                <div className="w-32 h-32 bg-white p-2 rounded-xl shadow-md border border-slate-100 flex items-center justify-center relative transition-transform duration-300 hover:scale-105 z-20">
                   {qrCodeDataUrl ? (
                     <img src={qrCodeDataUrl} className="w-full h-full object-contain" alt="Agreement QR Code" />
                   ) : (
@@ -963,7 +963,7 @@ export default function Agreements() {
                   )}
                 </div>
                 
-                <div className="flex-1 space-y-3 text-center md:text-left">
+                <div className="flex-1 space-y-3 text-center md:text-left z-20">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider rounded-full bg-amber-100 border border-amber-200 text-amber-800 font-sans">
                       ● {t("Provisional Registry (Pending Approval)")}
@@ -989,6 +989,29 @@ export default function Agreements() {
                 </div>
               </div>
             </div>
+
+            {/* OFFICIAL COMPANY SEAL COMPONENT */}
+            <div className="absolute bottom-8 right-8 z-10 flex items-center justify-center opacity-90 mix-blend-multiply pointer-events-none"><img src="/amaan_official_seal.png" alt="Company Signature" className="w-32 h-32 object-contain mr-[-50px] z-10 opacity-90" /><div className="w-40 h-40 text-red-700 z-0">
+              <svg viewBox="0 0 200 200" className="w-full h-full text-red-700 fill-current" style={{ transform: 'rotate(-15deg)' }}>
+                <circle cx="100" cy="100" r="94" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="5 3" />
+                <circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="100" cy="100" r="62" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                
+                <path id="topCurve" fill="none" d="M 28,100 A 72,72 0 0,1 172,100" />
+                <text fontFamily="Helvetica, Arial, sans-serif" fontWeight="900" fontSize="23" letterSpacing="1.5">
+                  <textPath href="#topCurve" startOffset="50%" textAnchor="middle">AMAANESTATE</textPath>
+                </text>
+                
+                <path id="bottomCurve" fill="none" d="M 172,100 A 72,72 0 0,1 28,100" />
+                <text fontFamily="Helvetica, Arial, sans-serif" fontWeight="bold" fontSize="15" letterSpacing="4.5">
+                  <textPath href="#bottomCurve" startOffset="50%" textAnchor="middle">JIGJIGA • ETHIOPIA</textPath>
+                </text>
+
+                <text x="100" y="91" fontFamily="Courier, monospace" fontWeight="bold" fontSize="13" textAnchor="middle">OFFICIAL</text>
+                <text x="100" y="111" fontFamily="Courier, monospace" fontWeight="900" fontSize="19" textAnchor="middle">VERIFIED</text>
+                <text x="100" y="128" fontFamily="Courier, monospace" fontWeight="bold" fontSize="13" textAnchor="middle">SEAL</text>
+              </svg>
+            </div></div>
 
           </div>
 
@@ -1243,7 +1266,7 @@ export default function Agreements() {
               ) : (
                 <div className="space-y-2">
                   <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                  <div className="bg-neutral-950 border border-white/10 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                  <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
                     <canvas 
                       ref={canvasRefA}
                       width={400}
@@ -1383,7 +1406,7 @@ export default function Agreements() {
               ) : (
                 <div className="space-y-2">
                   <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                  <div className="bg-neutral-950 border border-white/10 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                  <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
                     <canvas 
                       ref={canvasRefB}
                       width={400}
@@ -1466,7 +1489,7 @@ export default function Agreements() {
                   ) : (
                     <div className="space-y-2">
                       <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                      <div className="bg-neutral-950 border border-white/10 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                      <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
                         <canvas 
                           ref={w === 1 ? canvasRefW1 : w === 2 ? canvasRefW2 : canvasRefW3}
                           width={400}

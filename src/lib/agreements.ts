@@ -313,16 +313,16 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
         doc.addImage(sigPic, 'PNG', xPos + 10, pY + 2, 40, 16);
       } catch (e) {
         // Fallback cursive script
-        doc.setFont('Courier', 'oblique');
-        doc.setFontSize(14);
-        doc.setTextColor(30, 40, 150);
+        doc.setFont('Times', 'italic');
+        doc.setFontSize(16);
+        doc.setTextColor(15, 15, 15);
         doc.text(name, xPos + 10, pY + 14);
       }
     } else {
       // Fallback cursive typed signature representation
-      doc.setFont('Courier', 'oblique');
-      doc.setFontSize(14);
-      doc.setTextColor(30, 40, 150);
+      doc.setFont('Times', 'italic');
+        doc.setFontSize(16);
+        doc.setTextColor(15, 15, 15);
       doc.text(name, xPos + 10, pY + 14);
     }
 
@@ -360,15 +360,15 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
       try {
         doc.addImage(sigPic, 'PNG', xPos + 10, pY + 2, 40, 16);
       } catch (e) {
-        doc.setFont('Courier', 'oblique');
-        doc.setFontSize(14);
-        doc.setTextColor(30, 40, 150);
+        doc.setFont('Times', 'italic');
+        doc.setFontSize(16);
+        doc.setTextColor(15, 15, 15);
         doc.text(name || 'No Signature', xPos + 10, pY + 14);
       }
     } else {
-      doc.setFont('Courier', 'oblique');
-      doc.setFontSize(14);
-      doc.setTextColor(30, 40, 150);
+      doc.setFont('Times', 'italic');
+        doc.setFontSize(16);
+        doc.setTextColor(15, 15, 15);
       doc.text(name || 'No Signature', xPos + 10, pY + 14);
     }
 
@@ -387,28 +387,99 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
 
   drawFooter(3);
 
-  // Apply Admin Stamp overlay if approved
-  if (agreement.status === 'Approved' && agreement.adminStampUrl) {
-    try {
-      // Add a clean blue verification stamp overlay on signatures page (page 2)
-      doc.setPage(2);
-      
-      // Positioned near signatures
-      const stampX = pageWidth - margin - 45;
-      const stampY = pageHeight - margin - 60;
-      
-      doc.addImage(agreement.adminStampUrl, 'PNG', stampX, stampY, 40, 40, undefined, 'FAST');
-      
-      // Stamp text overlay for authenticity
-      doc.setFontSize(6);
-      doc.setTextColor(30, 58, 138); // Deep Blue
-      doc.setFont('Helvetica', 'bold');
-      doc.text(`CERTIFIED BY AMAANESTATE ADMIN`, stampX + 20, stampY + 15, { align: 'center' });
-      doc.text(`DATE: ${agreement.approvedAt ? new Date(agreement.approvedAt).toLocaleDateString() : 'N/A'}`, stampX + 20, stampY + 18, { align: 'center' });
-      doc.text(`REF: ${agreement.certificateNumber || 'N/A'}`, stampX + 20, stampY + 21, { align: 'center' });
-    } catch (stampErr) {
-      console.error("PDF Stamp overlay failed:", stampErr);
+  // Apply Red Company Verification Seal
+  try {
+    doc.setPage(2);
+    try { const coSigX = sealX - 35; const coSigY = sealY - 15; doc.addImage('/amaan_official_seal.png', 'PNG', coSigX, coSigY, 40, 40, undefined, 'FAST'); doc.setFontSize(6); doc.setTextColor(20, 20, 20); doc.setFont('Helvetica', 'bold'); doc.text('AUTHORIZED BY AMAANESTATE', coSigX + 20, coSigY + 45, { align: 'center' }); } catch(err){} 
+    // @ts-ignore
+    if (doc.GState) {
+      // @ts-ignore
+      doc.setGState(new doc.GState({ opacity: 0.75 }));
     }
+    
+    const sealX = pageWidth - margin - 20;
+    const sealY = pageHeight - margin - 45;
+    
+    doc.setDrawColor(220, 38, 38); // Red-600
+    doc.setTextColor(220, 38, 38);
+    
+    // Attempt dashed circle
+    if (typeof doc.setLineDashPattern === 'function') {
+      doc.setLineDashPattern([3, 2], 0);
+    }
+    doc.setLineWidth(1.2);
+    doc.circle(sealX, sealY, 21, 'S');
+    
+    if (typeof doc.setLineDashPattern === 'function') {
+      doc.setLineDashPattern([], 0); // reset
+    }
+    doc.setLineWidth(0.6);
+    doc.circle(sealX, sealY, 19, 'S');
+    doc.circle(sealX, sealY, 13, 'S');
+    
+    doc.setFont('Helvetica', 'bold');
+    
+    const stampTilt = -15; // Clockwise tilt
+    const tiltRad = (stampTilt * Math.PI) / 180;
+    
+    // Top curved text
+    const text1 = "AMAANESTATE".split('');
+    const radiusTop = 16.5;
+    doc.setFontSize(6.5);
+    text1.forEach((char, i) => {
+      const deg = -60 + (120 / (text1.length - 1)) * i;
+      const totalDeg = deg + stampTilt;
+      const rad = (totalDeg * Math.PI) / 180;
+      const tx = sealX + radiusTop * Math.sin(rad);
+      const ty = sealY - radiusTop * Math.cos(rad);
+      doc.text(char, tx, ty, { align: 'center', angle: -totalDeg });
+    });
+
+    // Bottom curved text
+    const text2 = "JIGJIGA * ETHIOPIA".split('');
+    const radiusBot = 16.5;
+    doc.setFontSize(5);
+    text2.forEach((char, i) => {
+      const deg = -70 + (140 / (text2.length - 1)) * i;
+      const totalDeg = deg + stampTilt;
+      const rad = (totalDeg * Math.PI) / 180;
+      const tx = sealX + radiusBot * Math.sin(rad);
+      const ty = sealY + radiusBot * Math.cos(rad);
+      doc.text(char, tx, ty, { align: 'center', angle: totalDeg });
+    });
+
+    // Center text rotated
+    const drawRotatedText = (txt: string, yOffset: number, fSize: number) => {
+      doc.setFontSize(fSize);
+      const tx = sealX - yOffset * Math.sin(tiltRad);
+      const ty = sealY + yOffset * Math.cos(tiltRad);
+      doc.text(txt, tx, ty, { align: 'center', angle: -stampTilt });
+    };
+
+    drawRotatedText('OFFICIAL', -4, 6);
+    drawRotatedText('VERIFIED', 1.5, 8.5);
+    drawRotatedText('SEAL', 6.5, 6);
+    
+    // Draw AmaanEstate Company Signature underlying the stamp
+    try {
+      const coSigX = sealX - 35;
+      const coSigY = sealY - 15;
+      doc.addImage('/amaan_official_seal.png', 'PNG', coSigX, coSigY, 40, 40, undefined, 'FAST');
+      doc.setFontSize(6);
+      doc.setTextColor(20, 20, 20); // Black
+      doc.setFont('Helvetica', 'bold');
+      doc.text('AUTHORIZED BY AMAANESTATE', coSigX + 20, coSigY + 45, { align: 'center' });
+    } catch(err) {
+      console.warn('Could not draw company signature:', err);
+    }
+
+    // @ts-ignore
+    if (doc.GState) {
+      // @ts-ignore
+      doc.setGState(new doc.GState({ opacity: 1.0 }));
+    }
+  } catch (err) {
+    console.warn("Could not draw Red Company Stamp:", err);
   }
 
   return doc;
