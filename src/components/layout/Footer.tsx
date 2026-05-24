@@ -58,7 +58,6 @@ export default function Footer() {
               {[
                 { name: '🌐 Become Broker', path: '/brokers/apply' },
                 { name: '🎓 Become Expert', path: '/become-pro' },
-                { name: '🏢 List Property', path: '/properties/create' },
                 { name: '🛡️ Registry Verification', path: '/brokers' },
                 { name: '📨 Direct Enquiries', path: '/contact' },
                 { name: '🔒 Privacy Policy', path: '/contact' }

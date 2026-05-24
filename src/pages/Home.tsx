@@ -27,6 +27,11 @@ export default function Home() {
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
 
+  const scrollToListings = (e: React.MouseEvent) => {
+    e.preventDefault();
+    propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const [searchParams] = useSearchParams();
 
   // Home-page state based filtering
@@ -176,7 +181,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-luxury-gold/5 via-luxury-black/90 to-luxury-black"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
-          <div className="text-center mb-10 md:mb-12 w-full max-w-3xl px-2">
+          <div className="text-center mb-10 md:mb-12 w-full max-w-3xl px-2 flex flex-col items-center">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -192,6 +197,48 @@ export default function Home() {
             >
               Verified real estate and mobility solutions
             </motion.p>
+
+            {/* Side-by-Side CTA Buttons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 w-full max-w-md px-4"
+            >
+              <Link
+                to="/properties"
+                onClick={scrollToListings}
+                className="w-full sm:w-auto px-8 py-3.5 text-center text-sm font-semibold text-black bg-white rounded-xl border border-white hover:bg-neutral-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] active:translate-y-[1px] transition-all duration-300 font-sans tracking-tight shrink-0 flex items-center justify-center gap-2 group cursor-pointer"
+              >
+                Browse Properties
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+
+              <Link
+                to="/list-property"
+                className="w-full sm:w-auto px-8 py-3.5 text-center text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-500 hover:to-teal-500 shadow-[0_10px_25px_rgba(16,185,129,0.25)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.35)] active:translate-y-[1px] transition-all duration-300 font-sans tracking-tight shrink-0 flex items-center justify-center gap-1 cursor-pointer"
+              >
+                List Your Property
+              </Link>
+            </motion.div>
+
+            {/* Sub-CTA Trust Indicators */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
+              className="flex flex-wrap justify-center items-center gap-y-2 gap-x-6 md:gap-x-8 text-xs text-white/40 tracking-wider font-sans mt-6"
+            >
+              <span className="flex items-center gap-1.5 hover:text-white transition-colors">
+                <span className="text-emerald-400 font-bold">✔</span> Verified Listings
+              </span>
+              <span className="flex items-center gap-1.5 hover:text-white transition-colors">
+                <span className="text-emerald-400 font-bold">✔</span> Trusted Agents
+              </span>
+              <span className="flex items-center gap-1.5 hover:text-white transition-colors">
+                <span className="text-emerald-400 font-bold">✔</span> Secure Agreements
+              </span>
+            </motion.div>
           </div>
           
           <div className="w-full max-w-4xl mb-6">

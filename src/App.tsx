@@ -40,9 +40,7 @@ const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
 const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
 
 // Product Custom Editors
-const EditProperty = lazy(() => import('./pages/EditProperty'));
-const CreateVehicle = lazy(() => import('./pages/CreateVehicle'));
-const EditVehicle = lazy(() => import('./pages/EditVehicle'));
+const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
@@ -65,8 +63,6 @@ const DashboardSettings = lazy(() => import('./pages/dashboard/DashboardSettings
 const DashboardArticles = lazy(() => import('./pages/dashboard/DashboardArticles'));
 const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
 const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
-const CreateProperty = lazy(() => import('./pages/CreateProperty'));
-const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
 // Additional Dashboard Sub-Modules
 const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
@@ -90,9 +86,8 @@ export default function App() {
                 <Route path="properties" element={<Home />} />
                 <Route path="marketplace" element={<Home />} />
                 <Route path="properties/:id" element={<PropertyDetails />} />
-                <Route path="properties/create" element={<CreateProperty />} />
-                <Route path="properties/edit/:id" element={<EditProperty />} />
-                <Route path="property-form" element={<PropertyListingFormPage />} />
+                <Route path="properties/edit/:id" element={<PropertyListingFormPage />} />
+                <Route path="list-property" element={<PropertyListingFormPage />} />
                 <Route path="agreements" element={<Agreements />} />
                 <Route path="admin/agreements" element={<AdminAgreements />} />
                 <Route path="verify/:id" element={<PublicVerification />} />
@@ -100,8 +95,7 @@ export default function App() {
                 {/* Vehicles Module */}
                 <Route path="vehicles" element={<Vehicles />} />
                 <Route path="vehicles/:id" element={<VehicleDetails />} />
-                <Route path="vehicles/create" element={<CreateVehicle />} />
-                <Route path="vehicles/edit/:id" element={<EditVehicle />} />
+                <Route path="vehicles/edit/:id" element={<PropertyListingFormPage />} />
 
                 {/* Agents Module */}
                 <Route path="agents" element={<AgentsList />} />

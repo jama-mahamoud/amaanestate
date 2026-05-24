@@ -8,7 +8,6 @@ import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Property } from '@/types';
 import EmptyState from '@/components/EmptyState';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
 export default function DashboardProperties() {
@@ -74,26 +73,12 @@ export default function DashboardProperties() {
           <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Asset Management & Global Distribution</p>
         </div>
         <Button 
-          onClick={() => {
-            setSelectedProperty(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/list-property')}
           className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1"
         >
           <Plus size={20} className="mr-3" /> Create Property Listing
         </Button>
       </div>
-
-      <ListingCreationModal 
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedProperty(null);
-        }}
-        category="property"
-        onSuccess={loadUserProperties}
-        listingToEdit={selectedProperty}
-      />
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="relative flex-1 group">
@@ -204,10 +189,7 @@ export default function DashboardProperties() {
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => {
-                                    setSelectedProperty(property);
-                                    setIsModalOpen(true);
-                                  }}
+                                  onClick={() => navigate(`/list-property?edit=${property.id}`)}
                                   title="Edit Property"
                                 >
                                   <Edit3 size={14} />
@@ -247,7 +229,7 @@ export default function DashboardProperties() {
             title="Portfolio Enrolled" 
             description={error ? "Our database is temporarily unavailable." : "Your catalog is currently waiting for your first listing upload. Begin by publishing a new property."} 
             actionLabel="Create Property Listing"
-            onAction={() => setIsModalOpen(true)}
+            onAction={() => navigate('/list-property')}
             icon={<Building2 size={48} />}
           />
         )}

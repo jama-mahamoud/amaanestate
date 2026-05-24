@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   MapPin, Gauge, Fuel, Calendar, Share2, 
@@ -15,17 +15,16 @@ import NotFoundState from '@/components/NotFoundState';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { toast } from 'sonner';
 
 export default function VehicleDetails() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { listing, loading, error, refresh } = useListing(id);
   const vehicle = listing as VehicleListing | null;
 
   const { user, profile } = useAuth();
   const isAdmin = profile?.role?.toString().toLowerCase().trim() === 'admin';
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleToggleFeature = React.useCallback(async () => {
     if (!vehicle) return;
@@ -136,7 +135,7 @@ export default function VehicleDetails() {
 
                 {/* Edit Button */}
                 <Button 
-                  onClick={() => setIsEditModalOpen(true)}
+                  onClick={() => navigate(`/list-property?edit=${vehicle.id}`)}
                   className="h-11 rounded-xl bg-luxury-gold hover:bg-white text-black font-black text-[9px] uppercase tracking-widest gap-2 px-6 shadow-lg shadow-luxury-gold/10"
                 >
                   <Edit3 size={12} /> Rewrite Listing
@@ -285,15 +284,6 @@ export default function VehicleDetails() {
         </div>
       </div>
 
-      {isAdmin && vehicle && (
-        <ListingCreationModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          category="vehicle"
-          listingToEdit={vehicle as any}
-          onSuccess={refresh}
-        />
-      )}
     </div>
   );
 }

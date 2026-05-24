@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Building2, 
@@ -19,19 +20,17 @@ import { Button } from '@/components/ui/button';
 import { Listing, ListingStatus } from '@/types';
 import { moderationService } from '@/services/moderationService';
 import { toast } from 'sonner';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
 
 type ModerationStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 
 export default function ListingModeratedList() {
+  const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ModerationStatus>('PENDING');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -231,10 +230,7 @@ export default function ListingModeratedList() {
                         </Button>
                       </a>
                       <Button 
-                        onClick={() => {
-                          setEditingListing(listing);
-                          setIsEditModalOpen(true);
-                        }}
+                        onClick={() => navigate(`/list-property?edit=${listing.id}`)}
                         variant="ghost" 
                         size="sm" 
                         className="h-10 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/20 hover:border-luxury-gold hover:text-luxury-gold text-[10px] uppercase font-black tracking-widest gap-2"
@@ -321,19 +317,6 @@ export default function ListingModeratedList() {
             </motion.div>
           ))}
         </div>
-      )}
-
-      {editingListing && (
-        <ListingCreationModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingListing(null);
-          }}
-          category={editingListing.category}
-          listingToEdit={editingListing}
-          onSuccess={loadListings}
-        />
       )}
     </div>
   );

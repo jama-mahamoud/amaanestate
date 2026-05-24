@@ -10,14 +10,12 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/services/userService';
 import { Agreement, agreementService } from '@/services/agreementService';
-import { useDashboard } from '@/contexts/DashboardContext';
 import { useListings } from '@/hooks/useListings';
 import { Property } from '@/types';
 
 export default function DashboardHome() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { openListingModal } = useDashboard();
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'notifications' | 'compliance' | 'referrals' | 'favorites'>('notifications');
@@ -431,22 +429,6 @@ export default function DashboardHome() {
         {/* SIDEBAR ANALYTICS AND ACCOUNT ACTIONS */}
         <div className="lg:col-span-4 space-y-8">
           
-          {/* Quick Create CTA Block */}
-          <div className="p-8 bg-[#C5A059] rounded-[2.5rem] text-black relative overflow-hidden group shadow-2xl">
-             <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 blur-[50px] rounded-full translate-x-1/4 -translate-y-1/4" />
-             <div className="relative z-10">
-               <span className="text-[9px] uppercase font-black tracking-[0.3em] opacity-40">Listing Actions</span>
-               <h3 className="text-3xl font-display font-medium mb-6 leading-none tracking-tight">Expand Your Digital Footprint</h3>
-               <p className="text-black/60 text-xs font-medium mb-8 leading-relaxed italic">Get started and list your property.</p>
-               <Button 
-                 onClick={() => openListingModal('property')}
-                 className="w-full bg-black text-white hover:bg-black/90 h-16 rounded-2xl font-bold text-sm border-0 shadow-lg cursor-pointer"
-               >
-                 Register New Asset
-               </Button>
-             </div>
-          </div>
-
           {/* Regional Market Shares */}
           <div className="glass-card rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden bg-white/[0.01]">
               <div className="absolute inset-0 bg-white/[0.005]" />

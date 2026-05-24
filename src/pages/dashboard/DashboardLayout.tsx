@@ -21,7 +21,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 import BrandLogo from '@/components/brand/BrandLogo';
 
@@ -30,7 +29,6 @@ function DashboardContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, logout, loading } = useAuth();
-  const { isListingModalOpen, closeListingModal, openListingModal, listingCategory } = useDashboard();
 
   const handleLogout = useCallback(async () => {
     try {
@@ -177,23 +175,11 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-6">
-             <Button 
-                onClick={() => openListingModal(location.pathname.includes('vehicles') ? 'vehicle' : 'property')}
-                className="hidden md:flex bg-luxury-gold text-luxury-black hover:bg-white h-12 rounded-[1rem] font-bold px-8 shadow-2xl shadow-luxury-gold/20 transition-all duration-500 scale-100 hover:scale-105 active:scale-95 text-[10px] uppercase tracking-widest"
-             >
-                <Plus size={16} className="mr-3" /> Create Listing
-             </Button>
              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:border-luxury-gold hover:bg-white/10 transition-all duration-500 cursor-pointer group">
                 <Users size={18} className="text-white/20 group-hover:text-luxury-gold transition-colors" />
              </div>
           </div>
         </header>
-
-        <ListingCreationModal 
-          isOpen={isListingModalOpen}
-          onClose={closeListingModal}
-          category={listingCategory}
-        />
 
         <main className="p-8 lg:p-16 max-w-[1600px] mx-auto w-full">
           <Outlet />

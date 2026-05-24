@@ -8,7 +8,6 @@ import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { VehicleListing } from '@/types';
 import EmptyState from '@/components/EmptyState';
-import ListingCreationModal from '@/components/listing/ListingCreationModal';
 import { formatPrice } from '@/lib/utils';
 
 export default function DashboardVehicles() {
@@ -68,26 +67,12 @@ export default function DashboardVehicles() {
           <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em]">Vehicle Fleet Management Protocal</p>
         </div>
         <Button 
-          onClick={() => {
-            setSelectedVehicle(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/list-property')}
           className="bg-luxury-gold text-luxury-black hover:bg-white h-16 px-10 rounded-[2rem] font-bold shadow-2xl shadow-luxury-gold/20 transition-all duration-500 hover:-translate-y-1"
         >
           <Plus size={20} className="mr-3" /> Catalog New Unit
         </Button>
       </div>
-
-      <ListingCreationModal 
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedVehicle(null);
-        }}
-        category="vehicle"
-        onSuccess={loadUserVehicles}
-        listingToEdit={selectedVehicle}
-      />
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="relative flex-1 group">
@@ -188,10 +173,7 @@ export default function DashboardVehicles() {
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => {
-                                    setSelectedVehicle(vehicle);
-                                    setIsModalOpen(true);
-                                  }}
+                                  onClick={() => navigate(`/list-property?edit=${vehicle.id}`)}
                                   title="Edit Vehicle"
                                 >
                                   <Edit3 size={14} />
@@ -231,7 +213,7 @@ export default function DashboardVehicles() {
             title="Fleet Registry Ready" 
             description={error ? "Our mobility registry is temporarily indisposed." : "The mobility database is initialized and ready for input. Catalog the first unit to begin tracking."} 
             actionLabel="Catalog New Unit"
-            onAction={() => setIsModalOpen(true)}
+            onAction={() => navigate('/list-property')}
             icon={<Car size={48} />}
           />
         )}
