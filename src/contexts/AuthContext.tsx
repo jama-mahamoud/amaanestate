@@ -193,6 +193,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      // Explicitly clear profile state immediately for fast response
+      setProfile(null);
+      // Clear relevant local storage
+      localStorage.clear();
+      sessionStorage.clear();
     } catch (err) {
         console.error("Logout error:", err);
     }
@@ -200,6 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      googleProvider.setCustomParameters({
+        prompt: "select_account"
+      });
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       if (error.code === 'auth/unauthorized-domain') {

@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Agency } from '@/types';
 import ImageUpload from '@/components/listing/ImageUpload';
+import { calculateAgencyTrustScore } from '@/utils/trustScore';
 
 export default function DashboardProfile() {
   const { user, profile } = useAuth();
@@ -43,6 +44,16 @@ export default function DashboardProfile() {
           const allAgencies = await brokerService.getAllAgencies();
           const found = allAgencies.find(a => a.ownerId === user.uid);
           if (found && active) {
+            // Recalculate dynamic trust score
+            const { score } = calculateAgencyTrustScore(found);
+            
+            // If outdated, update Firestore and local state immediately
+            if (score !== found.trustScore) {
+              const agencyRef = doc(db, 'agencies', found.id);
+              await updateDoc(agencyRef, { trustScore: score });
+              found.trustScore = score; // Sync local object
+            }
+
             setAgency(found);
             setAgencyName(found.agencyName);
             setEmail(found.email);
@@ -158,6 +169,43 @@ export default function DashboardProfile() {
         /* AGENCY SPECIALIZED COMPREHENSIVE CONFIGURATION VIEW */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-10">
+            <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
+              <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-display font-medium text-white tracking-tight">Trust & Verification</h3>
+                  <p className="text-white/40 text-[9px] uppercase tracking-wider font-extrabold">Dynamic score based on complete corporate documentation</p>
+                </div>
+              </div>
+              
+              {/* Trust Score Breakdown */}
+                <div className="space-y-6">
+                  {(() => {
+                    const { score, breakdown } = calculateAgencyTrustScore(agency);
+                    return (
+                      <>
+                        <div className="flex items-end gap-4">
+                          <div className="text-6xl font-display font-bold text-white">{score}%</div>
+                          <div className="text-white/40 mb-2 font-medium">Trust Score</div>
+                        </div>
+                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                          <div className="bg-luxury-gold h-full transition-all duration-500" style={{ width: `${score}%` }} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-[10px] uppercase tracking-wider text-white/50">
+                          <div>Basic Info: {breakdown.basicInfo}/30</div>
+                          <div>Location: {breakdown.locationInfo}/30</div>
+                          <div>Verification: {breakdown.verification}/30</div>
+                          <div>Extras: {breakdown.profileExtras}/10</div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+            </section>
+
             <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
               <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
               <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">

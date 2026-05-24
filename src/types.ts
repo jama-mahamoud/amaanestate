@@ -150,6 +150,9 @@ export interface UserProfile {
   createdAt: any; // Using any for Firestore Timestamp compatibility or date string
   photoURL: string | null;
   isVerified: boolean;
+  phone?: string;
+  city?: string;
+  bio?: string;
 }
 
 export interface Article {
@@ -232,4 +235,5 @@ export interface Agency {
   region?: string;
   createdAt: any;
   updatedAt?: any;
+  trustScore?: number;
 }

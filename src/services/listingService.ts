@@ -58,7 +58,7 @@ export const listingService = {
     else if (status === 'rejected' || status === 'REJECTED') status = 'SUSPENDED'; // Treat rejected as suspended for now
     else status = 'DRAFT';
 
-    return {
+    const normalizedData = {
       ...data,
       id,
       status: status as ListingStatus,
@@ -70,6 +70,13 @@ export const listingService = {
       listingType: data.listingType || data.type || 'sale',
       images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
     };
+
+    // Always compute the dynamic trustScore to replace any old, stale, or cached database values
+    const trustResults = trustService.calculateTrustScore(normalizedData as Listing);
+    normalizedData.trustScore = trustResults.trustScore;
+    normalizedData.riskLevel = trustResults.riskLevel;
+
+    return normalizedData as Listing;
   },
 
   async getListings(filters: ListingFilter = {}) {

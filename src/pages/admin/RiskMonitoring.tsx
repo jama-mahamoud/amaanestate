@@ -3,6 +3,7 @@ import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Listing } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { trustService } from '@/services/trustService';
 
 export default function RiskMonitoring() {
   const [properties, setProperties] = useState<Listing[]>([]);
@@ -11,7 +12,15 @@ export default function RiskMonitoring() {
   useEffect(() => {
     const q = query(collection(db, 'listings'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
+      const data = snapshot.docs.map(doc => {
+        const raw = { id: doc.id, ...doc.data() } as Listing;
+        const computed = trustService.calculateTrustScore(raw);
+        return {
+          ...raw,
+          trustScore: computed.trustScore,
+          riskLevel: computed.riskLevel,
+        };
+      });
       setProperties(data.filter(p => p.riskLevel === 'HIGH'));
       setLoading(false);
     });

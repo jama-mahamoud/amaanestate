@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion } from 'motion/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import HomeSearch from '@/components/HomeSearch';
+import CategoryScroller from '@/components/CategoryScroller';
 import LatestNews from '@/components/LatestNews';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
@@ -193,8 +194,11 @@ export default function Home() {
             </motion.p>
           </div>
           
-          <div className="w-full max-w-4xl mb-12">
+          <div className="w-full max-w-4xl mb-6">
             <HomeSearch onSearch={handleSearch} />
+          </div>
+          <div className="w-full max-w-4xl">
+            <CategoryScroller />
           </div>
         </div>
       </section>
