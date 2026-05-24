@@ -438,13 +438,9 @@ interface SettingsContextType {
   setLanguage: (lang: Language) => void;
   setCurrency: (curr: Currency) => void;
   t: (key: string) => string;
-  formatPriceConverted: (price: number | string, baseCurrency?: string) => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
-
-const EXCHANGE_RATE_ETB_TO_USD = 1 / 135; // 1 ETB = ~0.0074 USD (Example)
-const EXCHANGE_RATE_USD_TO_ETB = 135; // 1 USD = 135 ETB
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
@@ -485,25 +481,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return (translations[language] as Record<string, string>)[key] || key;
   };
 
-  const formatPriceConverted = (price: number | string, baseCurrency: string = 'ETB') => {
-    if (typeof price !== 'number') return String(price);
-
-    let priceInETB = price;
-    if (baseCurrency === 'USD') {
-      priceInETB = price * EXCHANGE_RATE_USD_TO_ETB;
-    }
-
-    let displayPrice = priceInETB;
-    if (currency === 'USD') {
-      displayPrice = priceInETB * EXCHANGE_RATE_ETB_TO_USD;
-      return `$${displayPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-    }
-    
-    return `${displayPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} ETB`;
-  };
-
   return (
-    <SettingsContext.Provider value={{ language, currency, setLanguage, setCurrency, t, formatPriceConverted }}>
+    <SettingsContext.Provider value={{ language, currency, setLanguage, setCurrency, t }}>
       {children}
     </SettingsContext.Provider>
   );

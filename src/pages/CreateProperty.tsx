@@ -97,7 +97,7 @@ export default function CreateProperty() {
     description: '',
     price: '',
     currency: 'ETB' as 'ETB' | 'USD',
-    city: 'Jigjiga',
+    city: '',
     subcategory: 'Apartment',
     listingType: 'sale' as 'sale' | 'rent',
     size: '',
@@ -299,8 +299,10 @@ export default function CreateProperty() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select value={data.city} onChange={e => setData({...data, city: e.target.value})} className="w-full h-14 bg-white/5 border border-white/10 px-4 rounded-2xl text-white">
-          <option value="Jigjiga">Jigjiga</option>
-          <option value="Dire Dawa">Dire Dawa</option>
+          <option value="" disabled>Select City</option>
+          {['Addis Ababa', 'Baidoa', 'Beledweyne', 'Berbera', 'Borama', 'Bosaso', 'Burco', 'Dire Dawa', 'Galkayo', 'Garissa', 'Garowe', 'Hargeisa', 'Jijiga', 'Kismayo', 'Mogadishu', 'Nairobi', 'Wajir'].map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
         <Input placeholder="District" value={data.district} onChange={e => setData({...data, district: e.target.value})} className="h-14 bg-white/5 border-white/10 rounded-2xl" />
       </div>

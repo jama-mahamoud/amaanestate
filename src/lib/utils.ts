@@ -6,12 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatPrice(price: number, currency?: string) {
+export function formatPrice(price: number | string, currency?: string) {
   const curr = currency || 'ETB';
-  if (curr === 'USD') {
-    return `$${price.toLocaleString()}`;
-  }
-  return `${price.toLocaleString()} ETB`;
+  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+  if (isNaN(numericPrice)) return `0 ${curr}`;
+  return `${numericPrice.toLocaleString()} ${curr}`;
 }
 
 export enum OperationType {

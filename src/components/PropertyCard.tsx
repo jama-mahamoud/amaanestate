@@ -14,7 +14,7 @@ import {
   Settings 
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useSettings } from '@/contexts/SettingsContext';
+import { formatPrice } from '@/lib/utils';
 import { usePropertyModal } from '@/contexts/PropertyModalContext';
 import React, { memo } from 'react';
 
@@ -26,7 +26,6 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: PropertyCardProps) => {
-  const { formatPriceConverted } = useSettings();
   const { openPropertyModal } = usePropertyModal();
   const isVehicle = (property.category || '').toString().toLowerCase().trim() === 'vehicle';
   
@@ -35,9 +34,9 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
     : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop'
   );
 
-  const displayPrice = typeof property.price === 'number' 
-    ? formatPriceConverted(property.price, property.currency || 'ETB') 
-    : property.price;
+  const displayPrice = property.price 
+    ? formatPrice(property.price, property.currency || 'ETB') 
+    : 'Contact for price';
 
   const targetLink = isVehicle ? `/vehicles/${property.id}` : `/properties/${property.id}`;
 
@@ -116,58 +115,52 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
 
             {/* Conditional Metadata Specs */}
             {isVehicle ? (
-              <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
+              <div className="grid grid-cols-3 gap-3 py-6 border-y border-white/5 mb-6">
                 {(property.year || property.metadata?.year) && (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Year</span>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-luxury-gold" />
-                      <span className="text-sm font-bold text-white/80">{property.year || property.metadata?.year}</span>
+                  <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Calendar size={14} className="text-[#C5A059]" />
+                      <span className="text-sm font-bold text-white/90">{property.year || property.metadata?.year}</span>
                     </div>
+                    <span className="text-[9px] uppercase tracking-widest text-[#C5A059]/60 font-bold">Year</span>
                   </div>
                 )}
                 {(property.mileage || property.metadata?.mileage) && (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Mileage</span>
-                    <div className="flex items-center gap-2">
-                      <Gauge size={14} className="text-luxury-gold animate-pulse" />
-                      <span className="text-sm font-bold text-white/80">{property.mileage || property.metadata?.mileage}</span>
+                  <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Gauge size={14} className="text-[#C5A059]" />
+                      <span className="text-sm font-bold text-white/90 truncate max-w-[50px]">{property.mileage || property.metadata?.mileage}</span>
                     </div>
+                    <span className="text-[9px] uppercase tracking-widest text-[#C5A059]/60 font-bold">Miles</span>
                   </div>
                 )}
                 {(property.fuelType || property.transmission || property.metadata?.fuelType) && (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Drivetrain</span>
-                    <div className="flex items-center gap-2">
-                      <Fuel size={14} className="text-luxury-gold" />
-                      <span className="text-sm font-bold text-white/80 capitalize">
+                  <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Fuel size={14} className="text-[#C5A059]" />
+                      <span className="text-sm font-bold text-white/90 capitalize truncate max-w-[50px]">
                         {property.fuelType || property.transmission || property.metadata?.fuelType}
                       </span>
                     </div>
+                    <span className="text-[9px] uppercase tracking-widest text-[#C5A059]/60 font-bold">Drive</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Beds</span>
-                  <div className="flex items-center gap-2">
-                    <BedDouble size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.beds || '-'}</span>
+              <div className="grid grid-cols-3 gap-3 py-6 border-y border-white/5 mb-6">
+                <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors pointer-events-none">
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center text-center">
+                    <span className="text-sm font-bold text-white/90 text-center">🛏 {property.beds || property.features?.beds || '-'} Beds</span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Baths</span>
-                  <div className="flex items-center gap-2">
-                    <Bath size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.baths || '-'}</span>
+                <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors pointer-events-none">
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center text-center">
+                    <span className="text-sm font-bold text-white/90 text-center">🛁 {property.baths || property.features?.baths || '-'} Baths</span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Area</span>
-                  <div className="flex items-center gap-2">
-                    <Square size={14} className="text-luxury-gold" />
-                    <span className="text-sm font-bold text-white/80">{property.size || '-'}</span>
+                <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors pointer-events-none">
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center text-center">
+                    <span className="text-sm font-bold text-white/90 text-center truncate max-w-[80px]">📏 {property.size || property.features?.size || '-'}</span>
                   </div>
                 </div>
               </div>

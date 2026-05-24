@@ -79,7 +79,7 @@ export default function AgentsList() {
 
   const cities = useMemo(() => {
     const brokerCities = brokers.map(b => b.city || '').filter(Boolean);
-    const agencyCities = agencies.map(a => (a as any).city || 'Jigjiga').filter(Boolean);
+    const agencyCities = agencies.map(a => (a as any).city).filter(Boolean);
     return ['All', ...Array.from(new Set([...brokerCities, ...agencyCities]))];
   }, [brokers, agencies]);
 
@@ -87,9 +87,9 @@ export default function AgentsList() {
     return agencies.filter(agency => {
       const matchQuery = !searchQuery || 
                          (agency.agencyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         ((agency as any).city || 'Jigjiga').toLowerCase().includes(searchQuery.toLowerCase());
+                         ((agency as any).city || '').toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchCity = selectedCity === 'All' || ((agency as any).city || 'Jigjiga').toLowerCase() === selectedCity.toLowerCase();
+      const matchCity = selectedCity === 'All' || ((agency as any).city || '').toLowerCase() === selectedCity.toLowerCase();
       
       const counts = getOwnerMetadata(agency.ownerId);
       const matchType = selectedPropType === 'All' || 
@@ -302,7 +302,7 @@ export default function AgentsList() {
                           </h3>
                           <div className="flex items-center gap-1.5 text-white/50 text-xs mt-1.5">
                             <MapPin size={12} className="text-[#C5A059]" />
-                            <span className="truncate">{agency.city || 'Jigjiga HQ'}, Horn of Africa</span>
+                            <span className="truncate">{agency.city || 'Unknown'}, Horn of Africa</span>
                           </div>
                           
                           {/* Rich Badge Check */}
@@ -336,14 +336,23 @@ export default function AgentsList() {
                     <div className="px-8 pb-8 pt-0 border-t border-white/5 mt-auto">
                       <div className="flex gap-2.5 pt-6">
                         <Button variant="outline" className="flex-1 bg-transparent border-white/10 text-white hover:bg-white/5 text-[10px] font-black uppercase tracking-widest" asChild>
-                          <a href={`tel:${agency.phone || '+251910012794'}`}>
+                          <a href={agency.phone ? `tel:${agency.phone}` : '#'}>
                             <Phone size={12} className="mr-1 text-emerald-500" /> Call
                           </a>
                         </Button>
                         <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest" asChild>
-                          <a href={`https://wa.me/${(agency.phone || '').replace(/\D/g, '') || '251910012794'}?text=Hello%20${agency.agencyName},%20I%20found%20your%20agency%20on%20AmaanEstate.`} target="_blank" rel="noopener noreferrer">
-                            <MessageCircle size={14} className="mr-1.5" /> WhatsApp
-                          </a>
+                          {agency.phone ? (
+                            <a href={`https://wa.me/${(() => {
+                              const clean = agency.phone.replace(/\D/g, '');
+                              return clean.startsWith('9') || clean.startsWith('7') ? '251' + clean : clean;
+                            })()}?text=Hello%20${agency.agencyName},%20I%20found%20your%20agency%20on%20AmaanEstate.`} target="_blank" rel="noopener noreferrer">
+                              <MessageCircle size={14} className="mr-1.5" /> WhatsApp
+                            </a>
+                          ) : (
+                            <span className="opacity-50 cursor-not-allowed">
+                              <MessageCircle size={14} className="mr-1.5" /> WhatsApp
+                            </span>
+                          )}
                         </Button>
                       </div>
                       <Button className="w-full bg-white/5 hover:bg-[#C5A059] text-white hover:text-black border border-white/10 mt-3 text-[10px] rounded-xl font-bold uppercase tracking-widest h-11" asChild>

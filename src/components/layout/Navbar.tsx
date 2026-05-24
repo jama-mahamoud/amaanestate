@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import BrandLogo from '../brand/BrandLogo';
+import PremiumLogo from '../brand/PremiumLogo';
 import MegaMenu from './MegaMenu';
 
 const MobileAccordionItem = ({ title, sections, setMobileMenuOpen, isOpen, onToggle }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void, isOpen: boolean, onToggle: () => void }) => {
@@ -304,7 +304,7 @@ export default function Navbar() {
         {/* LOGO AREA - Left matched width */}
         <div className="flex items-center gap-2 shrink-0 lg:flex-1 mt-[-3px]">
           <Link to="/" className="flex items-center group outline-none">
-            <BrandLogo size="xxs" variant="gold" />
+            <PremiumLogo className="h-8" variant="gold" />
           </Link>
         </div>
         
@@ -348,7 +348,7 @@ export default function Navbar() {
           >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-2">
-                 <BrandLogo size="xxs" layout="icon" />
+                 <PremiumLogo className="h-6" variant="white" />
                  <span className="font-display font-bold text-base text-white">Menu</span>
               </div>
               <button 

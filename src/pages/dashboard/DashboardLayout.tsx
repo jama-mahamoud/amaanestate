@@ -55,9 +55,9 @@ function DashboardContent() {
       items.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
       items.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
       items.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
-      items.push({ name: 'Trust Intelligence Engine', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
-      items.push({ name: 'Verification Center', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
-      items.push({ name: 'Risk Monitoring', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
+      items.push({ name: 'Insights', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
+      items.push({ name: 'Verification', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
+      items.push({ name: 'Activity Logs', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
     }
 
     if (isAgency) {
@@ -102,7 +102,7 @@ function DashboardContent() {
           </div>
 
           <div className="px-6 mb-8 text-[9px] uppercase tracking-[0.4em] font-bold text-white/50 ml-4">
-             Management Protocol
+             Management
           </div>
 
           <nav className="flex-1 px-6 space-y-3">
@@ -135,7 +135,7 @@ function DashboardContent() {
           <div className="p-8 space-y-6">
             <div className="glass-card p-6 rounded-3xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-luxury-gold/5 blur-2xl rounded-full" />
-              <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-white/40 mb-4">Authority Hub</p>
+              <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-white/40 mb-4">User Profile</p>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-[1rem] bg-white/5 border border-white/15 flex items-center justify-center text-luxury-gold group-hover:scale-110 transition-transform duration-500">
                   <Briefcase size={20} />
@@ -155,7 +155,7 @@ function DashboardContent() {
               onClick={handleLogout}
             >
               <LogOut size={20} className="mr-4 group-hover:translate-x-1 transition-transform" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Terminate Session</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold">Log Out</span>
             </Button>
           </div>
         </div>
@@ -170,9 +170,9 @@ function DashboardContent() {
             </Button>
             <div>
               <h2 className="text-3xl font-display font-bold tracking-tighter text-white">
-                {navItems.find(i => i.path === location.pathname)?.name || 'Command Center'}
+                {navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}
               </h2>
-              <p className="text-[9px] uppercase tracking-[0.3em] text-white/20 font-bold hidden sm:block">Automated Management Protocol Active</p>
+              <p className="text-[9px] uppercase tracking-[0.3em] text-white/20 font-bold hidden sm:block">Active</p>
             </div>
           </div>
 
@@ -181,7 +181,7 @@ function DashboardContent() {
                 onClick={() => openListingModal(location.pathname.includes('vehicles') ? 'vehicle' : 'property')}
                 className="hidden md:flex bg-luxury-gold text-luxury-black hover:bg-white h-12 rounded-[1rem] font-bold px-8 shadow-2xl shadow-luxury-gold/20 transition-all duration-500 scale-100 hover:scale-105 active:scale-95 text-[10px] uppercase tracking-widest"
              >
-                <Plus size={16} className="mr-3" /> New Asset
+                <Plus size={16} className="mr-3" /> Create Listing
              </Button>
              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:border-luxury-gold hover:bg-white/10 transition-all duration-500 cursor-pointer group">
                 <Users size={18} className="text-white/20 group-hover:text-luxury-gold transition-colors" />

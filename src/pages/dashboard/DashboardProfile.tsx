@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'motion/react';
 import { brokerService } from '@/services/brokerService';
+import { userService } from '@/services/userService';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Agency } from '@/types';
@@ -14,6 +15,12 @@ export default function DashboardProfile() {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // User Specific State
+  const [userDisplayName, setUserDisplayName] = useState(profile?.displayName || '');
+  const [userPhone, setUserPhone] = useState(profile?.phone || '');
+  const [userCity, setUserCity] = useState(profile?.city || '');
+  const [userBio, setUserBio] = useState(profile?.bio || '');
 
   // Agency Specific State
   const [agency, setAgency] = useState<Agency | null>(null);
@@ -90,17 +97,23 @@ export default function DashboardProfile() {
             displayName: agencyName
           });
         }
+      } else if (user?.uid) {
+        await userService.updateUser(user.uid, {
+          displayName: userDisplayName,
+          phone: userPhone,
+          city: userCity,
+          bio: userBio
+        });
       }
       setSuccess(true);
-      const timer = setTimeout(() => setSuccess(false), 3000);
-      return () => clearTimeout(timer);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      console.error("Failed to update credentials:", error);
+      console.error("Failed to update profile:", error);
       alert("Error saving profile details.");
     } finally {
       setLoading(false);
     }
-  }, [agency, agencyName, email, isAgencyRole, license, logo, logoFiles.length, phone, user?.uid, visibility]);
+  }, [agency, agencyName, email, isAgencyRole, license, logo, logoFiles.length, phone, user?.uid, visibility, userDisplayName, userCity, userBio, userPhone]);
 
   return (
     <div className="space-y-12">
@@ -265,7 +278,7 @@ export default function DashboardProfile() {
                   <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Display Name</label>
                   <div className="relative">
                     <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
-                    <Input defaultValue={user?.displayName || 'Amaan Estate Partner'} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
+                    <Input value={userDisplayName} onChange={e => setUserDisplayName(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
                   </div>
                 </div>
 
@@ -281,15 +294,28 @@ export default function DashboardProfile() {
                   <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30Presentation block ml-2 animate-none">Regional Hub Assigned</label>
                   <div className="relative">
                     <Map size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
-                    <Input defaultValue="Jigjiga HQ" className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-[#C5A059]/30 font-medium" />
+                    <Input value={userCity} onChange={e => setUserCity(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-[#C5A059]/30 font-medium" />
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Access Established On</label>
-                  <div className="relative border border-white/5 bg-white/[0.01] rounded-2xl h-16 flex items-center px-6">
-                    <Calendar size={16} className="text-white/20 mr-3" />
-                    <span className="text-white/60 font-mono text-sm">May 21, 2026</span>
+                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Phone Number</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
+                    <Input value={userPhone} onChange={e => setUserPhone(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 md:col-span-2">
+                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Bio / About Me</label>
+                  <div className="relative">
+                    <FileText size={16} className="absolute left-5 top-6 text-white/20" />
+                    <textarea 
+                      value={userBio} 
+                      onChange={e => setUserBio(e.target.value)}
+                      className="w-full bg-white/5 border-0 min-h-[120px] pl-12 pr-6 pt-5 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
+                      placeholder="Tell us about yourself..."
+                    />
                   </div>
                 </div>
               </div>

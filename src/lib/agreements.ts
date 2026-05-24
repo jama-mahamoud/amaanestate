@@ -390,7 +390,6 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
   // Apply Red Company Verification Seal
   try {
     doc.setPage(2);
-    try { const coSigX = sealX - 35; const coSigY = sealY - 15; doc.addImage('/amaan_official_seal.png', 'PNG', coSigX, coSigY, 40, 40, undefined, 'FAST'); doc.setFontSize(6); doc.setTextColor(20, 20, 20); doc.setFont('Helvetica', 'bold'); doc.text('AUTHORIZED BY AMAANESTATE', coSigX + 20, coSigY + 45, { align: 'center' }); } catch(err){} 
     // @ts-ignore
     if (doc.GState) {
       // @ts-ignore

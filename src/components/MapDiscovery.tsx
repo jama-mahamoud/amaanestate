@@ -16,15 +16,26 @@ interface MapDiscoveryProps {
 }
 
 const CITY_COORDINATES: Record<string, [number, number]> = {
-  'Jigjiga': [9.35, 42.8],
-  'Dire Dawa': [9.60, 41.86],
-  'Godey': [5.95, 43.55],
-  'Dhagaxbur': [8.20, 43.56],
-  'Qabridaha': [7.21, 44.27],
+  'Jijiga': [9.35, 42.8],
+  'Hargeisa': [9.56, 44.06],
+  'Burco': [9.52, 45.53],
+  'Berbera': [10.44, 45.01],
+  'Borama': [9.93, 43.18],
+  'Mogadishu': [2.04, 45.34],
+  'Garowe': [8.40, 48.48],
+  'Bosaso': [11.28, 49.18],
+  'Kismayo': [-0.35, 42.54],
+  'Galkayo': [6.76, 47.43],
+  'Beledweyne': [4.73, 45.20],
   'Addis Ababa': [9.03, 38.74],
+  'Dire Dawa': [9.60, 41.86],
+  'Nairobi': [-1.29, 36.82],
+  'Wajir': [1.75, 40.05],
+  'Garissa': [-0.45, 39.64],
+  'Djibouti City': [11.58, 43.14],
 };
 
-const DEFAULT_COORDS: [number, number] = [9.35, 42.8]; // Jigjiga
+const DEFAULT_COORDS: [number, number] = [6.0, 44.0]; // Central Horn of Africa
 
 const getPropertyCoords = (prop: Listing, index: number): [number, number] => {
   if (prop.latitude !== undefined && prop.longitude !== undefined) {

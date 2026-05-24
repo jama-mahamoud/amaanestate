@@ -7,6 +7,7 @@ interface PropertyFormData {
   location: string;
   nearbyPlaces: string;
   phone: string;
+  currency: string;
   beds: string;
   baths: string;
   showers: string;
@@ -29,6 +30,7 @@ export default function PropertyListingForm() {
     location: '',
     nearbyPlaces: '',
     phone: '',
+    currency: 'ETB',
     beds: '1',
     baths: '1',
     showers: '1',
@@ -68,6 +70,7 @@ export default function PropertyListingForm() {
       brokerPhone: '',
       ownerName: '',
       ownerPhone: '',
+      currency: 'ETB',
     });
     setFormSubmitted(false);
   };
@@ -116,18 +119,32 @@ export default function PropertyListingForm() {
             {/* Price */}
             <div className="flex flex-col gap-2">
               <label htmlFor="price" className="text-white/60 text-xs font-semibold tracking-wide">
-                Price (ETB) <span className="text-[#C5A059]">*</span>
+                Price <span className="text-[#C5A059]">*</span>
               </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                required
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="e.g., 25000000"
-                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-[10px] focus:outline-none focus:border-[#C5A059]/50 transition-colors"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  required
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="e.g., 25000000"
+                  className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-[10px] focus:outline-none focus:border-[#C5A059]/50 transition-colors flex-1"
+                />
+                <select
+                  name="currency"
+                  required
+                  value={formData.currency}
+                  onChange={handleChange}
+                  className="w-24 h-12 bg-white/5 border border-white/10 rounded-xl px-2 text-white text-sm focus:outline-none focus:border-[#C5A059]/50 transition-colors"
+                >
+                  <option value="ETB">ETB</option>
+                  <option value="USD">USD</option>
+                  <option value="SOS">SOS</option>
+                  <option value="AED">AED</option>
+                </select>
+              </div>
             </div>
 
             {/* Location */}
@@ -139,12 +156,18 @@ export default function PropertyListingForm() {
                 type="text"
                 id="location"
                 name="location"
+                list="somali-cities"
                 required
                 value={formData.location}
                 onChange={handleChange}
-                placeholder="e.g., Jigjiga, Ethiopia — Bole Subcity"
+                placeholder="e.g., Jijiga, Ethiopia — Bole Subcity"
                 className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:outline-none focus:border-[#C5A059]/50 transition-colors"
               />
+              <datalist id="somali-cities">
+                {['Addis Ababa', 'Baidoa', 'Beledweyne', 'Berbera', 'Borama', 'Bosaso', 'Burco', 'Dire Dawa', 'Galkayo', 'Garissa', 'Garowe', 'Hargeisa', 'Jijiga', 'Kismayo', 'Mogadishu', 'Nairobi', 'Wajir'].map(c => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </div>
 
             {/* Direct Contact Phone */}
@@ -176,7 +199,7 @@ export default function PropertyListingForm() {
                 required
                 value={formData.nearbyPlaces}
                 onChange={handleChange}
-                placeholder="e.g., Jigjiga Airport, 5 mins from Grand Mall"
+                placeholder="e.g., Jijiga Airport, 5 mins from Grand Mall"
                 className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:outline-none focus:border-[#C5A059]/50 transition-colors"
               />
             </div>
@@ -383,7 +406,7 @@ export default function PropertyListingForm() {
           </p>
           <div className="bg-black/40 rounded-xl p-4 text-xs font-mono text-emerald-200/80 space-y-1 overflow-x-auto max-h-48 scrollbar">
             <div><strong className="text-white/40">Property:</strong> {formData.title || "n/a"}</div>
-            <div><strong className="text-white/40">Price:</strong> {formData.price ? `${Number(formData.price).toLocaleString()} ETB` : "0 ETB"}</div>
+            <div><strong className="text-white/40">Price:</strong> {formData.price ? `${Number(formData.price).toLocaleString()} ${formData.currency}` : `0 ${formData.currency}`}</div>
             <div><strong className="text-white/40">Location:</strong> {formData.location || "n/a"}</div>
             <div><strong className="text-white/40">Nearby Places:</strong> {formData.nearbyPlaces || "n/a"}</div>
             <div><strong className="text-white/40">Direct Phone:</strong> {formData.phone || "n/a"}</div>

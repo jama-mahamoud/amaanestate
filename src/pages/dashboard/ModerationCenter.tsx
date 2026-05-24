@@ -74,18 +74,18 @@ export default function ModerationCenter() {
         </div>
         <h2 className="text-4xl font-display font-bold mb-4 tracking-tight">Access Restricted</h2>
         <p className="text-white/40 text-lg max-w-md mx-auto leading-relaxed">
-          The Moderation Protocol requires Level 1 Administrative Clearance. Your current profile does not possess the necessary authorization tokens.
+          This area is restricted to authorized administrators. Access denied.
         </p>
       </div>
     );
   }
 
   const tabs = React.useMemo(() => [
-    { id: 'listings', label: 'Listing Assets', icon: <LayoutList size={18} />, count: stats.pendingListings },
-    { id: 'professionals', label: 'Pro Vetting', icon: <Users size={18} />, count: stats.pendingProfessionals },
-    { id: 'brokers', label: 'Legal Audits', icon: <ShieldCheck size={18} />, count: 0 },
-    { id: 'articles', label: 'News Intelligence', icon: <FileText size={18} />, count: stats.totalArticles },
-    { id: 'inquiries', label: 'Comm Inbound', icon: <MessageSquare size={18} />, count: stats.totalInquiries },
+    { id: 'listings', label: 'Properties', icon: <LayoutList size={18} />, count: stats.pendingListings },
+    { id: 'professionals', label: 'Agents', icon: <Users size={18} />, count: stats.pendingProfessionals },
+    { id: 'brokers', label: 'Agencies', icon: <ShieldCheck size={18} />, count: 0 },
+    { id: 'articles', label: 'Articles', icon: <FileText size={18} />, count: stats.totalArticles },
+    { id: 'inquiries', label: 'Inquiries', icon: <MessageSquare size={18} />, count: stats.totalInquiries },
   ], [stats]);
 
   return (

@@ -67,7 +67,7 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
     transmission: 'Automatic',
     price: '',
     currency: 'ETB',
-    city: 'Jigjiga',
+    city: '',
     district: '',
     landmark: '',
     latitude: undefined as number | undefined,
@@ -108,7 +108,7 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
           transmission: listingToEdit.transmission || 'Automatic',
           price: listingToEdit.price?.toString() || '',
           currency: listingToEdit.currency || 'ETB',
-          city: listingToEdit.city || 'Jigjiga',
+          city: listingToEdit.city || '',
           district: listingToEdit.district || '',
           landmark: listingToEdit.landmark || '',
           latitude: listingToEdit.latitude,
@@ -239,6 +239,8 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
         
         const features: any = { size: formData.size };
         if (formData.assetClass === 'House' || formData.assetClass === 'Apartment') {
+          listingData.beds = Number(formData.beds) || 0;
+          listingData.baths = Number(formData.baths) || 0;
           features.beds = Number(formData.beds) || 0;
           features.baths = Number(formData.baths) || 0;
           if (formData.furnished !== 'No') features.furnished = formData.furnished;
@@ -411,8 +413,8 @@ export default function ListingCreationModal({ isOpen, onClose, category: propCa
                             <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-luxury-black border-white/10 text-white">
-                              {['Mogadishu', 'Hargeisa', 'Jigjiga', 'Bosaso', 'Garowe', 'Kismayo', 'Baidoa'].map(c => (
+                            <SelectContent className="bg-luxury-black border-white/10 text-white max-h-[250px] overflow-y-auto">
+                              {['Addis Ababa', 'Baidoa', 'Beledweyne', 'Berbera', 'Borama', 'Bosaso', 'Burco', 'Dire Dawa', 'Galkayo', 'Garissa', 'Garowe', 'Hargeisa', 'Jijiga', 'Kismayo', 'Mogadishu', 'Nairobi', 'Wajir'].map(c => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
                             </SelectContent>

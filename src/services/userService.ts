@@ -73,6 +73,17 @@ export const userService = {
     }
   },
 
+  async updateUser(userId: string, data: Partial<UserProfile>) {
+    const userRef = doc(db, 'users', userId);
+    try {
+      await updateDoc(userRef, { ...data, updatedAt: new Date().toISOString() });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+      return false;
+    }
+  },
+
   async getUserProfile(userId: string) {
     const userRef = doc(db, 'users', userId);
     try {

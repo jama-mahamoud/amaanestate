@@ -99,7 +99,7 @@ export default function DashboardHome() {
               <span className="block text-xl mt-1 text-white/50 font-light">Welcome back, {user.displayName}</span>
             )}
           </h1>
-          <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">Enterprise Security Index Mode: Secure & Encrypted</p>
+          <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">AmaanEstate Executive Dashboard</p>
         </div>
         <div className="flex gap-4">
            {isAdmin && pendingAgreements.length > 0 && (
@@ -126,7 +126,7 @@ export default function DashboardHome() {
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
               <div>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Market Feed</p>
-                <p className="text-sm font-bold tracking-tight text-white">LIVE REFRESH: OPTIMAL</p>
+                <p className="text-sm font-bold tracking-tight text-white">MARKET STATUS: ACTIVE</p>
               </div>
            </div>
         </div>
@@ -174,10 +174,10 @@ export default function DashboardHome() {
           {/* Custom Luxury Navigation Row */}
           <div className="border border-white/5 bg-white/[0.01] p-1.5 rounded-2xl flex flex-wrap gap-1">
             {[
-              { id: 'notifications', label: 'Live Notifications', unreadCount: notifications.filter(n => n.unread).length },
-              { id: 'compliance', label: 'Compliance & Auditing' },
-              { id: 'referrals', label: 'Opportunities & Referrals' },
-              { id: 'favorites', label: 'Bookmarked Assets' }
+              { id: 'notifications', label: 'Updates', unreadCount: notifications.filter(n => n.unread).length },
+              { id: 'compliance', label: 'Verification' },
+              { id: 'referrals', label: 'Referrals' },
+              { id: 'favorites', label: 'Favorites' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -214,7 +214,7 @@ export default function DashboardHome() {
                     <div>
                       <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
                         <Bell size={18} className="text-[#C5A059]" />
-                        Real-time Action Stream
+                        Recent Updates
                       </h3>
                       <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">In-app property signals & audit triggers</p>
                     </div>
@@ -271,7 +271,7 @@ export default function DashboardHome() {
                   <div>
                     <h3 className="text-xl font-display font-bold text-white tracking-tight flex items-center gap-2">
                       <ShieldCheck size={18} className="text-[#C5A059]" />
-                      Title Deed & Asset Approvals
+                      Property Verifications
                     </h3>
                     <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Government-audited legal property queues</p>
                   </div>
@@ -435,9 +435,9 @@ export default function DashboardHome() {
           <div className="p-8 bg-[#C5A059] rounded-[2.5rem] text-black relative overflow-hidden group shadow-2xl">
              <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 blur-[50px] rounded-full translate-x-1/4 -translate-y-1/4" />
              <div className="relative z-10">
-               <span className="text-[9px] uppercase font-black tracking-[0.3em] opacity-40">Portfolio Asset Actions</span>
+               <span className="text-[9px] uppercase font-black tracking-[0.3em] opacity-40">Listing Actions</span>
                <h3 className="text-3xl font-display font-medium mb-6 leading-none tracking-tight">Expand Your Digital Footprint</h3>
-               <p className="text-black/60 text-xs font-medium mb-8 leading-relaxed italic">Initiate legal asset logs for verification in our system.</p>
+               <p className="text-black/60 text-xs font-medium mb-8 leading-relaxed italic">Get started and list your property.</p>
                <Button 
                  onClick={() => openListingModal('property')}
                  className="w-full bg-black text-white hover:bg-black/90 h-16 rounded-2xl font-bold text-sm border-0 shadow-lg cursor-pointer"

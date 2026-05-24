@@ -223,7 +223,7 @@ export default function AgentDetails() {
   const logo = broker ? broker.profilePhotoUrl : agency!.logo;
   const phoneVal = broker ? broker.phone : agency!.phone;
   const emailVal = broker ? broker.email : agency!.email;
-  const cityVal = broker ? broker.city : (agency as any).city || 'Jigjiga';
+  const cityVal = broker ? broker.city : (agency as any).city || 'Unknown Location';
   const displayRoleText = broker ? 'Certified Partner' : 'Licensed Corporation 🏢';
 
   return (
@@ -287,12 +287,17 @@ export default function AgentDetails() {
               {/* Action Contact channels */}
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button className="bg-[#C5A059] hover:bg-white text-black h-12 px-6 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2" asChild>
-                  <a href={`https://wa.me/${phoneVal?.replace(/\D/g, '') || '251910012794'}?text=Hello%20${name},%20I%20am%20viewing%20your%20registered%20profile%20on%20AmaanEstate`} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle size={15} /> WhatsApp Message
-                  </a>
+                  {phoneVal ? (
+                    <a href={`https://wa.me/${(()=>{
+                      const clean = phoneVal.replace(/\D/g, '');
+                      return clean.startsWith('9') || clean.startsWith('7') ? '251' + clean : clean;
+                    })()}?text=Hello%20${name},%20I%20am%20viewing%20your%20registered%20profile%20on%20AmaanEstate`} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle size={15} /> WhatsApp Message
+                    </a>
+                  ) : <span className="opacity-50 cursor-not-allowed"><MessageCircle size={15} /> WhatsApp Message</span>}
                 </Button>
                 <Button variant="outline" className="border-white/10 text-white hover:bg-white/5 h-12 text-xs font-bold uppercase tracking-widest rounded-xl" asChild>
-                  <a href={`tel:${phoneVal}`}>
+                  <a href={phoneVal ? `tel:${phoneVal}` : '#'}>
                     <Phone size={13} className="mr-1.5 text-emerald-400" /> Direct Call
                   </a>
                 </Button>
@@ -408,7 +413,7 @@ export default function AgentDetails() {
                           <img src={item.profilePhotoUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'} alt="" className="w-14 h-14 object-cover rounded-xl border border-white/10 shrink-0" />
                           <div>
                             <h4 className="font-bold text-white group-hover:text-[#C5A059] transition-colors">{item.fullName}</h4>
-                            <p className="text-[10px] text-white/50 uppercase tracking-widest font-mono mt-0.5">{item.city || 'Jigjiga'}</p>
+                            <p className="text-[10px] text-white/50 uppercase tracking-widest font-mono mt-0.5">{item.city || 'Unknown Location'}</p>
                             <span className="text-[9px] text-emerald-400 uppercase font-black tracking-wider block mt-1">★ Verified Representative</span>
                           </div>
                         </div>

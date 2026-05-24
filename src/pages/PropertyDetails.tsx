@@ -127,8 +127,9 @@ export default function PropertyDetails() {
   const whatsAppInquiryUrl = useMemo(() => {
     if (!property) return '#';
     const priceText = formatPrice(property.price, property.currency);
-    const message = `Asc Salaam/Hello AmaanEstate, I is heavily interested in your premium listing: "${property.title}" listed for ${priceText} in outstanding ${property.city}. ID Ref: ${property.id}. Please consult me regarding coordinates.`;
-    const contactPhone = property.phone || property.features?.phone || '251717888800';
+    const message = `Asc Salaam/Hello AmaanEstate, I am interested in your listing: "${property.title}" listed for ${priceText} in ${property.city}. ID Ref: ${property.id}.`;
+    const contactPhone = property.phone || property.features?.phone || '';
+    if (!contactPhone) return '#';
     const cleanPhone = contactPhone.replace(/\D/g, '');
     const prefix = cleanPhone.startsWith('9') || cleanPhone.startsWith('7') ? '251' + cleanPhone : cleanPhone;
     return `https://wa.me/${prefix}?text=${encodeURIComponent(message)}`;
@@ -575,7 +576,7 @@ export default function PropertyDetails() {
                        </a>
                      </Button>
                      <Button variant="outline" asChild className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-16 rounded-2xl font-bold cursor-pointer">
-                       <a href={`tel:${property.phone || property.features?.phone || '+251717888800'}`} className="flex items-center justify-center gap-2">
+                       <a href={property.phone || property.features?.phone ? `tel:${property.phone || property.features?.phone}` : '#'} className="flex items-center justify-center gap-2">
                          <Phone size={18} />
                          <span>Direct Call Line</span>
                        </a>

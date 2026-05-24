@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useSettings } from '@/contexts/SettingsContext';
+import { formatPrice } from '@/lib/utils';
 import { listingService } from '@/services/listingService';
 import { toast } from 'sonner';
 import PropertyDetailMap from '@/components/location/PropertyDetailMap';
@@ -22,7 +22,6 @@ interface PropertyDetailModalProps {
 }
 
 export default function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetailModalProps) {
-  const { formatPriceConverted } = useSettings();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [favorite, setFavorite] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -72,16 +71,19 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
   }, [fullProperty]);
 
   const displayPrice = useMemo(() => {
-    if (typeof fullProperty?.price === 'number') {
-      return formatPriceConverted(fullProperty.price, fullProperty.currency || 'ETB');
-    }
-    return fullProperty?.price || 'Negotiative';
-  }, [fullProperty, formatPriceConverted]);
+    return fullProperty?.price 
+      ? formatPrice(fullProperty.price, fullProperty.currency || 'ETB') 
+      : 'Negotiable';
+  }, [fullProperty]);
 
   const whatsAppInquiryUrl = useMemo(() => {
     if (!fullProperty) return '#';
-    const message = `Asc Salaam/Hello AmaanEstate, I am highly interested in your premium listing: "${fullProperty.title}" listed for ${displayPrice} in ${fullProperty.city}. ID Ref: ${fullProperty.id}. Please consult me regarding coordinates.`;
-    return `https://wa.me/251717888800?text=${encodeURIComponent(message)}`;
+    const message = `Asc Salaam/Hello AmaanEstate, I am interested in your listing: "${fullProperty.title}" listed for ${displayPrice} in ${fullProperty.city}. ID Ref: ${fullProperty.id}.`;
+    const contactPhone = fullProperty.phone || '';
+    if (!contactPhone) return '#';
+    const cleanPhone = contactPhone.replace(/\D/g, '');
+    const prefix = cleanPhone.startsWith('9') || cleanPhone.startsWith('7') ? '251' + cleanPhone : cleanPhone;
+    return `https://wa.me/${prefix}?text=${encodeURIComponent(message)}`;
   }, [fullProperty, displayPrice]);
 
   const handleScheduleVisit = (e: React.FormEvent) => {
@@ -235,25 +237,25 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
 
                 {/* Structural Attributes Grid */}
                 <div className="grid grid-cols-3 gap-3 md:gap-4 py-6 border-y border-white/5">
-                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center">
+                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center hover:bg-white/5 transition-colors">
                     <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-1">Beds</span>
                     <div className="flex items-center gap-1.5 text-white/80 font-bold text-base mt-1">
-                      <BedDouble size={16} className="text-luxury-gold" />
-                      <span>{fullProperty?.beds || '-'}</span>
+                      <BedDouble size={16} className="text-[#C5A059]" />
+                      <span>{fullProperty?.beds || fullProperty?.features?.beds || '-'}</span>
                     </div>
                   </div>
-                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center">
+                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center hover:bg-white/5 transition-colors">
                     <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-1">Baths</span>
                     <div className="flex items-center gap-1.5 text-white/80 font-bold text-base mt-1">
-                      <Bath size={16} className="text-luxury-gold" />
-                      <span>{fullProperty?.baths || '-'}</span>
+                      <Bath size={16} className="text-[#C5A059]" />
+                      <span>{fullProperty?.baths || fullProperty?.features?.baths || '-'}</span>
                     </div>
                   </div>
-                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center">
+                  <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center justify-center hover:bg-white/5 transition-colors">
                     <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-1">Area</span>
                     <div className="flex items-center gap-1.5 text-white/80 font-bold text-base mt-1">
-                      <Square size={16} className="text-luxury-gold" />
-                      <span>{fullProperty?.size || '-'}</span>
+                      <Square size={16} className="text-[#C5A059]" />
+                      <span className="truncate max-w-[80px]">{fullProperty?.size || fullProperty?.features?.size || '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
                         <MessageSquare size={16} /> Inquiry on WhatsApp
                       </a>
                       <a 
-                        href="tel:+251717888800"
+                        href={fullProperty?.phone ? `tel:${fullProperty.phone}` : '#'}
                         className="w-full h-12 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <Phone size={14} /> Call Agent hotline
