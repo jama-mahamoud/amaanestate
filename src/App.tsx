@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 // Luxury Brand Fallback for Code-Splitting Suspense Loaders
 function PageFallback() {
@@ -43,6 +44,7 @@ const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
 const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 
 // Lazy Loaded Auth Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -77,6 +79,7 @@ export default function App() {
           <SettingsProvider>
             <PropertyModalProvider>
               <Suspense fallback={<PageFallback />}>
+                <ScrollToTop />
                 <Routes>
               <Route path="/" element={<RootLayout />}>
                 {/* Public Base & Website Routes */}
@@ -109,6 +112,7 @@ export default function App() {
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />
+                <Route path="terms" element={<TermsOfService />} />
                 
                 {/* Auth Routes - Public Only */}
                 <Route element={<PublicRoute />}>

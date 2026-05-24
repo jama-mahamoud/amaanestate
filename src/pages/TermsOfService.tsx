@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ArrowLeft, Clock, Eye } from 'lucide-react';
+import { Shield, FileText, ArrowLeft, Clock } from 'lucide-react';
 
-export default function PrivacyPolicy() {
+export default function TermsOfService() {
   const lastUpdated = "May 24, 2026";
 
   return (
@@ -26,11 +26,11 @@ export default function PrivacyPolicy() {
         <div className="border-b border-white/5 pb-10 mb-12">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-luxury-gold/5 border border-luxury-gold/10 flex items-center justify-center text-luxury-gold shadow-lg shadow-luxury-gold/5">
-              <Shield size={20} />
+              <FileText size={20} />
             </div>
             <div>
-              <span className="text-[10px] text-luxury-gold uppercase tracking-[0.25em] font-semibold">Information Security</span>
-              <h1 className="text-3xl md:text-4xl font-display font-medium tracking-tight text-white mt-1">Privacy Policy</h1>
+              <span className="text-[10px] text-luxury-gold uppercase tracking-[0.25em] font-semibold">Regulatory Framework</span>
+              <h1 className="text-3xl md:text-4xl font-display font-medium tracking-tight text-white mt-1">Terms of Service</h1>
             </div>
           </div>
           
@@ -40,8 +40,8 @@ export default function PrivacyPolicy() {
               <span>Effective Date: {lastUpdated}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Eye size={12} className="text-luxury-gold/60" />
-              <span>General Data Protection Standard</span>
+              <Shield size={12} className="text-luxury-gold/60" />
+              <span>Institutional Grade Compliance</span>
             </div>
           </div>
         </div>
@@ -52,50 +52,50 @@ export default function PrivacyPolicy() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">01.</span>
-              Commitment to Transparency
+              Acceptance of Institutional Terms
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              At AmaanEstate, we treat user privacy as a cornerstone of transactional trust. This Privacy Policy documents how we aggregate, govern, and protect your information across the AmaanEstate Global Property Network. When engaging with high-value properties, luxury mobility fleets, or digital legal agreements on AmaanEstate, your privacy rights are carefully managed.
+              By accessing the digital interfaces, brokerage catalogs, property registries, and agreement structures provided by AmaanEstate, you express unreserved agreement with the definitions, standards, and legal protocols detailed within this document. High-value property and mobility unit listings require verified verification markers prior to platform deployment.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">02.</span>
-              Information We Collect
+              User Registrations & Verification Protocols
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              To support certified property checks, broker integrations, and legal form processing, we process necessary transaction details. This includes contact information (name, email address, telecommunication numbers), agency credentials, property documents, and proof of unit licensing. No unneeded tracking, telemetry logs, or invasive background analytical patterns are processed.
+              Users seeking to utilize the platform for brokerage inquiries, verified digital contracts, or listing generation must undergo multi-tiered safety reviews. Credentials, licensing information, and structural integrity reports submitted with listed assets must represent genuine verifiable facts. Misrepresentation of property layout, location, or ownership results in absolute suspension.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">03.</span>
-              Data Protection & Compliance Standards
+              Transaction & Registry Operations
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              Your structural files, transaction parameters, and profile details are encrypted during transit and stored securely on enterprise cloud setups in designated regions. Access to listing documentation is restricted to authentic verified brokers and authorized compliance officers strictly to prevent fraudulent title claims and secure transactions.
+              AmaanEstate facilitates transparent real-estate and luxury asset matching. Digital land agreements, structural integrity validations, and broker ratings are designed for informational clarity and certified matching. Final ownership transfers and legally executing land transactions remain under local legislative mandates.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">04.</span>
-              Integrations, Brokers, and Public Agents
+              Listing Accuracy & Liability Limits
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              When requesting structural inspections, matching with real-estate brokers, or establishing digitized legal contracts, your specified credentials are shared exclusively with the chosen counterpart. Countersignatories and certified auditors receive strictly relevant documentation required to complete the administrative task and regional legal compliance.
+              While we enforce meticulous structural status reports and certified verification procedures, users acknowledge that real-estate catalog items are subject to dynamic physical conditions. We maintain maximum platform reliability standards but disclaim absolute liability for offline transaction negotiations executed outside established certification badges.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">05.</span>
-              User Rights, Modification, and Deletion
+              Ecosystem Governance & System Misuse
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              Users retain complete rights over their professional listings and contact credentials. You can request absolute catalog removal, modification of agent profiles, or account deactivation directly through the secure dashboard settings or by contacting our information desk.
+              Any attempt to scrape structural database logs, bypass certified broker verification, or inject illegitimate real estate titles into the portal will lead to absolute platform revocation, immediate trust-index blacklisting, and professional reports forwarded directly to regional real-estate authorities.
             </p>
           </section>
 
@@ -105,19 +105,19 @@ export default function PrivacyPolicy() {
               Inquiries and Support Channels
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              For security reports, audit documentation, or compliance investigations, please contact our privacy representative directly at:
+              For comprehensive structural audits, dispute processing, or clarification regarding compliance pathways, contact our legal desk directly via:
             </p>
             <div className="mt-4 ml-6 p-6 bg-white/[0.01] border border-white/5 rounded-2xl space-y-3 max-w-sm">
               <div className="text-xs flex justify-between">
-                <span className="text-white/40">Compliance Officer:</span>
+                <span className="text-white/40">Legal Desk:</span>
                 <span className="text-white font-medium">support@amaanestate.com</span>
               </div>
               <div className="text-xs flex justify-between">
-                <span className="text-white/40">Headquarters Desk:</span>
+                <span className="text-white/40">Regional HQ:</span>
                 <span className="text-white font-medium">Jigjiga, Ethiopia</span>
               </div>
               <div className="text-xs flex justify-between">
-                <span className="text-white/40">Secured Line:</span>
+                <span className="text-white/40">Compliance Line:</span>
                 <span className="text-white font-medium">+251 910 012 794</span>
               </div>
             </div>

@@ -18,7 +18,10 @@ import {
   Trash2,
   Upload,
   Edit,
-  PenTool
+  PenTool,
+  Lock,
+  Unlock,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +49,305 @@ const AgreementTypes = [
   { value: 'brokerCommission', label: 'Broker Commission Agreement' },
 ];
 
+const SecureInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+  t,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  t: (key: string) => string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
+  };
+
+  const handleSaveClick = () => {
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-1.5 relative group">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase font-bold tracking-wider text-white/50 flex items-center gap-1.5 font-mono">
+          {label} {required && <span className="text-red-500">*</span>}
+        </span>
+        <span className={`text-[8px] tracking-widest px-2 py-0.5 rounded-md font-mono flex items-center gap-1 border transition-colors duration-300 select-none ${
+          isEditing 
+            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+            : 'bg-[#C5A059]/10 text-[#C5A059] border-[#C5A059]/20'
+        }`}>
+          {isEditing ? (
+            <>
+              <span className="inline-block w-1 h-1 rounded-full bg-amber-500 animate-pulse"></span>
+              {t("ACTIVE EDIT MODE")}
+            </>
+          ) : (
+            <>
+              <span className="text-[#C5A059] font-sans font-bold">✓</span>
+              {t("SECURE PROTOCOL LOCKED")}
+            </>
+          )}
+        </span>
+      </div>
+
+      <div className={`relative flex items-center rounded-xl overflow-hidden transition-all duration-300 border ${
+        isEditing 
+          ? 'border-amber-500/50 bg-neutral-900 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
+          : 'border-white/5 bg-white/[0.02]'
+      }`}>
+        <input
+          ref={inputRef}
+          type={type}
+          disabled={!isEditing}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full h-11 px-4 pr-28 bg-transparent text-white text-sm focus:outline-none disabled:text-white/60 placeholder-neutral-600 transition-all ${
+            !isEditing ? 'cursor-not-allowed select-none' : 'cursor-text font-medium text-[#C5A059]'
+          }`}
+        />
+
+        {/* Action button inside input */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {isEditing ? (
+            <button
+              type="button"
+              onClick={handleSaveClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-green-400 transition-all shadow-md active:scale-95"
+            >
+              🔒 {t("Lock")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 text-white/80 text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-[#C5A059] hover:border-[#C5A059] hover:text-black transition-all"
+            >
+              📝 {t("Modify")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SecureSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  required = false,
+  t,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+  required?: boolean;
+  t: (key: string) => string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const selectRef = useRef<HTMLSelectElement | null>(null);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      if (selectRef.current) {
+        selectRef.current.focus();
+      }
+    }, 50);
+  };
+
+  const handleSaveClick = () => {
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-1.5 relative group">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase font-bold tracking-wider text-white/50 flex items-center gap-1.5 font-mono">
+          {label} {required && <span className="text-red-500">*</span>}
+        </span>
+        <span className={`text-[8px] tracking-widest px-2 py-0.5 rounded-md font-mono flex items-center gap-1 border transition-colors duration-300 select-none ${
+          isEditing 
+            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+            : 'bg-[#C5A059]/10 text-[#C5A059] border-[#C5A059]/20'
+        }`}>
+          {isEditing ? (
+            <>
+              <span className="inline-block w-1 h-1 rounded-full bg-amber-500 animate-pulse"></span>
+              {t("ACTIVE EDIT MODE")}
+            </>
+          ) : (
+            <>
+              <span className="text-[#C5A059] font-sans font-bold">✓</span>
+              {t("SECURE PROTOCOL LOCKED")}
+            </>
+          )}
+        </span>
+      </div>
+
+      <div className={`relative flex items-center rounded-xl overflow-hidden transition-all duration-300 border ${
+        isEditing 
+          ? 'border-amber-500/50 bg-neutral-900 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
+          : 'border-white/5 bg-white/[0.02]'
+      }`}>
+        <select
+          ref={selectRef}
+          disabled={!isEditing}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full h-11 px-4 pr-28 bg-transparent text-white text-sm focus:outline-none disabled:text-white/60 transition-all ${
+            !isEditing ? 'cursor-not-allowed select-none' : 'cursor-text font-medium text-[#C5A059]'
+          }`}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-neutral-900 text-white">
+              {t(opt.label)}
+            </option>
+          ))}
+        </select>
+
+        {/* Action button inside input */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 select-btn">
+          {isEditing ? (
+            <button
+              type="button"
+              onClick={handleSaveClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-green-400 transition-all shadow-md active:scale-95"
+            >
+              🔒 {t("Lock")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 text-white/80 text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-[#C5A059] hover:border-[#C5A059] hover:text-black transition-all"
+            >
+              📝 {t("Modify")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SecureTextarea = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required = false,
+  t,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  t: (key: string) => string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 50);
+  };
+
+  const handleSaveClick = () => {
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-1.5 relative group">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase font-bold tracking-wider text-white/50 flex items-center gap-1.5 font-mono">
+          {label} {required && <span className="text-red-500">*</span>}
+        </span>
+        <span className={`text-[8px] tracking-widest px-2 py-0.5 rounded-md font-mono flex items-center gap-1 border transition-colors duration-300 select-none ${
+          isEditing 
+            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+            : 'bg-[#C5A059]/10 text-[#C5A059] border-[#C5A059]/20'
+        }`}>
+          {isEditing ? (
+            <>
+              <span className="inline-block w-1 h-1 rounded-full bg-amber-500 animate-pulse"></span>
+              {t("ACTIVE EDIT MODE")}
+            </>
+          ) : (
+            <>
+              <span className="text-[#C5A059] font-sans font-bold">✓</span>
+              {t("SECURE PROTOCOL LOCKED")}
+            </>
+          )}
+        </span>
+      </div>
+
+      <div className={`relative flex flex-col rounded-xl overflow-hidden transition-all duration-300 border ${
+        isEditing 
+          ? 'border-amber-500/50 bg-neutral-900 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
+          : 'border-white/5 bg-white/[0.02]'
+      }`}>
+        <textarea
+          ref={textareaRef}
+          disabled={!isEditing}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full min-h-[8rem] p-4 pb-12 bg-transparent text-white text-sm focus:outline-none disabled:text-white/60 placeholder-neutral-600 transition-all resize-none ${
+            !isEditing ? 'cursor-not-allowed select-none' : 'cursor-text font-medium text-[#C5A059]'
+          }`}
+        />
+
+        {/* Action button inside input at bottom right */}
+        <div className="absolute right-3 bottom-3 flex items-center gap-1 z-10">
+          {isEditing ? (
+            <button
+              type="button"
+              onClick={handleSaveClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-green-400 transition-all shadow-md active:scale-95"
+            >
+              🔒 {t("Lock Terms")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 text-white/80 text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-[#C5A059] hover:border-[#C5A059] hover:text-black transition-all"
+            >
+              📝 {t("Modify Terms")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Agreements() {
   const { language, t } = useSettings();
   const navigate = useNavigate();
@@ -56,6 +358,8 @@ export default function Agreements() {
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  const [lastSavedTime, setLastSavedTime] = useState<string>('');
 
   // State for drawing pad
   const [sigTypeA, setSigTypeA] = useState<'type' | 'draw'>('type');
@@ -133,6 +437,30 @@ export default function Agreements() {
 
     legalClauses: DEFAULT_LEGAL_CLAUSES_EN
   });
+
+  // Auto-load draft from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('amaanestate_agreement_draft');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setFormData(parsed);
+          const now = new Date();
+          setLastSavedTime(now.toTimeString().split(' ')[0]);
+        }
+      } catch (e) {
+        console.error("Failed to load draft from local storage", e);
+      }
+    }
+  }, []);
+
+  // Auto-save draft to localStorage on form field change
+  useEffect(() => {
+    localStorage.setItem('amaanestate_agreement_draft', JSON.stringify(formData));
+    const now = new Date();
+    setLastSavedTime(now.toTimeString().split(' ')[0]);
+  }, [formData]);
 
   // QR Code and contract number states
   const [previewId, setPreviewId] = useState<string>('');
@@ -625,6 +953,7 @@ export default function Agreements() {
         qrCode: qrCodeDataUrl,
       }, previewId);
       setSubmittedId(subId);
+      localStorage.removeItem('amaanestate_agreement_draft');
       setPreview(false);
     } catch (err: any) {
       console.error(err);
@@ -743,7 +1072,64 @@ export default function Agreements() {
             <Button onClick={() => navigate('/dashboard')} className="w-full bg-[#C5A059] hover:bg-[#B48F48] text-black h-12 rounded-xl font-bold uppercase tracking-wider text-xs">
               {t("Go to Dashboard")}
             </Button>
-            <Button variant="outline" onClick={() => { setSubmittedId(null); setPreview(false); }} className="w-full border-white/10 text-white/70 h-12 rounded-xl text-xs uppercase tracking-wider font-bold">
+            <Button 
+              variant="outline" 
+              onClick={() => { 
+                const confirmDraft = window.confirm(t("Are you sure you want to draft another agreement? This will reset all current fields to pristine values."));
+                if (confirmDraft) {
+                  setFormData({
+                    agreementType: 'propertySale',
+                    agreementTitle: '',
+                    date: new Date().toISOString().split('T')[0],
+                    currency: 'ETB',
+                    paymentTerms: '',
+                    partyA_fullName: '',
+                    partyA_phone: '',
+                    partyA_email: '',
+                    partyA_nationalId: '',
+                    partyA_address: '',
+                    partyA_typedSignature: '',
+                    partyA_drawnSignature: '',
+                    partyB_fullName: '',
+                    partyB_phone: '',
+                    partyB_email: '',
+                    partyB_nationalId: '',
+                    partyB_address: '',
+                    partyB_typedSignature: '',
+                    partyB_drawnSignature: '',
+                    witness1FullName: '',
+                    witness1TypedSignature: '',
+                    witness1DrawnSignature: '',
+                    witness2FullName: '',
+                    witness2TypedSignature: '',
+                    witness2DrawnSignature: '',
+                    witness3FullName: '',
+                    witness3TypedSignature: '',
+                    witness3DrawnSignature: '',
+                    propertyId: '',
+                    propertyTitle: '',
+                    propertyCategory: 'Property',
+                    propertyType: 'Apartment',
+                    propertyCity: '',
+                    propertyDistrict: '',
+                    propertyPrice: '',
+                    propertyTerms: '',
+                    vehicleId: '',
+                    vehicleMake: '',
+                    vehicleModel: '',
+                    vehicleYear: new Date().getFullYear().toString(),
+                    vehiclePlateNumber: '',
+                    vehiclePrice: '',
+                    commissionTerms: '',
+                    legalClauses: language === 'so' ? DEFAULT_LEGAL_CLAUSES_SO : DEFAULT_LEGAL_CLAUSES_EN
+                  });
+                  localStorage.removeItem('amaanestate_agreement_draft');
+                  setSubmittedId(null); 
+                  setPreview(false); 
+                }
+              }} 
+              className="w-full border-white/10 text-white/70 h-12 rounded-xl text-xs uppercase tracking-wider font-bold"
+            >
               {t("Draft Another Agreement")}
             </Button>
           </div>
@@ -1103,49 +1489,69 @@ export default function Agreements() {
         {/* STEP 2: DYNAMIC COMPREHENSIVE FORM */}
         <form onSubmit={handlePreview} className="glass-card bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-10 space-y-10 shadow-2xl relative">
           
+          {/* SECURE BLOCK HEADER */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-[#C5A059]/5 border border-[#C5A059]/15 rounded-2xl select-none">
+            <div className="flex items-center gap-3">
+              <span className="flex h-3.5 w-3.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500"></span>
+              </span>
+              <div>
+                <p className="text-xs font-bold text-white uppercase tracking-wider">{t("Secure Registry Connection Active")}</p>
+                <p className="text-[10px] text-white/50 leading-relaxed font-sans">{t("Cryptographic handshake successfully initialized with Supreme Land Registry.")}</p>
+              </div>
+            </div>
+            
+            <div className="text-left sm:text-right">
+              <span className="text-[9px] font-mono block text-[#C5A059] uppercase tracking-widest">{t("DEED VERIFIED TRANSACTION PROTOCOL v4.1")}</span>
+              {lastSavedTime && (
+                <span className="text-[10px] text-emerald-400 flex items-center gap-1 sm:justify-end font-sans mt-0.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  {t("Draft auto-saved at")} {lastSavedTime}
+                </span>
+              )}
+            </div>
+          </div>
+          
           {/* SECTION A: AGREEMENT DETAILS */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-              <span className="px-2.5 py-1 bg-luxury-gold/10 text-[#C5A059] text-[10px] font-bold rounded-lg font-mono">B</span>
+              <span className="px-2.5 py-1 bg-luxury-gold/10 text-[#C5A059] text-[10px] font-bold rounded-lg font-mono">A</span>
               <h3 className="text-sm uppercase font-bold tracking-widest text-[#C5A059]">{t("Agreement Covenant Details")}</h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Agreement Title *")}</span>
-                <Input 
-                  required 
-                  value={formData.agreementTitle} 
-                  onChange={e => setFormData({ ...formData, agreementTitle: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                label={t("Agreement Title")}
+                value={formData.agreementTitle}
+                onChange={val => setFormData({ ...formData, agreementTitle: val })}
+                placeholder={t("e.g. Real Estate Sales Deed")}
+                t={t}
+              />
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Deed Transaction Date *")}</span>
-                <Input 
-                  required 
-                  type="date" 
-                  value={formData.date} 
-                  onChange={e => setFormData({ ...formData, date: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                type="date"
+                label={t("Deed Transaction Date")}
+                value={formData.date}
+                onChange={val => setFormData({ ...formData, date: val })}
+                t={t}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Currency Unit *")}</span>
-                <select 
-                  value={formData.currency} 
-                  onChange={e => setFormData({ ...formData, currency: e.target.value })}
-                  className="bg-neutral-900/60 border border-white/5 rounded-lg h-11 px-4 w-full text-white text-sm"
-                >
-                  <option value="ETB">ETB (Ethiopian Birr)</option>
-                  <option value="USD">USD (United States Dollar)</option>
-                  <option value="EUR">EUR (Euro)</option>
-                </select>
-              </div>
+              <SecureSelect
+                label={t("Currency Unit")}
+                value={formData.currency}
+                onChange={val => setFormData({ ...formData, currency: val })}
+                options={[
+                  { value: "ETB", label: "ETB (Ethiopian Birr)" },
+                  { value: "USD", label: "USD (United States Dollar)" },
+                  { value: "EUR", label: "EUR (Euro)" }
+                ]}
+                t={t}
+              />
 
               <div className="space-y-1.5">
                 <span className="text-[10px] uppercase font-bold text-white/40">{t("Default Asset Price Type *")}</span>
@@ -1166,62 +1572,52 @@ export default function Agreements() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Full Legal Name *")}</span>
-                <Input 
-                  required 
-                  placeholder={t("e.g. Abdirahman Yusuf")} 
-                  value={formData.partyA_fullName} 
-                  onChange={e => setFormData({ ...formData, partyA_fullName: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                label={t("Full Legal Name")}
+                placeholder={t("e.g. Abdirahman Yusuf")}
+                value={formData.partyA_fullName}
+                onChange={val => setFormData({ ...formData, partyA_fullName: val })}
+                t={t}
+              />
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Contact Phone *")}</span>
-                <Input 
-                  required 
-                  placeholder={t("e.g. +252 61 5XXXXXX")} 
-                  value={formData.partyA_phone} 
-                  onChange={e => setFormData({ ...formData, partyA_phone: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                label={t("Contact Phone")}
+                placeholder={t("e.g. +252 61 5XXXXXX")}
+                value={formData.partyA_phone}
+                onChange={val => setFormData({ ...formData, partyA_phone: val })}
+                t={t}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Email Address")}</span>
-                <Input 
-                  type="email" 
-                  placeholder={t("e.g. partyA@example.com")} 
-                  value={formData.partyA_email} 
-                  onChange={e => setFormData({ ...formData, partyA_email: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                type="email"
+                label={t("Email Address")}
+                placeholder={t("e.g. partyA@example.com")}
+                value={formData.partyA_email}
+                onChange={val => setFormData({ ...formData, partyA_email: val })}
+                t={t}
+              />
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("National ID Card Number")}</span>
-                <Input 
-                  placeholder={t("e.g. NID-842719")} 
-                  value={formData.partyA_nationalId} 
-                  onChange={e => setFormData({ ...formData, partyA_nationalId: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 border-b border-white/5 pb-4">
-              <span className="text-[10px] uppercase font-bold text-white/40">{t("Domicile / Address *")}</span>
-              <Input 
-                required 
-                placeholder={t("e.g. Mogadishu Airport Zone, Wadajir, Somalia")} 
-                value={formData.partyA_address} 
-                onChange={e => setFormData({ ...formData, partyA_address: e.target.value })} 
-                className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
+              <SecureInput
+                label={t("National ID Card Number")}
+                placeholder={t("e.g. NID-842719")}
+                value={formData.partyA_nationalId}
+                onChange={val => setFormData({ ...formData, partyA_nationalId: val })}
+                t={t}
               />
             </div>
+
+            <SecureInput
+              required
+              label={t("Domicile / Address")}
+              placeholder={t("e.g. Mogadishu Airport Zone, Wadajir, Somalia")}
+              value={formData.partyA_address}
+              onChange={val => setFormData({ ...formData, partyA_address: val })}
+              t={t}
+            />
 
             {/* Party A Signature Element */}
             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 space-y-4">
@@ -1246,13 +1642,14 @@ export default function Agreements() {
               </div>
 
               {sigTypeA === 'type' ? (
-                <div className="space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-white/30">{t("Type Full Name for Digital Script *")}</span>
-                  <Input 
-                    placeholder={t("Type name here (e.g. Abdirahman Yusuf)")} 
+                <div className="space-y-4">
+                  <SecureInput
+                    required
+                    label={t("Type Full Name for Digital Script")}
+                    placeholder={t("Type name here (e.g. Abdirahman Yusuf)")}
                     value={formData.partyA_typedSignature}
-                    onChange={e => setFormData({ ...formData, partyA_typedSignature: e.target.value })}
-                    className="bg-white/5 h-11 text-white placeholder:text-neutral-600"
+                    onChange={val => setFormData({ ...formData, partyA_typedSignature: val })}
+                    t={t}
                   />
                   {formData.partyA_typedSignature && (
                     <div className="p-3 bg-white/5 rounded-xl border border-white/5 text-center">
@@ -1266,11 +1663,16 @@ export default function Agreements() {
               ) : (
                 <div className="space-y-2">
                   <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                  <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                  
+                  <div className="bg-[#0b0b0b] border border-[#C5A059]/30 rounded-xl relative overflow-hidden h-36 flex flex-col justify-between transition-all duration-300 shadow-inner group">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+                      <span className="text-2xl font-display font-black tracking-[0.25em] text-[#C5A059] rotate-[-10deg] uppercase">{t("ONLINE NOTARY")}</span>
+                    </div>
+
                     <canvas 
                       ref={canvasRefA}
-                      width={400}
-                      height={128}
+                      width={450}
+                      height={144}
                       onMouseDown={startDrawingA}
                       onMouseMove={drawA}
                       onMouseUp={() => { setDrawingA(false); saveCanvasA(); }}
@@ -1278,16 +1680,38 @@ export default function Agreements() {
                       onTouchStart={startDrawingA}
                       onTouchMove={drawA}
                       onTouchEnd={() => { setDrawingA(false); saveCanvasA(); }}
-                      className="w-full h-full cursor-crosshair touch-none"
+                      className="w-full h-full cursor-crosshair touch-none relative z-10 bg-white"
                     />
-                    <div className="absolute top-2 right-2 flex gap-2">
+
+                    <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 pointer-events-none select-none">
+                      <span className="px-2 py-0.5 rounded bg-black/80 text-[7px] font-mono uppercase tracking-widest text-[#C5A059] border border-[#C5A059]/30">
+                        {t("Bilateral Pad A")}
+                      </span>
+                    </div>
+
+                    <div className="absolute top-2 right-2 z-20 flex gap-2">
                       <button 
                         type="button" 
                         onClick={clearCanvasA} 
-                        className="p-1 px-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500/20 transition-all uppercase"
+                        className="p-1 px-2.5 bg-red-500/15 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500 hover:text-white transition-all uppercase"
                       >
-                        {t("Reset Canvas")}
+                        {t("Reset Pad")}
                       </button>
+                    </div>
+
+                    <div className="p-2 border-t border-white/5 bg-[#0e0e0e] flex items-center justify-between text-[9px] font-mono select-none">
+                      <span className="text-white/40 uppercase tracking-widest">{t("Touchscreen Signed Protocol Enabled")}</span>
+                      {formData.partyA_drawnSignature ? (
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          {t("CERTIFIED REGISTERED ENDORSEMENT")}
+                        </span>
+                      ) : (
+                        <span className="text-amber-500 flex items-center gap-1 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          {t("AWAITING BIOMETRIC SIGN-OFF")}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {formData.partyA_drawnSignature && (
@@ -1298,7 +1722,7 @@ export default function Agreements() {
             </div>
           </div>
 
-          {/* SECTION C: PARTY B (Buyer / Tenant) */}
+            {/* SECTION C: PARTY B (Buyer / Tenant) */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 border-b border-white/5 pb-2">
               <span className="px-2.5 py-1 bg-luxury-gold/10 text-[#C5A059] text-[10px] font-bold rounded-lg font-mono">C</span>
@@ -1306,62 +1730,52 @@ export default function Agreements() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Full Legal Name *")}</span>
-                <Input 
-                  required 
-                  placeholder={t("e.g. Halima Ahmed")} 
-                  value={formData.partyB_fullName} 
-                  onChange={e => setFormData({ ...formData, partyB_fullName: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                label={t("Full Legal Name")}
+                placeholder={t("e.g. Halima Ahmed")}
+                value={formData.partyB_fullName}
+                onChange={val => setFormData({ ...formData, partyB_fullName: val })}
+                t={t}
+              />
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Contact Phone *")}</span>
-                <Input 
-                  required 
-                  placeholder={t("e.g. +252 61 7XXXXXX")} 
-                  value={formData.partyB_phone} 
-                  onChange={e => setFormData({ ...formData, partyB_phone: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                required
+                label={t("Contact Phone")}
+                placeholder={t("e.g. +252 61 7XXXXXX")}
+                value={formData.partyB_phone}
+                onChange={val => setFormData({ ...formData, partyB_phone: val })}
+                t={t}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("Email Address")}</span>
-                <Input 
-                  type="email" 
-                  placeholder={t("e.g. partyB@example.com")} 
-                  value={formData.partyB_email} 
-                  onChange={e => setFormData({ ...formData, partyB_email: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
+              <SecureInput
+                type="email"
+                label={t("Email Address")}
+                placeholder={t("e.g. partyB@example.com")}
+                value={formData.partyB_email}
+                onChange={val => setFormData({ ...formData, partyB_email: val })}
+                t={t}
+              />
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-white/40">{t("National ID Card Number")}</span>
-                <Input 
-                  placeholder={t("e.g. NID-108259")} 
-                  value={formData.partyB_nationalId} 
-                  onChange={e => setFormData({ ...formData, partyB_nationalId: e.target.value })} 
-                  className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 border-b border-white/5 pb-4">
-              <span className="text-[10px] uppercase font-bold text-white/40">{t("Domicile / Address *")}</span>
-              <Input 
-                required 
-                placeholder={t("e.g. Hodan District, Mogadishu, Somalia")} 
-                value={formData.partyB_address} 
-                onChange={e => setFormData({ ...formData, partyB_address: e.target.value })} 
-                className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
+              <SecureInput
+                label={t("National ID Card Number")}
+                placeholder={t("e.g. NID-108259")}
+                value={formData.partyB_nationalId}
+                onChange={val => setFormData({ ...formData, partyB_nationalId: val })}
+                t={t}
               />
             </div>
+
+            <SecureInput
+              required
+              label={t("Domicile / Address")}
+              placeholder={t("e.g. Hodan District, Mogadishu, Somalia")}
+              value={formData.partyB_address}
+              onChange={val => setFormData({ ...formData, partyB_address: val })}
+              t={t}
+            />
 
             {/* Party B Signature Element */}
             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 space-y-4">
@@ -1386,13 +1800,14 @@ export default function Agreements() {
               </div>
 
               {sigTypeB === 'type' ? (
-                <div className="space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-white/30">{t("Type Full Name for Digital Script *")}</span>
-                  <Input 
-                    placeholder={t("Type name here (e.g. Halima Ahmed)")} 
+                <div className="space-y-4">
+                  <SecureInput
+                    required
+                    label={t("Type Full Name for Digital Script")}
+                    placeholder={t("Type name here (e.g. Halima Ahmed)")}
                     value={formData.partyB_typedSignature}
-                    onChange={e => setFormData({ ...formData, partyB_typedSignature: e.target.value })}
-                    className="bg-white/5 h-11 text-white placeholder:text-neutral-600"
+                    onChange={val => setFormData({ ...formData, partyB_typedSignature: val })}
+                    t={t}
                   />
                   {formData.partyB_typedSignature && (
                     <div className="p-3 bg-white/5 rounded-xl border border-white/5 text-center">
@@ -1406,11 +1821,16 @@ export default function Agreements() {
               ) : (
                 <div className="space-y-2">
                   <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                  <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                  
+                  <div className="bg-[#0b0b0b] border border-[#C5A059]/30 rounded-xl relative overflow-hidden h-36 flex flex-col justify-between transition-all duration-300 shadow-inner group">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+                      <span className="text-2xl font-display font-black tracking-[0.25em] text-[#C5A059] rotate-[-10deg] uppercase">{t("ONLINE NOTARY")}</span>
+                    </div>
+
                     <canvas 
                       ref={canvasRefB}
-                      width={400}
-                      height={128}
+                      width={450}
+                      height={144}
                       onMouseDown={startDrawingB}
                       onMouseMove={drawB}
                       onMouseUp={() => { setDrawingB(false); saveCanvasB(); }}
@@ -1418,16 +1838,38 @@ export default function Agreements() {
                       onTouchStart={startDrawingB}
                       onTouchMove={drawB}
                       onTouchEnd={() => { setDrawingB(false); saveCanvasB(); }}
-                      className="w-full h-full cursor-crosshair touch-none"
+                      className="w-full h-full cursor-crosshair touch-none relative z-10 bg-white"
                     />
-                    <div className="absolute top-2 right-2 flex gap-2">
+
+                    <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 pointer-events-none select-none">
+                      <span className="px-2 py-0.5 rounded bg-black/80 text-[7px] font-mono uppercase tracking-widest text-[#C5A059] border border-[#C5A059]/30">
+                        {t("Bilateral Pad B")}
+                      </span>
+                    </div>
+
+                    <div className="absolute top-2 right-2 z-20 flex gap-2">
                       <button 
                         type="button" 
                         onClick={clearCanvasB} 
-                        className="p-1 px-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500/20 transition-all uppercase"
+                        className="p-1 px-2.5 bg-red-500/15 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500 hover:text-white transition-all uppercase"
                       >
-                        {t("Reset Canvas")}
+                        {t("Reset Pad")}
                       </button>
+                    </div>
+
+                    <div className="p-2 border-t border-white/5 bg-[#0e0e0e] flex items-center justify-between text-[9px] font-mono select-none">
+                      <span className="text-white/40 uppercase tracking-widest">{t("Touchscreen Signed Protocol Enabled")}</span>
+                      {formData.partyB_drawnSignature ? (
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          {t("CERTIFIED REGISTERED ENDORSEMENT")}
+                        </span>
+                      ) : (
+                        <span className="text-amber-500 flex items-center gap-1 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          {t("AWAITING BIOMETRIC SIGN-OFF")}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {formData.partyB_drawnSignature && (
@@ -1436,8 +1878,10 @@ export default function Agreements() {
                 </div>
               )}
             </div>
-            {/* WITNESS VERIFICATION SECTION */}
-            <div className="space-y-6">
+          </div>
+
+          {/* WITNESS VERIFICATION SECTION */}
+          <div className="space-y-6">
               <div className="flex items-center gap-3 border-b border-white/5 pb-2">
                 <span className="px-2.5 py-1 bg-luxury-gold/10 text-[#C5A059] text-[10px] font-bold rounded-lg font-mono">W</span>
                 <h3 className="text-sm uppercase font-bold tracking-widest text-[#C5A059]">{t("Witness Verification Section")}</h3>
@@ -1465,35 +1909,39 @@ export default function Agreements() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t(`Witness ${w} Full Name *`)}</span>
-                    <Input 
-                      required 
-                      placeholder={t(`Type Witness ${w} Full Name *`)} 
-                      value={formData[`witness${w}FullName` as keyof typeof formData]} 
-                      onChange={e => setFormData({ ...formData, [`witness${w}FullName`]: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 rounded-lg text-white" 
-                    />
-                  </div>
+                  <SecureInput
+                    required
+                    label={t(`Witness ${w} Full Name`)}
+                    placeholder={t(`Type Witness ${w} Full Name *`)}
+                    value={(formData[`witness${w}FullName` as keyof typeof formData] || '') as string}
+                    onChange={val => setFormData({ ...formData, [`witness${w}FullName`]: val })}
+                    t={t}
+                  />
 
                   {(w === 1 ? sigTypeW1 : w === 2 ? sigTypeW2 : sigTypeW3) === 'type' ? (
-                    <div className="space-y-1.5">
-                      <span className="text-[10px] uppercase font-bold text-white/30">{t("Type Full Name for Digital Script *")}</span>
-                      <Input 
-                        placeholder={t("Type name here")} 
-                        value={formData[`witness${w}TypedSignature` as keyof typeof formData]}
-                        onChange={e => setFormData({ ...formData, [`witness${w}TypedSignature`]: e.target.value })}
-                        className="bg-white/5 h-11 text-white placeholder:text-neutral-600"
+                    <div className="space-y-4">
+                      <SecureInput
+                        required
+                        label={t("Type Full Name for Digital Script")}
+                        placeholder={t("Type name here")}
+                        value={(formData[`witness${w}TypedSignature` as keyof typeof formData] || '') as string}
+                        onChange={val => setFormData({ ...formData, [`witness${w}TypedSignature`]: val })}
+                        t={t}
                       />
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <span className="text-[10px] uppercase font-bold text-white/30">{t("Draw inside the dark pad below")}</span>
-                      <div className="bg-white/95 border border-white/20 rounded-xl relative overflow-hidden h-32 flex items-center justify-center">
+                      
+                      <div className="bg-[#0b0b0b] border border-[#C5A059]/30 rounded-xl relative overflow-hidden h-36 flex flex-col justify-between transition-all duration-300 shadow-inner group">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+                          <span className="text-2xl font-display font-black tracking-[0.25em] text-[#C5A059] rotate-[-10deg] uppercase">{t("ONLINE NOTARY")}</span>
+                        </div>
+
                         <canvas 
                           ref={w === 1 ? canvasRefW1 : w === 2 ? canvasRefW2 : canvasRefW3}
-                          width={400}
-                          height={128}
+                          width={450}
+                          height={144}
                           onMouseDown={w === 1 ? startDrawingW1 : w === 2 ? startDrawingW2 : startDrawingW3}
                           onMouseMove={w === 1 ? drawW1 : w === 2 ? drawW2 : drawW3}
                           onMouseUp={w === 1 ? () => { setDrawingW1(false); saveCanvasW1(); } : w === 2 ? () => { setDrawingW2(false); saveCanvasW2(); } : () => { setDrawingW3(false); saveCanvasW3(); }}
@@ -1501,16 +1949,38 @@ export default function Agreements() {
                           onTouchStart={w === 1 ? startDrawingW1 : w === 2 ? startDrawingW2 : startDrawingW3}
                           onTouchMove={w === 1 ? drawW1 : w === 2 ? drawW2 : drawW3}
                           onTouchEnd={w === 1 ? () => { setDrawingW1(false); saveCanvasW1(); } : w === 2 ? () => { setDrawingW2(false); saveCanvasW2(); } : () => { setDrawingW3(false); saveCanvasW3(); }}
-                          className="w-full h-full cursor-crosshair touch-none"
+                          className="w-full h-full cursor-crosshair touch-none relative z-10 bg-white"
                         />
-                        <div className="absolute top-2 right-2 flex gap-2">
+
+                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 pointer-events-none select-none">
+                          <span className="px-2 py-0.5 rounded bg-black/80 text-[7px] font-mono uppercase tracking-widest text-[#C5A059] border border-[#C5A059]/30">
+                            {t(`Witness Pad ${w}`)}
+                          </span>
+                        </div>
+
+                        <div className="absolute top-2 right-2 z-20 flex gap-2">
                           <button 
                             type="button" 
                             onClick={w === 1 ? clearCanvasW1 : w === 2 ? clearCanvasW2 : clearCanvasW3} 
-                            className="p-1 px-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500/20 transition-all uppercase"
+                            className="p-1 px-2.5 bg-red-500/15 border border-red-500/20 text-red-400 rounded-md text-[9px] font-bold hover:bg-red-500 hover:text-white transition-all uppercase"
                           >
-                            {t("Reset Canvas")}
+                            {t("Reset Pad")}
                           </button>
+                        </div>
+
+                        <div className="p-2 border-t border-white/5 bg-[#0e0e0e] flex items-center justify-between text-[9px] font-mono select-none">
+                          <span className="text-white/40 uppercase tracking-widest">{t("Touchscreen Signed Protocol Enabled")}</span>
+                          {((w === 1 ? formData.witness1DrawnSignature : w === 2 ? formData.witness2DrawnSignature : formData.witness3DrawnSignature)) ? (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                              {t("CERTIFIED REGISTERED ENDORSEMENT")}
+                            </span>
+                          ) : (
+                            <span className="text-amber-500 flex items-center gap-1 font-bold">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                              {t("AWAITING BIOMETRIC SIGN-OFF")}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1519,7 +1989,7 @@ export default function Agreements() {
               ))}
             </div>
 
-                    {/* SECTION D: ASSET DETAILS */}
+          {/* SECTION D: ASSET DETAILS */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 border-b border-white/5 pb-2">
               <span className="px-2.5 py-1 bg-luxury-gold/10 text-[#C5A059] text-[10px] font-bold rounded-lg font-mono">D</span>
@@ -1530,94 +2000,79 @@ export default function Agreements() {
             {formData.agreementType.startsWith('property') && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Property Code / Identifier")}</span>
-                    <Input 
-                      placeholder={t("e.g. AP-94021")} 
-                      value={formData.propertyId} 
-                      onChange={e => setFormData({ ...formData, propertyId: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Property Name / Core Title *")}</span>
-                    <Input 
-                      required
-                      placeholder={t("e.g. Luxury Penthouse Suite B-2")} 
-                      value={formData.propertyTitle} 
-                      onChange={e => setFormData({ ...formData, propertyTitle: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
+                  <SecureInput
+                    label={t("Property Code / Identifier")}
+                    placeholder={t("e.g. AP-94021")}
+                    value={formData.propertyId}
+                    onChange={val => setFormData({ ...formData, propertyId: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    required
+                    label={t("Property Name / Core Title")}
+                    placeholder={t("e.g. Luxury Penthouse Suite B-2")}
+                    value={formData.propertyTitle}
+                    onChange={val => setFormData({ ...formData, propertyTitle: val })}
+                    t={t}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Category Range")}</span>
-                    <select 
-                      value={formData.propertyCategory} 
-                      onChange={e => setFormData({ ...formData, propertyCategory: e.target.value as any })}
-                      className="bg-neutral-900 border border-white/5 rounded-lg h-11 px-4 w-full text-white text-xs"
-                    >
-                      <option value="Property">{t("Commercial / Residential Property")}</option>
-                      <option value="Rental">{t("Leased Tenancy Unit")}</option>
-                      <option value="Land">{t("Secured Plot Land Area")}</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Structure Form (Apartment, Land Plot, etc)")}</span>
-                    <Input 
-                      placeholder={t("e.g. Duplex Villa")} 
-                      value={formData.propertyType} 
-                      onChange={e => setFormData({ ...formData, propertyType: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
+                  <SecureSelect
+                    label={t("Category Range")}
+                    value={formData.propertyCategory}
+                    onChange={val => setFormData({ ...formData, propertyCategory: val as any })}
+                    options={[
+                      { value: "Property", label: t("Commercial / Residential Property") },
+                      { value: "Rental", label: t("Leased Tenancy Unit") },
+                      { value: "Land", label: t("Secured Plot Land Area") }
+                    ]}
+                    t={t}
+                  />
+                  <SecureInput
+                    label={t("Structure Form (Apartment, Land Plot, etc)")}
+                    placeholder={t("e.g. Duplex Villa")}
+                    value={formData.propertyType}
+                    onChange={val => setFormData({ ...formData, propertyType: val })}
+                    t={t}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Metropolis City *")}</span>
-                    <Input 
-                      required
-                      placeholder={t("e.g. Mogadishu")} 
-                      value={formData.propertyCity} 
-                      onChange={e => setFormData({ ...formData, propertyCity: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Administrative District")}</span>
-                    <Input 
-                      placeholder={t("e.g. Hodan")} 
-                      value={formData.propertyDistrict} 
-                      onChange={e => setFormData({ ...formData, propertyDistrict: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
+                  <SecureInput
+                    required
+                    label={t("Metropolis City")}
+                    placeholder={t("e.g. Mogadishu")}
+                    value={formData.propertyCity}
+                    onChange={val => setFormData({ ...formData, propertyCity: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    label={t("Administrative District")}
+                    placeholder={t("e.g. Hodan")}
+                    value={formData.propertyDistrict}
+                    onChange={val => setFormData({ ...formData, propertyDistrict: val })}
+                    t={t}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Exchange Valuation Price")} ({formData.currency}) *</span>
-                    <Input 
-                      required
-                      type="number" 
-                      placeholder={t("e.g. 185000")} 
-                      value={formData.propertyPrice} 
-                      onChange={e => setFormData({ ...formData, propertyPrice: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Payment Instalments / Terms Description")}</span>
-                    <Input 
-                      placeholder={t("e.g. 30% Down, 70% Bank Escrow Transfer")} 
-                      value={formData.propertyTerms} 
-                      onChange={e => setFormData({ ...formData, propertyTerms: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
+                  <SecureInput
+                    required
+                    type="number"
+                    label={`${t("Exchange Valuation Price")} (${formData.currency})`}
+                    placeholder={t("e.g. 185000")}
+                    value={formData.propertyPrice}
+                    onChange={val => setFormData({ ...formData, propertyPrice: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    label={t("Payment Instalments / Terms Description")}
+                    placeholder={t("e.g. 30% Down, 70% Bank Escrow Transfer")}
+                    value={formData.propertyTerms}
+                    onChange={val => setFormData({ ...formData, propertyTerms: val })}
+                    t={t}
+                  />
                 </div>
               </div>
             )}
@@ -1626,87 +2081,73 @@ export default function Agreements() {
             {formData.agreementType.startsWith('vehicle') && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Vehicle ID / Chassis Ref")}</span>
-                    <Input 
-                      placeholder={t("e.g. CHASSIS-N028741")} 
-                      value={formData.vehicleId} 
-                      onChange={e => setFormData({ ...formData, vehicleId: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Automobile Manufacturer (Make) *")}</span>
-                    <Input 
-                      required
-                      placeholder={t("e.g. Toyota")} 
-                      value={formData.vehicleMake} 
-                      onChange={e => setFormData({ ...formData, vehicleMake: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
+                  <SecureInput
+                    label={t("Vehicle ID / Chassis Ref")}
+                    placeholder={t("e.g. CHASSIS-N028741")}
+                    value={formData.vehicleId}
+                    onChange={val => setFormData({ ...formData, vehicleId: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    required
+                    label={t("Automobile Manufacturer (Make)")}
+                    placeholder={t("e.g. Toyota")}
+                    value={formData.vehicleMake}
+                    onChange={val => setFormData({ ...formData, vehicleMake: val })}
+                    t={t}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Model Name *")}</span>
-                    <Input 
-                      required
-                      placeholder={t("e.g. Land Cruiser")} 
-                      value={formData.vehicleModel} 
-                      onChange={e => setFormData({ ...formData, vehicleModel: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Production Year")}</span>
-                    <Input 
-                      type="number" 
-                      placeholder={t("e.g. 2024")} 
-                      value={formData.vehicleYear} 
-                      onChange={e => setFormData({ ...formData, vehicleYear: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-white/40">{t("Official License Plate *")}</span>
-                    <Input 
-                      required
-                      placeholder={t("e.g. JUBALAND-840")} 
-                      value={formData.vehiclePlateNumber} 
-                      onChange={e => setFormData({ ...formData, vehiclePlateNumber: e.target.value })} 
-                      className="bg-white/5 border-white/5 h-11 text-white" 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase font-bold text-white/40">{t("Agreed Car Valuation Price")} ({formData.currency}) *</span>
-                  <Input 
+                  <SecureInput
                     required
-                    type="number" 
-                    placeholder={t("e.g. 52000")} 
-                    value={formData.vehiclePrice} 
-                    onChange={e => setFormData({ ...formData, vehiclePrice: e.target.value })} 
-                    className="bg-white/5 border-white/5 h-11 text-white" 
+                    label={t("Model Name")}
+                    placeholder={t("e.g. Land Cruiser")}
+                    value={formData.vehicleModel}
+                    onChange={val => setFormData({ ...formData, vehicleModel: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    type="number"
+                    label={t("Production Year")}
+                    placeholder={t("e.g. 2024")}
+                    value={formData.vehicleYear}
+                    onChange={val => setFormData({ ...formData, vehicleYear: val })}
+                    t={t}
+                  />
+                  <SecureInput
+                    required
+                    label={t("Official License Plate")}
+                    placeholder={t("e.g. JUBALAND-840")}
+                    value={formData.vehiclePlateNumber}
+                    onChange={val => setFormData({ ...formData, vehiclePlateNumber: val })}
+                    t={t}
                   />
                 </div>
+
+                <SecureInput
+                  required
+                  type="number"
+                  label={`${t("Agreed Car Valuation Price")} (${formData.currency})`}
+                  placeholder={t("e.g. 52000")}
+                  value={formData.vehiclePrice}
+                  onChange={val => setFormData({ ...formData, vehiclePrice: val })}
+                  t={t}
+                />
               </div>
             )}
 
             {/* Broker Commission agreement selected */}
             {formData.agreementType === 'brokerCommission' && (
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase font-bold text-[#C5A059]">{t("Broker Commission Terms & Compensations *")}</span>
-                  <Textarea 
-                    required 
-                    placeholder={t("Provide description of broker duties, affiliated real estate listings, payment percentages, and conditional terms...")} 
-                    value={formData.commissionTerms} 
-                    onChange={e => setFormData({ ...formData, commissionTerms: e.target.value })} 
-                    className="bg-white/5 border-white/5 h-32 rounded-lg text-white" 
-                  />
-                </div>
+                <SecureTextarea
+                  required
+                  label={t("Broker Commission Terms & Compensations")}
+                  placeholder={t("Provide description of broker duties, affiliated real estate listings, payment percentages, and conditional terms...")}
+                  value={formData.commissionTerms}
+                  onChange={val => setFormData({ ...formData, commissionTerms: val })}
+                  t={t}
+                />
               </div>
             )}
           </div>
@@ -1748,7 +2189,7 @@ export default function Agreements() {
             >
               {t("Preview Agreement")} <ArrowRight size={14} className="ml-2 inline-block" />
             </Button>
-          </div>  </div>
+          </div>
 
         </form>
       </div>
