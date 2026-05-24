@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import enTranslations from '../locales/en.json';
+import soTranslations from '../locales/so.json';
 
-// Translations
-const translations = {
+// Legacy flat translations (as backup and direct string fallbacks)
+const legacyTranslations = {
   en: {
     "Home": "Home",
     "Properties": "Properties",
@@ -22,7 +24,6 @@ const translations = {
     "Login": "Login",
     "Sign In": "Sign In",
     "Join Us": "Join Us",
-    // MegaMenu content
     "Residential": "Residential",
     "Houses": "Houses",
     "Apartments": "Apartments",
@@ -429,6 +430,41 @@ const translations = {
   }
 };
 
+const flattenTranslations = (obj: any, prefix = '', res: Record<string, string> = {}) => {
+  if (!obj) return res;
+  for (const k in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, k)) {
+      const path = prefix ? `${prefix}.${k}` : k;
+      if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
+        flattenTranslations(obj[k], path, res);
+      } else {
+        res[path] = obj[k];
+        // Merge direct simple keys if they don't exist yet, to support legacy verbatim lookup
+        if (!res[k]) {
+          res[k] = obj[k];
+        }
+      }
+    }
+  }
+  return res;
+};
+
+// Merged static & dynamic configurations
+const mergedEn = {
+  ...legacyTranslations.en,
+  ...flattenTranslations(enTranslations)
+};
+
+const mergedSo = {
+  ...legacyTranslations.so,
+  ...flattenTranslations(soTranslations)
+};
+
+const translations = {
+  en: mergedEn,
+  so: mergedSo
+};
+
 type Language = 'en' | 'so';
 type Currency = 'ETB' | 'USD';
 
@@ -445,10 +481,10 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
     try {
-      return (localStorage.getItem('amaan_language') as Language) || 'en';
+      return (localStorage.getItem('amaan_language') as Language) || 'so';
     } catch (e) {
       console.warn("Storage access failed:", e);
-      return 'en';
+      return 'so';
     }
   });
   
@@ -478,7 +514,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [currency]);
 
   const t = (key: string) => {
-    return (translations[language] as Record<string, string>)[key] || key;
+    if (!key) return '';
+    const currentLangDict = translations[language] as Record<string, string>;
+    
+    // 1. Direct or nested key match (e.g., "common.home" or legacy verbatim "Home")
+    if (currentLangDict[key]) {
+      return currentLangDict[key];
+    }
+    
+    // 2. Fall back to search case-insensitive or trimmed in direct dictionary
+    const lowercaseKey = key.toLowerCase().trim();
+    for (const dictKey in currentLangDict) {
+      if (dictKey.toLowerCase() === lowercaseKey) {
+        return currentLangDict[dictKey];
+      }
+    }
+
+    // 3. Fall back to english database flat search
+    const englishLangDict = translations['en'] as Record<string, string>;
+    if (englishLangDict[key]) {
+      return englishLangDict[key];
+    }
+
+    // 4. Return original key as final fail-safe
+    return key;
   };
 
   return (

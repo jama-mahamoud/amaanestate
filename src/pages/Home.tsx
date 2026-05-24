@@ -187,7 +187,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               className="text-3xl sm:text-4xl md:text-6xl font-display font-medium tracking-tight mb-4 md:mb-6 text-white leading-tight"
             >
-              Find your next luxury home
+              {t("properties.find")}
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -195,7 +195,7 @@ export default function Home() {
               transition={{ delay: 0.1 }}
               className="text-white/50 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] px-4"
             >
-              Verified real estate and mobility solutions
+              {t("properties.subtitle")}
             </motion.p>
 
             {/* Side-by-Side CTA Buttons */}
@@ -210,15 +210,15 @@ export default function Home() {
                 onClick={scrollToListings}
                 className="w-full sm:w-auto px-8 py-3.5 text-center text-sm font-semibold text-black bg-white rounded-xl border border-white hover:bg-neutral-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] active:translate-y-[1px] transition-all duration-300 font-sans tracking-tight shrink-0 flex items-center justify-center gap-2 group cursor-pointer"
               >
-                Browse Properties
+                {t("properties.browseProperties")}
                 <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
 
               <Link
-                to="/list-property"
+                to="/property-listing"
                 className="w-full sm:w-auto px-8 py-3.5 text-center text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-500 hover:to-teal-500 shadow-[0_10px_25px_rgba(16,185,129,0.25)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.35)] active:translate-y-[1px] transition-all duration-300 font-sans tracking-tight shrink-0 flex items-center justify-center gap-1 cursor-pointer"
               >
-                List Your Property
+                {t("properties.listProperty")}
               </Link>
             </motion.div>
 
@@ -230,13 +230,13 @@ export default function Home() {
               className="flex flex-wrap justify-center items-center gap-y-2 gap-x-6 md:gap-x-8 text-xs text-white/40 tracking-wider font-sans mt-6"
             >
               <span className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <span className="text-emerald-400 font-bold">✔</span> Verified Listings
+                <span className="text-emerald-400 font-bold">✔</span> {t("properties.verifiedListings")}
               </span>
               <span className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <span className="text-emerald-400 font-bold">✔</span> Trusted Agents
+                <span className="text-emerald-400 font-bold">✔</span> {t("properties.trustedAgents")}
               </span>
               <span className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <span className="text-emerald-400 font-bold">✔</span> Secure Agreements
+                <span className="text-emerald-400 font-bold">✔</span> {t("properties.secureAgreements")}
               </span>
             </motion.div>
           </div>
@@ -271,17 +271,17 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-luxury-gold tracking-[0.2em] mb-1 block">
-                      VERIFIED PORTFOLIO
+                      {t("VERIFIED PORTFOLIO")}
                     </span>
                     <h2 className="text-2xl font-display font-medium text-white tracking-tight">
-                      All Verified Properties
+                      {t("All Verified Properties")}
                     </h2>
                   </div>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="text-[10px] uppercase font-mono text-white/40 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
-                    {allProperties.length} ACTIVE PROPERTIES AVAILABLE
+                    {allProperties.length} {t("ACTIVE PROPERTIES AVAILABLE")}
                   </span>
                 </div>
               </div>
@@ -296,25 +296,25 @@ export default function Home() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
                       <Sparkles size={12} className="text-luxury-gold animate-pulse" />
-                      <span className="text-[10px] uppercase font-black tracking-[0.2em] text-white/40">Active Selection</span>
+                      <span className="text-[10px] uppercase font-black tracking-[0.2em] text-white/40">{t("Active Selection")}</span>
                     </div>
 
                     {filterCity && (
                       <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
                         <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
-                        City: {filterCity}
+                        {t("City")}: {filterCity}
                       </span>
                     )}
                     {filterSubcategory && (
                       <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
                         <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
-                        Type: {filterSubcategory}
+                        {t("Type")}: {filterSubcategory}
                       </span>
                     )}
                     {filterStatus && (
                       <span className="px-4 py-2 bg-luxury-gold/5 border border-luxury-gold/20 text-luxury-gold text-[10px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 group transition-all hover:bg-luxury-gold/10">
                         <span className="w-1 h-1 rounded-full bg-luxury-gold group-hover:scale-150 transition-all"></span>
-                        For {filterStatus === 'rent' ? 'Rent' : 'Sale'}
+                        {filterStatus === 'rent' ? t("For Rent") : t("For Sale")}
                       </span>
                     )}
                   </div>
@@ -323,7 +323,7 @@ export default function Home() {
                     className="flex items-center gap-2 px-6 py-2.5 bg-red-500/5 border border-red-500/10 hover:bg-red-500 hover:text-white hover:border-transparent rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 cursor-pointer shadow-lg shadow-red-500/5 group"
                   >
                     <XCircle size={14} className="group-hover:rotate-90 transition-transform duration-500" /> 
-                    Reset View
+                    {t("Reset View")}
                   </button>
                 </motion.div>
               )}
@@ -331,12 +331,12 @@ export default function Home() {
               {/* Normalized Luxury Grid Layout */}
               {allProperties.length === 0 ? (
                 <div className="text-center py-24 bg-white/[0.01] border border-white/5 rounded-2xl text-white/40 font-display text-xs uppercase tracking-widest backdrop-blur-md flex flex-col items-center justify-center gap-4">
-                  <p>No matching active properties found.</p>
+                  <p>{t("No matching active properties found.")}</p>
                   <button
                     onClick={handleResetFilters}
                     className="px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-[#C5A059] hover:text-black rounded-lg text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    Show All Properties
+                    {t("Show All Properties")}
                   </button>
                 </div>
               ) : (
@@ -356,7 +356,7 @@ export default function Home() {
                         onClick={handleResetFilters} 
                         className="flex items-center gap-2 px-10 py-4 bg-luxury-gold text-luxury-black font-black uppercase tracking-widest text-[11px] rounded-2xl hover:bg-white hover:text-luxury-black transition-all duration-500 w-full sm:w-auto justify-center shadow-2xl shadow-luxury-gold/20 cursor-pointer group"
                       >
-                        <span className="group-hover:mr-2 transition-all">Explore Marketplace</span>
+                        <span className="group-hover:mr-2 transition-all">{t("Explore Marketplace")}</span>
                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                       </button>
 
@@ -397,7 +397,7 @@ export default function Home() {
           {/* Vehicles Section */}
           <section className="py-16 border-b border-white/5 relative">
             <div className="container mx-auto px-4 relative z-10">
-              <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">Active Vehicles</h2>
+              <h2 className="text-2xl font-display font-medium text-white tracking-tight mb-10">{t("Active Vehicles")}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {vehicles.filter(v => v.status === 'ACTIVE' || (v as any).visibility === 'public').map(vehicle => (
                   <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
