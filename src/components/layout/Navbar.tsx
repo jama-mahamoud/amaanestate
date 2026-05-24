@@ -201,102 +201,6 @@ export default function Navbar() {
           : 'bg-transparent'
       }`}
     >
-      {/* Top Utility Bar */}
-      <div className="w-full border-b border-white/5 bg-luxury-black/90 backdrop-blur-md py-2 px-4 relative z-50 hidden md:block">
-        <div className="container mx-auto max-w-7xl flex justify-between items-center text-[10px] uppercase font-bold tracking-[0.1em] text-white/60">
-          <div className="flex items-center gap-6">
-            <a 
-              href="https://wa.me/251910012794" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:text-[#25D366] transition-colors"
-            >
-              <MessageCircle size={12} className="text-[#25D366]" />
-              {t('WhatsApp Support')}: <span className="text-white">+251 910 012 794</span>
-            </a>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <div 
-                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
-                onClick={toggleLangDropdown}
-              >
-                <span className="mb-[-1px]">🌐 {language === 'en' ? 'EN' : 'SOM'}</span> <ChevronDown size={10} />
-              </div>
-              <AnimatePresence>
-                {langDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
-                  >
-                    <button 
-                      onClick={() => selectLanguage('en')}
-                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
-                    >
-                      <span>English</span>
-                      {language === 'en' && <Check size={12} className="text-luxury-gold" />}
-                    </button>
-                    <button 
-                      onClick={() => selectLanguage('so')}
-                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
-                    >
-                      <span>Soomaali</span>
-                      {language === 'so' && <Check size={12} className="text-luxury-gold" />}
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <span className="w-px h-3 bg-white/20"></span>
-            
-            <div className="relative">
-              <div 
-                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
-                onClick={toggleCurrDropdown}
-              >
-                <span className="mb-[-1px]">💱 {currency}</span> <ChevronDown size={10} />
-              </div>
-              <AnimatePresence>
-                {currDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1"
-                  >
-                    <button 
-                      onClick={() => selectCurrency('ETB')}
-                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
-                    >
-                      <span>ETB (Birr)</span>
-                      {currency === 'ETB' && <Check size={12} className="text-luxury-gold" />}
-                    </button>
-                    <button 
-                      onClick={() => selectCurrency('USD')}
-                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between"
-                    >
-                      <span>USD ($)</span>
-                      {currency === 'USD' && <Check size={12} className="text-luxury-gold" />}
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <span className="w-px h-3 bg-white/20"></span>
-            {user ? (
-               <Link to="/dashboard" className="flex items-center gap-2 hover:text-luxury-gold transition-colors">
-                 <User size={12} /> {t('Account')}
-               </Link>
-            ) : (
-               <Link to="/login" className="flex items-center gap-2 hover:text-luxury-gold transition-colors">
-                 <User size={12} /> {t('Login')}
-               </Link>
-            )}
-          </div>
-        </div>
-      </div>
 
       <div className={`container mx-auto max-w-7xl px-4 md:px-6 flex items-center justify-between transition-all duration-500 ${
         isScrolled ? 'py-4' : 'py-8'
@@ -320,6 +224,85 @@ export default function Navbar() {
 
         {/* Desktop Actions - Right matched width */}
         <div className="hidden lg:flex items-center gap-6 shrink-0 lg:flex-1 justify-end">
+             {/* Language Dropdown Start */}
+             <div className="relative">
+              <div 
+                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer text-white/60 text-xs font-bold"
+                onClick={toggleLangDropdown}
+              >
+                <span className="mb-[-1px]">🌐 {language === 'en' ? 'EN' : 'SOM'}</span> <ChevronDown size={10} />
+              </div>
+              <AnimatePresence>
+                {langDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1 z-50"
+                  >
+                    <button 
+                      onClick={() => selectLanguage('en')}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs"
+                    >
+                      <span>English</span>
+                      {language === 'en' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                    <button 
+                      onClick={() => selectLanguage('so')}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs"
+                    >
+                      <span>Soomaali</span>
+                      {language === 'so' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+             {/* Currency Dropdown */}
+            <div className="relative">
+              <div 
+                className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer text-white/60 text-xs font-bold"
+                onClick={toggleCurrDropdown}
+              >
+                <span className="mb-[-1px]">💱 {currency}</span> <ChevronDown size={10} />
+              </div>
+              <AnimatePresence>
+                {currDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full mt-2 right-0 bg-luxury-black border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[120px] py-1 z-50"
+                  >
+                    <button 
+                      onClick={() => selectCurrency('ETB')}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs"
+                    >
+                      <span>ETB</span>
+                      {currency === 'ETB' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                    <button 
+                      onClick={() => selectCurrency('USD')}
+                      className="w-full text-left px-4 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs"
+                    >
+                      <span>USD</span>
+                      {currency === 'USD' && <Check size={12} className="text-luxury-gold" />}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            {user ? (
+               <Link to="/dashboard" className="flex items-center gap-2 hover:text-luxury-gold transition-colors text-white/60 text-xs font-bold">
+                 <User size={12} /> {t('Account')}
+               </Link>
+            ) : (
+               <Link to="/login" className="flex items-center gap-2 hover:text-luxury-gold transition-colors text-white/60 text-xs font-bold">
+                 <User size={12} /> {t('Login')}
+               </Link>
+            )}
+
           <Button asChild className="luxury-button shadow-luxury-gold/10">
             <Link to="/agents/apply">{t('Join Us')}</Link>
           </Button>
