@@ -25,7 +25,7 @@ const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
     >
       <Link to={`/vehicles/${vehicle.id}`}>
         <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
-          <div className="aspect-[16/10] overflow-hidden relative">
+          <div className="aspect-video overflow-hidden relative">
             <img 
               src={mainImage} 
               alt={vehicle.title} 

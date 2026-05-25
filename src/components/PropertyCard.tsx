@@ -86,7 +86,7 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
             : 'border-white/5 shadow-2xl shadow-black/40'
         }`}>
           {/* Main Visual Image Block */}
-          <div className="aspect-[1.5] overflow-hidden relative">
+          <div className="aspect-video overflow-hidden relative">
             <img 
               src={mainImage} 
               alt={property.title} 
@@ -200,23 +200,23 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
               )}
 
               {/* Luxury feature chips section */}
-              {amenities.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3.5">
-                  {amenities.slice(0, 3).map((amenity, idx) => (
-                    <span 
-                      key={idx} 
-                      className="text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 text-white/60 hover:text-white rounded-full transition-colors duration-200 select-none cursor-default"
-                    >
-                      {amenity}
-                    </span>
-                  ))}
-                  {amenities.length > 3 && (
-                    <span className="text-[8px] sm:text-[9px] uppercase tracking-wider font-light px-1.5 py-0.5 text-white/40 select-none">
-                      +{amenities.length - 3} more
-                    </span>
-                  )}
-                </div>
-              )}
+                {amenities.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3.5">
+                    {amenities.slice(0, 3).map((amenity, idx) => (
+                      <span 
+                        key={idx} 
+                        className="text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 text-white/60 hover:text-white rounded-full transition-colors duration-200 select-none cursor-default"
+                      >
+                        {amenity}
+                      </span>
+                    ))}
+                    {amenities.length > 3 && (
+                      <span className="text-[8px] sm:text-[9px] uppercase tracking-wider font-light px-1.5 py-0.5 text-white/40 select-none">
+                        +{amenities.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
             </div>
             
             {/* Elegant footer matching top tier sites */}
