@@ -11,6 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import QRCode from 'qrcode';
+import { notificationService } from './notificationService';
 
 export enum OperationType {
   CREATE = 'create',
@@ -277,6 +278,44 @@ export const agreementService = {
       console.log(`Attempting updateDoc for ${id} with payload:`, JSON.stringify(updatePayload));
       await updateDoc(docRef, updatePayload);
       console.log(`updateDoc successful for ${id}`);
+
+      // Notify owner/signatory on status change
+      try {
+        const agreementSnap = await getDoc(docRef);
+        if (agreementSnap.exists()) {
+          const agreementData = agreementSnap.data();
+          const clientUid = agreementData.submittedBy || agreementData.createdBy;
+          const assetTitle = agreementData.agreementTitle || 'Property Agreement';
+          
+          if (clientUid) {
+            if (status === 'Approved') {
+              await notificationService.createNotification(
+                clientUid,
+                'Agreement Verified & Approved',
+                `Your digital agreement "${assetTitle}" has been verified successfully and officially stamped by the public land registry.`,
+                'AGREEMENT'
+              );
+            } else if (status === 'Rejected') {
+              await notificationService.createNotification(
+                clientUid,
+                'Agreement Verification Declined',
+                `Your digital agreement "${assetTitle}" was declined. Reason: ${reason || 'Document validation failed'}`,
+                'AGREEMENT'
+              );
+            } else if (status === 'revision_requested') {
+              await notificationService.createNotification(
+                clientUid,
+                'Agreement Revision Required',
+                `Your digital agreement "${assetTitle}" requires revisions. Moderator request: ${reason}`,
+                'AGREEMENT'
+              );
+            }
+          }
+        }
+      } catch (notifyErr) {
+        console.error('Error triggering agreement status update notification:', notifyErr);
+      }
+
     } catch (error) {
       console.error(`updateDoc FAILED for ${id}. Error object:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `agreements/${id}`);

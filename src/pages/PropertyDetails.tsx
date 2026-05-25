@@ -7,7 +7,7 @@ import {
   Heart, Calendar, Check, ArrowLeft, Phone, 
   Mail, MessageSquare, Info, Loader2, ShieldCheck, FileCheck2,
   ChevronLeft, ChevronRight, Sparkles, Building, Landmark, Percent, Clock, AlertCircle,
-  Edit3
+  Edit3, Wifi, Droplet, Zap, Shield, Car, Compass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -370,32 +370,81 @@ export default function PropertyDetails() {
               </p>
             </div>
 
+            {/* Property Specifications Section */}
+            <div className="bg-white/[0.01] border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
+              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-4 flex items-center">
+                Property Specifications <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Property Size</span>
+                  <span className="text-white font-semibold text-sm font-mono">{property.size || property.features?.size || 'Not Provided'}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Parking Spaces</span>
+                  <span className="text-white font-semibold text-sm">
+                    {property.features?.parkingSpaces && Number(property.features?.parkingSpaces) > 0 
+                      ? `${property.features.parkingSpaces} Spaces` 
+                      : (property.features?.parking ? 'Yes (1 Dedicated Space)' : 'No Dedicated Parking')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Furnished Status</span>
+                  <span className="text-white font-semibold text-sm">
+                    {property.features?.furnished ? 'Fully Furnished' : 'Unfurnished'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Year Constructed</span>
+                  <span className="text-white font-semibold text-sm">
+                    {property.complianceYear || property.features?.complianceYear || 'Not Specified'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Amenities Grid */}
             <div>
               <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
-                Refined Custom Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
+                Refined Property Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {(property.features && typeof property.features === 'object') ? (
-                  Object.entries(property.features).map(([key, value], i) => (
-                    <div key={i} className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-luxury-gold/20 transition-all group">
-                      <div className="w-8 h-8 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
-                        <Check size={14} className="text-luxury-gold" />
-                      </div>
-                      <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">{key}: {String(value)}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { key: 'wifi', label: 'WiFi', icon: <Wifi size={14} className="text-luxury-gold" />, value: !!property.features?.wifi },
+                  { key: 'water', label: 'Water Access', icon: <Droplet size={14} className="text-luxury-gold" />, value: !!(property.features?.waterAccess || property.features?.water) },
+                  { key: 'electricity', label: 'Electricity Nearby', icon: <Zap size={14} className="text-luxury-gold" />, value: !!(property.features?.electricityNearby || property.features?.electricity) },
+                  { key: 'security', label: 'Security System', icon: <Shield size={14} className="text-luxury-gold" />, value: !!(property.features?.securitySystem || property.features?.security) },
+                  { key: 'garage', label: 'Private Garage', icon: <Car size={14} className="text-luxury-gold" />, value: !!(property.features?.parking || property.features?.garage) },
+                  { key: 'balcony', label: 'Spacious Balcony', icon: <Building size={14} className="text-luxury-gold" />, value: !!property.features?.balcony },
+                  { key: 'garden', label: 'Private Garden', icon: <Sparkles size={14} className="text-luxury-gold" />, value: !!property.features?.garden },
+                  { key: 'airConditioning', label: 'Air Conditioning', icon: <Compass size={14} className="text-luxury-gold" />, value: !!property.features?.airConditioning },
+                ].map((amenity, i) => (
+                  <div 
+                    key={i} 
+                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                      amenity.value 
+                        ? 'bg-emerald-950/10 border-emerald-500/20 shadow-[0_4px_20px_rgba(16,185,129,0.05)]' 
+                        : 'bg-white/5 border-white/5 opacity-40'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      amenity.value ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/30'
+                    }`}>
+                      {amenity.value ? <Check size={14} className="text-emerald-400 font-bold" /> : amenity.icon}
                     </div>
-                  ))
-                ) : (
-                  // Default elegant list if empty
-                  ['Master Suite Design', 'Perimeter Security Enclosure', 'Reliable Hydroelectric Connection', 'Spacious Private Balconies', 'Italian Ceramic Finishes', 'Diaspora-standard construction'].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-luxury-gold/20 transition-all group">
-                      <div className="w-8 h-8 rounded-lg bg-luxury-gold/10 flex items-center justify-center shrink-0">
-                        <Check size={14} className="text-luxury-gold" />
-                      </div>
-                      <span className="text-white/60 text-xs font-medium">{item}</span>
+                    <div>
+                      <span className={`text-[11px] font-bold uppercase tracking-wider block ${
+                        amenity.value ? 'text-white' : 'text-white/30'
+                      }`}>
+                        {amenity.label}
+                      </span>
+                      <span className="text-[9px] uppercase tracking-widest text-white/35 font-bold">
+                        {amenity.value ? 'Available' : 'Unavailable'}
+                      </span>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </div>
 

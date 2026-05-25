@@ -5,7 +5,7 @@ import {
   Building2, MapPin, Bed, Bath, Ruler, Car, ShieldCheck, 
   ArrowLeft, ArrowRight, Loader2, CheckCircle2, DollarSign,
   Upload, Info, Check, Phone, Mail, FileText, Compass,
-  Sparkles, Trash2, HelpCircle
+  Sparkles, Trash2, HelpCircle, Wifi, Droplet, Zap, Shield, Building
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
@@ -74,9 +74,9 @@ const INITIAL_STATE: FormState = {
   propertyType: 'House',
   listingType: 'sale',
   description: '',
-  country: 'Somalia',
-  region: 'Somaliland',
-  city: 'Hargeisa',
+  country: 'Kenya',
+  region: 'Nairobi',
+  city: 'Nairobi',
   district: '',
   streetAddress: '',
   latitude: undefined,
@@ -169,7 +169,7 @@ export default function PropertyListingFormPage() {
               propertyType: pType,
               listingType: listing.listingType || 'sale',
               description: listing.description || '',
-              country: listing.metadata?.country || 'Somalia',
+              country: listing.metadata?.country || 'Kenya',
               region: listing.region || '',
               city: listing.city || '',
               district: listing.district || '',
@@ -441,17 +441,17 @@ export default function PropertyListingFormPage() {
         </button>
         <div className="text-right">
           <p className="text-[10px] text-luxury-gold font-black uppercase tracking-[0.4em] mb-1">AmaanEstate Host</p>
-          <p className="text-[8px] text-white/20 uppercase tracking-widest">Enterprise Asset Enrollment Protocols</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-widest">Property Listing</p>
         </div>
       </div>
 
       <div className="w-full max-w-5xl text-center mb-10 z-10">
-        <p className="text-luxury-gold text-xs font-black uppercase tracking-[0.3em] mb-2">Host Portal v3.0</p>
+        <p className="text-luxury-gold text-xs font-black uppercase tracking-[0.3em] mb-2">List Your Property</p>
         <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight">
-          {isEditMode ? 'Modify Listing Node' : 'List Your Premium Asset'}
+          {isEditMode ? 'Modify Listing Details' : 'List Your Premium Property'}
         </h1>
         <p className="text-white/40 text-sm max-w-lg mx-auto mt-2 font-light">
-          Register with security screening, interactive geodata mapping, and verified certificates to Somaliland's largest audience.
+          Create and publish your verified property listing to East Africa’s largest audience.
         </p>
       </div>
 
@@ -511,12 +511,12 @@ export default function PropertyListingFormPage() {
               <CheckCircle2 size={48} />
             </div>
             <h2 className="text-3xl font-display font-medium tracking-tight mb-4">
-              {isEditMode ? 'Listing Node Modified Successfully!' : 'Property Enrolled in Verification Queue'}
+              {isEditMode ? 'Listing Successfully Updated!' : 'Property Listing Published'}
             </h2>
             <p className="text-white/50 text-sm max-w-lg mx-auto leading-relaxed mb-10 font-light">
               {isEditMode 
-                ? 'Your updates have been securely synchronized across the network catalog. Changes are effective immediately.'
-                : 'AmaanEstate audit desks are verifying ownership documents and mapping integrity. It typically takes less than an hour to index on the public portal.'
+                ? 'Your property updates have been successfully saved and are now live.'
+                : 'Our listing moderators will review your verification files and documents. Your listing should go live to the public shortly.'
               }
             </p>
 
@@ -553,8 +553,8 @@ export default function PropertyListingFormPage() {
               {currentStep === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 1 — Asset Basics</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Provide general properties details, types, and descriptive definitions</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 1 — Property Basics</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Provide general property details, type, and descriptive information</p>
                   </div>
 
                   <div className="space-y-2">
@@ -571,13 +571,13 @@ export default function PropertyListingFormPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Asset Class Classification *</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Property Type *</label>
                       <Select 
                         value={formData.propertyType}
                         onValueChange={(val) => handleSelectChange('propertyType', val)}
                       >
                         <SelectTrigger className="bg-white/5 border-white/5 h-14 rounded-xl text-white">
-                          <SelectValue placeholder="Select asset class" />
+                          <SelectValue placeholder="Select property type" />
                         </SelectTrigger>
                         <SelectContent className="bg-luxury-black border-white/15 text-white">
                           <SelectItem value="House">House</SelectItem>
@@ -585,13 +585,13 @@ export default function PropertyListingFormPage() {
                           <SelectItem value="Land">Land Plot</SelectItem>
                           <SelectItem value="Commercial">Commercial Office / Mall</SelectItem>
                           <SelectItem value="Villa">Villa Estate</SelectItem>
-                          <SelectItem value="Vehicle">Vehicle Transport</SelectItem>
+                          <SelectItem value="Vehicle">Vehicle Details</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Listing Intention *</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Listing Type *</label>
                       <Select 
                         value={formData.listingType}
                         onValueChange={(val) => handleSelectChange('listingType', val)}
@@ -600,17 +600,17 @@ export default function PropertyListingFormPage() {
                           <SelectValue placeholder="Listing intent" />
                         </SelectTrigger>
                         <SelectContent className="bg-luxury-black border-white/15 text-white">
-                          <SelectItem value="sale">For Sale / Perpetual Grant</SelectItem>
-                          <SelectItem value="rent">For Rent / Lease</SelectItem>
+                          <SelectItem value="sale">For Sale</SelectItem>
+                          <SelectItem value="rent">For Rent</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Creative Description (Min 15 char) *</label>
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Description (Min 15 char) *</label>
                     <Textarea 
-                      placeholder="Discuss construction age, materials, layout parameters, water security details, neighborhood vibe, and special incentives..." 
+                      placeholder="Describe your property's style, design, unique layout details, local highlights, and amenities..." 
                       name="description"
                       value={formData.description}
                       onChange={handleTextChange}
@@ -625,8 +625,8 @@ export default function PropertyListingFormPage() {
               {currentStep === 2 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 2 — Geographic Mapping</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Pin exact coordinates on the atlas, identify regions, and fill verified addresses</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 2 — Location Details</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Enter the location details and select the address on the map</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -642,7 +642,7 @@ export default function PropertyListingFormPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Region / Province *</label>
                       <Input 
-                        placeholder="e.g. Woqooyi Galbeed" 
+                        placeholder="e.g. Coast" 
                         name="region"
                         value={formData.region}
                         onChange={handleTextChange}
@@ -655,7 +655,7 @@ export default function PropertyListingFormPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">City *</label>
                       <Input 
-                        placeholder="e.g. Hargeisa" 
+                        placeholder="e.g. Nairobi" 
                         name="city"
                         value={formData.city}
                         onChange={handleTextChange}
@@ -665,7 +665,7 @@ export default function PropertyListingFormPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">District / Neighborhood</label>
                       <Input 
-                        placeholder="e.g. Jigiga Yar" 
+                        placeholder="e.g. Kilimani" 
                         name="district"
                         value={formData.district}
                         onChange={handleTextChange}
@@ -675,7 +675,7 @@ export default function PropertyListingFormPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Street Address</label>
                       <Input 
-                        placeholder="e.g. Sheikh Madar Rd" 
+                        placeholder="e.g. Peponi Road" 
                         name="streetAddress"
                         value={formData.streetAddress}
                         onChange={handleTextChange}
@@ -684,15 +684,15 @@ export default function PropertyListingFormPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Atlas Geolocation Pin (Map)</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 ml-1">Your Property Location</label>
                       <p className="text-[8px] text-luxury-gold uppercase tracking-widest font-black">
-                        {formData.latitude ? `PINNED: ${formData.latitude.toFixed(5)}, ${formData.longitude?.toFixed(5)}` : 'AUTO COORDINATES DETERMINING...'}
+                        {formData.latitude ? 'Location Selected' : 'Select Location on Map'}
                       </p>
                     </div>
                     
-                    <div className="h-64 rounded-2xl border border-white/5 overflow-hidden relative">
+                    <div className="rounded-2xl border border-white/5 bg-white/[0.01]">
                       <MapPicker 
                         city={formData.city}
                         latitude={formData.latitude}
@@ -701,7 +701,6 @@ export default function PropertyListingFormPage() {
                         onAddressChange={handleMapAddressChange}
                       />
                     </div>
-                    <p className="text-[9px] text-white/20 italic ml-1">Drag the pinpoint to lock mapping data. Reverse geocoding index determines locations details auto-synced.</p>
                   </div>
                 </div>
               )}
@@ -710,16 +709,16 @@ export default function PropertyListingFormPage() {
               {currentStep === 3 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 3 — Structural Details</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Document sizing metrics, structural layout features, and utility tags</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 3 — Property Details</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Specify dimensions, layouts, and additional characteristics</p>
                   </div>
 
                   {formData.propertyType === 'Vehicle' ? (
                     <div className="p-8 bg-white/5 border border-white/5 rounded-2xl text-center">
                       <Car size={32} className="text-luxury-gold mx-auto mb-3" />
-                      <p className="text-sm font-bold text-white mb-2">Vehicle Specification Framework</p>
+                      <p className="text-sm font-bold text-white mb-2">Vehicle Details</p>
                       <p className="text-xs text-white/40 leading-relaxed font-light">
-                        This asset is designated under mobility class. Vehicle details will compile dynamic options like mileage, fuel index, and transmission variables upon review.
+                        Provide a description and detailed specifications. Additional information such as mileage and engine options can be added during verification.
                       </p>
                     </div>
                   ) : formData.propertyType === 'Land' ? (
@@ -756,10 +755,12 @@ export default function PropertyListingFormPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Bedrooms *</label>
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1 flex items-center gap-1.5">
+                            <Bed size={12} className="text-luxury-gold/70 shrink-0" /> Bedrooms *
+                          </label>
                           <Input 
                             type="number"
                             placeholder="3" 
@@ -767,11 +768,13 @@ export default function PropertyListingFormPage() {
                             value={formData.bedrooms}
                             onChange={handleTextChange}
                             required
-                            className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm"
+                            className="bg-white/[0.02] border-white/5 hover:border-white/10 focus-visible:border-luxury-gold/30 focus-visible:ring-luxury-gold/5 h-10 rounded-xl text-white text-xs transition-all duration-200"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Bathrooms *</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1 flex items-center gap-1.5">
+                            <Bath size={12} className="text-luxury-gold/70 shrink-0" /> Bathrooms *
+                          </label>
                           <Input 
                             type="number"
                             placeholder="2" 
@@ -779,11 +782,13 @@ export default function PropertyListingFormPage() {
                             value={formData.bathrooms}
                             onChange={handleTextChange}
                             required
-                            className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm"
+                            className="bg-white/[0.02] border-white/5 hover:border-white/10 focus-visible:border-luxury-gold/30 focus-visible:ring-luxury-gold/5 h-10 rounded-xl text-white text-xs transition-all duration-200"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Size (m²) *</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1 flex items-center gap-1.5">
+                            <Ruler size={12} className="text-luxury-gold/70 shrink-0" /> Size (m²) *
+                          </label>
                           <Input 
                             type="number"
                             placeholder="250" 
@@ -791,30 +796,32 @@ export default function PropertyListingFormPage() {
                             value={formData.areaSize}
                             onChange={handleTextChange}
                             required
-                            className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm"
+                            className="bg-white/[0.02] border-white/5 hover:border-white/10 focus-visible:border-luxury-gold/30 focus-visible:ring-luxury-gold/5 h-10 rounded-xl text-white text-xs transition-all duration-200"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Parking Spaces</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1 flex items-center gap-1.5">
+                            <Car size={12} className="text-luxury-gold/70 shrink-0" /> Parking Spaces
+                          </label>
                           <Input 
                             type="number"
                             placeholder="1" 
                             name="parkingSpaces"
                             value={formData.parkingSpaces}
                             onChange={handleTextChange}
-                            className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm"
+                            className="bg-white/[0.02] border-white/5 hover:border-white/10 focus-visible:border-luxury-gold/30 focus-visible:ring-luxury-gold/5 h-10 rounded-xl text-white text-xs transition-all duration-200"
                           />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Furnish Structuring</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1">Furnishing</label>
                           <Select 
                             value={formData.furnished}
                             onValueChange={(val: any) => handleSelectChange('furnished', val)}
                           >
-                            <SelectTrigger className="bg-white/5 border-white/5 h-12 rounded-xl text-white">
+                            <SelectTrigger className="bg-white/[0.02] border-white/5 hover:border-white/10 h-10 rounded-xl text-white text-xs transition-all duration-200">
                               <SelectValue placeholder="Furnished status" />
                             </SelectTrigger>
                             <SelectContent className="bg-luxury-black border-white/15 text-white">
@@ -823,14 +830,14 @@ export default function PropertyListingFormPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Year Constructed</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1">Year Constructed</label>
                           <Input 
                             placeholder="e.g. 2024" 
                             name="yearBuilt"
                             value={formData.yearBuilt}
                             onChange={handleTextChange}
-                            className="bg-white/5 border-white/5 h-12 rounded-xl text-white placeholder:text-white/10 text-sm"
+                            className="bg-white/[0.02] border-white/5 hover:border-white/10 focus-visible:border-luxury-gold/30 focus-visible:ring-luxury-gold/5 h-10 rounded-xl text-white placeholder:text-white/10 text-xs transition-all duration-200"
                           />
                         </div>
                       </div>
@@ -839,26 +846,43 @@ export default function PropertyListingFormPage() {
 
                   {/* Amenities checklist */}
                   <div>
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1 block mb-4">Core Utilities & Perks Checklists</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <label className="text-[9px] uppercase font-bold tracking-widest text-white/45 ml-1 block mb-3">Amenities & Features</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-3.5">
                       {Object.keys(formData.features).map((fKey) => {
                         const hasF = formData.features[fKey as keyof FormState['features']];
+                        const featureIcons: Record<string, React.ReactNode> = {
+                          wifi: <Wifi size={13} />,
+                          water: <Droplet size={13} />,
+                          electricity: <Zap size={13} />,
+                          security: <Shield size={13} />,
+                          garage: <Car size={13} />,
+                          balcony: <Building2 size={13} />,
+                          garden: <Sparkles size={13} />,
+                          airConditioning: <Compass size={13} />,
+                        };
                         return (
                           <button
                             key={fKey}
                             type="button"
                             onClick={() => handleFeatureToggle(fKey as keyof FormState['features'])}
-                            className={`p-4 rounded-xl border text-center transition-all duration-300 flex flex-col items-center justify-center gap-2 group cursor-pointer ${
+                            className={`p-3 rounded-xl border text-left transition-all duration-300 flex items-center justify-between gap-2.5 group cursor-pointer ${
                               hasF 
-                                ? 'bg-luxury-gold/5 border-luxury-gold/50 text-luxury-gold' 
-                                : 'bg-white/5 border-white/5 text-white/40 hover:border-white/10 hover:bg-white/[0.08]'
+                                ? 'bg-luxury-gold/5 border-luxury-gold/30 text-white shadow-[0_4px_16px_rgba(197,160,89,0.06)]' 
+                                : 'bg-white/[0.02] border-white/5 text-white/40 hover:border-white/10 hover:bg-white/[0.04]'
                             }`}
                           >
-                            <span className="text-xs font-bold uppercase tracking-widest font-sans capitalize">{fKey.replace(/([A-Z])/g, ' $1')}</span>
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                              hasF ? 'bg-luxury-gold border-luxury-gold text-black' : 'border-white/10'
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`p-1.5 rounded-lg shrink-0 transition-colors ${hasF ? 'bg-luxury-gold/15 text-luxury-gold' : 'bg-white/5 text-white/30 group-hover:bg-white/10 group-hover:text-white/50'}`}>
+                                {featureIcons[fKey] || <Check size={12} />}
+                              </span>
+                              <span className={`text-[10px] font-semibold tracking-wide capitalize truncate transition-colors ${hasF ? 'text-white/90' : 'text-white/45 group-hover:text-white/70'}`}>
+                                {fKey.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                              </span>
+                            </div>
+                            <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                              hasF ? 'bg-luxury-gold border-luxury-gold text-black' : 'border-white/10 group-hover:border-white/20'
                             }`}>
-                              {hasF && <Check size={10} />}
+                              {hasF && <Check size={8} strokeWidth={3} />}
                             </div>
                           </button>
                         );
@@ -872,8 +896,8 @@ export default function PropertyListingFormPage() {
               {currentStep === 4 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 4 — Media Portfolio</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Attach high resolution imagery. First loaded item acts as the cover hero element</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 4 — Photos</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Upload high-resolution property photos. The first photo will be used as the cover banner.</p>
                   </div>
 
                   {isEditMode && existingImagesList.length > 0 && (
@@ -905,7 +929,7 @@ export default function PropertyListingFormPage() {
                   <ImageUpload 
                     onImagesChange={(files) => setImageFiles(files)} 
                     maxFiles={10} 
-                    label="Drop or Select New Graphic Files"
+                    label="Upload Beautiful Property Photos"
                   />
                 </div>
               )}
@@ -914,8 +938,8 @@ export default function PropertyListingFormPage() {
               {currentStep === 5 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 5 — Pricing & Verification Contacts</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">List value requirements, currencies indexes, and preferred contact coordinates</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 5 — Pricing & Contact Info</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Set your listing price and preferred contact details</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -937,7 +961,7 @@ export default function PropertyListingFormPage() {
                     </div>
 
                     <div className="space-y-2 col-span-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Asset Valuation Price *</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Price *</label>
                       <Input 
                         type="number"
                         placeholder="e.g. 150000" 
@@ -963,9 +987,9 @@ export default function PropertyListingFormPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">WhatsApp coordinates</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">WhatsApp Number</label>
                       <Input 
-                        placeholder="+252 63 ..." 
+                        placeholder="+254 7..." 
                         name="whatsapp"
                         value={formData.whatsapp}
                         onChange={handleTextChange}
@@ -973,7 +997,7 @@ export default function PropertyListingFormPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Email Coordinates</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Email Address</label>
                       <Input 
                         type="email"
                         placeholder="info@ayaanestate.com" 
@@ -986,7 +1010,7 @@ export default function PropertyListingFormPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Preferred Interaction Pathway</label>
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Preferred Contact Method</label>
                     <div className="flex gap-4">
                       {['WhatsApp', 'Phone', 'Email'].map((method) => {
                         const active = formData.preferredContact === method;
@@ -1010,20 +1034,20 @@ export default function PropertyListingFormPage() {
                 </div>
               )}
 
-              {/* STEP 6: Legal Verification & Digital Agreement */}
+              {/* STEP 6: Verification & Agreement */}
               {currentStep === 6 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 6 — Legal Screening Assets</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Enroll property titles deeds and national identification records for escrow auditing</p>
+                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 6 — Verification Documents</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Upload your ownership deed or title document, and a government ID to help us verify your listing.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="p-6 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center text-center justify-between gap-4">
                       <FileText size={28} className="text-luxury-gold" />
                       <div>
-                        <p className="text-xs font-bold text-white mb-1">Ownership Deed / land Grant Certificate</p>
-                        <p className="text-[9px] text-white/20 uppercase tracking-widest">Attach PDF, PNG or JPG max 10MB</p>
+                        <p className="text-xs font-bold text-white mb-1">Property Deed or Title Certificate</p>
+                        <p className="text-[9px] text-white/20 uppercase tracking-widest">Upload certified document (PDF, PNG or JPG up to 10MB)</p>
                       </div>
                       
                       {ownershipFile ? (
@@ -1054,8 +1078,8 @@ export default function PropertyListingFormPage() {
                     <div className="p-6 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center text-center justify-between gap-4">
                       <ShieldCheck size={28} className="text-luxury-gold" />
                       <div>
-                        <p className="text-xs font-bold text-white mb-1">Seller Identity Document (Passport / National ID)</p>
-                        <p className="text-[9px] text-white/20 uppercase tracking-widest">Scan image or passport file</p>
+                        <p className="text-xs font-bold text-white mb-1">Government ID or Passport</p>
+                        <p className="text-[9px] text-white/20 uppercase tracking-widest">Upload scanner image or passport photo file</p>
                       </div>
 
                       {identityFile ? (
@@ -1093,14 +1117,14 @@ export default function PropertyListingFormPage() {
                         className="mt-1 accent-luxury-gold"
                       />
                       <span className="text-xs leading-relaxed font-light">
-                        I hereby declare that all provided documents, title certificates, geodata coordinates representation, and structural status parameters represent the authentic visual state of the property. I consent to the escrow listing terms and real-estate registry search conditions of Somaliland.
+                        I hereby declare that all provided documents, title certificates, and visual representations of the property are accurate and authentic. I consent to the standard listing terms and real-estate directory conditions of East Africa.
                       </span>
                     </label>
 
                     <div className="space-y-2 pt-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Digital Protocol Escrow Signature</label>
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-white/40 ml-1">Digital Signature</label>
                       <Input 
-                        placeholder="Type legal full name to confirm digital agreement" 
+                        placeholder="Type your full legal name to confirm listing terms" 
                         name="digitalSignature"
                         value={formData.digitalSignature}
                         onChange={handleTextChange}
@@ -1115,15 +1139,15 @@ export default function PropertyListingFormPage() {
               {currentStep === 7 && (
                 <div className="space-y-8">
                   <div>
-                    <h3 className="text-lg font-bold text-luxury-gold mb-1">Step 7 — Comprehensive Registry Review</h3>
-                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Auditing complete listing model before establishing active database indexes</p>
+                    <h3 className="text-lg font-gold font-bold text-luxury-gold mb-1">Step 7 — Review & Publish</h3>
+                    <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Review your details and documents before publishing your listing</p>
                   </div>
 
                   {/* Summary Card */}
                   <div className="glass-card p-8 rounded-3xl border border-white/5 space-y-6">
                     <div className="flex justify-between items-start border-b border-white/5 pb-4">
                       <div>
-                        <h4 className="text-xl font-bold font-display text-white">{formData.title || 'Untitled Listing Certificate'}</h4>
+                        <h4 className="text-xl font-bold font-display text-white">{formData.title || 'Untitled Property Listing'}</h4>
                         <p className="text-[10px] uppercase font-black tracking-widest text-luxury-gold mt-1">
                           {formData.propertyType} • For {formData.listingType === 'sale' ? 'Sale' : 'Rent'}
                         </p>
@@ -1135,12 +1159,12 @@ export default function PropertyListingFormPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-white/60 font-light leading-relaxed">
                       <div className="space-y-2">
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/30">Geographic Address</p>
-                        <p className="flex items-center gap-2"><MapPin size={12} className="text-luxury-gold shrink-0" /> {formData.streetAddress}, {formData.city}, Somaliland</p>
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/30">Property Address</p>
+                        <p className="flex items-center gap-2"><MapPin size={12} className="text-luxury-gold shrink-0" /> {formData.streetAddress}, {formData.city}, East Africa</p>
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/30">Sizing metrics & layouts</p>
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/30">Size & Layout</p>
                         <p>
                           {formData.propertyType === 'Vehicle' ? 'Class Mobility Designation' : 
                            formData.propertyType === 'Land' ? `Plot Area size: ${formData.areaSize} m²` : 
@@ -1157,15 +1181,15 @@ export default function PropertyListingFormPage() {
 
                     <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-4">
                       <div className="text-center bg-white/5 p-4 rounded-2xl">
-                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Image files</p>
+                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Photos</p>
                         <p className="text-lg font-bold font-mono text-white">{isEditMode ? existingImagesList.length + imageFiles.length : imageFiles.length}</p>
                       </div>
                       <div className="text-center bg-white/5 p-4 rounded-2xl">
-                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Security Docs</p>
+                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Documents</p>
                         <p className="text-lg font-bold text-emerald-400">Included</p>
                       </div>
                       <div className="text-center bg-white/5 p-4 rounded-2xl">
-                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Interact Pathway</p>
+                        <p className="text-[8px] uppercase tracking-widest text-white/35 font-bold mb-1">Contact Choice</p>
                         <p className="text-xs font-bold text-luxury-gold truncate">{formData.preferredContact}</p>
                       </div>
                     </div>
@@ -1173,8 +1197,8 @@ export default function PropertyListingFormPage() {
 
                   <div className="p-6 bg-luxury-gold/5 border border-luxury-gold/20 rounded-2xl flex items-start gap-4">
                     <Sparkles className="text-luxury-gold shrink-0 mt-0.5" size={18} />
-                    <p className="text-xs text-white/60 leading-relaxed">
-                      Upon hitting publish, this listing is injected as a cryptographic node into AmaanEstate's decentralized property registry. Verification badge gets indexed live post validation desk audit check.
+                    <p className="text-xs text-white/60 leading-relaxed font-light">
+                      Upon publishing, your listing will be reviewed by our moderation team before going live on East Africa's premier directory map to maintain maximum security and trust.
                     </p>
                   </div>
                 </div>
@@ -1213,7 +1237,7 @@ export default function PropertyListingFormPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      <span>Syncing Registry...</span>
+                      <span>Publishing...</span>
                     </>
                   ) : (
                     <>
@@ -1234,8 +1258,8 @@ export default function PropertyListingFormPage() {
                     {uploadProgress}%
                   </div>
                 </div>
-                <h4 className="text-xl font-bold mb-2">Publishing Node...</h4>
-                <p className="text-white/40 text-xs animate-pulse max-w-sm font-mono tracking-wide">{uploadStatus}</p>
+                <h4 className="text-xl font-bold mb-2">Publishing Listing...</h4>
+                <p className="text-white/40 text-xs animate-pulse max-w-sm font-sans tracking-wide">{uploadStatus}</p>
               </div>
             )}
             

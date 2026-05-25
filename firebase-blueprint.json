@@ -163,6 +163,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["agreementId", "date", "type", "status", "partyA", "partyB", "assetInfo", "terms", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System-generated or transactional direct user and admin notifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["PROPERTY", "PAYMENT", "AGREEMENT", "VERIFICATION", "INQUIRY", "SYSTEM"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "message", "type", "read", "createdAt"]
     }
   },
   "firestore": {
@@ -263,6 +278,10 @@
     "/agreements/{agreementId}": {
       "schema": "Agreement",
       "description": "Collection of legal agreements"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "In-app system and direct user notifications"
     }
   }
 }

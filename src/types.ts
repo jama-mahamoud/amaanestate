@@ -47,6 +47,7 @@ export interface Listing {
   updatedAt?: any;
   trustScore?: number;
   riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  moderationComment?: string;
 }
 
 export interface Property extends Listing {
@@ -78,6 +79,18 @@ export interface Property extends Listing {
     zoningType?: string;
     landUse?: string;
     phone?: string;
+    wifi?: boolean;
+    balcony?: boolean;
+    garden?: boolean;
+    airConditioning?: boolean;
+    water?: boolean;
+    electricity?: boolean;
+    security?: boolean;
+    garage?: boolean;
+    size?: string;
+    complianceYear?: string;
+    beds?: number;
+    baths?: number;
   };
   financing?: {
     minDownPayment?: number;

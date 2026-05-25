@@ -5,7 +5,7 @@ import {
   Heart, X, ArrowLeft, Phone, Mail, MessageSquare, 
   Info, Loader2, ShieldCheck, FileCheck2,
   ChevronLeft, ChevronRight, Sparkles, Building, Landmark, Compass, Navigation, Percent, Clock, AlertCircle, 
-  ExternalLink, Check
+  ExternalLink, Check, Wifi, Droplet, Zap, Shield, Car
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -266,6 +266,76 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
                   <p className="text-white/60 text-sm leading-relaxed font-light whitespace-pre-line bg-white/[0.01] p-5 rounded-2.5xl border border-white/5">
                     {fullProperty?.description || "This premium certified real estate asset listed in Jigjiga Somali Region holds high strategic location values. Complete structural parameters and location maps can be certified through AmaanEstate Central Hub."}
                   </p>
+                </div>
+
+                {/* Property Specifications */}
+                <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-white/60">Property Specifications</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                      <span className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Size</span>
+                      <span className="text-white font-semibold text-xs font-mono">{fullProperty?.size || fullProperty?.features?.size || 'Not Provided'}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                      <span className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Parking Spaces</span>
+                      <span className="text-white font-semibold text-xs">
+                        {fullProperty?.features?.parkingSpaces && Number(fullProperty?.features?.parkingSpaces) > 0 
+                          ? `${fullProperty.features.parkingSpaces} Spaces` 
+                          : (fullProperty?.features?.parking ? 'Yes (1 Garage Space)' : 'No Dedicated Parking')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                      <span className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Furnished</span>
+                      <span className="text-white font-semibold text-xs">
+                        {fullProperty?.features?.furnished ? 'Yes (Furnished)' : 'No (Unfurnished)'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                      <span className="text-white/40 text-[10px] uppercase tracking-wider font-bold">Year Built</span>
+                      <span className="text-white font-semibold text-xs">
+                        {fullProperty?.complianceYear || fullProperty?.features?.complianceYear || 'Not Specified'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Premium Amenities Badges */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-white/60">Property Amenities</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { key: 'wifi', label: 'WiFi', icon: <Wifi size={12} className="text-luxury-gold" />, value: !!fullProperty?.features?.wifi },
+                      { key: 'water', label: 'Water', icon: <Droplet size={12} className="text-luxury-gold" />, value: !!(fullProperty?.features?.waterAccess || fullProperty?.features?.water) },
+                      { key: 'electricity', label: 'Electricity', icon: <Zap size={12} className="text-luxury-gold" />, value: !!(fullProperty?.features?.electricityNearby || fullProperty?.features?.electricity) },
+                      { key: 'security', label: 'Security', icon: <Shield size={12} className="text-luxury-gold" />, value: !!(fullProperty?.features?.securitySystem || fullProperty?.features?.security) },
+                      { key: 'garage', label: 'Garage', icon: <Car size={12} className="text-luxury-gold" />, value: !!(fullProperty?.features?.parking || fullProperty?.features?.garage) },
+                      { key: 'balcony', label: 'Balcony', icon: <Building size={12} className="text-luxury-gold" />, value: !!fullProperty?.features?.balcony },
+                      { key: 'garden', label: 'Garden', icon: <Sparkles size={12} className="text-luxury-gold" />, value: !!fullProperty?.features?.garden },
+                      { key: 'airConditioning', label: 'Air Con', icon: <Compass size={12} className="text-luxury-gold" />, value: !!fullProperty?.features?.airConditioning },
+                    ].map((amenity, i) => (
+                      <div 
+                        key={i} 
+                        className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all ${
+                          amenity.value 
+                            ? 'bg-emerald-950/10 border-emerald-500/20 shadow-md' 
+                            : 'bg-white/5 border-white/5 opacity-40'
+                        }`}
+                      >
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                          amenity.value ? 'bg-emerald-500/15 text-emerald-400 font-extrabold' : 'bg-white/5 text-white/30'
+                        }`}>
+                          {amenity.value ? <Check size={11} className="text-emerald-400 font-bold" /> : amenity.icon}
+                        </div>
+                        <div className="min-w-0">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider block truncate ${
+                            amenity.value ? 'text-white' : 'text-white/35'
+                          }`}>
+                            {amenity.label}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Landmark & Coordinates Map Dashboard */}

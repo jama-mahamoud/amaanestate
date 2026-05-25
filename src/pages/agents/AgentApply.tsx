@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, Upload, ChevronRight, Scale, AlertCircle, FileText, CheckCircle2, User, Building2 } from 'lucide-react';
+import { 
+  ShieldCheck, Upload, ChevronRight, Scale, AlertCircle, FileText, 
+  CheckCircle2, User, Building2, Lock, Check, Award, MapPin, 
+  Phone, Globe, FileSignature, HelpCircle, ArrowLeft
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,27 +51,34 @@ export default function AgentApply() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-luxury-black flex items-center justify-center text-white">
-        <div className="w-8 h-8 rounded-full border-2 border-[#C5A059] border-t-transparent animate-spin"></div>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 rounded-full border-2 border-[#C5A059]/10 animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#C5A059] border-r-transparent border-b-transparent border-l-transparent animate-spin duration-1000" />
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4 text-white">
-        <div className="glass-card p-12 rounded-[2rem] border border-white/10 text-center max-w-xl shadow-2xl">
-          <ShieldCheck className="w-16 h-16 text-[#C5A059] mx-auto mb-6" />
-          <h2 className="text-3xl font-display font-semibold mb-4">Verification Required</h2>
-          <p className="text-white/60 mb-8 max-w-sm mx-auto">
-            Please log in or sign up with an authenticated account to start your background verification and apply as a certified agent/agency.
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 text-white relative overflow-hidden font-sans">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C5A059]/[0.02] blur-[120px] rounded-full pointer-events-none"></div>
+        <div className="glass-card p-10 md:p-12 rounded-[2.5rem] border border-white/5 text-center max-w-xl shadow-2xl bg-white/[0.01]/80 backdrop-blur-3xl relative z-10">
+          <div className="w-16 h-16 bg-[#C5A059]/10 border border-[#C5A059]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-8 h-8 text-[#C5A059]" />
+          </div>
+          <h2 className="text-3xl font-display font-medium mb-3 tracking-tight">System Onboarding Key Required</h2>
+          <p className="text-white/50 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
+            You must be logged in to an authenticated AmaanEstate account to submit records to the municipal background and dual-allocation verification desk.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild className="bg-[#C5A059] text-black">
-              <Link to="/login">Sign In</Link>
+            <Button asChild className="bg-[#C5A059] text-black hover:bg-white rounded-xl h-11 px-8 font-semibold transition-all duration-350">
+              <Link to="/login">Sign In & Begin</Link>
             </Button>
-            <Button asChild variant="outline" className="border-white/10 text-white hover:bg-white/5">
-              <Link to="/">Back Home</Link>
+            <Button asChild variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-xl h-11 px-8 transition-all duration-350">
+              <Link to="/">Back to Home</Link>
             </Button>
           </div>
         </div>
@@ -77,17 +88,17 @@ export default function AgentApply() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-luxury-black flex flex-col items-center justify-center text-center px-4 relative text-white">
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-center px-4 relative text-white font-sans overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.02),transparent)] pointer-events-none"></div>
-        <div className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-8">
-          <CheckCircle2 size={48} className="text-emerald-400" />
+        <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-8 animate-pulse">
+          <CheckCircle2 size={40} className="text-emerald-400" />
         </div>
-        <h2 className="text-4xl font-display font-bold text-white mb-4">Application Submitted</h2>
-        <p className="text-white/60 max-w-md mx-auto mb-8 leading-relaxed">
-          Your credentials and legal background records have been submitted to the AmaanEstate compliance desk. Proofing and ID audits take 2-4 business days.
+        <h2 className="text-3xl md:text-4xl font-display font-medium tracking-tight text-white mb-3">Compliance Review Initiated</h2>
+        <p className="text-white/50 text-sm max-w-md mx-auto mb-10 leading-relaxed font-light">
+          Your records are locked and queuing for review at the regional land compliance desk. Verification, address audits, and badge authorization take 2 to 4 business days.
         </p>
-        <Button onClick={() => navigate('/dashboard')} className="bg-[#C5A059] text-black hover:bg-white transition-colors h-12 px-8 rounded-xl font-bold uppercase tracking-wider text-xs">
-          Return to Dashboard
+        <Button onClick={() => navigate('/dashboard')} className="bg-[#C5A059] text-black hover:bg-white transition-all h-12 px-8 rounded-xl font-bold uppercase tracking-wider text-[11px] shadow-lg shadow-[#C5A059]/10">
+          Dashboard Portal
         </Button>
       </div>
     );
@@ -97,11 +108,12 @@ export default function AgentApply() {
     e.preventDefault();
     if (step < 3) {
       setStep(step + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (!formData.agreement) {
-      alert("Please check and accept the verification agreement to complete application.");
+      alert("Please review and check the regulatory authorization agreement to complete submission.");
       return;
     }
 
@@ -141,293 +153,487 @@ export default function AgentApply() {
       setSubmitted(true);
     } catch (error) {
       console.error(error);
-      alert("Application submission failed. Please try again or contact support.");
+      alert("Onboarding registration record failed to save. Please review inputs and re-submit.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="pt-24 pb-20 min-h-screen bg-luxury-black text-white px-4">
-      <div className="max-w-3xl mx-auto">
-        
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6">
-            <ShieldCheck size={14} />
-            <span>AmaanEstate Compliance Officer</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Certified Registry Application</h1>
-          <p className="text-white/60 text-sm max-w-sm mx-auto">
-            Become a legally verified real estate agent, independent broker, or corporate agency on the Horn of Africa.
-          </p>
-        </div>
+    <div className="pt-28 pb-24 min-h-screen bg-[#050505] text-white px-4 md:px-8 relative overflow-hidden font-sans selection:bg-[#C5A059]/20">
+      {/* Background Ambience Subtle Shaders */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] bg-gradient-to-b from-[#C5A059]/[0.02] via-transparent to-transparent pointer-events-none rounded-b-[4rem]"></div>
+      <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-gradient-to-r from-[#C5A059]/[0.01] to-[#C5A059]/[0.02] blur-[100px] rounded-full pointer-events-none"></div>
 
-        {/* Action: Select Application Mode at Step 1 */}
-        {step === 1 && (
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <button
-              type="button"
-              onClick={() => setApplyType('individual')}
-              className={`p-6 rounded-[2rem] border text-left transition-all duration-300 flex flex-col items-start gap-4 ${
-                applyType === 'individual'
-                  ? 'bg-[#C5A059] border-[#C5A059] text-black shadow-lg shadow-[#C5A059]/15'
-                  : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
-              }`}
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          
+          {/* Left Column: Interactive Trust Metrics and Sidebar Info */}
+          <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-6">
+            
+            {/* Nav Back Button */}
+            <Link 
+              to="/dashboard" 
+              className="inline-flex items-center gap-2 text-white/40 hover:text-[#C5A059] text-[11px] font-bold uppercase tracking-wider transition-colors duration-300"
             >
-              <User size={24} />
-              <div>
-                <p className="font-bold text-sm uppercase tracking-wider block">Independent Broker</p>
-                <span className="text-[10px] leading-tight block mt-1">Apply as an individual certified market operator</span>
-              </div>
-            </button>
+              <ArrowLeft size={14} />
+              <span>Dashboard Portal</span>
+            </Link>
 
-            <button
-              type="button"
-              onClick={() => setApplyType('agency')}
-              className={`p-6 rounded-[2rem] border text-left transition-all duration-300 flex flex-col items-start gap-4 ${
-                applyType === 'agency'
-                  ? 'bg-[#C5A059] border-[#C5A059] text-black shadow-lg shadow-[#C5A059]/15'
-                  : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
-              }`}
-            >
-              <Building2 size={24} />
-              <div>
-                <p className="font-bold text-sm uppercase tracking-wider block">Agency Corporation</p>
-                <span className="text-[10px] leading-tight block mt-1">Apply as a licensed brokerage or corporate firm</span>
+            {/* Premium Header */}
+            <div>
+              <div id="compliance-officer-badge" className="inline-flex items-center gap-2 bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+                <ShieldCheck size={14} className="stroke-[2.5]" />
+                <span>Compliance & Audit Bureau</span>
               </div>
-            </button>
-          </div>
-        )}
-
-        {/* Steps Gauge */}
-        <div className="flex items-center justify-between mb-8 relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-white/10 z-0"></div>
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                step >= s ? 'bg-[#C5A059] text-black shadow-[0_0_20px_rgba(197,160,89,0.3)]' : 'bg-luxury-black border border-white/20 text-white/40'
-              }`}>
-                {s}
-              </div>
-              <span className={`text-[10px] uppercase tracking-widest font-bold ${step >= s ? 'text-[#C5A059]' : 'text-white/40'}`}>
-                {s === 1 ? 'Primary Details' : s === 2 ? 'Audit Docs' : 'Agreement'}
-              </span>
+              <h1 className="text-3xl md:text-4.5xl font-display font-medium tracking-tight text-white mb-4 leading-tight">
+                Certified Registry Onboarding
+              </h1>
+              <p className="text-white/50 text-sm leading-relaxed max-w-md font-light">
+                Upgrade your operator account status to access certified regional marketing, legal deed logging, and double-allocation risk assessment charters under regional compliance frameworks.
+              </p>
             </div>
-          ))}
-        </div>
 
-        {/* Form Container */}
-        <div className="glass-card bg-luxury-black/90 border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-2xl backdrop-blur-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Live Compliance Parameters Checklist */}
+            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01] space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-2">
+                <Award size={14} className="text-[#C5A059]" />
+                <span>Audit & Registry Safeguards</span>
+              </h4>
+              <ul className="space-y-3">
+                {[
+                  { title: "East Africa Real Estate Association Verification", desc: "Direct registration checks matching professional agency rosters." },
+                  { title: "Title & Property Allocation Audits", desc: "Double-allocation prevention checks matched with land records." },
+                  { title: "Office & Address Verification", desc: "Physical agency offices are verified for authentic operation checks." }
+                ].map((item, i) => (
+                  <li key={i} className="flex gap-3">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-white/80">{item.title}</p>
+                      <p className="text-[10px] text-white/40 leading-normal mt-0.5">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-white/40">
+                <span className="flex items-center gap-1">
+                  <Lock size={11} className="text-[#C5A059]" />
+                  Secure 256-bit Encr.
+                </span>
+                <span>Registry Code: AE-V3</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column: Complete Flow Application Form Card */}
+          <div className="lg:col-span-8">
+            
+            {/* Selection Mode at Step 1 */}
             {step === 1 && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span>Step 1: Contact & Legal Identity</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {applyType === 'agency' ? (
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">Agency / Brand Corporate Name</label>
-                      <Input 
-                        required 
-                        value={formData.agencyName} 
-                        onChange={e => setFormData({...formData, agencyName: e.target.value})}
-                        placeholder="e.g., Somali Lands Development Ltd"
-                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                      />
+              <div className="mb-8">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-white/30 mb-3">Verification License Class</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setApplyType('individual')}
+                    className={`p-6 rounded-2xl border text-left transition-all duration-350 flex flex-col items-start gap-4 cursor-pointer relative overflow-hidden group ${
+                      applyType === 'individual'
+                        ? 'bg-gradient-to-br from-[#C5A059]/10 to-[#C5A059]/[0.02] border-[#C5A059] text-white shadow-xl shadow-[#C5A059]/5'
+                        : 'bg-white/[0.01] border-white/5 text-white/40 hover:bg-white/[0.03] hover:border-white/10 hover:text-white'
+                    }`}
+                  >
+                    {applyType === 'individual' && (
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-[#C5A059] opacity-5 rounded-bl-full pointer-events-none" />
+                    )}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-350 shrink-0 ${
+                      applyType === 'individual' 
+                        ? 'bg-[#C5A059] text-black shadow-md shadow-[#C5A059]/20' 
+                        : 'bg-white/5 text-white/60 group-hover:text-[#C5A059]'
+                    }`}>
+                      <User size={18} />
                     </div>
-                  ) : (
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">Full Legal Name</label>
-                      <Input 
-                        required 
-                        value={formData.fullName} 
-                        onChange={e => setFormData({...formData, fullName: e.target.value})}
-                        placeholder="e.g., Mahdi Omar"
-                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                      />
+                    <div>
+                      <span className="font-bold text-sm tracking-wide block">Independent Broker</span>
+                      <span className="text-[11px] leading-relaxed block mt-1 opacity-70">
+                        For local market operators, certified independent agents, or land development counselors.
+                      </span>
                     </div>
-                  )}
+                  </button>
 
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Registry Email</label>
-                    <Input 
-                      required 
-                      type="email" 
-                      value={formData.email} 
-                      onChange={e => setFormData({...formData, email: e.target.value})}
-                      placeholder="e.g., contact@amaanestate.com"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Official Phone Line</label>
-                    <Input 
-                      required 
-                      value={formData.phone} 
-                      onChange={e => setFormData({...formData, phone: e.target.value})}
-                      placeholder="e.g., +251 911 223 344"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  
-                  {applyType === 'individual' && (
-                    <div className="space-y-2">
-                      <label className="text-xs uppercase font-bold tracking-widest text-white/60">WhatsApp Line</label>
-                      <Input 
-                        required 
-                        value={formData.whatsapp} 
-                        onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-                        placeholder="e.g., +251 911 223 344"
-                        className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                      />
+                  <button
+                    type="button"
+                    onClick={() => setApplyType('agency')}
+                    className={`p-6 rounded-2xl border text-left transition-all duration-350 flex flex-col items-start gap-4 cursor-pointer relative overflow-hidden group ${
+                      applyType === 'agency'
+                        ? 'bg-gradient-to-br from-[#C5A059]/10 to-[#C5A059]/[0.02] border-[#C5A059] text-white shadow-xl shadow-[#C5A059]/5'
+                        : 'bg-white/[0.01] border-white/5 text-white/40 hover:bg-white/[0.03] hover:border-white/10 hover:text-white'
+                    }`}
+                  >
+                    {applyType === 'agency' && (
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-[#C5A059] opacity-5 rounded-bl-full pointer-events-none" />
+                    )}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-350 shrink-0 ${
+                      applyType === 'agency' 
+                        ? 'bg-[#C5A059] text-black shadow-md shadow-[#C5A059]/20' 
+                        : 'bg-white/5 text-white/60 group-hover:text-[#C5A059]'
+                    }`}>
+                      <Building2 size={18} />
                     </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Operational Province / City</label>
-                    <Input 
-                      required 
-                      value={formData.city} 
-                      onChange={e => setFormData({...formData, city: e.target.value})}
-                      placeholder="e.g., Jigjiga"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs uppercase font-bold tracking-widest text-white/60">Main Office Corporate Address</label>
-                    <Input 
-                      value={formData.officeAddress} 
-                      onChange={e => setFormData({...formData, officeAddress: e.target.value})}
-                      placeholder="e.g., Somali Region Commercial Towers, Block #B, Jigjiga"
-                      className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                    />
-                  </div>
+                    <div>
+                      <span className="font-bold text-sm tracking-wide block">Agency Corporation</span>
+                      <span className="text-[11px] leading-relaxed block mt-1 opacity-70">
+                        For licensed brokerages, development firms, and multi-partner enterprise entities.
+                      </span>
+                    </div>
+                  </button>
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {step === 2 && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span>Step 2: Legal Documentation & Credentials</span>
-                </h3>
-                
-                {applyType === 'individual' ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Years of Experience</label>
-                        <Input 
-                          type="number" 
-                          required 
-                          value={formData.yearsOfExperience} 
-                          onChange={e => setFormData({...formData, yearsOfExperience: e.target.value})}
-                          placeholder="e.g., 5"
-                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Sectors / Specialization (comma separated)</label>
-                        <Input 
-                          required 
-                          value={formData.propertySpecialization} 
-                          onChange={e => setFormData({...formData, propertySpecialization: e.target.value})}
-                          placeholder="e.g., Land plots, Luxury villas, Commercial"
-                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                        />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs uppercase font-bold tracking-widest text-white/60">Operational Neighborhoods</label>
-                        <Input 
-                          required 
-                          value={formData.areasOfOperation} 
-                          onChange={e => setFormData({...formData, areasOfOperation: e.target.value})}
-                          placeholder="e.g., Hodan District, Jigjiga HQ, Dire Dawa"
-                          className="bg-white/5 border border-white/5 h-12 rounded-xl text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-white/10">
-                      <p className="text-xs uppercase font-bold tracking-widest text-[#C5A059]">Credentials Upload (National ID or Business License)</p>
-                      
-                      <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                        <span className="text-[11px] uppercase font-bold text-white/60 block">1. Government Photo Identity (Passport / Regional ID)</span>
-                        <ImageUpload onImagesChange={setGovernmentIdFiles} maxFiles={1} />
-                      </div>
-
-                      <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                        <span className="text-[11px] uppercase font-bold text-white/60 block">2. Profile Photo (Visible in Registry Directory)</span>
-                        <ImageUpload onImagesChange={setProfilePhotoFiles} maxFiles={1} />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <p className="text-xs text-white/60">Please provide corporate licensing certificates and supporting deeds to verified the operating entity.</p>
-                    
-                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                      <span className="text-[11px] uppercase font-bold text-white/60 block">1. Corporate Business registration/License Document</span>
-                      <ImageUpload onImagesChange={setBusinessLicenseFiles} maxFiles={1} />
-                    </div>
-
-                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-2">
-                      <span className="text-[11px] uppercase font-bold text-white/60 block">2. Official Corporate Logo</span>
-                      <ImageUpload onImagesChange={setCompanyLogoFiles} maxFiles={1} />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span>Step 3: Verification Agreement</span>
-                </h3>
-                <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl flex items-start gap-4">
-                  <input 
-                    type="checkbox" 
-                    id="chk-agreeterm" 
-                    checked={formData.agreement}
-                    onChange={e => setFormData({...formData, agreement: e.target.checked})}
-                    className="mt-1 h-5 w-5 bg-white/5 border-white/10 text-[#C5A059] focus:ring-0 checked:bg-[#C5A059]"
-                  />
-                  <label htmlFor="chk-agreeterm" className="text-white/60 text-xs leading-relaxed select-none cursor-pointer">
-                    I state that all documents and information uploaded are legally valid. I permit AmaanEstate’s Compliance Board to run regional criminal record, address validation, and license audits under Ethiopian/regional frameworks to enforce double-allocation safety.
-                  </label>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step Controls */}
-            <div className="pt-6 border-t border-white/5 flex gap-4 justify-between">
-              {step > 1 ? (
-                <Button 
-                  type="button" 
-                  onClick={() => setStep(step - 1)} 
-                  variant="outline" 
-                  className="border-white/10 text-white hover:bg-white/5 h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-[10px]"
-                >
-                  Back Step
-                </Button>
-              ) : (
-                <div />
-              )}
+            {/* Modernized Stepper Bar */}
+            <div className="relative mb-10 overflow-hidden rounded-2xl border border-white/5 bg-white/[0.01] p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-bold text-[#C5A059] uppercase tracking-widest">Progress Tracker</span>
+                <span className="h-4 w-px bg-white/10 hidden md:block"></span>
+                <span className="text-xs text-white/40">Step {step} of 3</span>
+              </div>
               
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="bg-[#C5A059] text-black hover:bg-white transition-colors h-12 px-8 rounded-xl font-bold uppercase tracking-widest text-[10px]"
-              >
-                {loading ? 'Submitting Registry...' : step < 3 ? 'Save / Next Step' : 'Finish & Submit'}
-              </Button>
-            </div>
-          </form>
-        </div>
+              <div className="flex items-center gap-1.5 h-1.5 w-full md:max-w-xs bg-white/5 rounded-full overflow-hidden">
+                {[1, 2, 3].map((s) => (
+                  <div 
+                    key={s} 
+                    className={`h-full transition-all duration-500 rounded-full flex-1 ${
+                      step >= s ? 'bg-[#C5A059]' : 'bg-white/10'
+                    }`} 
+                  />
+                ))}
+              </div>
 
+              <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-white/40">
+                <span className={step === 1 ? 'text-[#C5A059]' : ''}>1. Identity</span>
+                <span className={step === 2 ? 'text-[#C5A059]' : ''}>2. Credentials</span>
+                <span className={step === 3 ? 'text-[#C5A059]' : ''}>3. Mandate</span>
+              </div>
+            </div>
+
+            {/* Main Form Dashboard card */}
+            <div className="rounded-[2rem] border border-white/5 bg-[#0a0a0a]/90 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+              
+              {/* Top ambient luxury border glow */}
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#C5A059]/40 to-transparent"></div>
+
+              <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-8">
+                
+                <AnimatePresence mode="wait">
+                  {step === 1 && (
+                    <motion.div 
+                      key="step1"
+                      initial={{ opacity: 0, y: 15 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-6"
+                    >
+                      <div className="border-b border-white/5 pb-4 flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-widest font-black text-[#C5A059]">Active Stage</span>
+                          <h3 className="text-lg font-display font-medium text-white mt-0.5">Primary Contact & Identity</h3>
+                        </div>
+                        <span className="text-white/30 text-xs font-mono">01 / 03</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {applyType === 'agency' ? (
+                          <div className="space-y-2 md:col-span-2">
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Agency / Business Legal Name</label>
+                            <Input 
+                              required 
+                              value={formData.agencyName} 
+                              onChange={e => setFormData({...formData, agencyName: e.target.value})}
+                              placeholder="e.g., Somali Lands Development Ltd"
+                              className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                            />
+                            <p className="text-[9px] text-white/30">Matches your ministry registered legal corporate banner.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 md:col-span-2">
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Agent Legal Full Name</label>
+                            <Input 
+                              required 
+                              value={formData.fullName} 
+                              onChange={e => setFormData({...formData, fullName: e.target.value})}
+                              placeholder="e.g., Mahdi Omar"
+                              className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                            />
+                            <p className="text-[9px] text-white/30">As indicated on your government-issued passport or national ID card.</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Official Email Address</label>
+                          <Input 
+                            required 
+                            type="email" 
+                            value={formData.email} 
+                            onChange={e => setFormData({...formData, email: e.target.value})}
+                            placeholder="e.g., contact@amaanestate.com"
+                            className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Official Telephone Number</label>
+                          <Input 
+                            required 
+                            value={formData.phone} 
+                            onChange={e => setFormData({...formData, phone: e.target.value})}
+                            placeholder="e.g., +251 911 223 344"
+                            className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                          />
+                        </div>
+                        
+                        {applyType === 'individual' && (
+                          <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">WhatsApp Phone Code</label>
+                            <Input 
+                              required 
+                              value={formData.whatsapp} 
+                              onChange={e => setFormData({...formData, whatsapp: e.target.value})}
+                              placeholder="e.g., +251 911 223 344"
+                              className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Metropolitan City</label>
+                          <Input 
+                            required 
+                            value={formData.city} 
+                            onChange={e => setFormData({...formData, city: e.target.value})}
+                            placeholder="e.g., Jigjiga"
+                            className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                          />
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Physical Head Office Address</label>
+                          <Input 
+                            required
+                            value={formData.officeAddress} 
+                            onChange={e => setFormData({...formData, officeAddress: e.target.value})}
+                            placeholder="e.g., Somali Region Commercial Towers, Block #B, Jigjiga"
+                            className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 2 && (
+                    <motion.div 
+                      key="step2"
+                      initial={{ opacity: 0, y: 15 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-6"
+                    >
+                      <div className="border-b border-white/5 pb-4 flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-widest font-black text-[#C5A059]">Active Stage</span>
+                          <h3 className="text-lg font-display font-medium text-white mt-0.5">Documents & Credentials</h3>
+                        </div>
+                        <span className="text-white/30 text-xs font-mono">02 / 03</span>
+                      </div>
+                      
+                      {applyType === 'individual' ? (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Years of Industry Experience</label>
+                              <Input 
+                                type="number" 
+                                required 
+                                value={formData.yearsOfExperience} 
+                                onChange={e => setFormData({...formData, yearsOfExperience: e.target.value})}
+                                placeholder="e.g., 5"
+                                className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Specializations (comma separated)</label>
+                              <Input 
+                                required 
+                                value={formData.propertySpecialization} 
+                                onChange={e => setFormData({...formData, propertySpecialization: e.target.value})}
+                                placeholder="e.g., Land plots, Luxury villas, Commercial"
+                                className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                              />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                              <label className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Primary Operational Neighborhood districts</label>
+                              <Input 
+                                required 
+                                value={formData.areasOfOperation} 
+                                onChange={e => setFormData({...formData, areasOfOperation: e.target.value})}
+                                placeholder="e.g., Hodan District, Jigjiga HQ, Dire Dawa"
+                                className="bg-white/[0.02] border-white/5 h-12 rounded-xl text-white focus-visible:ring-1 focus-visible:ring-[#C5A059]/30 focus-visible:border-[#C5A059]/80 placeholder:text-white/20 transition-all font-light"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-5 pt-4 border-t border-white/5">
+                            <h4 className="text-[11px] uppercase font-bold tracking-widest text-[#C5A059] flex items-center gap-2">
+                              <Upload size={13} />
+                              <span>Required Documentation Uploads</span>
+                            </h4>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="bg-white/[0.01] border border-white/5 p-5 rounded-xl space-y-3">
+                                <div>
+                                  <span className="text-xs font-semibold text-white/80 block">Government Photo ID</span>
+                                  <span className="text-[10px] text-white/40 block mt-0.5">Please provide your clean National ID or Passport scan.</span>
+                                </div>
+                                <ImageUpload onImagesChange={setGovernmentIdFiles} maxFiles={1} />
+                              </div>
+
+                              <div className="bg-white/[0.01] border border-white/5 p-5 rounded-xl space-y-3">
+                                <div>
+                                  <span className="text-xs font-semibold text-white/80 block">Recent Portrait Photo</span>
+                                  <span className="text-[10px] text-white/40 block mt-0.5">Will be displayed on your verified registry public profile.</span>
+                                </div>
+                                <ImageUpload onImagesChange={setProfilePhotoFiles} maxFiles={1} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          <p className="text-xs text-white/50 leading-relaxed font-light">
+                            Corporate verification requires legal business certification and active trade registry records under local commercial regulations.
+                          </p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white/[0.01] border border-white/5 p-5 rounded-xl space-y-3">
+                              <div>
+                                <span className="text-xs font-semibold text-white/80 block">Corporate Trade License</span>
+                                <span className="text-[10px] text-white/40 block mt-0.5">Copy of your active corporate registry charter.</span>
+                              </div>
+                              <ImageUpload onImagesChange={setBusinessLicenseFiles} maxFiles={1} />
+                            </div>
+
+                            <div className="bg-white/[0.01] border border-white/5 p-5 rounded-xl space-y-3">
+                              <div>
+                                <span className="text-xs font-semibold text-white/80 block">Official Corporate Logo</span>
+                                <span className="text-[10px] text-white/40 block mt-0.5">Used for corporate brand watermarks on properties.</span>
+                              </div>
+                              <ImageUpload onImagesChange={setCompanyLogoFiles} maxFiles={1} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {step === 3 && (
+                    <motion.div 
+                      key="step3"
+                      initial={{ opacity: 0, y: 15 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-6"
+                    >
+                      <div className="border-b border-white/5 pb-4 flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-widest font-black text-[#C5A059]">Active Stage</span>
+                          <h3 className="text-lg font-display font-medium text-white mt-0.5">Verification Oath & Mandate</h3>
+                        </div>
+                        <span className="text-white/30 text-xs font-mono">03 / 03</span>
+                      </div>
+
+                      <div className="p-6 rounded-2xl border border-[#C5A059]/20 bg-[#C5A059]/5 space-y-4">
+                        <div className="flex gap-3">
+                          <Award size={20} className="text-[#C5A059] shrink-0 mt-0.5" />
+                          <div>
+                            <h5 className="text-sm font-semibold text-white">Ethical Broker Commitment</h5>
+                            <p className="text-[11px] text-white/60 leading-relaxed mt-1">
+                              By joining the AmaanEstate Certified Registry, you strictly guarantee clean property listings, active ownership proof verification, and zero dual-deed listings to protect downstream regional commercial safety.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-6 rounded-2xl bg-white/[0.01] border border-white/5 flex items-start gap-4">
+                        <div className="flex items-center h-5">
+                          <input 
+                            type="checkbox" 
+                            id="chk-agreeterm" 
+                            checked={formData.agreement}
+                            onChange={e => setFormData({...formData, agreement: e.target.checked})}
+                            className="h-5 w-5 rounded bg-white/5 border-white/10 text-[#C5A059] focus:ring-0 checked:bg-[#C5A059]"
+                          />
+                        </div>
+                        <label htmlFor="chk-agreeterm" className="text-white/50 text-xs leading-relaxed select-none cursor-pointer">
+                          I hereby declare under legal oath that all documents, corporate license charts, and broker details submitted are correct and valid. I explicitly authorize the AmaanEstate Compliance and Audit board to coordinate criminal records background checks and physical office audits with municipal registers.
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Styled Back / Next Step Controls */}
+                <div className="pt-6 border-t border-white/5 flex gap-4 justify-between">
+                  {step > 1 ? (
+                    <Button 
+                      type="button" 
+                      onClick={() => {
+                        setStep(step - 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} 
+                      variant="outline" 
+                      className="border-white/10 text-white hover:bg-white/5 hover:text-[#C5A059] h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all"
+                    >
+                      Retrieve Previous
+                    </Button>
+                  ) : (
+                    <div />
+                  )}
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="bg-[#C5A059] text-black hover:bg-white hover:shadow-xl hover:shadow-[#C5A059]/10 transition-all duration-350 h-12 px-8 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                        Syncing Ledger...
+                      </span>
+                    ) : step < 3 ? (
+                      <span className="flex items-center gap-1.5">
+                        Continue Audit
+                        <ChevronRight size={14} />
+                      </span>
+                    ) : (
+                      'Authorize & Submit Application'
+                    )}
+                  </Button>
+                </div>
+
+              </form>
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </div>
   );

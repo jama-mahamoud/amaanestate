@@ -7,7 +7,12 @@ import {
   FileText, 
   MessageSquare,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  MapPin,
+  Eye,
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 import { ModerationStats as IStats } from '@/services/moderationService';
 
@@ -17,72 +22,140 @@ interface ModerationStatsProps {
 }
 
 export default function ModerationStats({ stats, loading }: ModerationStatsProps) {
-  const cards = [
+  // Operational verification counts
+  const queues = [
     { 
-      label: 'Pending Approval', 
+      label: 'Listings Pending Review', 
       value: stats.pendingListings, 
-      icon: <ClipboardCheck size={24} />, 
-      color: 'text-luxury-gold',
-      bg: 'bg-luxury-gold/10'
+      icon: <ClipboardCheck size={20} />, 
+      color: 'text-amber-400',
+      bg: 'bg-amber-400/10 border-amber-500/10'
     },
     { 
-      label: 'Pending Pros', 
+      label: 'Profiles Pending Review', 
       value: stats.pendingProfessionals, 
-      icon: <AlertCircle size={24} />, 
-      color: 'text-red-500',
-      bg: 'bg-red-500/10'
+      icon: <AlertCircle size={20} />, 
+      color: 'text-rose-500',
+      bg: 'bg-rose-500/10 border-rose-500/10'
     },
     { 
-      label: 'Verified Pros', 
-      value: stats.totalVerifiedProfessionals, 
-      icon: <UserCheck size={24} />, 
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10'
-    },
-    { 
-      label: 'Total Listings', 
-      value: stats.totalListings, 
-      icon: <LayoutList size={24} />, 
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10'
-    },
-    { 
-      label: 'Total Articles', 
-      value: stats.totalArticles, 
-      icon: <FileText size={24} />, 
-      color: 'text-green-500',
-      bg: 'bg-green-500/10'
-    },
-    { 
-      label: 'New Inquiries', 
+      label: 'Open Inquiries & Leads', 
       value: stats.totalInquiries, 
-      icon: <MessageSquare size={24} />, 
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10'
+      icon: <MessageSquare size={20} />, 
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-400/10 border-emerald-500/10'
+    }
+  ];
+
+  // Enterprise real-estate analytics & business intelligence
+  const saasMetrics = [
+    {
+      label: 'Platform User Registry',
+      value: `${stats.totalUsers.toLocaleString()} Users`,
+      subtext: 'Total registered account holders',
+      icon: <Users size={18} />,
+      gradient: 'from-blue-500/10 to-indigo-500/10'
+    },
+    {
+      label: 'Active Market Listings',
+      value: `${(stats.totalListings - stats.pendingListings).toLocaleString()} Active`,
+      subtext: 'Verified and publicly discoverable listings',
+      icon: <LayoutList size={18} />,
+      gradient: 'from-emerald-500/10 to-teal-500/10'
+    },
+    {
+      label: 'Total Platform Content',
+      value: `${stats.totalArticles.toLocaleString()} Items`,
+      subtext: 'Articles published in market news',
+      icon: <FileText size={18} />,
+      gradient: 'from-amber-500/10 to-orange-500/10'
+    },
+    {
+      label: 'Verified Professionals',
+      value: stats.totalVerifiedProfessionals.toLocaleString(),
+      subtext: 'Certified brokers and agency agents',
+      icon: <CheckCircle2 size={18} />,
+      gradient: 'from-purple-500/10 to-pink-500/10'
+    },
+    {
+      label: 'Total Inquiries',
+      value: stats.totalInquiries.toLocaleString(),
+      subtext: 'Client inquiries & lead messages',
+      icon: <MessageSquare size={18} />,
+      gradient: 'from-cyan-500/10 to-sky-500/10'
+    },
+    {
+      label: 'Verification Queue',
+      value: `${stats.pendingListings + stats.pendingProfessionals} Pending`,
+      subtext: 'Items requiring administrative review',
+      icon: <ShieldCheck size={18} />,
+      gradient: 'from-violet-500/10 to-fuchsia-500/10'
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {cards.map((card, i) => (
-        <motion.div
-          key={card.label}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.05 }}
-          className="glass-card hover:bg-white/[0.03] transition-all p-6 rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden group"
-        >
-          <div className={`w-12 h-12 rounded-2xl ${card.bg} ${card.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500`}>
-            {card.icon}
-          </div>
-          {loading ? (
-            <div className="h-8 w-12 bg-white/5 animate-pulse rounded-lg mb-1" />
-          ) : (
-            <p className="text-3xl font-display font-bold tracking-tighter mb-1">{card.value}</p>
-          )}
-          <p className="text-[8px] uppercase tracking-[0.2em] font-black text-white/20">{card.label}</p>
-        </motion.div>
-      ))}
+    <div className="space-y-8">
+      {/* Queues & Action Required Group */}
+      <div>
+        <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-4 flex items-center">
+          Active Action Queues <div className="h-px flex-1 bg-white/5 ml-8"></div>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {queues.map((q, i) => (
+            <motion.div
+              key={q.label}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className={`p-6 bg-white/[0.01] border ${q.bg} rounded-[2rem] flex items-center justify-between group transition-all duration-300 hover:scale-[1.02]`}
+            >
+              <div className="space-y-2">
+                <span className="text-white/40 text-xs font-semibold block">{q.label}</span>
+                {loading ? (
+                  <div className="h-9 w-16 bg-white/5 animate-pulse rounded-lg" />
+                ) : (
+                  <p className="text-4xl font-display font-black tracking-tight text-white">{q.value}</p>
+                )}
+              </div>
+              <div className={`w-14 h-14 rounded-2xl bg-white/[0.02] border border-white/5 ${q.color} flex items-center justify-center group-hover:rotate-12 transition-transform duration-500`}>
+                {q.icon}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Corporate Market Analytics Group */}
+      <div>
+        <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-4 flex items-center">
+          Marketplace Operations & Performance Metrics <div className="h-px flex-1 bg-white/5 ml-8"></div>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {saasMetrics.map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: (i + 3) * 0.04 }}
+              className={`p-6 bg-gradient-to-br ${card.gradient} border border-white/5 rounded-3xl relative overflow-hidden group hover:border-[#C5A059]/20 transition-all duration-500`}
+            >
+              {/* Abs decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-[#C5A059]/5 transition-colors duration-500 pointer-events-none" />
+              
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#C5A059]/80">{card.label}</span>
+                  <p className="text-2xl font-display font-bold text-white tracking-tight">{card.value}</p>
+                  <p className="text-white/40 text-[11px] font-medium leading-relaxed">{card.subtext}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#C5A059] group-hover:scale-110 transition-transform duration-300">
+                  {card.icon}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,27 @@ import soTranslations from '../locales/so.json';
 // Legacy flat translations (as backup and direct string fallbacks)
 const legacyTranslations = {
   en: {
+    "properties.houses": "Houses",
+    "properties.apartments": "Apartments",
+    "properties.land": "Land & Plots",
+    "properties.commercial": "Commercial Spaces",
+    "properties.villas": "Villas & Estates",
+    "properties.luxuryHomes": "Luxury Homes",
+    "vehicles.suvs": "SUVs",
+    "vehicles.sedans": "Sedans",
+    "vehicles.trucks": "Trucks",
+    "vehicles.luxury": "Luxury Vehicles",
+    "agents.verifiedBrokers": "Verified Brokers",
+    "agents.agencies": "Agencies Office",
+    "agents.propertyExperts": "Property Experts",
+    "agents.registryVerification": "Registry Verification",
+    "agents.certifiedAgents": "Certified Agents",
+    "footer.brandSlogan": "Global Real Estate & Structural Verification Network",
+    "footer.brandDescription": "Pioneering absolute transactional security and asset compliance. Establishing state-of-the-art cataloging, certified ownership validation, and luxury asset exchange systems across East Africa.",
+    "footer.ctaSub": "Catalog Your Premium Asset",
+    "footer.ctaTitle": "Ready to reach East Africa's premier buyers?",
+    "footer.poweredBy": "Powered by",
+    "footer.networkName": "AmaanEstate Global Property Network",
     "Home": "Home",
     "Properties": "Properties",
     "Vehicles": "Vehicles",
@@ -217,6 +238,27 @@ const legacyTranslations = {
     "Review and alter standard legal protections directly inside the document. Ensure exact payment deadlines and breach guidelines are specified according to local commerce bylaws.": "Review and alter standard legal protections directly inside the document. Ensure exact payment deadlines and breach guidelines are specified according to local commerce bylaws."
   },
   so: {
+    "properties.houses": "Guryaha",
+    "properties.apartments": "Abaartamaano",
+    "properties.land": "Dhul & Boosas",
+    "properties.commercial": "Xarumaha Ganacsiga",
+    "properties.villas": "Fillooyin & Guryo Waawayn",
+    "properties.luxuryHomes": "Guryo Nooca Sare ah",
+    "vehicles.suvs": "Gawaarida Waaweyn",
+    "vehicles.sedans": "Gaadiidka Sedan-ka",
+    "vehicles.trucks": "Gawaarida Xamuulka",
+    "vehicles.luxury": "Gawaadhida Nooca Sare",
+    "agents.verifiedBrokers": "Dillaaliinta La Hubiyey",
+    "agents.agencies": "Xafiisyada Wakiillada",
+    "agents.propertyExperts": "Khabiirada Hantida",
+    "agents.registryVerification": "Xaqiijinta Diiwaanka",
+    "agents.certifiedAgents": "Wakiillada Shahaadaysan",
+    "footer.brandSlogan": "Diiwaanka Guud ee Hantida iyo Hubinta Deegaanka",
+    "footer.brandDescription": "Hormuudka amniga macaamilka iyo u hoggaansanaanta hantida. Samaynta nidaamka casriga ah ee buug-yaraha, xaqiijinta lahaanshaha, iyo isdhaafsiga hantida ee gobolka Soomaaliyeed.",
+    "footer.ctaSub": "Diiwaangeli Hantidaada Nooca Sare ah",
+    "footer.ctaTitle": "Ma diyaar u tahay inaad gaadho iibsadayaasha ugu fiican?",
+    "footer.poweredBy": "Waxaa ku shaqeeya",
+    "footer.networkName": "Shabakadda hantida caalamiga ah ee AmaanEstate",
     "Home": "Bogga Hore",
     "Properties": "Guryaha",
     "Vehicles": "Gaadiidka",
@@ -473,7 +515,7 @@ interface SettingsContextType {
   currency: Currency;
   setLanguage: (lang: Language) => void;
   setCurrency: (curr: Currency) => void;
-  t: (key: string) => string;
+  t: (key: string, fallback?: string) => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
@@ -513,7 +555,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currency]);
 
-  const t = (key: string) => {
+  const t = (key: string, fallback?: string) => {
     if (!key) return '';
     const currentLangDict = translations[language] as Record<string, string>;
     
@@ -536,7 +578,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       return englishLangDict[key];
     }
 
-    // 4. Return original key as final fail-safe
+    // 4. If key is missing, look at fallback parameter
+    if (fallback) {
+      return fallback;
+    }
+
+    // 5. Fallback prettifier for dots
+    if (key.includes('.')) {
+      const parts = key.split('.');
+      const last = parts[parts.length - 1];
+      return last.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+    }
+
+    // 6. Return original key as final fail-safe
     return key;
   };
 

@@ -16,7 +16,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  XCircle
+  XCircle,
+  ShieldCheck,
+  Users,
+  Award
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
@@ -215,7 +218,7 @@ export default function Home() {
               </Link>
 
               <Link
-                to="/property-listing"
+                to="/list-property"
                 className="w-full sm:w-auto px-8 py-3.5 text-center text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-500 hover:to-teal-500 shadow-[0_10px_25px_rgba(16,185,129,0.25)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.35)] active:translate-y-[1px] transition-all duration-300 font-sans tracking-tight shrink-0 flex items-center justify-center gap-1 cursor-pointer"
               >
                 {t("properties.listProperty")}

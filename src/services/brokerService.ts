@@ -1,6 +1,7 @@
 import { db, auth } from '@/lib/firebase';
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { Broker, Agency } from '@/types';
+import { notificationService } from './notificationService';
 
 export const brokerService = {
   async getBroker(id: string): Promise<Broker | null> {
@@ -85,6 +86,32 @@ export const brokerService = {
         visibility,
         updatedAt: new Date().toISOString()
       });
+
+      // Fetch broker profile details to notify user
+      const brokerSnap = await getDoc(brokerRef);
+      if (brokerSnap.exists()) {
+        const brokerData = brokerSnap.data();
+        const userId = brokerData.userId;
+        const fullName = brokerData.fullName || 'Broker';
+
+        if (userId) {
+          if (status === 'approved') {
+            await notificationService.createNotification(
+              userId,
+              'Broker Verification Approved',
+              `Congratulations ${fullName}! Your professional broker application is approved. Your account has been upgraded to the Agent role.`,
+              'VERIFICATION'
+            );
+          } else if (status === 'rejected') {
+            await notificationService.createNotification(
+              userId,
+              'Broker Verification Declined',
+              `Hello ${fullName}. Your broker verification application was declined by structural checks. Please verify your legal certificate details and resubmit.`,
+              'VERIFICATION'
+            );
+          }
+        }
+      }
 
       // Update user role to 'agent' if approved (Safety: Never update logged-in user if they are the admin doing the approval)
       if (status === 'approved') {
@@ -205,6 +232,32 @@ export const brokerService = {
         visibility,
         updatedAt: new Date().toISOString()
       });
+
+      // Fetch agency details to notify owner
+      const agencySnap = await getDoc(agencyRef);
+      if (agencySnap.exists()) {
+        const agencyData = agencySnap.data();
+        const ownerId = agencyData.ownerId;
+        const agencyName = agencyData.agencyName || 'Agency';
+
+        if (ownerId) {
+          if (status === 'approved') {
+            await notificationService.createNotification(
+              ownerId,
+              'Agency License Approved',
+              `Congratulations! Your corporate agency registration for "${agencyName}" has been successfully approved.`,
+              'VERIFICATION'
+            );
+          } else if (status === 'rejected') {
+            await notificationService.createNotification(
+              ownerId,
+              'Agency Registration Declined',
+              `Hello. Your corporate registration request for "${agencyName}" was declined. Please verify your operational license details and resubmit.`,
+              'VERIFICATION'
+            );
+          }
+        }
+      }
 
       // Update user role to 'agency' if approved (Safety: Never update logged-in admin role)
       if (status === 'approved') {

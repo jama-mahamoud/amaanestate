@@ -13,9 +13,11 @@ import {
   writeBatch,
   setDoc,
   onSnapshot,
-  Timestamp
+  Timestamp,
+  getDoc
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
+import { notificationService } from './notificationService';
 import { 
   Listing, 
   Article, 
@@ -33,6 +35,7 @@ export interface ModerationStats {
   totalListings: number;
   totalArticles: number;
   totalInquiries: number;
+  totalUsers: number;
 }
 
 export type ApplicationStatus = 'pending' | 'reviewing' | 'active' | 'rejected' | 'suspended';
@@ -56,14 +59,16 @@ export const moderationService = {
         activeProsCount,
         totalListingsCount,
         totalArticlesCount,
-        totalInquiriesCount
+        totalInquiriesCount,
+        totalUsersCount
       ] = await Promise.all([
         getCountFromServer(query(listingsRef, where('status', 'in', ['pending', 'PENDING']))),
         getCountFromServer(query(proAppsRef, where('status', 'in', ['pending', 'pending_review']))),
         getCountFromServer(query(usersRef, where('role', '==', 'verified_professional'))),
         getCountFromServer(listingsRef),
         getCountFromServer(articlesRef),
-        getCountFromServer(inquiriesRef)
+        getCountFromServer(inquiriesRef),
+        getCountFromServer(usersRef)
       ]);
 
       return {
@@ -72,7 +77,8 @@ export const moderationService = {
         totalVerifiedProfessionals: activeProsCount.data().count,
         totalListings: totalListingsCount.data().count,
         totalArticles: totalArticlesCount.data().count,
-        totalInquiries: totalInquiriesCount.data().count
+        totalInquiries: totalInquiriesCount.data().count,
+        totalUsers: totalUsersCount.data().count
       };
     } catch (error) {
       console.error('Error fetching moderation stats:', error);
@@ -83,7 +89,8 @@ export const moderationService = {
         totalVerifiedProfessionals: 0,
         totalListings: 0,
         totalArticles: 0,
-        totalInquiries: 0
+        totalInquiries: 0,
+        totalUsers: 0
       };
     }
   },
@@ -186,6 +193,27 @@ export const moderationService = {
         verificationStatus: 'VERIFIED',
         updatedAt: serverTimestamp()
       });
+      await this.logAdminAction('LISTING_APPROVAL', id, 'Listing verified and made publicly searchable.');
+
+      try {
+        const listingSnap = await getDoc(listingRef);
+        if (listingSnap.exists()) {
+          const listingData = listingSnap.data();
+          const ownerId = listingData.ownerId;
+          const title = listingData.title || 'Property listing';
+          if (ownerId) {
+            await notificationService.createNotification(
+              ownerId,
+              'Listing Approved Successfully',
+              `Congratulations! Your property listing "${title}" has been approved by moderators and is now live.`,
+              'PROPERTY'
+            );
+          }
+        }
+      } catch (notifyErr) {
+        console.error('Error triggering approve listing notification:', notifyErr);
+      }
+
       return true;
     } catch (error) {
       console.error(`Error approving listing ${id}:`, error);
@@ -207,6 +235,27 @@ export const moderationService = {
         verificationStatus: 'REJECTED',
         updatedAt: serverTimestamp()
       });
+      await this.logAdminAction('LISTING_REJECTION', id, 'Listing suspended and marked as rejected.');
+
+      try {
+        const listingSnap = await getDoc(listingRef);
+        if (listingSnap.exists()) {
+          const listingData = listingSnap.data();
+          const ownerId = listingData.ownerId;
+          const title = listingData.title || 'Property listing';
+          if (ownerId) {
+            await notificationService.createNotification(
+              ownerId,
+              'Listing Verification Declined',
+              `Your property listing "${title}" was not approved. Please verify your legal certificate details and resubmit.`,
+              'PROPERTY'
+            );
+          }
+        }
+      } catch (notifyErr) {
+        console.error('Error triggering reject listing notification:', notifyErr);
+      }
+
       return true;
     } catch (error) {
       console.error(`Error rejecting listing ${id}:`, error);
@@ -225,6 +274,29 @@ export const moderationService = {
         isFeatured,
         updatedAt: serverTimestamp()
       });
+      await this.logAdminAction('LISTING_FEATURE_TOGGLE', id, `Updated feature status to: ${isFeatured}`);
+
+      if (isFeatured) {
+        try {
+          const listingSnap = await getDoc(listingRef);
+          if (listingSnap.exists()) {
+            const listingData = listingSnap.data();
+            const ownerId = listingData.ownerId;
+            const title = listingData.title || 'Property listing';
+            if (ownerId) {
+              await notificationService.createNotification(
+                ownerId,
+                'Listing Featured Successfully',
+                `Your property listing "${title}" is now successfully featured on AmaanEstate!`,
+                'PROPERTY'
+              );
+            }
+          }
+        } catch (notifyErr) {
+          console.error('Error triggering feature listing notification:', notifyErr);
+        }
+      }
+
       return true;
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
@@ -526,10 +598,189 @@ export const moderationService = {
         archived,
         updatedAt: serverTimestamp()
       });
+      // Log Action
+      await this.logAdminAction('INQUIRY_ARCHIVE', id, `Updated archive state to: ${archived}`);
       return true;
     } catch (error) {
       console.error(`Error updating message ${id}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `contactMessages/${id}`);
+      return false;
+    }
+  },
+
+  /**
+   * Log administrative governance actions for immutable audit trails
+   */
+  async logAdminAction(action: string, targetId: string, details: string) {
+    try {
+      const email = auth.currentUser?.email || 'System Moderator';
+      const uid = auth.currentUser?.uid || 'system';
+      const auditRef = doc(collection(db, 'auditLogs'));
+      
+      await setDoc(auditRef, {
+        action,
+        targetId,
+        details,
+        adminUser: email,
+        adminUid: uid,
+        timestamp: serverTimestamp()
+      });
+      
+      // Also write an active notification
+      await this.createSystemNotification(
+        'ADMIN_ACTION',
+        `Governance Action: ${action}`,
+        `Action executed on ID: ${targetId}. Details: ${details}`
+      );
+      
+      return true;
+    } catch (e) {
+      console.error("Failed to write audit log:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Retrieve active audit logs
+   */
+  async getAuditLogs() {
+    try {
+      const q = query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'), limit(50));
+      const s = await getDocs(q);
+      return s.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    } catch (e) {
+      console.warn("Audit log order-by timestamp might need index, falling back to simple query...");
+      try {
+        const s = await getDocs(collection(db, 'auditLogs'));
+        const list = s.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+        return list.reverse().slice(0, 50);
+      } catch (err) {
+        return [];
+      }
+    }
+  },
+
+  /**
+   * Create enterprise-level system system alert notification
+   */
+  async createSystemNotification(type: string, title: string, message: string) {
+    try {
+      const notifRef = doc(collection(db, 'adminNotifications'));
+      await setDoc(notifRef, {
+        type,
+        title,
+        message,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      console.error("Failed to write system notification:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Subscribe to Admin governance notifications Real-time
+   */
+  subscribeToNotifications(callback: (notifications: any[]) => void) {
+    const q = query(collection(db, 'adminNotifications'), orderBy('createdAt', 'desc'), limit(15));
+    return onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      callback(list);
+    }, () => {
+      // Fallback
+      getDocs(collection(db, 'adminNotifications')).then(s => {
+        const list = s.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+        callback(list.slice(0, 15));
+      }).catch(() => callback([]));
+    });
+  },
+
+  /**
+   * Dismiss notification
+   */
+  async dismissNotification(id: string) {
+    try {
+      await updateDoc(doc(db, 'adminNotifications', id), { read: true });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Advanced listing governance logic
+   */
+  async requestListingChanges(id: string, feedback: string) {
+    try {
+      const ref = doc(db, 'listings', id);
+      await updateDoc(ref, {
+        status: 'PENDING',
+        verificationStatus: 'REJECTED',
+        moderationComment: feedback,
+        updatedAt: serverTimestamp()
+      });
+      await this.logAdminAction('LISTING_REVISION_REQUESTED', id, `Feedback: ${feedback}`);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Assign exclusive agency verified credentials & corporate badge
+   */
+  async certifyAgency(agencyId: string, registryId: string) {
+    try {
+      const ref = doc(db, 'agencies', agencyId);
+      await updateDoc(ref, {
+        status: 'approved',
+        registryId: registryId,
+        trustBadge: 'Certified Premium Agency',
+        verifiedDate: serverTimestamp()
+      });
+      await this.logAdminAction('AGENCY_OFFICIAL_CERTIFICATION', agencyId, `Assigned Registry ID: ${registryId}`);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Assign broker score & trust rating
+   */
+  async assignTrustBadge(userId: string, badgeType: string) {
+    try {
+      const ref = doc(db, 'users', userId);
+      await updateDoc(ref, {
+        trustBadge: badgeType,
+        isVerified: true,
+        updatedAt: serverTimestamp()
+      });
+      await this.logAdminAction('BROKER_TRUST_UPGRADED', userId, `Badge: ${badgeType}`);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Update client inquiry response tracking details
+   */
+  async updateInquiryStatus(id: string, responseStatus: 'new' | 'contacted' | 'resolved' | 'follow_up', trackerNotes: string) {
+    try {
+      const ref = doc(db, 'contactMessages', id);
+      await updateDoc(ref, {
+        responseStatus,
+        trackerNotes,
+        lastResponsedBy: auth.currentUser?.email || 'Admin Moderator',
+        respondedAt: serverTimestamp()
+      });
+      await this.logAdminAction('INQUIRY_RESPONSE_UPDATED', id, `Status: ${responseStatus}, Notes: ${trackerNotes}`);
+      return true;
+    } catch (e) {
+      console.error(e);
       return false;
     }
   }

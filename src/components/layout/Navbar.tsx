@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import PremiumLogo from '../brand/PremiumLogo';
 import MegaMenu from './MegaMenu';
+import NotificationBell from './NotificationBell';
 
 const MobileAccordionItem = ({ title, sections, setMobileMenuOpen, isOpen, onToggle }: { title: string, sections: any[], setMobileMenuOpen: (v: boolean) => void, isOpen: boolean, onToggle: () => void }) => {
   const { t } = useSettings();
@@ -293,6 +294,8 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
             
+            {user && <NotificationBell />}
+            
             {user ? (
                <Link to="/dashboard" className="flex items-center gap-2 hover:text-luxury-gold transition-colors text-white/60 text-xs font-bold">
                  <User size={12} /> {t('Account')}
@@ -309,7 +312,8 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
+          {user && <NotificationBell />}
           <button 
             className="p-2 text-white/70 hover:text-white transition-colors" 
             onClick={toggleMobileMenu}

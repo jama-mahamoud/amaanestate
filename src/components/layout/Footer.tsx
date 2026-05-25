@@ -61,7 +61,7 @@ export default function Footer() {
               {t("footer.brandSlogan") || "Global Real Estate & Structural Verification Network"}
             </p>
             <p className="text-white/60 text-sm leading-relaxed max-w-md font-light">
-              {t("footer.brandDescription") || "Pioneering absolute transactional security and asset compliance. Establishing state-of-the-art cataloging, certified ownership validation, and luxury asset exchange systems across the Somali region."}
+              {t("footer.brandDescription") || "Pioneering absolute transactional security and asset compliance. Establishing state-of-the-art cataloging, certified ownership validation, and luxury asset exchange systems across East Africa."}
             </p>
           </div>
           
@@ -71,11 +71,11 @@ export default function Footer() {
                 {t("footer.ctaSub") || "Catalog Your Premium Asset"}
               </p>
               <h4 className="text-lg font-display text-white font-medium">
-                {t("footer.ctaTitle") || "Ready to reach Somaliland's premier buyers?"}
+                {t("footer.ctaTitle") || "Ready to reach East Africa's premier buyers?"}
               </h4>
             </div>
             <Link 
-              to="/property-listing"
+              to="/list-property"
               className="px-6 py-4 rounded-xl bg-luxury-gold text-black hover:bg-white text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl shadow-luxury-gold/10 animate-pulse-subtle"
             >
               {t("properties.listProperty") || "List Your Property"} 
