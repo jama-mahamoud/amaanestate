@@ -98,8 +98,8 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
             <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-black/30 opacity-85"></div>
             
             {/* Elegant glassmorphism badges over image */}
-            <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10">
-              <span className={`text-[9px] uppercase tracking-widest font-black px-3 py-1.5 backdrop-blur-md rounded-lg shadow-md border ${
+            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap gap-1 md:gap-1.5 z-10">
+              <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-black px-2 py-1 sm:px-3 sm:py-1.5 backdrop-blur-md rounded-lg shadow-md border ${
                 property.listingType === 'sale' 
                   ? 'bg-luxury-gold/95 border-luxury-gold/20 text-black' 
                   : 'bg-white/95 border-white/20 text-black'
@@ -108,15 +108,15 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
               </span>
               
               {property.isVerified && (
-                <span className="bg-emerald-500/80 hover:bg-emerald-500 backdrop-blur-md text-white border border-emerald-500/40 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold transition-all duration-300 shadow-md">
-                  <ShieldCheck size={11} className="text-emerald-200" />
+                <span className="bg-emerald-500/80 hover:bg-emerald-500 backdrop-blur-md text-white border border-emerald-500/40 flex items-center gap-1 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-[8px] sm:text-[9px] uppercase tracking-widest font-bold transition-all duration-300 shadow-md">
+                  <ShieldCheck size={10} className="text-emerald-200" />
                   <span>Verified</span>
                 </span>
               )}
               
               {property.legalChecked && property.listingType === 'sale' && (
-                <span className="bg-luxury-gold/15 backdrop-blur-md text-luxury-gold border border-luxury-gold/30 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold shadow-md">
-                  <ShieldCheck size={11} /> 
+                <span className="bg-luxury-gold/15 backdrop-blur-md text-luxury-gold border border-luxury-gold/30 flex items-center gap-1 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-[8px] sm:text-[9px] uppercase tracking-widest font-bold shadow-md">
+                  <ShieldCheck size={10} /> 
                   <span>Authenticated</span>
                 </span>
               )}
@@ -124,32 +124,32 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
           </div>
           
           {/* Property Details Content Area */}
-          <div className="p-6 md:p-7 flex-1 flex flex-col justify-between">
+          <div className="p-4.5 sm:p-5 md:p-6 lg:p-7 flex-1 flex flex-col justify-between">
             <div>
               {/* Category / Subtitle */}
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-luxury-gold font-bold text-[9px] uppercase tracking-[0.25em] font-sans">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-luxury-gold font-bold text-[8px] sm:text-[9px] uppercase tracking-[0.25em] font-sans">
                   {property.subcategory || (isVehicle ? 'Elite Automobile' : 'Premium Property')}
                 </span>
               </div>
               
               {/* Main Title heading */}
-              <h3 className="text-[17px] md:text-lg font-display font-medium text-white group-hover:text-luxury-gold leading-snug transition-colors line-clamp-1 mb-2">
+              <h3 className="text-[15px] sm:text-[17px] md:text-lg font-display font-medium text-white group-hover:text-luxury-gold leading-snug transition-colors line-clamp-1 mb-1.5">
                 {property.title}
               </h3>
 
               {/* Geo-location metadata block */}
-              <div className="flex items-center text-white/50 text-xs mb-5 font-sans">
-                <MapPin size={11} className="mr-1.5 text-luxury-gold/80" />
+              <div className="flex items-center text-white/50 text-[11px] sm:text-xs mb-3.5 font-sans">
+                <MapPin size={10} className="mr-1 text-luxury-gold/80" />
                 <span className="line-clamp-1 truncate font-light">{property.city}, {property.location}</span>
               </div>
 
               {/* Clean specification rows: replacing raw, messy emoji cells */}
               {isVehicle ? (
-                <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-white/60 mb-5 font-sans border-t border-white/5 pt-4">
+                <div className="flex flex-wrap items-center gap-y-1 gap-x-2.5 text-[11px] sm:text-xs text-white/60 mb-3.5 font-sans border-t border-white/5 pt-3">
                   {(property.year || property.metadata?.year) && (
-                    <span className="flex items-center gap-1.5">
-                      <Calendar size={13} className="text-luxury-gold/75" />
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} className="text-luxury-gold/75" />
                       <span className="font-light">{property.year || property.metadata?.year}</span>
                     </span>
                   )}
@@ -157,8 +157,8 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
                     <span className="text-white/10 select-none">•</span>
                   )}
                   {(property.mileage || property.metadata?.mileage) && (
-                    <span className="flex items-center gap-1.5">
-                      <Gauge size={13} className="text-luxury-gold/75" />
+                    <span className="flex items-center gap-1">
+                      <Gauge size={12} className="text-luxury-gold/75" />
                       <span className="font-light">{property.mileage || property.metadata?.mileage}</span>
                     </span>
                   )}
@@ -166,34 +166,34 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
                     <span className="text-white/10 select-none">•</span>
                   )}
                   {(property.fuelType || property.transmission || property.metadata?.fuelType) && (
-                    <span className="flex items-center gap-1.5">
-                      <Fuel size={13} className="text-luxury-gold/75" />
-                      <span className="font-light capitalize truncate max-w-[85px]">
+                    <span className="flex items-center gap-1">
+                      <Fuel size={12} className="text-luxury-gold/75" />
+                      <span className="font-light capitalize truncate max-w-[80px]">
                         {property.fuelType || property.transmission || property.metadata?.fuelType}
                       </span>
                     </span>
                   )}
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-white/60 mb-5 font-sans border-t border-white/5 pt-4">
+                <div className="flex flex-wrap items-center gap-y-1 gap-x-2.5 text-[11px] sm:text-xs text-white/60 mb-3.5 font-sans border-t border-white/5 pt-3">
                   {bedsVal && (
-                    <span className="flex items-center gap-1.5">
-                      <BedDouble size={14} className="text-luxury-gold/80" />
+                    <span className="flex items-center gap-1">
+                      <BedDouble size={13} className="text-luxury-gold/80" />
                       <span className="font-light">{bedsVal} {Number(bedsVal) > 1 ? 'Beds' : 'Bed'}</span>
                     </span>
                   )}
                   {bedsVal && bathsVal && <span className="text-white/10 select-none">•</span>}
                   {bathsVal && (
-                    <span className="flex items-center gap-1.5">
-                      <Bath size={14} className="text-luxury-gold/80" />
+                    <span className="flex items-center gap-1">
+                      <Bath size={13} className="text-luxury-gold/80" />
                       <span className="font-light">{bathsVal} {Number(bathsVal) > 1 ? 'Baths' : 'Bath'}</span>
                     </span>
                   )}
                   {(bedsVal || bathsVal) && sizeVal && <span className="text-white/10 select-none">•</span>}
                   {sizeVal && (
-                    <span className="flex items-center gap-1.5">
-                      <Square size={12} className="text-luxury-gold/80" />
-                      <span className="font-light font-mono text-[11px]">{sizeVal}</span>
+                    <span className="flex items-center gap-1">
+                      <Square size={11} className="text-luxury-gold/80" />
+                      <span className="font-light font-mono text-[10px]">{sizeVal}</span>
                     </span>
                   )}
                 </div>
@@ -201,17 +201,17 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
 
               {/* Luxury feature chips section */}
               {amenities.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-5">
+                <div className="flex flex-wrap gap-1 mb-3.5">
                   {amenities.slice(0, 3).map((amenity, idx) => (
                     <span 
                       key={idx} 
-                      className="text-[9px] uppercase tracking-wider font-semibold px-2.5 py-1 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 text-white/60 hover:text-white rounded-full transition-colors duration-200 select-none cursor-default"
+                      className="text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 text-white/60 hover:text-white rounded-full transition-colors duration-200 select-none cursor-default"
                     >
                       {amenity}
                     </span>
                   ))}
                   {amenities.length > 3 && (
-                    <span className="text-[9px] uppercase tracking-wider font-light px-2 py-1 text-white/40 select-none">
+                    <span className="text-[8px] sm:text-[9px] uppercase tracking-wider font-light px-1.5 py-0.5 text-white/40 select-none">
                       +{amenities.length - 3} more
                     </span>
                   )}
@@ -220,16 +220,16 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
             </div>
             
             {/* Elegant footer matching top tier sites */}
-            <div className="mt-2 pt-4 border-t border-white/5 flex items-center justify-between">
+            <div className="mt-1.5 pt-3 border-t border-white/5 flex items-center justify-between">
               <div>
-                <span className="text-[9px] uppercase tracking-widest font-bold text-white/30 block mb-0.5">ESTIMATED PRICE</span>
-                <p className="text-[15px] md:text-base font-semibold text-white group-hover:text-luxury-gold transition-colors duration-300">
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-widest font-bold text-white/30 block mb-0.5">ESTIMATED PRICE</span>
+                <p className="text-sm sm:text-base font-semibold text-white group-hover:text-luxury-gold transition-colors duration-300">
                   {displayPrice}
                 </p>
               </div>
               
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black group-hover:shadow-[0_4px_15px_rgba(197,160,89,0.3)] transition-all duration-300 scale-95 group-hover:scale-100">
-                <ArrowRight size={16} />
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black group-hover:shadow-[0_4px_15px_rgba(197,160,89,0.3)] transition-all duration-300 scale-95 group-hover:scale-100">
+                <ArrowRight size={14} />
               </div>
             </div>
           </div>

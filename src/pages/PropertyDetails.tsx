@@ -172,37 +172,37 @@ export default function PropertyDetails() {
       <div className="relative pt-24">
         {isAdmin && property && (
           <div className="container mx-auto px-4 mb-8">
-            <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 p-5 rounded-[2rem] flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold shrink-0">
-                   <ShieldCheck size={24} className="animate-pulse" />
+            <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 p-4 sm:p-5 rounded-[1.5rem] md:rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold shrink-0">
+                   <ShieldCheck size={20} className="animate-pulse" />
                 </div>
                 <div>
-                   <p className="text-[11px] font-black uppercase tracking-[0.2em] text-luxury-gold leading-none">Administrative Panel Override</p>
-                   <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1.5 font-bold">Unrestricted write access & registry controls</p>
+                   <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-luxury-gold leading-none">Administrative Panel Override</p>
+                   <p className="text-[8px] sm:text-[9px] text-white/30 uppercase tracking-widest mt-1.5 font-bold">Unrestricted write access & registry controls</p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 {/* Feature Toggle */}
                 <button 
                   onClick={handleToggleFeature}
-                  className={`flex items-center gap-2 px-5 h-11 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                  className={`flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-4 h-10 sm:h-11 rounded-xl border text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                     property.isFeatured 
                       ? 'bg-luxury-gold/20 border-luxury-gold text-luxury-gold' 
                       : 'bg-white/5 border-white/5 text-white/40 hover:text-white hover:border-white/25'
                   }`}
                 >
-                  <Sparkles size={12} fill={property.isFeatured ? 'currentColor' : 'none'} /> 
-                  <span>{property.isFeatured ? 'Featured Asset' : 'Mark Featured'}</span>
+                  <Sparkles size={11} fill={property.isFeatured ? 'currentColor' : 'none'} /> 
+                  <span>{property.isFeatured ? 'Featured' : 'Feature'}</span>
                 </button>
 
                 {/* Status Switcher */}
-                <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-xl px-4 h-11 text-[9px] uppercase font-black tracking-widest text-white/40">
+                <div className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 bg-white/5 border border-white/5 rounded-xl px-3 h-10 sm:h-11 text-[8px] sm:text-[9px] uppercase font-black tracking-widest text-white/40">
                   <span className="font-bold">STATUS:</span>
                   <select
                     value={property.status}
                     onChange={(e) => handleStatusChange(e.target.value as any)}
-                    className="bg-transparent border-0 text-white focus:outline-none cursor-pointer text-[9px] uppercase font-black tracking-widest"
+                    className="bg-transparent border-0 text-white focus:outline-none cursor-pointer text-[8px] sm:text-[9px] uppercase font-black tracking-widest"
                   >
                     <option value="pending" className="bg-luxury-black">PENDING</option>
                     <option value="active" className="bg-luxury-black">ACTIVE</option>
@@ -216,44 +216,44 @@ export default function PropertyDetails() {
                 {/* Edit Button */}
                 <Button 
                   onClick={() => navigate(`/list-property?edit=${property.id}`)}
-                  className="h-11 rounded-xl bg-luxury-gold hover:bg-white text-black font-black text-[9px] uppercase tracking-widest gap-2 px-6 shadow-lg shadow-luxury-gold/10"
+                  className="flex-1 sm:flex-initial h-10 sm:h-11 rounded-xl bg-luxury-gold hover:bg-white text-black font-black text-[8px] sm:text-[9px] uppercase tracking-widest gap-1.5 px-4 shadow-lg shadow-luxury-gold/10"
                 >
-                  <Edit3 size={12} /> Rewrite Listing
+                  <Edit3 size={11} /> Edit
                 </Button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="container mx-auto px-4 mb-5 flex justify-between items-center text-white/40 text-xs">
-          <Link to="/properties" className="flex items-center gap-2 hover:text-luxury-gold transition-colors font-bold tracking-widest uppercase">
-            <ArrowLeft size={14} /> BACK TO MARKETPLACE
+        <div className="container mx-auto px-4 mb-5 flex flex-wrap gap-4 justify-between items-center text-white/40 text-[11px] sm:text-xs">
+          <Link to="/properties" className="flex items-center gap-1.5 hover:text-luxury-gold transition-colors font-bold tracking-widest uppercase">
+            <ArrowLeft size={13} /> BACK TO MARKETPLACE
           </Link>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <button 
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
-                alert('Property portfolio link saved to clipboard!');
+                toast.success('Property portfolio link saved to clipboard!');
               }}
-              className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer font-semibold uppercase tracking-widest"
             >
-              <Share2 size={14} /> SHARE
+              <Share2 size={13} /> SHARE
             </button>
             <button 
               onClick={() => setFavorite(!favorite)}
-              className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer font-semibold uppercase tracking-widest"
             >
-              <Heart size={14} className={favorite ? 'fill-luxury-gold text-luxury-gold' : 'text-white/40'} /> 
+              <Heart size={13} className={favorite ? 'fill-luxury-gold text-luxury-gold' : 'text-white/40'} /> 
               <span>{favorite ? 'SAVED' : 'SAVE ASSET'}</span>
             </button>
           </div>
         </div>
 
         {/* Cinematic Grid Layout */}
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:min-h-[550px]">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-4 h-auto md:min-h-[500px]">
           <div 
             onClick={() => { setActivePhotoIndex(0); setIsGalleryOpen(true); }}
-            className="md:col-span-8 rounded-[2rem] overflow-hidden group aspect-[16/10] md:aspect-auto bg-white/5 cursor-pointer relative"
+            className="col-span-1 md:col-span-8 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group aspect-[16/10] md:aspect-auto bg-white/5 cursor-pointer relative"
           >
             <img 
               src={images[0]} 
@@ -261,11 +261,15 @@ export default function PropertyDetails() {
               alt={property.title} 
               loading="eager"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-end">
+            {/* Gallery badge for screens where the side column is collapsed */}
+            <div className="absolute top-4 right-4 z-10 md:hidden bg-black/75 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-luxury-gold">1 / {images.length} Photos</span>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 sm:p-6 flex items-end">
               <span className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Main Perspective</span>
             </div>
           </div>
-          <div className="md:col-span-4 flex flex-row md:flex-col gap-4">
+          <div className="hidden md:flex md:col-span-4 flex-col gap-4">
             <div 
               onClick={() => { setActivePhotoIndex(1); setIsGalleryOpen(true); }}
               className="flex-1 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group aspect-square md:aspect-auto cursor-pointer bg-white/5"
@@ -296,20 +300,20 @@ export default function PropertyDetails() {
       </div>
 
       {/* CORE INFO MATRIX */}
-      <div className="container mx-auto px-4 mt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <div className="container mx-auto px-4 mt-8 sm:mt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           
           {/* Main Info Columns */}
-          <div className="lg:col-span-8 space-y-16">
+          <div className="lg:col-span-8 space-y-10 sm:space-y-16">
             <div>
-              <div className="flex flex-wrap items-center gap-4 mb-6">
-                <Badge className={`uppercase text-[10px] tracking-[0.3em] font-bold px-6 py-2 border-0 rounded-full ${
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <Badge className={`uppercase text-[9px] sm:text-[10px] tracking-[0.25em] font-bold px-4 py-1.5 sm:px-6 sm:py-2 border-0 rounded-full ${
                   property.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black shadow-lg shadow-luxury-gold/20' : 'bg-white text-luxury-black'
                 }`}>
                   For {property.listingType}
                 </Badge>
-                <div className="bg-white/5 border border-white/5 text-luxury-gold uppercase text-[10px] tracking-[0.3em] px-6 py-2 rounded-full font-bold flex items-center gap-2">
-                  <Building size={12} />
+                <div className="bg-white/5 border border-white/5 text-luxury-gold uppercase text-[9px] sm:text-[10px] tracking-[0.25em] px-4 py-1.5 sm:px-6 sm:py-2 rounded-full font-bold flex items-center gap-1.5">
+                  <Building size={11} />
                   <span>{property.subcategory || property.category}</span>
                 </div>
                 {property.isVerified && (
@@ -317,9 +321,9 @@ export default function PropertyDetails() {
                     initial={{ scale: 0.9 }}
                     animate={{ scale: [0.9, 1.05, 1] }}
                     transition={{ repeat: Infinity, duration: 3, repeatType: "reverse" }}
-                    className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase text-[9px] tracking-[0.25em] px-5 py-2 rounded-full font-bold flex items-center gap-1.5"
+                    className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase text-[8px] sm:text-[9px] tracking-[0.25em] px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold flex items-center gap-1"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                     Verified Agent
                   </motion.div>
                 )}
@@ -328,76 +332,76 @@ export default function PropertyDetails() {
                     initial={{ scale: 0.9 }}
                     animate={{ scale: [0.9, 1.05, 1] }}
                     transition={{ repeat: Infinity, duration: 3, repeatType: "reverse", delay: 1 }}
-                    className="bg-[#C5A059]/10 border border-[#C5A059]/30 text-[#C5A059] uppercase text-[9px] tracking-[0.25em] px-5 py-2 rounded-full font-bold flex items-center gap-1.5"
+                    className="bg-[#C5A059]/10 border border-[#C5A059]/30 text-[#C5A059] uppercase text-[8px] sm:text-[9px] tracking-[0.25em] px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold flex items-center gap-1"
                   >
-                    <ShieldCheck size={12} />
-                    Legal Title Verified
+                    <ShieldCheck size={11} />
+                    Title Verified
                   </motion.div>
                 )}
               </div>
-              <h1 className="text-4xl md:text-7xl font-display font-medium text-white mb-6 tracking-tight leading-[1.05] md:leading-[1]">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-medium text-white mb-4 sm:mb-6 tracking-tight leading-[1.1] md:leading-[1]">
                 {property.title}
               </h1>
-              <div className="flex items-center text-white/50 text-base md:text-lg font-light">
-                <MapPin className="mr-3 text-luxury-gold animate-bounce" size={20} />
+              <div className="flex items-center text-white/50 text-sm sm:text-base font-light">
+                <MapPin className="mr-2 text-luxury-gold animate-bounce shrink-0" size={16} />
                 <span className="tracking-wide">{property.location}, {property.city}</span>
               </div>
             </div>
 
             {/* Core Blueprint Parameters */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-8 md:py-10 border-y border-white/5 bg-white/[0.01] px-6 rounded-2xl">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-6 sm:py-8 border-y border-white/5 bg-white/[0.01] px-4 sm:px-6 rounded-2xl">
               {[
-                { icon: <BedDouble size={24} />, label: 'Bedrooms', value: (property.beds !== undefined && property.beds !== null ? property.beds : 'Not Provided') + ' Rooms' },
-                { icon: <Bath size={24} />, label: 'Bathrooms', value: (property.baths !== undefined && property.baths !== null ? property.baths : 'Not Provided') + ' Baths' },
-                { icon: <Square size={24} />, label: 'Metric Area', value: property.size || 'Not Provided' },
-                { icon: <Calendar size={24} />, label: 'Compliance Year', value: property.complianceYear || 'Not provided' },
+                { icon: <BedDouble size={20} className="sm:size-[24px]" />, label: 'Bedrooms', value: (property.beds !== undefined && property.beds !== null ? property.beds : 'N/A') + ' Rooms' },
+                { icon: <Bath size={20} className="sm:size-[24px]" />, label: 'Bathrooms', value: (property.baths !== undefined && property.baths !== null ? property.baths : 'N/A') + ' Baths' },
+                { icon: <Square size={18} className="sm:size-[24px]" />, label: 'Metric Area', value: property.size || 'N/A' },
+                { icon: <Calendar size={20} className="sm:size-[24px]" />, label: 'Constructed', value: property.complianceYear || 'N/A' },
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center p-3 hover:bg-white/5 rounded-xl transition-all">
-                  <div className="text-luxury-gold/60 mb-2">{item.icon}</div>
-                  <p className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1 font-bold">{item.label}</p>
-                  <p className="text-white font-bold text-sm md:text-base tracking-tight">{item.value}</p>
+                <div key={i} className="flex flex-col items-center text-center p-2 sm:p-3 hover:bg-white/5 rounded-xl transition-all">
+                  <div className="text-luxury-gold/60 mb-1.5 sm:mb-2">{item.icon}</div>
+                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-white/30 mb-0.5 sm:mb-1 font-bold">{item.label}</p>
+                  <p className="text-white font-bold text-xs sm:text-sm md:text-base tracking-tight">{item.value}</p>
                 </div>
               ))}
             </div>
 
             {/* General Description */}
-            <div className="max-w-3xl space-y-4">
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
-                Executive Portfolio Summary <div className="h-px flex-1 bg-white/5 ml-8"></div>
+            <div className="max-w-3xl space-y-3 sm:space-y-4">
+              <h3 className="text-white text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.4em] mb-4 sm:mb-6 flex items-center">
+                Executive Portfolio Summary <div className="h-px flex-1 bg-white/5 ml-4 sm:ml-8"></div>
               </h3>
-              <p className="text-white/70 text-base md:text-lg leading-[1.8] font-light">
+              <p className="text-white/70 text-sm sm:text-base md:text-lg leading-[1.7] sm:leading-[1.8] font-light">
                 {property.description || 'No description provided.'}
               </p>
             </div>
 
             {/* Property Specifications Section */}
-            <div className="bg-white/[0.01] border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-4 flex items-center">
-                Property Specifications <div className="h-px flex-1 bg-white/5 ml-8"></div>
+            <div className="bg-white/[0.01] border border-white/5 rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+              <h3 className="text-white text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.4em] mb-2 sm:mb-4 flex items-center">
+                Property Specifications <div className="h-px flex-1 bg-white/5 ml-4 sm:ml-8"></div>
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Property Size</span>
-                  <span className="text-white font-semibold text-sm font-mono">{property.size || property.features?.size || 'Not Provided'}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wider font-bold">Property Size</span>
+                  <span className="text-white font-semibold text-xs sm:text-sm font-mono">{property.size || property.features?.size || 'Not Provided'}</span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Parking Spaces</span>
-                  <span className="text-white font-semibold text-sm">
+                <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wider font-bold">Parking Spaces</span>
+                  <span className="text-white font-semibold text-xs sm:text-sm">
                     {property.features?.parkingSpaces && Number(property.features?.parkingSpaces) > 0 
                       ? `${property.features.parkingSpaces} Spaces` 
-                      : (property.features?.parking ? 'Yes (1 Dedicated Space)' : 'No Dedicated Parking')}
+                      : (property.features?.parking ? 'Yes (1 Dedicated)' : 'No Dedicated Parking')}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Furnished Status</span>
-                  <span className="text-white font-semibold text-sm">
+                <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wider font-bold">Furnished Status</span>
+                  <span className="text-white font-semibold text-xs sm:text-sm">
                     {property.features?.furnished ? 'Fully Furnished' : 'Unfurnished'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                  <span className="text-white/40 text-xs uppercase tracking-wider font-bold">Year Constructed</span>
-                  <span className="text-white font-semibold text-sm">
+                <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                  <span className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wider font-bold">Year Constructed</span>
+                  <span className="text-white font-semibold text-xs sm:text-sm">
                     {property.complianceYear || property.features?.complianceYear || 'Not Specified'}
                   </span>
                 </div>
@@ -406,40 +410,40 @@ export default function PropertyDetails() {
 
             {/* Amenities Grid */}
             <div>
-              <h3 className="text-white text-[10px] uppercase font-bold tracking-[0.4em] mb-6 flex items-center">
-                Refined Property Amenities <div className="h-px flex-1 bg-white/5 ml-8"></div>
+              <h3 className="text-white text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.4em] mb-4 sm:mb-6 flex items-center">
+                Refined Property Amenities <div className="h-px flex-1 bg-white/5 ml-4 sm:ml-8"></div>
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
                 {[
-                  { key: 'wifi', label: 'WiFi', icon: <Wifi size={14} className="text-luxury-gold" />, value: !!property.features?.wifi },
-                  { key: 'water', label: 'Water Access', icon: <Droplet size={14} className="text-luxury-gold" />, value: !!(property.features?.waterAccess || property.features?.water) },
-                  { key: 'electricity', label: 'Electricity Nearby', icon: <Zap size={14} className="text-luxury-gold" />, value: !!(property.features?.electricityNearby || property.features?.electricity) },
-                  { key: 'security', label: 'Security System', icon: <Shield size={14} className="text-luxury-gold" />, value: !!(property.features?.securitySystem || property.features?.security) },
-                  { key: 'garage', label: 'Private Garage', icon: <Car size={14} className="text-luxury-gold" />, value: !!(property.features?.parking || property.features?.garage) },
-                  { key: 'balcony', label: 'Spacious Balcony', icon: <Building size={14} className="text-luxury-gold" />, value: !!property.features?.balcony },
-                  { key: 'garden', label: 'Private Garden', icon: <Sparkles size={14} className="text-luxury-gold" />, value: !!property.features?.garden },
-                  { key: 'airConditioning', label: 'Air Conditioning', icon: <Compass size={14} className="text-luxury-gold" />, value: !!property.features?.airConditioning },
+                  { key: 'wifi', label: 'WiFi', icon: <Wifi size={13} className="text-luxury-gold" />, value: !!property.features?.wifi },
+                  { key: 'water', label: 'Water Access', icon: <Droplet size={13} className="text-luxury-gold" />, value: !!(property.features?.waterAccess || property.features?.water) },
+                  { key: 'electricity', label: 'Electricity Nearby', icon: <Zap size={13} className="text-luxury-gold" />, value: !!(property.features?.electricityNearby || property.features?.electricity) },
+                  { key: 'security', label: 'Security System', icon: <Shield size={13} className="text-luxury-gold" />, value: !!(property.features?.securitySystem || property.features?.security) },
+                  { key: 'garage', label: 'Private Garage', icon: <Car size={13} className="text-luxury-gold" />, value: !!(property.features?.parking || property.features?.garage) },
+                  { key: 'balcony', label: 'Spacious Balcony', icon: <Building size={13} className="text-luxury-gold" />, value: !!property.features?.balcony },
+                  { key: 'garden', label: 'Private Garden', icon: <Sparkles size={13} className="text-luxury-gold" />, value: !!property.features?.garden },
+                  { key: 'airConditioning', label: 'Air Con', icon: <Compass size={13} className="text-luxury-gold" />, value: !!property.features?.airConditioning },
                 ].map((amenity, i) => (
                   <div 
                     key={i} 
-                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border transition-all ${
                       amenity.value 
                         ? 'bg-emerald-950/10 border-emerald-500/20 shadow-[0_4px_20px_rgba(16,185,129,0.05)]' 
                         : 'bg-white/5 border-white/5 opacity-40'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      amenity.value ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/30'
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      amenity.value ? 'bg-emerald-500/10 text-emerald-400 font-extrabold' : 'bg-white/5 text-white/30'
                     }`}>
-                      {amenity.value ? <Check size={14} className="text-emerald-400 font-bold" /> : amenity.icon}
+                      {amenity.value ? <Check size={13} className="text-emerald-400 font-bold" /> : amenity.icon}
                     </div>
-                    <div>
-                      <span className={`text-[11px] font-bold uppercase tracking-wider block ${
+                    <div className="min-w-0">
+                      <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block truncate ${
                         amenity.value ? 'text-white' : 'text-white/30'
                       }`}>
                         {amenity.label}
                       </span>
-                      <span className="text-[9px] uppercase tracking-widest text-white/35 font-bold">
+                      <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-white/35 font-bold">
                         {amenity.value ? 'Available' : 'Unavailable'}
                       </span>
                     </div>
@@ -517,46 +521,46 @@ export default function PropertyDetails() {
             </div>
 
             {/* INTERACTIVE FINANCIAL MORTGAGE PLANNER */}
-            <div className="bg-luxury-charcoal/40 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold">
-                  <Percent size={24} />
+            <div className="bg-luxury-charcoal/40 backdrop-blur-xl border border-white/10 p-5 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] space-y-6 sm:space-y-8">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-luxury-gold/10 flex items-center justify-center text-luxury-gold shrink-0">
+                  <Percent size={20} className="sm:size-[24px]" />
                 </div>
                 <div>
-                  <h4 className="text-white font-display font-bold text-xl">Intelligent Financing & Mortgage Calculator</h4>
-                  <p className="text-white/40 text-xs">Simulate monthly installments with prime Somali banking partners (Dahabshil Bank, Premier Bank)</p>
+                  <h4 className="text-white font-display font-bold text-lg sm:text-xl">Intelligent Financing & Mortgage Calculator</h4>
+                  <p className="text-white/40 text-[11px] sm:text-xs">Simulate monthly installments with prime Somali banking partners (Dahabshil Bank, Premier Bank)</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div>
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Down Payment ({property.currency || 'ETB'})</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-1.5 sm:mb-2">Down Payment ({property.currency || 'ETB'})</label>
                   <Input 
                     type="number"
                     placeholder={`e.g. ${(property.price * 0.2).toFixed(0)}`}
                     value={calcDownPayment}
                     onChange={(e) => setCalcDownPayment(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl text-white focus:border-luxury-gold/50"
+                    className="bg-white/5 border-white/10 h-11 sm:h-12 rounded-xl text-white focus:border-luxury-gold/50 text-xs sm:text-sm"
                   />
-                  <span className="text-[10px] text-white/30 mt-1 block">Default: 20% minimum</span>
+                  <span className="text-[9px] sm:text-[10px] text-white/30 mt-1 block">Default: 20% minimum</span>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Interest Rate (%)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-1.5 sm:mb-2">Interest Rate (%)</label>
                   <Input 
                     type="number"
                     step="0.1"
                     value={calcInterestRate}
                     onChange={(e) => setCalcInterestRate(Number(e.target.value))}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl text-white focus:border-luxury-gold/50"
+                    className="bg-white/5 border-white/10 h-11 sm:h-12 rounded-xl text-white focus:border-luxury-gold/50 text-xs sm:text-sm"
                   />
-                  <span className="text-[10px] text-white/30 mt-1 block">Somali diaspora rate index</span>
+                  <span className="text-[9px] sm:text-[10px] text-white/30 mt-1 block">Somali diaspora rate index</span>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-2">Duration (Years)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/50 block mb-1.5 sm:mb-2">Duration (Years)</label>
                   <select 
                     value={calcDuration} 
                     onChange={(e) => setCalcDuration(Number(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 h-12 rounded-xl px-4 text-white hover:border-luxury-gold/50 transition-colors cursor-pointer text-sm"
+                    className="w-full bg-[#141414] border border-white/10 h-11 sm:h-12 rounded-xl px-3 sm:px-4 text-white hover:border-luxury-gold/50 transition-colors cursor-pointer text-xs sm:text-sm"
                   >
                     {[5, 10, 15, 20, 25, 30].map(yr => (
                       <option key={yr} value={yr} className="bg-luxury-black">{yr} Years</option>
@@ -566,18 +570,18 @@ export default function PropertyDetails() {
               </div>
 
               {mortgageResult && (
-                <div className="pt-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left items-center bg-white/[0.02] p-6 rounded-2xl">
+                <div className="pt-5 sm:pt-6 border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center sm:text-left items-center bg-white/[0.02] p-4 sm:p-6 rounded-2xl">
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Financed Value</span>
-                    <p className="text-xl font-bold text-white tabular-nums">{formatPrice(mortgageResult.loanValue, property.currency)}</p>
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-0.5 sm:mb-1">Financed Value</span>
+                    <p className="text-lg sm:text-xl font-bold text-white tabular-nums">{formatPrice(mortgageResult.loanValue, property.currency)}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-1">Down Payment Simulated</span>
-                    <p className="text-xl font-bold text-emerald-400 tabular-nums">{formatPrice(mortgageResult.downPayment, property.currency)}</p>
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 block mb-0.5 sm:mb-1">Down Payment Simulated</span>
+                    <p className="text-lg sm:text-xl font-bold text-emerald-400 tabular-nums">{formatPrice(mortgageResult.downPayment, property.currency)}</p>
                   </div>
-                  <div className="bg-luxury-gold/10 p-4 rounded-xl border border-luxury-gold/30">
-                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold block mb-1">Monthly Installment Est.</span>
-                    <p className="text-2xl font-display font-bold text-luxury-gold tabular-nums">{formatPrice(mortgageResult.monthlyPayment, property.currency)}/mo</p>
+                  <div className="bg-luxury-gold/10 p-3 sm:p-4 rounded-xl border border-luxury-gold/30">
+                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-luxury-gold block mb-0.5 sm:mb-1">Monthly Installment Est.</span>
+                    <p className="text-xl sm:text-2xl font-display font-bold text-luxury-gold tabular-nums">{formatPrice(mortgageResult.monthlyPayment, property.currency)}/mo</p>
                   </div>
                 </div>
               )}
@@ -590,125 +594,125 @@ export default function PropertyDetails() {
             <div className="lg:sticky lg:top-32 space-y-8">
               
               {/* Luxury Concierge details */}
-              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-8">
+              <div className="bg-luxury-charcoal/60 backdrop-blur-2xl p-5 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl space-y-6 sm:space-y-8">
                 <div>
-                  <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-2">Portfolio Listing Value</p>
-                  <p className="text-4xl md:text-5xl font-display font-medium text-luxury-gold tabular-nums">
+                  <p className="text-white/40 text-[9px] sm:text-[10px] uppercase tracking-widest font-bold mb-1.5">Portfolio Listing Value</p>
+                  <p className="text-3xl sm:text-4xl md:text-5xl font-display font-medium text-luxury-gold tabular-nums">
                     {formatPrice(property.price, property.currency)}
                   </p>
                 </div>
 
-                <div className="space-y-6">
-                   <div className="flex items-center gap-4 pb-6 border-b border-white/10 relative">
-                      <div className="w-14 h-14 rounded-2xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold relative">
+                <div className="space-y-4 sm:space-y-6">
+                   <div className="flex items-center gap-3.5 pb-4 sm:pb-6 border-b border-white/10 relative">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold relative text-sm sm:text-base shrink-0">
                         AS
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
+                          <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h4 className="text-white font-bold text-sm">Amaan Certified Concierge</h4>
-                        <span className="text-luxury-gold text-[9px] font-bold tracking-widest uppercase">Verified Premier Agent</span>
-                        <div className="flex items-center gap-1.5 text-white/40 text-[10px] uppercase font-bold">
-                          <Clock size={12} className="text-emerald-400" />
+                      <div className="space-y-0.5 min-w-0">
+                        <h4 className="text-white font-bold text-xs sm:text-sm truncate">Amaan Certified Concierge</h4>
+                        <p className="text-luxury-gold text-[8px] sm:text-[9px] font-bold tracking-widest uppercase truncate">Verified Premier Agent</p>
+                        <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase font-bold">
+                          <Clock size={11} className="text-emerald-400 shrink-0" />
                           <span>Response: &lt; 10 Mins</span>
                         </div>
                       </div>
                    </div>
 
-                   <div className="space-y-3 pt-2">
-                     <Button asChild className="w-full bg-[#C5A059] text-black hover:bg-white hover:text-black hover:shadow-xl transition-all h-16 rounded-2xl font-bold cursor-pointer">
+                   <div className="space-y-2.5 pt-1">
+                     <Button asChild className="w-full bg-[#C5A059] text-black hover:bg-white hover:text-black hover:shadow-xl transition-all h-14 sm:h-16 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold cursor-pointer">
                        <a href={whatsAppInquiryUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                         <MessageSquare size={20} />
+                         <MessageSquare size={18} />
                          <span>WhatsApp Inquire</span>
                        </a>
                      </Button>
-                     <Button variant="outline" asChild className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-16 rounded-2xl font-bold cursor-pointer">
+                     <Button variant="outline" asChild className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-14 sm:h-16 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold cursor-pointer">
                        <a href={property.phone || property.features?.phone ? `tel:${property.phone || property.features?.phone}` : '#'} className="flex items-center justify-center gap-2">
-                         <Phone size={18} />
+                         <Phone size={16} />
                          <span>Direct Call Line</span>
                        </a>
                      </Button>
                    </div>
                 </div>
 
-                <div className="p-5 bg-white/[0.02] rounded-2xl flex gap-3.5 items-start border border-white/5">
-                  <Info size={16} className="text-luxury-gold shrink-0 border-0 mt-0.5" />
-                  <p className="text-white/50 text-[11px] leading-relaxed">
+                <div className="p-4 bg-white/[0.02] rounded-2xl flex gap-3.5 items-start border border-white/5">
+                  <Info size={15} className="text-luxury-gold shrink-0 border-0 mt-0.5" />
+                  <p className="text-white/50 text-[10px] sm:text-[11px] leading-relaxed">
                     Diaspora acquisitions are supported through our exclusive banking and power-of-attorney legal compliance frameworks.
                   </p>
                 </div>
               </div>
 
               {/* SCHEDULE VISIT CLIENT PANEL */}
-              <div className="p-8 border border-white/10 rounded-[2.5rem] bg-luxury-charcoal/30 backdrop-blur-md">
-                <h4 className="text-white font-display font-bold text-lg mb-2 flex items-center gap-2">
-                  <Calendar size={18} className="text-luxury-gold" />
+              <div className="p-5 sm:p-8 border border-white/10 rounded-[1.5rem] md:rounded-[2.5rem] bg-luxury-charcoal/30 backdrop-blur-md">
+                <h4 className="text-white font-display font-bold text-base sm:text-lg mb-1.5 flex items-center gap-2">
+                  <Calendar size={16} className="text-luxury-gold" />
                   Request Private Tour
                 </h4>
-                <p className="text-white/40 text-xs mb-6">Schedule on-site private viewing or HD virtual live video tour with a portfolio guide.</p>
+                <p className="text-white/40 text-[11px] sm:text-xs mb-4 sm:mb-6">Schedule on-site private viewing or HD virtual live video tour with a portfolio guide.</p>
                 
                 {scheduleStatus === 'success' ? (
                   <motion.div 
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-4"
+                    className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3 sm:space-y-4"
                   >
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
-                      <ShieldCheck size={24} />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
+                      <ShieldCheck size={20} className="sm:size-[24px]" />
                     </div>
                     <div>
-                      <h5 className="text-white font-bold text-sm">Tour Requested Successfully</h5>
-                      <p className="text-white/50 text-xs mt-1">Our certified manager will ping your WhatsApp in &lt; 10 mins to lock in security clearances.</p>
+                      <h5 className="text-white font-bold text-xs sm:text-sm">Tour Requested Successfully</h5>
+                      <p className="text-white/50 text-[10px] sm:text-xs mt-1">Our certified manager will ping your WhatsApp in &lt; 10 mins to lock in security clearances.</p>
                     </div>
                   </motion.div>
                 ) : (
-                  <form onSubmit={handleScheduleVisit} className="space-y-4">
+                  <form onSubmit={handleScheduleVisit} className="space-y-3.5">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Date</label>
+                        <label className="text-[8px] sm:text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Date</label>
                         <input 
                           type="date" 
                           required
                           value={visitingDate}
                           onChange={(e) => setVisitingDate(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs"
+                          className="w-full bg-[#141414] border border-white/10 rounded-xl h-10 sm:h-11 px-3 text-white text-[11px] sm:text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Time</label>
+                        <label className="text-[8px] sm:text-[9px] uppercase font-bold text-white/40 block mb-1">Pick Time</label>
                         <input 
                           type="time" 
                           required
                           value={visitingTime}
                           onChange={(e) => setVisitingTime(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs"
+                          className="w-full bg-[#141414] border border-white/10 rounded-xl h-10 sm:h-11 px-3 text-white text-[11px] sm:text-xs"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Your Full Name</label>
+                      <label className="text-[8px] sm:text-[9px] uppercase font-bold text-white/40 block mb-1">Your Full Name</label>
                       <input 
                         type="text" 
                         required
                         placeholder="e.g. Abdirahman Yusuf"
                         value={visitingName}
                         onChange={(e) => setVisitingName(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs placeholder:text-white/20"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl h-10 sm:h-11 px-3 text-white text-[11px] sm:text-xs placeholder:text-white/20"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] uppercase font-bold text-white/40 block mb-1">Direct Call/WhatsApp Phone</label>
+                      <label className="text-[8px] sm:text-[9px] uppercase font-bold text-white/40 block mb-1">Direct Call/WhatsApp Phone</label>
                       <input 
                         type="tel" 
                         required
                         placeholder="e.g. +251 9..."
                         value={visitingPhone}
                         onChange={(e) => setVisitingPhone(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl h-11 px-3 text-white text-xs placeholder:text-white/20"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl h-10 sm:h-11 px-3 text-white text-[11px] sm:text-xs placeholder:text-white/20"
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-white/5 border border-white/10 text-white hover:bg-luxury-gold hover:text-black hover:border-luxury-gold transition-colors font-bold uppercase tracking-widest text-[10px] h-12 rounded-xl cursor-pointer">
+                    <Button type="submit" className="w-full bg-white/5 border border-white/10 text-white hover:bg-luxury-gold hover:text-black hover:border-luxury-gold transition-colors font-bold uppercase tracking-widest text-[9px] sm:text-[10px] h-11 sm:h-12 rounded-xl cursor-pointer">
                       Lock Visitation Request
                     </Button>
                   </form>
