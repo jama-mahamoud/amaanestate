@@ -179,12 +179,36 @@ export interface Article {
   featuredImage?: string;
   gallery?: string[];
   tags?: string[];
+  
+  // Layout Controls
+  layoutType?: 'single' | 'two-column' | 'featured' | 'magazine';
+  sidebarPlacement?: 'left' | 'right' | 'none';
+  
+  // Design Controls
+  backgroundColor?: string;
+  cardStyle?: 'default' | 'glass' | 'plain' | 'premium';
+  borderRadius?: number;
+  shadowIntensity?: 'none' | 'soft' | 'heavy';
+  padding?: number;
+  
+  // SEO & Performance
   seoTitle?: string;
   seoDescription?: string;
+  focusKeyword?: string;
+  seoScore?: number;
+  socialImage?: string;
+  
+  // Advanced Settings
   authorId: string;
+  showAuthor?: boolean;
+  readingTime?: number;
+  publishSchedule?: any;
   isFeatured?: boolean;
   published: boolean;
   views: number;
+  priority?: number;
+  homepageSection?: string;
+  
   createdAt: any;
   updatedAt?: any;
 }
