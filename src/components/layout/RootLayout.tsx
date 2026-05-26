@@ -3,6 +3,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import { Toaster } from '@/components/ui/sonner';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
+import AIChatWidget from '../AIChatWidget';
 
 export default function RootLayout() {
   return (
@@ -14,6 +15,7 @@ export default function RootLayout() {
       <Footer />
       <Toaster position="top-center" richColors />
       <WhatsAppFloatingButton />
+      <AIChatWidget />
     </div>
   );
 }

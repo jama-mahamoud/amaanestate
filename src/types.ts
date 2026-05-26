@@ -74,6 +74,7 @@ export interface Property extends Listing {
     roadAccess?: boolean;
     fenced?: boolean;
     floorsCount?: number;
+    powerCapacity?: string;
     plotType?: string;
     terrain?: string;
     zoningType?: string;

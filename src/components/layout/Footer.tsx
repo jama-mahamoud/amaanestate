@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { 
   Facebook, Instagram, Linkedin, Send, MessageCircle, MapPin, Phone, Mail, 
-  ArrowUpRight
+  ArrowUpRight, Music2
 } from 'lucide-react';
 import PremiumLogo from '../brand/PremiumLogo';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -235,8 +235,9 @@ export default function Footer() {
 
           <div className="flex gap-3">
             {[
-              { Icon: Facebook, url: 'https://facebook.com/amaanestate', label: 'Facebook' },
+              { Icon: Facebook, url: 'https://web.facebook.com/profile.php?id=61560833697279', label: 'Facebook' },
               { Icon: Instagram, url: 'https://instagram.com/amaanestate', label: 'Instagram' },
+              { Icon: Music2, url: 'https://www.tiktok.com/@momentumforsuccesstv', label: 'TikTok' },
               { Icon: Linkedin, url: 'https://linkedin.com/company/amaanestate', label: 'LinkedIn' },
               { Icon: Send, url: 'https://t.me/amaanestate', label: 'Telegram' },
               { Icon: MessageCircle, url: 'https://wa.me/251910012794', label: 'WhatsApp' }

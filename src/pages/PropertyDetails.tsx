@@ -432,11 +432,23 @@ export default function PropertyDetails() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                  <span className="text-white/40 text-[10px] sm:text-xs uppercase tracking-wider font-bold">Year Constructed</span>
+                  <span className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold">Year Constructed</span>
                   <span className="text-white font-semibold text-xs sm:text-sm">
                     {property.complianceYear || property.features?.complianceYear || 'Not Specified'}
                   </span>
                 </div>
+                {property.features?.floorsCount !== undefined && (
+                  <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                    <span className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold">Total Floors</span>
+                    <span className="text-white font-semibold text-xs sm:text-sm font-mono">{property.features.floorsCount} Floors</span>
+                  </div>
+                )}
+                {property.features?.powerCapacity && (
+                  <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                    <span className="text-white/40 text-[10px] sm:text-[11px] uppercase tracking-wider font-bold">Power Capacity</span>
+                    <span className="text-white font-semibold text-xs sm:text-sm font-mono">{property.features.powerCapacity} KW/Amp</span>
+                  </div>
+                )}
               </div>
             </div>
 

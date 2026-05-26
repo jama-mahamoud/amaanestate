@@ -7,9 +7,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // Use initializeFirestore with settings to mitigate WebChannel connection issues in AI Studio preview
+const dbId = (firebaseConfig as any).firestoreDatabaseId;
+const finalDbId = (dbId && dbId !== '(default)' && dbId !== 'default') ? dbId : undefined;
+
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, (firebaseConfig as any).firestoreDatabaseId);
+}, finalDbId);
 
 export const googleProvider = new GoogleAuthProvider();
 
