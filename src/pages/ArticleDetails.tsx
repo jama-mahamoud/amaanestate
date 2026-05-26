@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Calendar, User, Clock, ArrowLeft, Share2, Facebook, Twitter, Linkedin, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback } from 'react';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
+import { toast } from 'sonner';
 
 import NotFoundState from '@/components/NotFoundState';
 
@@ -43,6 +44,11 @@ export default function ArticleDetails() {
     if (!dateValue || !dateValue.seconds) return 'Recently Published';
     return new Date(dateValue.seconds * 1000).toLocaleDateString();
   }, []);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Intelligence report link copied to clipboard');
+  };
 
   if (loading) return <div className="min-h-screen bg-luxury-black flex items-center justify-center text-white">Loading intelligence report...</div>;
 

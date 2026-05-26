@@ -5,7 +5,7 @@ import { useListings } from '@/hooks/useListings';
 import { Property } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 export default function DashboardFavorites() {
   const { listings, loading } = useListings({ limit: 8 });

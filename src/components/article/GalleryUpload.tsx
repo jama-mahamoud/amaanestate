@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Upload, X, Grid } from 'lucide-react';
 import { uploadFile } from '@/services/uploadService';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface GalleryUploadProps {
   value: string[];

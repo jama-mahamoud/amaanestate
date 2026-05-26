@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 import BrandLogo from '@/components/brand/BrandLogo';

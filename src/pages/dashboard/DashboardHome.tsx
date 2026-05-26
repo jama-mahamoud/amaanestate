@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, Car, Users, TrendingUp, ArrowUpRight, Clock, MapPin, Loader2, 
   Activity, Heart, Copy, Check, ShieldCheck, Sparkles, Bell, AlertCircle, Share2,

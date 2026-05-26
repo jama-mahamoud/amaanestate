@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { 
   MapPin, Gauge, Fuel, Calendar, Share2, 
   Heart, ArrowLeft, Phone, Mail, MessageSquare, 

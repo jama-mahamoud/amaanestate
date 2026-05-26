@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, MapPin, Bed, Bath, Ruler, Car, ShieldCheck, 
   ArrowLeft, ArrowRight, Loader2, CheckCircle2, DollarSign,

@@ -11,7 +11,7 @@ import Editor from './Editor';
 import ImageUpload from './ImageUpload';
 import GalleryUpload from './GalleryUpload';
 import TagsInput from './TagsInput';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, Save, Globe, Info, Layout, Palette, 
   Settings2, Share2, Sparkles, AlertCircle,

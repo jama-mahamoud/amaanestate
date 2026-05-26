@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import VehicleCard from '@/components/VehicleCard';
 import EmptyState from '@/components/EmptyState';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useListings } from '@/hooks/useListings';
 import { ListingCategory, ListingType, VehicleListing } from '@/types';
 

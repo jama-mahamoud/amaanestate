@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, Clock } from 'lucide-react';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';

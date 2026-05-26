@@ -1,14 +1,90 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Edit3, Trash2, Eye, Car, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { VehicleListing } from '@/types';
 import EmptyState from '@/components/EmptyState';
 import { formatPrice } from '@/lib/utils';
+
+interface VehicleActionsProps {
+  vehicle: VehicleListing;
+  user: any;
+  profile: any;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onView: (id: string) => void;
+}
+
+const VehicleActions = ({ vehicle, user, profile, onEdit, onDelete, onView }: VehicleActionsProps) => {
+  const currentUser = {
+    uid: user?.uid,
+    role: profile?.role
+  };
+  const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
+  const canEdit =
+    isUserAdmin ||
+    vehicle.ownerId === currentUser?.uid ||
+    vehicle.createdBy === currentUser?.uid;
+
+  if (canEdit) {
+    return (
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
+          onClick={() => onView(vehicle.id)}
+          title="View Vehicle"
+        >
+          <Eye size={14} />
+          <span>View</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+          onClick={() => onEdit(vehicle.id)}
+          title="Edit Vehicle"
+        >
+          <Edit3 size={14} />
+          <span>Edit</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+          onClick={() => onDelete(vehicle.id)}
+          title="Delete Vehicle"
+        >
+          <Trash2 size={14} />
+          <span>Delete</span>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-2 flex-wrap">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
+        onClick={() => onView(vehicle.id)}
+        title="View Vehicle"
+      >
+        <Eye size={14} />
+        <span>View</span>
+      </Button>
+      <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
+        Access Restricted
+      </span>
+    </div>
+  );
+};
 
 export default function DashboardVehicles() {
   const { user, profile } = useAuth();
@@ -16,8 +92,6 @@ export default function DashboardVehicles() {
   const [vehicles, setVehicles] = useState<VehicleListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleListing | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadUserVehicles = async () => {
@@ -50,10 +124,11 @@ export default function DashboardVehicles() {
     }
   };
 
-  const filteredVehicles = vehicles.filter(v => 
-    v.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    v.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredVehicles = useMemo(() => 
+    vehicles.filter(v => 
+      v.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      v.subcategory?.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [vehicles, searchQuery]);
 
   const displayPrice = (price: number, currency?: string) => {
     return formatPrice(price, currency);
@@ -143,63 +218,14 @@ export default function DashboardVehicles() {
                       <p className="text-lg font-display font-bold text-white tabular-nums">{displayPrice(vehicle.price, vehicle.currency)}</p>
                     </td>
                     <td className="p-8 text-right">
-                      <div className="flex items-center justify-end gap-2 flex-wrap">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
-                          onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                          title="View Vehicle"
-                        >
-                          <Eye size={14} />
-                          <span>View</span>
-                        </Button>
-                        
-                        {(() => {
-                          const currentUser = {
-                            uid: user?.uid,
-                            role: profile?.role
-                          };
-                          const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
-                          const canEdit =
-                            isUserAdmin ||
-                            vehicle.ownerId === currentUser?.uid ||
-                            vehicle.createdBy === currentUser?.uid;
-
-                          if (canEdit) {
-                            return (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => navigate(`/list-property?edit=${vehicle.id}`)}
-                                  title="Edit Vehicle"
-                                >
-                                  <Edit3 size={14} />
-                                  <span>Edit</span>
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => handleDelete(vehicle.id)}
-                                  title="Delete Vehicle"
-                                >
-                                  <Trash2 size={14} />
-                                  <span>Delete</span>
-                                </Button>
-                              </>
-                            );
-                          } else {
-                            return (
-                              <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
-                                Access Restricted
-                              </span>
-                            );
-                          }
-                        })()}
-                      </div>
+                      <VehicleActions 
+                        vehicle={vehicle}
+                        user={user}
+                        profile={profile}
+                        onView={(id) => navigate(`/vehicles/${id}`)}
+                        onEdit={(id) => navigate(`/list-property?edit=${id}`)}
+                        onDelete={handleDelete}
+                      />
                     </td>
                   </motion.tr>
                 ))}

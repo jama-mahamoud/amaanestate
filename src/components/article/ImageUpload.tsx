@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { uploadFile } from '@/services/uploadService';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ImageUploadProps {
   value: string;

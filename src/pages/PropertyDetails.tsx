@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { formatPrice } from '@/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
   Heart, Calendar, Check, ArrowLeft, Phone, 
@@ -99,6 +99,11 @@ export default function PropertyDetails() {
     ];
   }, [property]);
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Property portfolio link saved to clipboard!');
+  };
+
   // Handle Mortgage Calculators
   const mortgageResult = useMemo(() => {
     if (!property || typeof property.price !== 'number') return null;
@@ -168,11 +173,38 @@ export default function PropertyDetails() {
   return (
     <div className="min-h-screen bg-luxury-black pb-24">
       
-      {/* 1. GALLERY MEDIA CONTAINER */}
-      <div className="relative pt-24">
+      {/* Property Hero */}
+      <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <motion.img 
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.5 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            src={images[0]} 
+            className="w-full h-full object-cover" 
+            alt={property.title} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent"></div>
+        </div>
+        
+        <div className="container mx-auto px-6 relative z-10 text-center">
+            <Badge className="bg-luxury-gold text-luxury-black border-0 mb-6 px-6 py-2 uppercase tracking-[0.3em] font-black text-[10px] rounded-full shadow-lg shadow-luxury-gold/20">
+                {property.subcategory || property.category}
+            </Badge>
+            <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black text-white mb-6 uppercase tracking-tight leading-[0.9]">
+                {property.title}
+            </h1>
+            <p className="text-white/60 text-lg md:text-xl font-light mb-10 max-w-2xl mx-auto italic">
+              Located in {property.location}, {property.city}
+            </p>
+        </div>
+      </div>
+
+      {/* 1. GALLERY MEDIA CONTAINER - Adjusted Below Hero */}
+      <div className="container mx-auto px-4 -mt-32 relative z-30">
         {isAdmin && property && (
           <div className="container mx-auto px-4 mb-8">
-            <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 p-4 sm:p-5 rounded-[1.5rem] md:rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-[#C5A059]/10 border border-[#C5A059]/30 p-4 sm:p-5 rounded-[1.5rem] md:rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-3xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold shrink-0">
                    <ShieldCheck size={20} className="animate-pulse" />

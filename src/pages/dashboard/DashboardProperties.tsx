@@ -3,12 +3,77 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Edit3, Trash2, Eye, MapPin, Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { listingService } from '@/services/listingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Property } from '@/types';
 import EmptyState from '@/components/EmptyState';
 import { formatPrice } from '@/lib/utils';
+
+interface PropertyActionsProps {
+  property: Property;
+  user: any;
+  profile: any;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onView: (id: string) => void;
+}
+
+function PropertyActions({ property, user, profile, onEdit, onDelete, onView }: PropertyActionsProps) {
+  const currentUser = {
+    uid: user?.uid,
+    role: profile?.role
+  };
+  const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
+  const canEdit =
+    isUserAdmin ||
+    property.ownerId === currentUser?.uid ||
+    property.createdBy === currentUser?.uid;
+
+  return (
+    <div className="flex items-center justify-end gap-2 flex-wrap">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
+        onClick={() => onView(property.id)}
+        title="View Property"
+      >
+        <Eye size={14} />
+        <span>View</span>
+      </Button>
+      
+      {canEdit ? (
+        <>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+            onClick={() => onEdit(property.id)}
+            title="Edit Property"
+          >
+            <Edit3 size={14} />
+            <span>Edit</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
+            onClick={() => onDelete(property.id)}
+            title="Delete Property"
+          >
+            <Trash2 size={14} />
+            <span>Delete</span>
+          </Button>
+        </>
+      ) : (
+        <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
+          Access Restricted
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardProperties() {
   const { user, profile } = useAuth();
@@ -159,63 +224,14 @@ export default function DashboardProperties() {
                       <p className="text-lg font-display font-bold text-white tabular-nums">{displayPrice(property.price, property.currency)}</p>
                     </td>
                     <td className="p-8 text-right">
-                      <div className="flex items-center justify-end gap-2 flex-wrap">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-9 px-3 rounded-lg border border-white/10 text-[10px] uppercase font-bold tracking-wider hover:bg-white/10 gap-1.5 flex items-center text-white/80 hover:text-white"
-                          onClick={() => navigate(`/properties/${property.id}`)}
-                          title="View Property"
-                        >
-                          <Eye size={14} />
-                          <span>View</span>
-                        </Button>
-                        
-                        {(() => {
-                          const currentUser = {
-                            uid: user?.uid,
-                            role: profile?.role
-                          };
-                          const isUserAdmin = currentUser?.role?.toString().toLowerCase().trim() === 'admin';
-                          const canEdit =
-                            isUserAdmin ||
-                            property.ownerId === currentUser?.uid ||
-                            property.createdBy === currentUser?.uid;
-
-                          if (canEdit) {
-                            return (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-9 px-3 rounded-lg border border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10 text-luxury-gold text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => navigate(`/list-property?edit=${property.id}`)}
-                                  title="Edit Property"
-                                >
-                                  <Edit3 size={14} />
-                                  <span>Edit</span>
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-9 px-3 rounded-lg border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 text-[10px] uppercase font-bold tracking-wider gap-1.5 flex items-center"
-                                  onClick={() => handleDelete(property.id)}
-                                  title="Delete Property"
-                                >
-                                  <Trash2 size={14} />
-                                  <span>Delete</span>
-                                </Button>
-                              </>
-                            );
-                          } else {
-                            return (
-                              <span className="text-[10px] uppercase font-bold tracking-widest text-[#FF4444] bg-[#FF4444]/10 border border-[#FF4444]/20 px-3 py-1.5 rounded-lg">
-                                Access Restricted
-                              </span>
-                            );
-                          }
-                        })()}
-                      </div>
+                      <PropertyActions 
+                        property={property}
+                        user={user}
+                        profile={profile}
+                        onView={(id) => navigate(`/properties/${id}`)}
+                        onEdit={(id) => navigate(`/list-property?edit=${id}`)}
+                        onDelete={handleDelete}
+                      />
                     </td>
                   </motion.tr>
                 ))}

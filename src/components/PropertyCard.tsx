@@ -13,7 +13,7 @@ import {
   Car, 
   Settings 
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { formatPrice } from '@/lib/utils';
 import { usePropertyModal } from '@/contexts/PropertyModalContext';
 import React, { memo } from 'react';

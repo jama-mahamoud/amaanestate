@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Edit3, Trash2, Eye, FileText, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
 import { Link, useNavigate } from 'react-router-dom';

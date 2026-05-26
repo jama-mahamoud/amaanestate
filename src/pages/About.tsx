@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Shield, Target, Users, MapPin, Award, History } from 'lucide-react';
 
 export default function About() {

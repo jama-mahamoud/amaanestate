@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Search, PackageOpen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

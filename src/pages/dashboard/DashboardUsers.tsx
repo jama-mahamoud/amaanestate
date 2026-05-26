@@ -2,7 +2,7 @@ import { Plus, Search, Filter, Edit3, Trash2, ShieldCheck, User, Mail, ShieldAle
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { userService } from '@/services/userService';
 import { UserProfile } from '@/types';
 import EmptyState from '@/components/EmptyState';

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Gauge, Fuel, Calendar, ArrowRight, MapPin } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { VehicleListing } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import React, { memo } from 'react';

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ShieldCheck, MapPin, ArrowUpRight, CheckCircle2, MessageCircle, Building2, Home as HomeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';

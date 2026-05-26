@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { User, Shield, BadgeCheck, Bell, Save, Mail, Map, Calendar, Loader2, Building2, Eye, EyeOff, FileText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { brokerService } from '@/services/brokerService';
 import { userService } from '@/services/userService';
 import { db } from '@/lib/firebase';
