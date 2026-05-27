@@ -1,5 +1,5 @@
 export type ListingCategory = 'property' | 'rental' | 'land' | 'vehicle';
-export type ListingStatus = 'DRAFT' | 'PENDING' | 'VERIFIED' | 'ACTIVE' | 'SUSPENDED';
+export type ListingStatus = 'DRAFT' | 'PENDING' | 'VERIFIED' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED' | 'DELETED' | 'ARCHIVED';
 export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
 export type ListingType = 'sale' | 'rent';
 

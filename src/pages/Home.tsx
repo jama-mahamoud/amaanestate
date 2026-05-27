@@ -88,15 +88,22 @@ export default function Home() {
 
   // Separate properties and vehicles based on category
   const { visibleProperties, vehicles } = useMemo(() => {
-    const propertiesList = allListings.filter(item => item.category === "property");
+    const propertiesList = allListings.filter(item => item.category === "property" || item.category === "land");
     const vehiclesList = allListings.filter(item => item.category === "vehicle");
     
     // Visibility and basic validation filters
     const visible = propertiesList.filter(
       item =>
-        (item.status === "ACTIVE" || (item as any).visibility === "public" || (item as any).approved === true)
+        (item.status === "ACTIVE" || item.status === "VERIFIED" || (item as any).visibility === "public" || (item as any).approved === true)
     );
     
+    console.log('[DEBUG] Fetched total allListings:', allListings.length);
+    console.log('[DEBUG] Classified as properties/land:', propertiesList.length);
+    console.log('[DEBUG] Filtered visible properties/land:', visible.length);
+    
+    const landListings = visible.filter(item => item.category === 'land');
+    console.log('[DEBUG] Visible land listings:', landListings);
+
     return { visibleProperties: visible, vehicles: vehiclesList };
   }, [allListings]);
 
@@ -134,7 +141,7 @@ export default function Home() {
 
   // Filter matched properties dynamically
   const allProperties = useMemo(() => {
-    return visibleProperties.filter(item => {
+    const result = visibleProperties.filter(item => {
       if (filterSubcategory) {
         const itemSub = (item.subcategory || '').toLowerCase().trim();
         const querySub = filterSubcategory.toLowerCase().trim();
@@ -160,6 +167,9 @@ export default function Home() {
 
       return true;
     });
+    
+    console.log('[DEBUG] Rendered total properties/land after UI filters:', result.length);
+    return result;
   }, [visibleProperties, filterSubcategory, filterCity, filterStatus]);
 
   const ITEMS_PER_PAGE = 8;
@@ -359,12 +369,12 @@ export default function Home() {
             
             <div className="flex items-center gap-4">
               <span className="text-[11px] font-bold text-[#C5A059] uppercase tracking-widest bg-[#C5A059]/5 border border-[#C5A059]/20 px-4 py-2 rounded-xl">
-                {vehicles.filter(v => v.status === 'ACTIVE' || (v as any).visibility === 'public').length} SHIELD-VERIFIED FLEET
+                {vehicles.filter(v => v.status === 'ACTIVE' || v.status === 'VERIFIED' || (v as any).visibility === 'public').length} SHIELD-VERIFIED FLEET
               </span>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {vehicles.filter(v => v.status === 'ACTIVE' || (v as any).visibility === 'public').slice(0, 4).map(vehicle => (
+            {vehicles.filter(v => v.status === 'ACTIVE' || v.status === 'VERIFIED' || (v as any).visibility === 'public').slice(0, 4).map(vehicle => (
               <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
             ))}
           </div>

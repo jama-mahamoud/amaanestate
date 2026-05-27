@@ -127,7 +127,7 @@ export default function AgentDetails() {
   );
 
   // Divide properties / vehicles
-  const propertiesList = useMemo(() => agentListings.filter(l => l.category === 'property'), [agentListings]);
+  const propertiesList = useMemo(() => agentListings.filter(l => l.category === 'property' || l.category === 'land'), [agentListings]);
   const vehiclesList = useMemo(() => agentListings.filter(l => l.category === 'vehicle'), [agentListings]);
 
   // Load broker profiles

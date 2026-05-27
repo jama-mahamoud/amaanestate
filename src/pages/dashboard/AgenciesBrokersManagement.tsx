@@ -103,7 +103,7 @@ export default function AgenciesBrokersManagement() {
       const oid = l.ownerId;
       if (!agencyCounts[oid]) agencyCounts[oid] = { total: 0, property: 0, vehicle: 0 };
       agencyCounts[oid].total++;
-      if (l.category === 'property') agencyCounts[oid].property++;
+      if (l.category === 'property' || l.category === 'land') agencyCounts[oid].property++;
       if (l.category === 'vehicle') agencyCounts[oid].vehicle++;
 
       if (l.associatedBrokerId) {

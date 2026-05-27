@@ -147,7 +147,7 @@ export default function AgentsList() {
       const oid = l.ownerId;
       if (!counts[oid]) counts[oid] = { total: 0, properties: 0, vehicles: 0 };
       counts[oid].total++;
-      if (l.category === 'property') counts[oid].properties++;
+      if (l.category === 'property' || l.category === 'land') counts[oid].properties++;
       if (l.category === 'vehicle') counts[oid].vehicles++;
     });
     return counts;
@@ -196,7 +196,7 @@ export default function AgentsList() {
       const matchCity = selectedCity === 'All' || (broker.city || '').toLowerCase() === selectedCity.toLowerCase();
       
       const matchType = selectedPropType === 'All' || 
-                        (selectedPropType === 'property' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'property')) ||
+                        (selectedPropType === 'property' && listings.some(l => l.associatedBrokerId === broker.id && (l.category === 'property' || l.category === 'land'))) ||
                         (selectedPropType === 'vehicle' && listings.some(l => l.associatedBrokerId === broker.id && l.category === 'vehicle'));
 
       const isNotBanned = broker.status !== 'rejected' && broker.status !== 'suspended' && (broker as any).status !== 'SUSPENDED';

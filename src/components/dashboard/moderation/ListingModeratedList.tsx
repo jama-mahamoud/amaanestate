@@ -32,7 +32,7 @@ import { Listing, ListingStatus } from '@/types';
 import { moderationService } from '@/services/moderationService';
 import { toast } from 'sonner';
 
-type ModerationStatusFilter = 'PENDING' | 'ACTIVE' | 'SUSPENDED';
+type ModerationStatusFilter = 'PENDING' | 'VERIFIED' | 'ACTIVE' | 'REJECTED' | 'DELETED' | 'ARCHIVED';
 
 export default function ListingModeratedList() {
   const navigate = useNavigate();
@@ -77,25 +77,14 @@ export default function ListingModeratedList() {
     return () => unsubscribe();
   }, [statusFilter, refreshKey]);
 
-  // Actions
-  const handleApprove = async (id: string) => {
+  // Universal status controller
+  const handleUpdateStatus = async (id: string, newStatus: string, successMessage: string) => {
     setActioningId(id);
-    const success = await moderationService.approveListing(id);
+    const success = await moderationService.updateListingStatus(id, newStatus);
     if (success) {
-      toast.success('Listing approved & certified successfully.');
+      toast.success(successMessage);
     } else {
       toast.error('Failed to update listing status.');
-    }
-    setActioningId(null);
-  };
-
-  const handleReject = async (id: string) => {
-    setActioningId(id);
-    const success = await moderationService.rejectListing(id);
-    if (success) {
-      toast.success('Listing has been rejected and moved to Suspended archive.');
-    } else {
-      toast.error('Failed to reject the listing.');
     }
     setActioningId(null);
   };
@@ -111,23 +100,12 @@ export default function ListingModeratedList() {
     setActioningId(null);
   };
 
-  const handleSuspend = async (id: string) => {
-    setActioningId(id);
-    const success = await moderationService.suspendItem('listings', id);
-    if (success) {
-      toast.success('Asset suspended successfully.');
-    } else {
-      toast.error('Failed to suspend the catalog asset.');
-    }
-    setActioningId(null);
-  };
-
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete listing permanently from databases? This is irreversible.')) return;
+    if (!window.confirm('Erase this listing document permanently from secure database store? This is completely irreversible.')) return;
     setActioningId(id);
     const success = await moderationService.deleteDocument('listings', id);
     if (success) {
-      toast.success('Document deleted permanently from our secure archives.');
+      toast.success('Document deleted permanently from secure archives.');
     } else {
       toast.error('Failed to delete listing.');
     }
@@ -228,21 +206,21 @@ export default function ListingModeratedList() {
     <div className="space-y-6">
       {/* Tab select bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-        <div className="flex gap-2">
-          {(['PENDING', 'ACTIVE', 'SUSPENDED'] as const).map((s) => (
+        <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 max-w-full">
+          {(['PENDING', 'VERIFIED', 'ACTIVE', 'REJECTED', 'DELETED', 'ARCHIVED'] as const).map((s) => (
             <button
               key={s}
               onClick={() => {
                 setStatusFilter(s);
                 setSearchQuery('');
               }}
-              className={`px-5 py-2.5 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all ${
+              className={`px-4 py-2 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all whitespace-nowrap ${
                 statusFilter === s 
-                ? 'bg-[#C5A059] text-black shadow-lg shadow-[#C5A059]/10' 
+                ? 'bg-[#C5A059] text-black shadow-lg shadow-[#C5A059]/15' 
                 : 'bg-white/5 border border-white/5 text-white/50 hover:bg-white/10 hover:text-white'
               }`}
             >
-              {s === 'PENDING' ? 'Pending Reviews' : s === 'ACTIVE' ? 'Active Listings' : 'Suspended Archive'}
+              {s === 'PENDING' ? 'Pending Reviews' : s === 'VERIFIED' ? 'Approved' : s === 'ACTIVE' ? 'Active' : s === 'REJECTED' ? 'Rejected' : s === 'DELETED' ? 'Deleted' : 'Archived'}
             </button>
           ))}
         </div>
@@ -280,9 +258,9 @@ export default function ListingModeratedList() {
             className="w-full h-11 bg-white/5 border border-white/5 rounded-xl px-4 text-xs font-semibold text-white/80 focus:outline-none focus:border-[#C5A059]/40 transition-colors"
           >
             <option value="ALL">All Categories</option>
-            {availableCategories.map(cat => (
-              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-            ))}
+            <option value="property">Houses & Apartments</option>
+            <option value="land">Land & Plots</option>
+            <option value="vehicle">Vehicles</option>
           </select>
         </div>
 
@@ -427,22 +405,40 @@ export default function ListingModeratedList() {
                               ACTIVE
                             </span>
                           )}
+                          {listing.status === 'VERIFIED' && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                              APPROVED / VERIFIED
+                            </span>
+                          )}
                           {listing.status === 'PENDING' && !hasChangesRequested && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-amber-500/15 text-amber-400 border border-amber-500/25">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
                               PENDING REVIEW
                             </span>
                           )}
-                          {hasChangesRequested && (
+                          {(listing.status === 'REJECTED' || hasChangesRequested) && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-orange-500/15 text-orange-400 border border-orange-500/25">
                               <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-                              REVISIONS REQ
+                              REJECTED
                             </span>
                           )}
                           {listing.status === 'SUSPENDED' && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-zinc-500/15 text-zinc-400 border border-zinc-500/25">
+                              <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full"></span>
+                              DEACTIVATED
+                            </span>
+                          )}
+                          {listing.status === 'DELETED' && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-rose-500/15 text-rose-400 border border-rose-500/25">
-                              <span className="w-1.5 h-1.5 bg-rose-400 rounded-full"></span>
-                              SUSPENDED
+                              <span className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-pulse"></span>
+                              DELETED
+                            </span>
+                          )}
+                          {listing.status === 'ARCHIVED' && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-widest bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                              ARCHIVED
                             </span>
                           )}
                         </div>
@@ -450,7 +446,7 @@ export default function ListingModeratedList() {
 
                       {/* Actions col */}
                       <td className="py-5 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2.5">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
                           {/* Inspect Link */}
                           <a 
                             href={listing.category === 'vehicle' ? `/vehicles/${listing.id}` : `/properties/${listing.id}`} 
@@ -471,73 +467,242 @@ export default function ListingModeratedList() {
                             <Edit3 size={14} />
                           </button>
 
-                          {/* Featured toggle */}
-                          <button
-                            onClick={() => handleToggleFeature(listing.id, !!listing.isFeatured)}
-                            className={`p-2 border rounded-xl transition-all ${
-                              listing.isFeatured 
-                              ? 'bg-[#C5A059]/10 border-[#C5A059] text-[#C5A059]' 
-                              : 'bg-white/5 border-white/5 text-white/30 hover:text-[#C5A059]'
-                            }`}
-                            title="Toggle Premium Feature Badge"
-                          >
-                            <Star size={14} fill={listing.isFeatured ? 'currentColor' : 'none'} />
-                          </button>
-
-                          {/* Request Changes button */}
-                          {listing.status === 'PENDING' && (
+                          {/* Featured toggle for Approved or Active listings */}
+                          {(listing.status === 'VERIFIED' || listing.status === 'ACTIVE') && (
                             <button
-                              onClick={() => setFeedbackListing(listing)}
-                              className="px-3 py-1.5 bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
-                              title="Request specific data change"
+                              onClick={() => handleToggleFeature(listing.id, !!listing.isFeatured)}
+                              className={`p-2 border rounded-xl transition-all ${
+                                listing.isFeatured 
+                                ? 'bg-[#C5A059]/10 border-[#C5A059] text-[#C5A059]' 
+                                : 'bg-white/5 border-white/5 text-white/30 hover:text-[#C5A059]'
+                              }`}
+                              title="Toggle Premium Feature Badge"
                             >
-                              Request Change
+                              <Star size={14} fill={listing.isFeatured ? 'currentColor' : 'none'} />
                             </button>
                           )}
 
-                          {/* Approve Action */}
+                          {/* Phase-specific actions */}
+                          
+                          {/* 1. Pending Phase */}
                           {listing.status === 'PENDING' && (
-                            <button
-                              disabled={actioningId === listing.id}
-                              onClick={() => handleApprove(listing.id)}
-                              className="px-3.5 py-1.5 bg-emerald-500 text-black hover:bg-white rounded-xl text-[9px] uppercase font-black tracking-widest transition-all shadow-md shadow-emerald-500/10"
-                            >
-                              Approve
-                            </button>
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'VERIFIED', 'Listing approved & certified successfully.')}
+                                className="px-3 py-1.5 bg-emerald-500 text-black hover:bg-white rounded-xl text-[9px] uppercase font-black tracking-widest transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => setFeedbackListing(listing)}
+                                className="px-3 py-1.5 bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                                title="Request specific data change"
+                              >
+                                Feedback
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'REJECTED', 'Listing marked as rejected.')}
+                                className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Reject
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing moved to Deleted archive.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-500/80 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
 
-                          {/* Suspend or Trash */}
+                          {/* 2. Approved Phase (VERIFIED) */}
+                          {listing.status === 'VERIFIED' && (
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'ACTIVE', 'Listing is now publicly active.')}
+                                className="px-3 py-1.5 bg-[#C5A059] text-black hover:bg-white rounded-xl text-[9px] uppercase font-black tracking-widest transition-all"
+                              >
+                                Activate
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'SUSPENDED', 'Listing deactivated.')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Deactivate
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'REJECTED', 'Listing marked as rejected.')}
+                                className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Reject
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'ARCHIVED', 'Listing archived.')}
+                                className="px-3 py-1.5 bg-purple-500/15 border border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Archive
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing moved to Deleted archive.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-500/80 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+
+                          {/* 3. Active Phase */}
                           {listing.status === 'ACTIVE' && (
-                            <button
-                              disabled={actioningId === listing.id}
-                              onClick={() => handleSuspend(listing.id)}
-                              className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all"
-                              title="Suspend and Hide listing"
-                            >
-                              <EyeOff size={14} />
-                            </button>
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'SUSPENDED', 'Listing suspended.')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                                title="Deactivate listing"
+                              >
+                                Deactivate
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'ARCHIVED', 'Listing archived.')}
+                                className="px-3 py-1.5 bg-purple-500/15 border border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Archive
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing soft-deleted.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
 
-                          {/* Restore action */}
+                          {/* 4. Suspended Phase */}
                           {listing.status === 'SUSPENDED' && (
-                            <button
-                              disabled={actioningId === listing.id}
-                              onClick={() => handleApprove(listing.id)}
-                              className="px-3 py-1.5 bg-[#C5A059]/20 border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#C5A059] hover:text-black rounded-xl text-[9px] uppercase font-bold tracking-widest"
-                            >
-                              Restore Active
-                            </button>
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'VERIFIED', 'Approved')}
+                                className="px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'ACTIVE', 'Activated')}
+                                className="px-3 py-1.5 bg-[#C5A059]/20 border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#C5A059] hover:text-black rounded-xl text-[9px] uppercase font-bold tracking-widest"
+                              >
+                                Activate
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'PENDING', 'Pending')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Rest. Pending
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing soft-deleted.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
 
-                          {/* Expunge / Permanent Delete */}
-                          <button
-                            disabled={actioningId === listing.id}
-                            onClick={() => handleDelete(listing.id)}
-                            className="p-2 bg-red-950/20 border border-red-500/10 text-red-500/40 hover:text-red-500 hover:border-red-500/30 rounded-xl transition-all"
-                            title="Critically Erase Permanent Source document"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {/* 5. Rejected Phase */}
+                          {listing.status === 'REJECTED' && (
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'VERIFIED', 'Approved')}
+                                className="px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'PENDING', 'Pending')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Rest. Pending
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing soft-deleted.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+
+                          {/* 6. Deleted Phase */}
+                          {listing.status === 'DELETED' && (
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'PENDING', 'Pending')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Rest. Pending
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleDelete(listing.id)}
+                                className="p-2 bg-red-950/20 border border-red-500/10 text-red-500/40 hover:text-red-500 hover:border-red-500/30 rounded-xl transition-all"
+                                title="Erase Documents Permanently"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+
+                          {/* 7. Archived Phase */}
+                          {listing.status === 'ARCHIVED' && (
+                            <>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'VERIFIED', 'Approved')}
+                                className="px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'ACTIVE', 'Activated')}
+                                className="px-3 py-1.5 bg-[#C5A059]/20 border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#C5A059] hover:text-black rounded-xl text-[9px] uppercase font-bold tracking-widest"
+                              >
+                                Activate
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'PENDING', 'Pending')}
+                                className="px-3 py-1.5 bg-zinc-500/15 border border-zinc-500/20 text-zinc-400 hover:bg-zinc-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Rest. Pending
+                              </button>
+                              <button
+                                disabled={actioningId === listing.id}
+                                onClick={() => handleUpdateStatus(listing.id, 'DELETED', 'Listing soft-deleted.')}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-[9px] uppercase font-bold tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

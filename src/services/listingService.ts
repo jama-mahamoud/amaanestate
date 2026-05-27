@@ -93,14 +93,18 @@ export const listingService = {
 
     // Default to active listings if no status is specified
     if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
-       filterConstraints.push(where('status', 'in', ['active', 'approved', 'ACTIVE']));
+       filterConstraints.push(where('status', 'in', ['active', 'approved', 'ACTIVE', 'VERIFIED']));
     } else if (filters.status) {
        const statusOptions = Array.from(new Set([filters.status, filters.status.toLowerCase(), filters.status.toUpperCase()]));
        filterConstraints.push(where('status', 'in', statusOptions));
     }
 
     if (filters.category) {
-      filterConstraints.push(where('category', '==', filters.category));
+      if (filters.category === 'property') {
+        filterConstraints.push(where('category', 'in', ['property', 'land']));
+      } else {
+        filterConstraints.push(where('category', '==', filters.category));
+      }
     }
 
     if (filters.listingType) {
@@ -314,7 +318,11 @@ export const listingService = {
     constraints.push(limit(limitCount));
 
     if (category) {
-      constraints.push(where('category', '==', category));
+      if (category === 'property') {
+        constraints.push(where('category', 'in', ['property', 'land']));
+      } else {
+        constraints.push(where('category', '==', category));
+      }
     }
 
     const q = query(listingsRef, ...constraints);

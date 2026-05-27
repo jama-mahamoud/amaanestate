@@ -180,62 +180,47 @@ export const moderationService = {
   },
 
   /**
-   * Approve a listing
+   * Approve a listing (sets status to VERIFIED/Approved)
    */
   async approveListing(id: string) {
-    const listingRef = doc(db, 'listings', id);
-    try {
-      console.log(`Approving listing ${id}...`);
-      await updateDoc(listingRef, {
-        status: 'ACTIVE',
-        visibility: 'public',
-        isVerified: true,
-        verificationStatus: 'VERIFIED',
-        updatedAt: serverTimestamp()
-      });
-      await this.logAdminAction('LISTING_APPROVAL', id, 'Listing verified and made publicly searchable.');
-
-      try {
-        const listingSnap = await getDoc(listingRef);
-        if (listingSnap.exists()) {
-          const listingData = listingSnap.data();
-          const ownerId = listingData.ownerId;
-          const title = listingData.title || 'Property listing';
-          if (ownerId) {
-            await notificationService.createNotification(
-              ownerId,
-              'Listing Approved Successfully',
-              `Congratulations! Your property listing "${title}" has been approved by moderators and is now live.`,
-              'PROPERTY'
-            );
-          }
-        }
-      } catch (notifyErr) {
-        console.error('Error triggering approve listing notification:', notifyErr);
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`Error approving listing ${id}:`, error);
-      handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
-      return false;
-    }
+    return this.updateListingStatus(id, 'VERIFIED', 'Listing verified and approved by moderation center.');
   },
 
   /**
    * Reject a listing
    */
   async rejectListing(id: string) {
+    return this.updateListingStatus(id, 'REJECTED', 'Listing rejected for failed verification criteria.');
+  },
+
+  /**
+   * Universal function to update listing status with notifications and admin audit trails
+   */
+  async updateListingStatus(id: string, newStatus: string, comment?: string) {
     const listingRef = doc(db, 'listings', id);
     try {
-      console.log(`Rejecting listing ${id}...`);
-      await updateDoc(listingRef, {
-        status: 'SUSPENDED',
-        isVisible: false,
-        verificationStatus: 'REJECTED',
+      console.log(`Setting listing ${id} status to ${newStatus}...`);
+      
+      const updatePayload: any = {
+        status: newStatus,
         updatedAt: serverTimestamp()
-      });
-      await this.logAdminAction('LISTING_REJECTION', id, 'Listing suspended and marked as rejected.');
+      };
+
+      // Set helper flags for visibility based on status
+      const isPublic = newStatus === 'ACTIVE' || newStatus === 'VERIFIED';
+      updatePayload.visibility = isPublic ? 'public' : 'private';
+      updatePayload.isVisible = isPublic;
+      
+      if (newStatus === 'VERIFIED') {
+        updatePayload.isVerified = true;
+        updatePayload.verificationStatus = 'VERIFIED';
+      } else if (newStatus === 'REJECTED') {
+        updatePayload.isVerified = false;
+        updatePayload.verificationStatus = 'REJECTED';
+      }
+
+      await updateDoc(listingRef, updatePayload);
+      await this.logAdminAction('LISTING_STATUS_CHANGE', id, `Updated state to ${newStatus}. ${comment || ''}`);
 
       try {
         const listingSnap = await getDoc(listingRef);
@@ -244,21 +229,44 @@ export const moderationService = {
           const ownerId = listingData.ownerId;
           const title = listingData.title || 'Property listing';
           if (ownerId) {
+            let titleText = 'Listing Status Updated';
+            let detailText = `Your property listing "${title}" has been updated to ${newStatus}.`;
+            
+            if (newStatus === 'VERIFIED') {
+              titleText = 'Listing Approved Successfully';
+              detailText = `Congratulations! Your property listing "${title}" has been approved by moderators and is certified.`;
+            } else if (newStatus === 'REJECTED') {
+              titleText = 'Listing Revisions Requested';
+              detailText = `Your property listing "${title}" was rejected. Please update details according to guidelines.`;
+            } else if (newStatus === 'ACTIVE') {
+              titleText = 'Listing Activated';
+              detailText = `Your property listing "${title}" is now active and publicly live.`;
+            } else if (newStatus === 'SUSPENDED') {
+              titleText = 'Listing Suspended';
+              detailText = `Your property listing "${title}" has been suspended.`;
+            } else if (newStatus === 'DELETED') {
+              titleText = 'Listing Deleted';
+              detailText = `Your property listing "${title}" has been soft deleted.`;
+            } else if (newStatus === 'ARCHIVED') {
+              titleText = 'Listing Archived';
+              detailText = `Your property listing "${title}" has been archived.`;
+            }
+
             await notificationService.createNotification(
               ownerId,
-              'Listing Verification Declined',
-              `Your property listing "${title}" was not approved. Please verify your legal certificate details and resubmit.`,
+              titleText,
+              detailText,
               'PROPERTY'
             );
           }
         }
       } catch (notifyErr) {
-        console.error('Error triggering reject listing notification:', notifyErr);
+        console.error('Error triggering status updated notification:', notifyErr);
       }
 
       return true;
     } catch (error) {
-      console.error(`Error rejecting listing ${id}:`, error);
+      console.error(`Error updating status for listing ${id} to ${newStatus}:`, error);
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
       return false;
     }
