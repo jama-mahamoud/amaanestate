@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
+import somaliHeroImg from '@/assets/images/somali_agency_hero_1779895169818.png';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -175,66 +176,73 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
-        {/* Abstract Background Decoration */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#C5A059]/5 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[#C5A059]/3 blur-[100px] rounded-full" />
+      <section className="relative pt-20 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
+        {/* Immersive Background Image with High-Contrast Overlays (Desktop & Tablet only) */}
+        <div className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none">
+          <img 
+            src={somaliHeroImg} 
+            alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
+            className="w-full h-full object-cover filter brightness-[0.7] saturate-[1.1] object-center"
+            referrerPolicy="no-referrer"
+          />
+          {/* Black gradient overlays designed to preserve background visibility while keeping white text extremely legible */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-black/25" />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10 mb-8"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Verified Real Estate Marketplace</span>
-            </motion.div>
+        <div className="container mx-auto px-4 relative z-10 w-full">
+          {/* Full-view Mobile-friendly Image Container (Mobile only) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/[0.02]"
+          >
+            <img 
+              src={somaliHeroImg} 
+              alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
+              className="w-full h-auto object-contain filter brightness-[0.9] saturate-[1.1]"
+              referrerPolicy="no-referrer"
+            />
+            {/* Soft ambient inner gradient to blend with the interface of the mobile app */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+          </motion.div>
 
+          <div className="max-w-2xl text-left">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-7xl font-display text-white mb-6 leading-[1.1] tracking-tight"
+              className="text-2xl sm:text-5xl md:text-6xl font-display text-white mb-6 leading-[1.15] tracking-widest font-extrabold uppercase text-left"
             >
-              Find your next home in <span className="gold-text-gradient font-bold text-[#C5A059]">Somalia & Ethiopia</span>
+              RENTALS.<br />
+              PROPERTIES.<br />
+              <span className="text-white/50">VERIFICATION.</span>
             </motion.h1>
-
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-lg text-white/60 mb-12 max-w-2xl"
-            >
-              The most trusted marketplace for verified properties and vehicles across the region. Transparent, secure, and professional.
-            </motion.p>
 
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
+              className="flex flex-col sm:flex-row items-center justify-start gap-4 w-full"
             >
               <Link
                 to="/properties"
                 onClick={scrollToListings}
-                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-black bg-[#C5A059] hover:bg-white transition-all rounded-2xl shadow-xl shadow-[#C5A059]/10 hover:-translate-y-0.5 animate-pulse"
+                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-black bg-[#C5A059] hover:bg-white transition-all rounded-2xl shadow-xl shadow-[#C5A059]/10 hover:-translate-y-0.5"
               >
                 Browse Marketplace
               </Link>
 
               <Link
                 to="/list-property"
-                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-white border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all rounded-2xl hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-white border border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all rounded-2xl hover:-translate-y-0.5"
               >
                 List your Property
               </Link>
             </motion.div>
           </div>
 
-          <div className="w-full max-w-5xl mx-auto mt-16 md:mt-24">
+          <div className="w-full max-w-5xl mt-12 md:mt-20">
             <HomeSearch onSearch={handleSearch} />
           </div>
         </div>

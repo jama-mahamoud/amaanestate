@@ -46,9 +46,10 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
     return (
       <div className={`flex flex-col items-center text-center gap-2 ${className}`}>
         <AmaanLogo size={size} variant={variant} />
-        <div className="flex flex-col">
-          <h1 className={`font-display font-black tracking-tighter leading-none text-white ${textSizes[size]}`}>
-            Amaan<span className="text-luxury-gold">Estate</span>
+        <div className="flex flex-col items-center">
+          <h1 className={`font-display tracking-tighter leading-none flex items-center justify-center ${textSizes[size]}`}>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] via-[#E6C587] to-[#C5A059] font-black mr-[1px]">Amaan</span>
+            <span className="text-white font-medium">Estate</span>
           </h1>
           <span className={`uppercase font-bold tracking-[0.4em] mt-1 text-white/40 ${subTextSizes[size]}`}>
             Luxury Living

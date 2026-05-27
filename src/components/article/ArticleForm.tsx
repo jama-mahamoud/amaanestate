@@ -6,12 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { articleService } from '@/services/articleService';
-import { Article } from '@/types';
+import { Article, ArticleStatus } from '@/types';
 import Editor from './Editor';
 import ImageUpload from './ImageUpload';
 import GalleryUpload from './GalleryUpload';
 import TagsInput from './TagsInput';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Eye, Save, Globe, Info, Layout, Palette, 
   Settings2, Share2, Sparkles, AlertCircle,
@@ -21,9 +23,12 @@ import {
 
 export default function ArticleForm({ initialData }: { initialData?: Article }) {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [showPreview, setShowPreview] = useState(false);
   const [splitPreview, setSplitPreview] = useState(false);
   const [previewSize, setPreviewSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  
+  const isAdminOrEditor = profile?.role?.toString().trim().toLowerCase() === 'admin' || profile?.role?.toString().trim().toLowerCase() === 'editor';
   
   const [formData, setFormData] = useState<Partial<Article>>({
     title: initialData?.title || '',
@@ -64,37 +69,93 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // SEO Score auto-calculation (Simulated)
+  // SEO Score auto-calculation
   useEffect(() => {
     let score = 0;
-    if (formData.title && formData.title.length > 30) score += 20;
-    if (formData.summary && formData.summary.length > 100) score += 20;
-    if (formData.content && formData.content.length > 1000) score += 20;
+    if (formData.title && formData.title.length > 20) score += 20;
+    if (formData.summary && formData.summary.length > 60) score += 20;
+    const wordCount = formData.content ? formData.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length : 0;
+    if (wordCount > 100) score += 20;
     if (formData.focusKeyword && formData.content?.toLowerCase().includes(formData.focusKeyword.toLowerCase())) score += 20;
     if (formData.featuredImage) score += 20;
     setFormData(prev => ({ ...prev, seoScore: score }));
   }, [formData.title, formData.summary, formData.content, formData.focusKeyword, formData.featuredImage]);
 
+  // Reactive automated slug generation as title is typed (only matches if slug is empty or simple draft name)
+  useEffect(() => {
+    if (formData.title && !initialData && (!formData.slug || formData.slug === 'draft-briefing')) {
+      const gSlug = formData.title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setFormData(prev => ({ ...prev, slug: gSlug }));
+    }
+  }, [formData.title, initialData]);
+
+  const validateFormSEO = (): boolean => {
+    const issues: string[] = [];
+    if (!formData.title?.trim()) issues.push('Headline/Title');
+    if (!formData.summary?.trim()) issues.push('Summary/Meta description');
+    if (!formData.featuredImage?.trim()) issues.push('Featured Image');
+    const wordCount = formData.content ? formData.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length : 0;
+    if (wordCount < 40) issues.push(`Sufficient word count (currently ${wordCount} words, minimum 40 requested)`);
+    if (!formData.category?.trim()) issues.push('Subject category');
+
+    if (issues.length > 0) {
+      toast.error(`Publish Restricted: Missing required fields (${issues.join(', ')}). Work can still be saved as "Hold" (Draft).`);
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent, asDraft: boolean = false) => {
     e.preventDefault();
-    setIsSaving(true);
     
+    // Core structural check on high-level broadcast
+    if (!asDraft) {
+      const isValid = validateFormSEO();
+      if (!isValid) return;
+    }
+
+    setIsSaving(true);
     try {
+      const finalStatus: ArticleStatus = asDraft 
+        ? 'draft' 
+        : (isAdminOrEditor ? 'published' : 'pending');
+
       const dataToSave = { 
         ...formData, 
-        published: asDraft ? false : formData.published,
+        status: finalStatus,
+        published: finalStatus === 'published',
         updatedAt: new Date()
       };
       
       if (initialData) {
         await articleService.updateArticle(initialData.id, dataToSave);
+        if (asDraft) {
+          toast.success('Briefing updated successfully as DRAFT HOLD');
+        } else if (finalStatus === 'published') {
+          toast.success('Briefing published and active live!');
+        } else {
+          toast.success('Briefing submitted for review and approval.');
+        }
       } else {
         await articleService.createArticle(dataToSave as any);
+        if (asDraft) {
+          toast.success('Briefing saved successfully as DRAFT HOLD');
+        } else if (finalStatus === 'published') {
+          toast.success('Briefing published and active live!');
+        } else {
+          toast.success('Briefing submitted for review and approval.');
+        }
       }
       
       navigate('/dashboard/articles');
     } catch (error) {
       console.error('Failed to save article:', error);
+      toast.error('Failed to process editorial transaction.');
     } finally {
       setIsSaving(false);
     }
@@ -117,7 +178,21 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
             {formData.summary || 'Awaiting executive summary synchronization...'}
           </div>
           <article 
-            className="prose prose-invert prose-luxury max-w-none text-xl text-white/70 leading-loose prose-headings:font-display prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-white prose-p:mb-10"
+            className={`
+              prose prose-invert max-w-none break-words
+              prose-p:text-white/80 prose-p:leading-[1.8] prose-p:font-normal prose-p:mb-6 prose-p:text-base sm:prose-p:text-lg prose-p:tracking-normal
+              prose-headings:text-white prose-headings:font-display prose-headings:font-semibold prose-headings:tracking-tight prose-headings:mb-4
+              prose-h2:text-xl sm:prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:font-medium
+              prose-h3:text-lg sm:prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-medium
+              prose-strong:text-[#C5A059] prose-strong:font-bold
+              prose-blockquote:border-l-[#C5A059] prose-blockquote:bg-white/[0.01] prose-blockquote:p-5 sm:prose-blockquote:p-8 prose-blockquote:rounded-r-xl prose-blockquote:italic prose-blockquote:text-white/70 prose-blockquote:my-8 prose-blockquote:border-l-2
+              prose-img:rounded-xl prose-img:border prose-img:border-white/5 prose-img:my-8 prose-img:w-full prose-img:object-cover
+              prose-a:text-[#C5A059] hover:prose-a:text-white prose-a:transition-colors prose-a:font-semibold prose-a:underline prose-a:underline-offset-4
+              prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-6 prose-ul:text-white/70 prose-ul:space-y-2
+              prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-6 prose-ol:text-white/70 prose-ol:space-y-2
+              prose-li:text-base sm:prose-li:text-lg
+              ${formData.layoutType === 'magazine' ? 'first-letter:text-6xl sm:first-letter:text-7xl first-letter:font-bold first-letter:text-[#C5A059] first-letter:mr-3 first-letter:float-left first-letter:leading-none' : ''}
+            `}
             dangerouslySetInnerHTML={{ __html: formData.content || '' }}
           />
         </div>
@@ -175,7 +250,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
             disabled={isSaving}
             className="bg-luxury-gold text-luxury-black h-11 rounded-xl hover:bg-white px-8 font-black uppercase tracking-widest shadow-2xl shadow-luxury-gold/20"
           >
-            Broadcast
+            Publish
           </Button>
         </div>
       </header>

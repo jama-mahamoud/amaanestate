@@ -28,7 +28,55 @@ interface CacheEntry<T> {
 const articlesCache: { [key: string]: CacheEntry<Article[]> } = {};
 const articleDetailCache: { [key: string]: CacheEntry<Article> } = {};
 
+const clearCaches = () => {
+  for (const key in articlesCache) {
+    if (Object.prototype.hasOwnProperty.call(articlesCache, key)) {
+      delete articlesCache[key];
+    }
+  }
+  for (const key in articleDetailCache) {
+    if (Object.prototype.hasOwnProperty.call(articleDetailCache, key)) {
+      delete articleDetailCache[key];
+    }
+  }
+};
+
+const cleanHtmlContent = (html?: string): string => {
+  if (!html) return '';
+  return html
+    .replace(/<p>\s*?(<br\s*?\/?>)?\s*?<\/p>/g, '') // remove empty paragraphs
+    .replace(/<p>&nbsp;<\/p>/g, '')                 // remove empty non-breaking space paragraphs
+    .replace(/(<br\s*?\/?>\s*?){2,}/g, '<br />')     // squash duplicate linebreaks
+    .trim();
+};
+
 export const articleService = {
+  async ensureUniqueSlug(title: string, currentArticleId?: string): Promise<string> {
+    let baseSlug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
+    if (!baseSlug) baseSlug = "article";
+    
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+    let duplicate = true;
+    
+    while (duplicate) {
+      const art = await this.getArticleBySlug(uniqueSlug);
+      if (art && art.id !== currentArticleId) {
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+      } else {
+        duplicate = false;
+      }
+    }
+    return uniqueSlug;
+  },
+
   async getArticles(category?: string, language?: string, publishedOnly: boolean = true) {
     const cacheKey = `list_${category || 'all'}_${language || 'all'}_${publishedOnly}`;
     const cached = articlesCache[cacheKey];
@@ -114,8 +162,21 @@ export const articleService = {
   async createArticle(data: Omit<Article, 'id' | 'authorId' | 'createdAt' | 'updatedAt' | 'views'>) {
     if (!auth.currentUser) throw new Error('Authentication required');
     try {
+      clearCaches();
+      // Ensure slug is auto-generated or validated
+      let finalSlug = data.slug || '';
+      if (!finalSlug && data.title) {
+        finalSlug = await this.ensureUniqueSlug(data.title);
+      } else if (finalSlug) {
+        finalSlug = await this.ensureUniqueSlug(finalSlug);
+      }
+      
+      const cleanContent = cleanHtmlContent(data.content);
+      
       const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), {
         ...data,
+        slug: finalSlug,
+        content: cleanContent,
         authorId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -130,8 +191,25 @@ export const articleService = {
 
   async updateArticle(id: string, data: Partial<Article>) {
     try {
-      await updateDoc(doc(db, ARTICLES_COLLECTION, id), {
-        ...data,
+      clearCaches();
+      const docRef = doc(db, ARTICLES_COLLECTION, id);
+      
+      const updatePayload: any = { ...data };
+      
+      if (data.title && data.slug) {
+        updatePayload.slug = await this.ensureUniqueSlug(data.slug, id);
+      } else if (data.title && !data.slug) {
+        updatePayload.slug = await this.ensureUniqueSlug(data.title, id);
+      } else if (data.slug) {
+        updatePayload.slug = await this.ensureUniqueSlug(data.slug, id);
+      }
+      
+      if (data.content !== undefined) {
+        updatePayload.content = cleanHtmlContent(data.content);
+      }
+      
+      await updateDoc(docRef, {
+        ...updatePayload,
         updatedAt: serverTimestamp()
       });
       return true;
@@ -143,6 +221,7 @@ export const articleService = {
 
   async deleteArticle(id: string) {
     try {
+      clearCaches();
       await deleteDoc(doc(db, ARTICLES_COLLECTION, id));
       return true;
     } catch (error) {

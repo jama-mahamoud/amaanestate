@@ -169,6 +169,8 @@ export interface UserProfile {
   bio?: string;
 }
 
+export type ArticleStatus = 'draft' | 'pending' | 'approved' | 'published';
+
 export interface Article {
   id: string;
   title: string;
@@ -205,7 +207,8 @@ export interface Article {
   readingTime?: number;
   publishSchedule?: any;
   isFeatured?: boolean;
-  published: boolean;
+  status: ArticleStatus;
+  published: boolean; // Deprecated, will be removed in future
   views: number;
   priority?: number;
   homepageSection?: string;

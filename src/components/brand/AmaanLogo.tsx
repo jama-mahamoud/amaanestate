@@ -162,9 +162,10 @@ export default function AmaanLogo({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className={`${currentSize.fontSize} font-display font-black tracking-tighter leading-none text-white`}
+            className={`${currentSize.fontSize} font-display tracking-tighter leading-none flex items-center`}
           >
-            Amaan<span className={`${color.text}`}>Estate</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] via-[#E6C587] to-[#C5A059] font-black mr-[1px]">Amaan</span>
+            <span className="text-white font-medium">Estate</span>
           </motion.h1>
           <motion.span 
             initial={{ opacity: 0 }}
