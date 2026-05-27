@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Mail, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import BrandLogo from '@/components/brand/BrandLogo';
+import PremiumLogo from '@/components/brand/PremiumLogo';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -51,15 +51,11 @@ export default function Register() {
   }, [signInWithGoogle, navigate]);
 
   return (
-    <div className="min-h-screen bg-luxury-black flex items-center justify-center p-4">
-      {/* Decorative Orbs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-luxury-gold/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
-
+    <div className="min-h-screen bg-super-black flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl relative z-10">
-        <div className="flex justify-center mb-16">
-            <Link to="/" className="flex flex-col items-center select-none group">
-               <BrandLogo size="lg" layout="stacked" />
+        <div className="flex justify-center mb-12">
+            <Link to="/" className="flex flex-col items-center select-none">
+               <PremiumLogo className="h-10" variant="white" />
             </Link>
         </div>
 
@@ -67,13 +63,11 @@ export default function Register() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="glass-card p-10 md:p-16 rounded-[4rem] shadow-2xl relative overflow-hidden"
+          className="bg-super-charcoal p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-white/10 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-48 h-48 bg-luxury-gold/5 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
-          
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-display font-bold text-white mb-4 tracking-tighter">Apply for Access</h1>
-            <p className="text-white/40 text-sm font-light tracking-wide uppercase">Join the region's most exclusive portfolio</p>
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Create Account</h1>
+            <p className="text-white/40 text-sm font-medium">Join the AmaanEstate marketplace today</p>
           </div>
 
           {error && (
@@ -87,61 +81,61 @@ export default function Register() {
             </motion.div>
           )}
 
-          <form className="space-y-8" onSubmit={handleRegister}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form className="space-y-6" onSubmit={handleRegister}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative group md:col-span-2">
-                <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
                 <Input 
-                  placeholder="Full Legal Name" 
+                  placeholder="Full Name" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
                 />
               </div>
 
               <div className="relative group md:col-span-2">
-                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
                 <Input 
                   type="email" 
-                  placeholder="Official Email Address" 
+                  placeholder="Email Address" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
                 />
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
                 <Input 
                   type="password" 
-                  placeholder="Secure Password" 
+                  placeholder="Password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
                 />
               </div>
 
               <div className="relative group">
-                <ShieldCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={20} />
+                <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
                 <Input 
                   type="password" 
-                  placeholder="Verify Password" 
+                  placeholder="Confirm Password" 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-16 pl-16 rounded-2xl text-white placeholder:text-white/20 focus-visible:ring-luxury-gold/30 text-lg"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
                 />
               </div>
             </div>
 
-            <div className="p-8 bg-white/5 border border-white/5 rounded-3xl">
-              <label className="flex items-start gap-4 text-xs text-white/40 cursor-pointer group leading-relaxed">
-                <input type="checkbox" required className="mt-1 w-5 h-5 rounded-lg bg-white/5 border-white/10 checked:bg-luxury-gold accent-luxury-gold" />
+            <div className="p-6 bg-white/5 border border-white/5 rounded-2xl">
+              <label className="flex items-start gap-3 text-xs text-white/40 cursor-pointer group leading-relaxed">
+                <input type="checkbox" required className="mt-1 w-4 h-4 rounded bg-white/10 border-white/10 checked:bg-emerald-500 accent-emerald-500" />
                 <span>
-                  I acknowledge the <Link to="/terms" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Terms of Excellence</Link> and <Link to="/privacy" className="text-luxury-gold hover:text-white transition-colors underline underline-offset-4 decoration-luxury-gold/20">Privacy Standards</Link>. High-value transactions may require institutional verification.
+                  I agree to the <Link to="/terms" className="text-emerald-400 hover:underline">Terms</Link> and <Link to="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>.
                 </span>
               </label>
             </div>
@@ -149,28 +143,28 @@ export default function Register() {
             <div className="space-y-4">
               <Button 
                 type="submit"
-                className="w-full bg-luxury-gold text-luxury-black hover:bg-white transition-all h-20 rounded-[2rem] font-bold text-xl shadow-2xl shadow-luxury-gold/10"
+                className="w-full bg-emerald-500 text-white hover:bg-emerald-600 transition-all h-14 rounded-2xl font-bold text-base shadow-xl shadow-emerald-500/10"
                 disabled={loading}
               >
-                {loading ? 'Initializing...' : 'Initialize Membership'}
+                {loading ? 'Creating...' : 'Create Account'}
               </Button>
 
               <Button 
                 type="button"
                 variant="outline"
                 onClick={handleGoogleSignIn}
-                className="w-full bg-transparent border-white/10 text-white hover:bg-white/5 transition-all h-20 rounded-[2rem] font-bold text-lg"
+                className="w-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all h-14 rounded-2xl font-bold text-sm"
                 disabled={loading}
               >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6 mr-3" alt="Google" />
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 mr-3" alt="Google" />
                 Continue with Google
               </Button>
             </div>
 
             <div className="text-center pt-8 border-t border-white/5">
-              <p className="text-white/40 text-xs font-light">
-                Already established an account?{' '}
-                <Link to="/auth/login" className="text-luxury-gold hover:text-white transition-colors font-bold uppercase tracking-[0.2em] ml-2">
+              <p className="text-white/40 text-xs font-medium">
+                Already have an account?{' '}
+                <Link to="/auth/login" className="text-white font-bold text-sm hover:text-emerald-400 transition-colors ml-2">
                   Sign In
                 </Link>
               </p>

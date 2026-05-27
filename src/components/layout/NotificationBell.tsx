@@ -7,7 +7,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { notificationService, Notification, NotificationType } from '@/services/notificationService';
 
-export default function NotificationBell() {
+export default function NotificationBell({ isDark }: { isDark?: boolean }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -79,17 +79,17 @@ export default function NotificationBell() {
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case 'PROPERTY':
-        return <Building size={14} className="text-[#C5A059]" />;
+        return <Building size={14} className="text-white/60" />;
       case 'PAYMENT':
-        return <CreditCard size={14} className="text-emerald-400" />;
+        return <CreditCard size={14} className="text-emerald-500" />;
       case 'AGREEMENT':
-        return <FileText size={14} className="text-blue-400" />;
+        return <FileText size={14} className="text-blue-500" />;
       case 'VERIFICATION':
-        return <ShieldCheck size={14} className="text-indigo-400" />;
+        return <ShieldCheck size={14} className="text-indigo-500" />;
       case 'INQUIRY':
-        return <MessageSquare size={14} className="text-[#C5A059]" />;
+        return <MessageSquare size={14} className="text-white/60" />;
       default:
-        return <Info size={14} className="text-white/60" />;
+        return <Info size={14} className="text-white/40" />;
     }
   };
 
@@ -115,21 +115,18 @@ export default function NotificationBell() {
       {/* Trigger Button with badge */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 text-white/60 hover:text-white hover:bg-white/[0.04] active:scale-95 duration-200 transition-all rounded-full flex items-center justify-center outline-none"
+        className="relative p-2.5 transition-all rounded-full flex items-center justify-center outline-none active:scale-95 text-white/60 hover:text-white hover:bg-white/10"
         aria-label="Toggle notifications"
       >
-        <Bell size={18} className={`${unreadCount > 0 ? 'animate-pulse text-white' : ''}`} />
+        <Bell size={18} className={`${unreadCount > 0 ? 'text-white' : ''}`} />
         
         {unreadCount > 0 && (
-          <>
-            {/* Soft breathing ring animate */}
-            <span className="absolute top-1 right-1 flex h-4 w-4 pointer-events-none">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-luxury-gold/50 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-[#C5A059] items-center justify-center text-[8px] font-black text-black">
-                {unreadCount}
-              </span>
+          <span className="absolute top-1 right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 items-center justify-center text-[8px] font-black text-white">
+              {unreadCount}
             </span>
-          </>
+          </span>
         )}
       </button>
 
@@ -137,120 +134,50 @@ export default function NotificationBell() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.98 }}
-            transition={{ type: 'spring', duration: 0.3 }}
-            className="absolute right-0 lg:right-[-10px] sm:right-0 mt-3 bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden w-[340px] z-[100] flex flex-col"
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="absolute right-0 lg:right-[-10px] mt-3 bg-super-charcoal border border-white/10 rounded-2xl shadow-2xl w-[340px] z-[100] flex flex-col"
           >
             {/* Dropdown Header */}
-            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-white/80">Alert Log</h3>
-                {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded bg-luxury-gold/10 border border-luxury-gold/20 text-luxury-gold text-[9px] font-bold">
-                    {unreadCount} New
-                  </span>
-                )}
-              </div>
+            <div className="p-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-white/40">Alert Log</h3>
               <div className="flex items-center gap-2">
                 {notifications.length > 0 && (
-                  <>
-                    <button
-                      onClick={handleMarkAllAsRead}
-                      className="text-[10px] text-white/40 hover:text-luxury-gold transition-colors font-medium cursor-pointer"
-                    >
-                      Read All
-                    </button>
-                    <span className="h-2 w-px bg-white/10" />
-                    <button
-                      onClick={handleClearAll}
-                      className="text-[10px] text-white/40 hover:text-red-400 transition-colors font-medium flex items-center gap-0.5 cursor-pointer"
-                    >
-                      Clear All
-                    </button>
-                  </>
+                  <button onClick={handleMarkAllAsRead} className="text-[10px] text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-wider">
+                    Read All
+                  </button>
                 )}
               </div>
             </div>
 
-            {/* Notifications List Container */}
-            <div className="max-h-[360px] overflow-y-auto divide-y divide-white/[0.03] no-scrollbar">
+            {/* Notifications List */}
+            <div className="max-h-[360px] overflow-y-auto divide-y divide-white/5 no-scrollbar">
               {notifications.length === 0 ? (
-                <div className="py-12 px-4 flex flex-col items-center justify-center text-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/20">
-                    <Bell size={16} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white/70">No notifications yet</h4>
-                    <p className="text-[10px] text-white/40 max-w-[200px] mt-1">
-                      Direct transactional updates and admin activity logs will manifest here.
-                    </p>
-                  </div>
+                <div className="py-12 px-4 flex flex-col items-center justify-center text-center">
+                  <Bell size={18} className="text-white/10 mb-2" />
+                  <p className="text-xs font-bold text-white/40">No alerts found</p>
                 </div>
               ) : (
                 notifications.map((n) => (
                   <div
                     key={n.id}
-                    className={`p-3.5 transition-all duration-300 flex items-start gap-3 relative ${
-                      !n.read 
-                        ? 'bg-luxury-gold/[0.02] hover:bg-luxury-gold/[0.04]' 
-                        : 'hover:bg-white/[0.02]'
-                    }`}
+                    className={`p-4 transition-all flex items-start gap-3 ${!n.read ? 'bg-white/[0.02]' : ''}`}
                   >
-                    {/* Unread dot indicator */}
-                    {!n.read && (
-                      <span className="absolute top-4 left-3 w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
-                    )}
-
-                    {/* Left Icon Panel */}
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                      !n.read 
-                        ? 'bg-luxury-gold/10 border-luxury-gold/20' 
-                        : 'bg-white/[0.02] border-white/5'
-                    } ${!n.read ? '' : 'pl-0.5'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${!n.read ? 'bg-white/5' : 'bg-transparent border border-white/5'}`}>
                       {getIcon(n.type)}
                     </div>
-
-                    {/* Notice Detail Content */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-1">
-                        <h4 className={`text-xs ${!n.read ? 'font-semibold text-white/95' : 'text-white/70'} leading-snug truncate`}>
-                          {n.title}
-                        </h4>
-                        <span className="text-[9px] text-white/30 whitespace-nowrap pt-0.5">
-                          {formatTime(n.createdAt)}
-                        </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-1">
+                        <p className={`text-xs ${!n.read ? 'font-bold text-white' : 'text-white/70'} line-clamp-1`}>{n.title}</p>
+                        <span className="text-[8px] text-white/20 font-bold uppercase whitespace-nowrap">{formatTime(n.createdAt)}</span>
                       </div>
-                      <p className="text-[11px] text-white/50 leading-relaxed mt-1 font-light break-words">
-                        {n.message}
-                      </p>
-
-                      {/* Micro actions per card */}
-                      {!n.read && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={(e) => handleMarkAsRead(n.id, e)}
-                            className="text-[9px] text-luxury-gold/80 hover:text-white transition-colors font-medium flex items-center gap-1 cursor-pointer"
-                          >
-                            <Check size={10} strokeWidth={3} /> Mark as read
-                          </button>
-                        </div>
-                      )}
+                      <p className="text-[11px] text-white/40 line-clamp-2 mt-0.5 font-light">{n.message}</p>
                     </div>
                   </div>
                 ))
               )}
             </div>
-
-            {/* Footer summary */}
-            {notifications.length > 0 && (
-              <div className="p-3 border-t border-white/5 text-center bg-white/[0.01]">
-                <p className="text-[10px] text-white/45">
-                  Showing {notifications.length} transactional logs
-                </p>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

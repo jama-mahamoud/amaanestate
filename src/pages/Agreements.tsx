@@ -1232,7 +1232,7 @@ export default function Agreements() {
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                     <p><strong>{t("Property Unique ID:")}</strong> {formData.propertyId || 'PENDING'}</p>
                     <p><strong>{t("Property Title/Lodge:")}</strong> {formData.propertyTitle}</p>
-                    <p><strong>{t("Covenant Status:")}</strong> {t("Covenant Status:")} {t(formData.propertyCategory)}</p>
+                    <p><strong>{t("Category Range:")}</strong> {t(formData.propertyCategory)}</p>
                     <p><strong>{t("Structure Specification:")}</strong> {t(formData.propertyType) || formData.propertyType}</p>
                     <p><strong>{t("Metropolis City:")}</strong> {formData.propertyCity}</p>
                     <p><strong>{t("District Address:")}</strong> {formData.propertyDistrict}</p>

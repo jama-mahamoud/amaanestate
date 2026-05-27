@@ -51,34 +51,34 @@ const LatestNews = memo(() => {
   const isMany = articles.length > 3;
 
   return (
-    <section className="py-24 bg-luxury-black relative overflow-hidden border-t border-white/5">
+    <section className="py-24 bg-slate-50 relative overflow-hidden border-t border-slate-100 text-slate-900">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 tracking-tight">
-              Latest News & <span className="gold-text-gradient bg-clip-text">Market Intelligence</span>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-slate-950 mb-4 tracking-tight">
+              Latest News & <span className="text-[#C5A059]">Market Intelligence</span>
             </h2>
-            <p className="text-white/60 max-w-2xl text-lg">
+            <p className="text-slate-600 max-w-2xl text-lg">
               Stay informed with our latest market reports, investment insights, and regional development news.
             </p>
           </div>
           
           <div className="flex items-center gap-4">
-            <Button asChild variant="outline" className="border-white/10 hover:bg-white/5 hover:text-luxury-gold pt-1">
+            <Button asChild variant="outline" className="border-slate-200 hover:bg-slate-100 hover:text-[#C5A059] pt-1 text-slate-900">
               <Link to="/news">View All Insights</Link>
             </Button>
             {isMany && (
               <div className="hidden md:flex items-center gap-2">
                 <button 
                   onClick={scrollLeft}
-                  className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/70 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all bg-luxury-black/50"
+                  className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#C5A059] hover:border-[#C5A059]/55 transition-all bg-white"
                   aria-label="Previous articles"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button 
                   onClick={scrollRight}
-                  className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/70 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all bg-luxury-black/50"
+                  className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#C5A059] hover:border-[#C5A059]/55 transition-all bg-white"
                   aria-label="Next articles"
                 >
                   <ChevronRight size={20} />
@@ -106,44 +106,46 @@ const LatestNews = memo(() => {
               transition={{ delay: index * 0.1 }}
               key={article.id} 
               className={`
-                group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-luxury-gold/30 transition-all duration-300
+                group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:border-[#C5A059]/30 transition-all duration-300 shadow-sm hover:shadow-md
                 ${isMany ? "min-w-[300px] md:min-w-[380px] snap-start flex-shrink-0 flex flex-col" : "flex flex-col h-full"}
               `}
             >
               <div className="relative aspect-[16/10] overflow-hidden">
                 <img 
-                  src={article.featuredImage || `https://images.unsplash.com/photo-1582407947304-fd86f1289c54?auto=format&fit=crop&q=80&w=1000`} 
+                   src={article.featuredImage || `https://images.unsplash.com/photo-1582407947304-fd86f1289c54?auto=format&fit=crop&q=80&w=1000`} 
                   alt={article.title}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-luxury-gold text-black uppercase tracking-wider text-[10px] font-bold border-none">
+                  <Badge className="bg-[#C5A059] text-black hover:bg-[#C5A059] uppercase tracking-wider text-[10px] font-bold border-none">
                     {article.category || 'News'}
                   </Badge>
                 </div>
               </div>
               
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-white/40 text-xs mb-3 font-mono">
-                  <Clock size={14} />
-                  {formatDate(article.createdAt)}
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-slate-500 text-xs mb-3 font-mono">
+                    <Clock size={14} />
+                    {formatDate(article.createdAt)}
+                  </div>
+                  
+                  <h3 className="text-xl font-display font-bold text-slate-950 mb-3 line-clamp-2 group-hover:text-[#C5A059] transition-colors">
+                    <Link to={`/news/${article.id}`}>
+                      {article.title}
+                    </Link>
+                  </h3>
+                  
+                  <p className="text-slate-600 text-sm line-clamp-3 mb-6 font-light leading-relaxed">
+                    {article.summary || article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...'}
+                  </p>
                 </div>
                 
-                <h3 className="text-xl font-display font-bold text-white mb-3 line-clamp-2 group-hover:text-luxury-gold transition-colors">
-                  <Link to={`/news/${article.id}`}>
-                    {article.title}
-                  </Link>
-                </h3>
-                
-                <p className="text-white/60 text-sm line-clamp-3 mb-6 flex-1">
-                  {article.summary || article.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...'}
-                </p>
-                
-                <div className="mt-auto pt-4 border-t border-white/5">
+                <div className="mt-auto pt-4 border-t border-slate-100">
                   <Link 
                     to={`/news/${article.id}`}
-                    className="inline-flex items-center text-sm font-bold text-white/70 group-hover:text-luxury-gold transition-colors"
+                    className="inline-flex items-center text-sm font-bold text-slate-900 group-hover:text-[#C5A059] transition-colors"
                   >
                     Read Article <ArrowRight size={16} className="ml-2 transform group-hover:translate-x-1 transition-transform" />
                   </Link>

@@ -11,6 +11,7 @@ export interface MegaMenuItem {
 export interface MegaMenuProps {
   title: string;
   sections: MegaMenuItem[];
+  isDark?: boolean;
 }
 
 export default function MegaMenu({ title, sections }: MegaMenuProps) {
@@ -22,8 +23,8 @@ export default function MegaMenu({ title, sections }: MegaMenuProps) {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <button className="text-[10px] items-center uppercase font-bold tracking-[0.1em] text-white/60 transition-all hover:text-luxury-gold flex items-center gap-1 whitespace-nowrap">
-        {title} <ChevronDown size={12} />
+      <button className="text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap outline-none text-white/70 hover:text-white">
+        {title} <ChevronDown size={12} className="opacity-50" />
       </button>
 
       <AnimatePresence>
@@ -32,15 +33,15 @@ export default function MegaMenu({ title, sections }: MegaMenuProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute top-full left-0 w-max bg-luxury-black border border-white/10 p-6 shadow-2xl rounded-xl z-50 flex gap-8"
+            className="absolute top-full -left-4 w-max bg-super-charcoal border border-white/10 p-8 shadow-2xl rounded-[2rem] z-50 flex gap-12"
           >
             {sections.map((section, idx) => (
-              <div key={idx} className="flex flex-col gap-4">
-                <h3 className="text-luxury-gold text-xs font-bold uppercase tracking-widest">{section.title}</h3>
+              <div key={idx} className="flex flex-col gap-5">
+                <h3 className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">{section.title}</h3>
                 <ul className="flex flex-col gap-3">
                   {section.items.map((item, i) => (
                     <li key={i}>
-                      <Link to={item.href} className="text-white/60 hover:text-white transition-colors text-sm whitespace-nowrap">
+                      <Link to={item.href} className="text-white/60 hover:text-white transition-colors text-sm font-medium whitespace-nowrap">
                         {item.title}
                       </Link>
                     </li>

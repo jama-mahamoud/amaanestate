@@ -21,72 +21,84 @@ const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="group"
+      className="group h-full"
     >
-      <Link to={`/vehicles/${vehicle.id}`}>
-        <div className="glass-card rounded-[2rem] overflow-hidden flex flex-col h-full">
-          <div className="aspect-video overflow-hidden relative">
+      <Link to={`/vehicles/${vehicle.id}`} className="block h-full">
+        <div className="bg-super-charcoal border border-white/10 rounded-[2rem] overflow-hidden flex flex-col h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group-hover:border-[#C5A059]/30">
+          <div className="aspect-[4/3] overflow-hidden relative">
             <img 
               src={mainImage} 
               alt={vehicle.title} 
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent opacity-60"></div>
             
-            <div className="absolute top-6 left-6 flex gap-2">
-              <Badge className={`uppercase text-[9px] tracking-widest font-bold px-3 py-1.5 border-0 rounded-lg ${
-                vehicle.listingType === 'sale' ? 'bg-luxury-gold text-luxury-black' : 'bg-white text-luxury-black'
+            {/* Elegant glassmorphism dark/gold badges over image */}
+            <div className="absolute top-4 left-4 flex gap-2 z-10">
+              <span className={`text-[9px] uppercase tracking-widest font-bold px-3.5 py-1.5 rounded-full border shadow-sm backdrop-blur-md transition-all ${
+                vehicle.listingType === 'sale' 
+                  ? 'bg-black/80 text-[#C5A059] border-[#C5A059]/30' 
+                  : 'bg-emerald-950/80 text-emerald-400 border-emerald-500/20'
               }`}>
                 {vehicle.listingType === 'sale' ? 'For Sale' : 'For Rent'}
-              </Badge>
+              </span>
             </div>
           </div>
           
-          <div className="p-6 md:p-8 flex-1 flex flex-col">
-            <div className="mb-6">
-              <span className="text-luxury-gold font-bold text-[10px] uppercase tracking-[0.2em] mb-2 block">
-                {vehicle.subcategory || 'Elite Automotive'}
-              </span>
-              <h3 className="text-xl font-display font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1 mb-2">
+          <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+            <div className="mb-auto">
+              {/* Category / Location badges */}
+              <div className="flex items-center justify-between mb-3 text-xs">
+                <span className="px-2.5 py-1 rounded-lg bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20 text-[9px] font-bold uppercase tracking-wider">
+                  {vehicle.subcategory || 'Automotive'}
+                </span>
+                <span className="text-white/40 text-[10px] font-medium flex items-center gap-1">
+                  <MapPin size={11} className="text-white/30" /> {vehicle.city}
+                </span>
+              </div>
+              
+              <h3 className="text-lg md:text-xl font-display font-semibold text-white group-hover:text-[#C5A059] transition-colors line-clamp-1 mb-4">
                 {vehicle.title}
               </h3>
-              <p className="text-white/40 text-xs flex items-center gap-2">
-                <MapPin size={12} className="text-luxury-gold" /> {vehicle.city}
-              </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Year</span>
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{vehicle.year || '-'}</span>
+            {/* Specifications Details inside the card */}
+            <div className="grid grid-cols-3 gap-2 py-4 border-y border-white/10 mb-6">
+              <div className="flex flex-col gap-1.5 items-center text-center">
+                <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Year</span>
+                <div className="flex items-center gap-1 text-white font-bold text-xs bg-white/5 px-2 py-1 rounded-xl border border-white/5 w-full justify-center">
+                  <Calendar size={12} className="text-[#C5A059]" />
+                  <span>{vehicle.year || '-'}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Mileage</span>
-                <div className="flex items-center gap-2">
-                  <Gauge size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80">{vehicle.mileage || '-'}</span>
+              <div className="flex flex-col gap-1.5 items-center text-center border-x border-white/10 px-1">
+                <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Mileage</span>
+                <div className="flex items-center gap-1 text-white font-bold text-xs bg-white/5 px-2 py-1 rounded-xl border border-white/5 w-full justify-center">
+                  <Gauge size={12} className="text-[#C5A059]" />
+                  <span className="truncate">{vehicle.mileage || '-'}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">Fuel</span>
-                <div className="flex items-center gap-2">
-                  <Fuel size={14} className="text-luxury-gold" />
-                  <span className="text-sm font-bold text-white/80 capitalize">{vehicle.fuelType || '-'}</span>
+              <div className="flex flex-col gap-1.5 items-center text-center">
+                <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Fuel</span>
+                <div className="flex items-center gap-1 text-white font-bold text-xs bg-white/5 px-2 py-1 rounded-xl border border-white/5 w-full justify-center">
+                  <Fuel size={12} className="text-[#C5A059]" />
+                  <span className="capitalize">{vehicle.fuelType?.charAt(0) || '-'}</span>
                 </div>
               </div>
             </div>
             
-            <div className="mt-auto flex items-center justify-between">
-              <p className="text-2xl font-display font-bold text-white group-hover:gold-text-gradient transition-all duration-500">
-                {displayPrice}
-              </p>
-              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white group-hover:bg-luxury-gold group-hover:border-luxury-gold group-hover:text-luxury-black transition-all duration-500">
-                <ArrowRight size={18} />
+            {/* Card price and interactive indicator */}
+            <div className="pt-2 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest block mb-0.5">Price</span>
+                <p className="text-xl font-bold text-[#C5A059] tracking-tight">
+                  {displayPrice}
+                </p>
+              </div>
+              
+              <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white group-hover:bg-[#C5A059] group-hover:text-black group-hover:border-transparent transition-all duration-300">
+                <ArrowRight size={16} />
               </div>
             </div>
           </div>

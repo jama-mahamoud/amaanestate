@@ -2,7 +2,6 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { Toaster } from '@/components/ui/sonner';
-import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
 import AIChatWidget from '../AIChatWidget';
 
 export default function RootLayout() {
@@ -14,7 +13,6 @@ export default function RootLayout() {
       </main>
       <Footer />
       <Toaster position="top-center" richColors />
-      <WhatsAppFloatingButton />
       <AIChatWidget />
     </div>
   );

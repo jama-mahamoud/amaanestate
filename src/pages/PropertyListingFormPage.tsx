@@ -477,7 +477,7 @@ export default function PropertyListingFormPage() {
                     ? 'bg-luxury-gold border-luxury-gold text-black shadow-lg shadow-luxury-gold/20 scale-110' 
                     : currentStep > step.number 
                     ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' 
-                    : 'bg-luxury-black border-white/10 text-white/30 group-hover:border-white/20'
+                    : 'bg-white/5 border-white/10 text-white/30 group-hover:border-white/20'
                 }`}
               >
                 {currentStep > step.number ? <Check size={14} /> : step.icon}
