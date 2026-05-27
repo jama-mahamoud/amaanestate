@@ -2,13 +2,25 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import http from "http";
+import fs from "fs";
 
+// Load environment variables immediately
 dotenv.config();
 
+// Critical Startup Diagnostics for Production
+console.log("=== BACKEND PRODUCTION INITIALIZATION START ===");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("VERCEL runtime:", !!process.env.VERCEL);
+console.log("GEMINI KEY EXISTS:", !!process.env.GEMINI_API_KEY);
+if (process.env.GEMINI_API_KEY) {
+  console.log("GEMINI KEY LENGTH:", process.env.GEMINI_API_KEY.length);
+  console.log("GEMINI KEY PREFIX:", process.env.GEMINI_API_KEY.substring(0, 5) + "...");
+}
+console.log("================================================");
+
 import { createServer as createViteServer } from "vite";
-import fs from "fs";
-import { initializeApp } from "firebase/app";
-import { initializeFirestore, collection, getDocs, query, where, limit } from "firebase/firestore";
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { GoogleGenAI } from "@google/genai";
 
 export const app = express();
@@ -16,31 +28,39 @@ export const app = express();
 app.use(express.json());
 
 // Initialize Gemini Client Lazily using secure system variable
-let aiClient: any = null;
+let genAI: any = null;
 function getGeminiClient() {
   const key = process.env.GEMINI_API_KEY;
-  console.log("GEMINI KEY EXISTS:", !!key);
-  console.log("AVAILABLE ENV KEYS:", Object.keys(process.env).filter(k => k.includes("KEY") || k.includes("GEMINI")));
-  if (!aiClient) {
+  
+  if (!genAI) {
     if (!key) {
+      console.error("[PROD] CRITICAL: GEMINI_API_KEY is null or undefined in backend.");
       throw new Error("GEMINI_API_KEY environment variable is not set.");
     }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
+    
+    try {
+      genAI = new GoogleGenAI({ 
+        apiKey: key,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
         }
-      }
-    });
+      });
+      console.log("[PROD] Gemini AI client initialized successfully with aistudio-build UA.");
+    } catch (err) {
+      console.error("[PROD] Failed to initialize GoogleGenAI client:", err);
+      throw err;
+    }
   }
-  return aiClient;
+  return genAI;
 }
 
 // Fetch and compile database context in real-time
 async function fetchDatabaseContext() {
-  const firestoreDb = getDb();
+  const firestoreDb = getAdminDb();
   if (!firestoreDb) {
+    console.error("[PROD] Firestore Database connection failed - check firebase configuration.");
     return {
       listingsStr: "No active listings database connection.",
       prosStr: "No certified professional registry database connection.",
@@ -55,9 +75,11 @@ async function fetchDatabaseContext() {
   let brokersStr = "No verified agents active.";
 
   try {
-    const listRef = collection(firestoreDb, "listings");
-    const listingsQ = query(listRef, where("status", "==", "active"), limit(50));
-    const listingsSnap = await getDocs(listingsQ);
+    const listingsSnap = await firestoreDb.collection("listings")
+      .where("status", "==", "active")
+      .limit(50)
+      .get();
+    
     if (!listingsSnap.empty) {
       const items = listingsSnap.docs.map(docSnapshot => {
         const d = docSnapshot.data();
@@ -74,13 +96,15 @@ async function fetchDatabaseContext() {
       listingsStr = items.join("\n");
     }
   } catch (err) {
-    console.error("Error fetching listings context in backend:", err);
+    console.error("[PROD] Error fetching listings context:", err);
   }
 
   try {
-    const brokerRef = collection(firestoreDb, "brokers");
-    const brokerQ = query(brokerRef, where("status", "==", "approved"), limit(30));
-    const brokerSnap = await getDocs(brokerQ);
+    const brokerSnap = await firestoreDb.collection("brokers")
+      .where("status", "==", "approved")
+      .limit(30)
+      .get();
+    
     if (!brokerSnap.empty) {
       const items = brokerSnap.docs.map(docSnapshot => {
         const d = docSnapshot.data();
@@ -90,13 +114,15 @@ async function fetchDatabaseContext() {
       brokersStr = items.join("\n");
     }
   } catch (err) {
-    console.error("Error fetching brokers context in backend:", err);
+    console.error("[PROD] Error fetching brokers context:", err);
   }
 
   try {
-    const proRef = collection(firestoreDb, "professionalServices");
-    const prosQ = query(proRef, where("status", "==", "active"), limit(50));
-    const prosSnap = await getDocs(prosQ);
+    const prosSnap = await firestoreDb.collection("professionalServices")
+      .where("status", "==", "active")
+      .limit(50)
+      .get();
+    
     if (!prosSnap.empty) {
       const items = prosSnap.docs.map(docSnapshot => {
         const d = docSnapshot.data();
@@ -105,13 +131,15 @@ async function fetchDatabaseContext() {
       prosStr = items.join("\n");
     }
   } catch (err) {
-    console.error("Error fetching professionals context in backend:", err);
+    console.error("[PROD] Error fetching professionals context:", err);
   }
 
   try {
-    const articleRef = collection(firestoreDb, "articles");
-    const articleQ = query(articleRef, where("published", "==", true), limit(30));
-    const articleSnap = await getDocs(articleQ);
+    const articleSnap = await firestoreDb.collection("articles")
+      .where("published", "==", true)
+      .limit(30)
+      .get();
+    
     if (!articleSnap.empty) {
       const items = articleSnap.docs.map(docSnapshot => {
         const d = docSnapshot.data();
@@ -120,7 +148,7 @@ async function fetchDatabaseContext() {
       articlesStr = items.join("\n");
     }
   } catch (err) {
-    console.error("Error fetching articles context in backend:", err);
+    console.error("[PROD] Error fetching articles context:", err);
   }
 
   return { listingsStr, prosStr, articlesStr, brokersStr };
@@ -146,11 +174,11 @@ app.post("/api/chat", async (req, res) => {
     console.error("Error pre-fetching firestore context:", dbErr);
   }
 
-  let ai;
+  let genAIClient: any;
   try {
-    ai = getGeminiClient();
+    genAIClient = getGeminiClient();
   } catch (err: any) {
-    console.warn("Gemini client initialization failed:", err.message);
+    console.error("[PROD] Gemini client initialization error:", err.message);
     return res.json({ text: "Waan ka xunnahay, adeegga Amaan AI hadda diyaar ma aha. Fadlan hubi in GEMINI_API_KEY la qabeeyay." });
   }
 
@@ -255,7 +283,7 @@ AREA GUIDANCE
 
 If user asks about locations or neighborhoods:
 - give short helpful guidance ONLY if information is available
-- do not invent false details
+- do not delete or invent false details
 
 ========================
 HOTEL RESPONSE STYLE
@@ -323,143 +351,120 @@ LATEST PORTAL INTEL & ARTICLES:
 ${contextData.articlesStr}
 ----------------------------------`;
 
-    // Map history to contents format: { role: 'user'|'model', parts: [{ text: string }] }
-    const contents: any[] = [];
-    if (history && Array.isArray(history)) {
-      for (const turn of history) {
-        if (turn.text) {
-          contents.push({
-            role: turn.role === "user" ? "user" : "model",
-            parts: [{ text: turn.text }]
-          });
-        }
-      }
-    }
-
-    contents.push({
-      role: "user",
-      parts: [{ text: message }]
-    });
-
-    const response = await ai.models.generateContent({
+    const model = genAIClient.getGenerativeModel({ 
       model: "gemini-1.5-flash",
-      contents,
-      config: {
-        systemInstruction,
-        temperature: 0.6,
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: systemInstruction }]
       }
     });
 
-    const finalResponseText = response.text || "I was unable to retrieve a response. Please try again.";
+    const chatSession = model.startChat({
+      history: history?.map((h: any) => ({
+        role: h.role === 'user' ? 'user' : 'model',
+        parts: [{ text: h.text || h.content || "" }]
+      })) || []
+    });
+
+    const result = await chatSession.sendMessage(message);
+    const finalResponseText = result.response.text();
     res.json({ text: finalResponseText });
   } catch (error: any) {
     const errMsg = error.message || "Unknown API issue";
     const cleanedMsg = errMsg.replace(/AIzaSy[A-Za-z0-9_\-]{33}/g, "[REDACTED_API_KEY]");
-    console.error("AI Assistant API error gracefully handled:", cleanedMsg);
-    res.json({ text: "Waan ka xunnahay, cilad ayaa ku timid adeegga AI assistant. Fadlan dib iskugu day." });
+    console.error("[PROD] AI Assistant API error:", cleanedMsg);
+    res.json({ text: "Waan ka xunnahay, adeegga AI hadda wuu mashquulsan yahay. Fadlan dib iskugu day waxyar ka dib." });
   }
 });
 
 async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
-  if (!process.env.VERCEL) {
-    const server = http.createServer(app);
+  // Vite middleware for development
+  if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "custom",
+    });
+    app.use(vite.middlewares);
 
-    // Vite middleware for development
-    if (process.env.NODE_ENV !== "production") {
-      const vite = await createViteServer({
-        server: { 
-          middlewareMode: true
-        },
-        appType: "custom",
-      });
-      app.use(vite.middlewares);
-
-      app.use("*", async (req, res, next) => {
-        if (req.originalUrl.startsWith('/api')) return next();
-        
-        try {
-          const url = req.originalUrl;
-          let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-          template = await vite.transformIndexHtml(url, template);
-          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-        } catch (e: any) {
-          vite.ssrFixStacktrace(e);
-          next(e);
-        }
-      });
-    } else {
-      const distPath = path.join(process.cwd(), "dist");
-      app.use(express.static(distPath));
-      app.get("*", (req, res) => {
-        res.sendFile(path.join(distPath, "index.html"));
-      });
-    }
-
-    server.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+    app.use("*", async (req, res, next) => {
+      if (req.originalUrl.startsWith('/api')) return next();
+      
+      try {
+        const url = req.originalUrl;
+        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e: any) {
+        vite.ssrFixStacktrace(e);
+        next(e);
+      }
     });
   } else {
-    // Under Vercel environment where express is exported
-    if (process.env.NODE_ENV !== "production") {
-      const vite = await createViteServer({
-        server: { 
-          middlewareMode: true
-        },
-        appType: "custom",
-      });
-      app.use(vite.middlewares);
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
 
-      app.use("*", async (req, res, next) => {
-        if (req.originalUrl.startsWith('/api')) return next();
-        
-        try {
-          const url = req.originalUrl;
-          let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-          template = await vite.transformIndexHtml(url, template);
-          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-        } catch (e: any) {
-          vite.ssrFixStacktrace(e);
-          next(e);
-        }
-      });
-    } else {
-      const distPath = path.join(process.cwd(), "dist");
-      app.use(express.static(distPath));
-      app.get("*", (req, res) => {
-        res.sendFile(path.join(distPath, "index.html"));
-      });
-    }
+  // Only listen if not in serverless environment
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`[PROD] Server running on http://localhost:${PORT}`);
+    });
   }
 }
 
-// Initialize Firebase client for backend
-let db: any = null;
-function getDb() {
-  if (!db) {
+// Check if we should start the server (standalone vs imported)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer().catch(err => {
+    console.error("[CRITICAL] Failed to start server:", err);
+  });
+}
+
+// Initialize Firebase Admin for backend privileged access
+let adminDb: any = null;
+function getAdminDb() {
+  if (!adminDb) {
     try {
       const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-      if (!fs.existsSync(configPath)) {
-        console.warn("firebase-applet-config.json not found. Database features will be mocked.");
-        return null;
-      }
-      const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
-      const app = initializeApp(firebaseConfig);
+      let firebaseConfig: any = {};
       
-      // Use standard settings with long polling to avoid connection issues in some environments
-      const dbId = (firebaseConfig as any).firestoreDatabaseId;
+      if (fs.existsSync(configPath)) {
+        firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      } else {
+        console.warn("[PROD] firebase-applet-config.json not found. Trying Env config.");
+        // Fallback or skip if not in AI Studio workspace
+      }
+      
+      if (getApps().length === 0) {
+        const saKey = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (saKey) {
+          console.log("[PROD] Initializing Firebase Admin with Service Account from ENV.");
+          initializeApp({
+            credential: cert(JSON.parse(saKey)),
+            projectId: firebaseConfig.projectId
+          });
+        } else {
+          console.log("[PROD] Initializing Firebase Admin with Project ID: " + firebaseConfig.projectId);
+          initializeApp({
+            projectId: firebaseConfig.projectId
+          });
+        }
+      }
+      
+      const dbId = firebaseConfig.firestoreDatabaseId;
       const finalDbId = (dbId && dbId !== '(default)' && dbId !== 'default') ? dbId : undefined;
       
-      db = initializeFirestore(app, {
-        experimentalForceLongPolling: true,
-      }, finalDbId);
+      adminDb = getFirestore(finalDbId);
+      console.log("[PROD] Firebase Admin initialized for Project ID:", firebaseConfig.projectId || "unknown");
     } catch (err) {
-      console.error("Failed to initialize Firebase in server:", err);
+      console.error("[PROD] Failed to initialize Firebase Admin:", err);
       return null;
     }
   }
-  return db;
+  return adminDb;
 }
-
-startServer();

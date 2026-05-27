@@ -51,12 +51,19 @@ const AIChatWidget: React.FC = () => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
+      }
+
       const data = await response.json();
-      const aiMessage: Message = { role: 'assistant', content: data.text || 'Sorry, I encountered an issue. Please try again.' };
+      const aiMessage: Message = { role: 'assistant', content: data.text || 'I encountered an issue processing your request.' };
       setChatHistory((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error('Chat Error:', error);
-      setChatHistory((prev) => [...prev, { role: 'assistant', content: 'Waan ka xunnahay, cilad ayaa ku timid adeegga AI. Fadlan xiriirka internetka hubi.' }]);
+      setChatHistory((prev) => [...prev, { 
+        role: 'assistant', 
+        content: 'Waan ka xunnahay, adeegga AI hadda ma heli karno. Fadlan dib iskugu day ama hubi xiriirkaaga.' 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -64,16 +71,16 @@ const AIChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Mini Premium Design */}
       <motion.button
         id="amaanchat-trigger"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-[#1E3A8A] to-[#7C3AED] text-white shadow-2xl flex items-center justify-center z-[9999] group overflow-hidden"
+        className="fixed bottom-6 right-6 w-9 h-9 rounded-xl bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20 transition-all z-[9999] flex items-center justify-center group"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ 
           scale: 1, 
           opacity: 1,
-          y: [0, -8, 0],
+          y: [0, -4, 0],
         }}
         transition={{
           y: {
@@ -84,18 +91,10 @@ const AIChatWidget: React.FC = () => {
           scale: { duration: 0.3 },
           opacity: { duration: 0.3 }
         }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.1, backgroundColor: '#1e40af' }}
+        whileTap={{ scale: 0.9 }}
       >
-        <Sparkles size={24} className="relative z-10 group-hover:scale-110 transition-transform duration-300" />
-        
-        {/* Soft Premium Glow */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
-        <motion.div
-          animate={{ opacity: [0.1, 0.3, 0.1] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="absolute inset-0 bg-white"
-        />
+        <Sparkles size={16} className="relative z-10 group-hover:scale-110 transition-transform duration-300" />
       </motion.button>
 
       {/* Chat Window */}
@@ -103,123 +102,82 @@ const AIChatWidget: React.FC = () => {
         {isOpen && (
           <motion.div
             id="amaanchat-window"
-            initial={{ opacity: 0, y: 50, scale: 0.9, x: 20 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95, x: 10 }}
             animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9, x: 20 }}
-            className={`fixed bottom-24 right-0 sm:right-6 w-full sm:w-[400px] h-[calc(100vh-120px)] sm:h-[600px] max-h-[80vh] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-[9998] backdrop-blur-xl ${
+            exit={{ opacity: 0, y: 30, scale: 0.95, x: 10 }}
+            className={`fixed bottom-20 right-0 sm:right-6 w-full sm:w-[320px] h-[480px] sm:h-[480px] max-h-[80vh] bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800/80 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-[9998] backdrop-blur-xl ${
               isOpen ? 'pointer-events-auto' : 'pointer-events-none'
             }`}
           >
             {/* Header */}
-            <div className="p-4 bg-gradient-to-r from-[#1E3A8A] to-[#7C3AED] text-white flex items-center justify-between shadow-md">
+            <div className="p-4 bg-zinc-900 dark:bg-black text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                  <Sparkles size={20} className="text-white" />
+                <div className="w-8 h-8 rounded-lg bg-[#1E3A8A] flex items-center justify-center shadow-inner">
+                  <Sparkles size={16} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">Amaan AI Assistant</h3>
-                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Find properties instantly</p>
+                  <h3 className="font-bold text-xs tracking-tight">Amaan Chatbot</h3>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <p className="text-[9px] text-zinc-400 font-medium uppercase tracking-wider">AI System Online</p>
+                  </div>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white"
                 title="Close chat"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
-              {chatHistory.length === 0 && (
-                <div className="space-y-6 pt-4">
-                  <div className="text-center space-y-2">
-                    <div className="w-16 h-16 bg-gradient-to-tr from-[#1E3A8A]/10 to-[#7C3AED]/10 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-[#1E3A8A]/10">
-                      <Sparkles size={32} className="text-[#1E3A8A]" />
-                    </div>
-                    <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 italic">Iska warran?</h2>
-                    <p className="text-sm text-zinc-500 max-w-[240px] mx-auto">
-                      Halkan waxaad ka heli kartaa guryaha, dhulka iyo adeegyada magaalada ee AmaanEstate.
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 scroll-smooth bg-zinc-50/50 dark:bg-zinc-900/20">
+              <div className="space-y-6 pt-4">
+                <div className="text-center space-y-3">
+                  <div className="w-14 h-14 bg-white dark:bg-zinc-900 shadow-sm border border-zinc-100 dark:border-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <Sparkles size={24} className="text-[#1E3A8A]" />
+                  </div>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Smart AI Property Assistant</h2>
+                  
+                  <div className="bg-[#1E3A8A]/5 dark:bg-[#1E3A8A]/10 p-4 rounded-2xl border border-[#1E3A8A]/10">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                      Smart AI property assistant coming soon. We are preparing an advanced real estate intelligence system for Somalia and Ethiopia.
                     </p>
                   </div>
-
-                  <div className="grid grid-cols-1 gap-2">
-                    {SUGGESTED_QUERIES.map((q, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSendMessage(q.label)}
-                        className="flex items-center gap-3 p-3 text-left text-sm bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50 transition-all group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center text-zinc-500 group-hover:text-[#1E3A8A] transition-colors">
-                          <q.icon size={16} />
-                        </div>
-                        <span className="font-medium text-zinc-700 dark:text-zinc-300">{q.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {chatHistory.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${
-                      msg.role === 'user' 
-                        ? 'bg-[#1E3A8A] text-white rounded-tr-none' 
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-tl-none border border-zinc-200 dark:border-zinc-700'
-                    }`}
-                  >
-                    <div className="markdown-body prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-a:text-[#C5A059] prose-a:no-underline hover:prose-a:underline">
-                      <Markdown>{msg.content}</Markdown>
+                  
+                  <div className="pt-4 space-y-2">
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">Planned Features</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {['Valuation', 'Matchmaking', 'Deep Search'].map((feat) => (
+                        <span key={feat} className="px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">
+                          {feat}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                </motion.div>
-              ))}
-
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-2xl rounded-tl-none border border-zinc-200 dark:border-zinc-700 flex items-center gap-3">
-                    <Loader2 size={16} className="animate-spin text-[#1E3A8A]" />
-                    <span className="text-xs font-medium text-zinc-500">Amaan AI is searching...</span>
-                  </div>
                 </div>
-              )}
+              </div>
+
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800">
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
-                }}
-                className="relative"
-              >
+            {/* Input Area (Disabled for Coming Soon) */}
+            <div className="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="relative group grayscale">
                 <input
                   type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Ask me anything..."
-                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/20 focus:border-[#1E3A8A] transition-all"
-                  disabled={isLoading}
+                  placeholder="System upgrading..."
+                  className="w-full bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700 rounded-xl py-3 pl-4 pr-12 text-sm text-zinc-400 cursor-not-allowed"
+                  disabled
                 />
-                <button
-                  type="submit"
-                  disabled={isLoading || !message.trim()}
-                  className="absolute right-2 top-2 bottom-2 w-10 h-10 flex items-center justify-center rounded-xl bg-[#1E3A8A] text-white disabled:opacity-50 disabled:grayscale transition-all"
-                >
-                  <Send size={18} />
-                </button>
-              </form>
+                <div className="absolute right-2 top-2 bottom-2 w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-400">
+                  <Send size={14} />
+                </div>
+              </div>
               <div className="mt-3 text-center">
-                <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-[0.2em]">Crafted by AmaanEstate</p>
+                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-[0.3em]">AmaanEstate Premium</p>
               </div>
             </div>
           </motion.div>

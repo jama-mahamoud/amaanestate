@@ -215,7 +215,7 @@ service cloud.firestore {
 
     // Services
     match /professionalServices/{serviceId} {
-      allow read: if resource.data.status == 'active' || (isSignedIn() && isOwner(resource.data.providerId)) || isAdmin();
+      allow read: if true;
       allow create: if isSignedIn() && isValidService(incoming());
       allow update: if isOwner(existing().providerId) || isAdmin();
       allow delete: if isAdmin();
