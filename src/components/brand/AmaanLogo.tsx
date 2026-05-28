@@ -98,60 +98,231 @@ export default function AmaanLogo({
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Geometric "A" structure - sophisticated, minimalist */}
-          <motion.path
-            d="M50 15 L85 85"
-            stroke={color.primary}
-            strokeWidth="8"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-          />
-          <motion.path
-            d="M50 15 L15 85"
-            stroke={color.primary}
-            strokeWidth="8"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          />
-          {/* The crossbar - stylized as architectural detail */}
-          <motion.path
-            d="M32 60 L68 60"
-            stroke={color.secondary}
-            strokeWidth="6"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-          />
-          
-          {/* Architectural roof line accent to reflect Real Estate */}
-          <motion.path
-            d="M10 90 L50 75 L90 90"
-            stroke={color.primary}
-            strokeWidth="2"
-            strokeOpacity="0.4"
-            strokeLinecap="round"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
-            transition={{ duration: 1.5, delay: 0.8 }}
+          <defs>
+            {/* Multi-stop golden metallic gradient simulating specularity */}
+            <linearGradient id="goldReflective" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#9B7836" />
+              <stop offset="15%" stopColor="#F7E5BC" />
+              <stop offset="30%" stopColor="#DDAA46" />
+              <stop offset="45%" stopColor="#FFF3D1" />
+              <stop offset="65%" stopColor="#C5A059" />
+              <stop offset="85%" stopColor="#FDECC8" />
+              <stop offset="100%" stopColor="#8A6624" />
+            </linearGradient>
+
+            {/* Left-facing facets (bright light source gradient) */}
+            <linearGradient id="goldLeft" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#FFF3D1" />
+              <stop offset="50%" stopColor="#E6C587" />
+              <stop offset="100%" stopColor="#9B7836" />
+            </linearGradient>
+
+            {/* Right-facing facets (shadow/recessed gradient) */}
+            <linearGradient id="goldRight" x1="1" y1="0" x2="0.4" y2="1">
+              <stop offset="0%" stopColor="#A6843F" />
+              <stop offset="50%" stopColor="#7E6023" />
+              <stop offset="100%" stopColor="#413010" />
+            </linearGradient>
+
+            {/* Bottom-facing upper facets (mid-tone) */}
+            <linearGradient id="goldBottomLight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FDECC8" />
+              <stop offset="100%" stopColor="#AA853C" />
+            </linearGradient>
+
+            {/* Bottom-facing lower facets (deep shadow) */}
+            <linearGradient id="goldBottomDark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#8A6624" />
+              <stop offset="100%" stopColor="#3B2C0D" />
+            </linearGradient>
+
+            {/* Dark luxury background circular shield gradient */}
+            <radialGradient id="shieldBg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#222222" />
+              <stop offset="65%" stopColor="#0B0B0B" />
+              <stop offset="100%" stopColor="#020202" />
+            </radialGradient>
+
+            {/* Premium sparkle glow lens flare filter */}
+            <filter id="sparkleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feColorMatrix type="matrix" values="1 0 0 0 1  0 1 0 0 0.82  0 0 1 0 0.65  0 0 0 1 0" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* 1. Outer Polished Gold Metallic Frame */}
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="46.5" 
+            stroke="url(#goldReflective)" 
+            strokeWidth="3" 
+            fill="none" 
           />
 
-          {/* Premium shimmer effect circle */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r="45"
-            stroke={color.primary}
-            strokeWidth="0.5"
-            strokeOpacity="0.2"
-            strokeDasharray="4 4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          {/* 2. Inner Dark Textured Core Plate */}
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="45.1" 
+            fill="url(#shieldBg)" 
           />
+
+          {/* 3. Inner Decorative Dashed Gauge Ring */}
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="43" 
+            stroke="url(#goldReflective)" 
+            strokeWidth="0.5" 
+            strokeDasharray="2 3" 
+            opacity="0.35" 
+            fill="none" 
+          />
+
+          {/* 4. Luxury 3D Beveled Gold Triangle structure */}
+          {/* Left Bar Inside Facet */}
+          <motion.path
+            d="M30 66 L50 31 L50 22 L23 69 Z"
+            fill="url(#goldLeft)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          />
+
+          {/* Left Bar Outside Facet */}
+          <motion.path
+            d="M23 69 L50 22 L50 13 L16 72 Z"
+            fill="url(#goldReflective)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          />
+
+          {/* Right Bar Inside Facet */}
+          <motion.path
+            d="M70 66 L50 31 L50 22 L77 69 Z"
+            fill="url(#goldRight)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          />
+
+          {/* Right Bar Outside Facet */}
+          <motion.path
+            d="M77 69 L50 22 L50 13 L84 72 Z"
+            fill="url(#goldRight)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          />
+
+          {/* Bottom Bar Upper Facet */}
+          <motion.path
+            d="M30 66 L70 66 L77 69 L23 69 Z"
+            fill="url(#goldBottomLight)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          />
+
+          {/* Bottom Bar Lower Facet */}
+          <motion.path
+            d="M23 69 L77 69 L84 72 L16 72 Z"
+            fill="url(#goldBottomDark)"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          />
+
+          {/* 5. Centerpiece Luxury Key (Faithful to the requested design) */}
+          <g>
+            {/* Clover Bow (Top Three Loops) */}
+            {/* Center Bow circle */}
+            <motion.circle
+              cx="50"
+              cy="41.5"
+              r="4"
+              stroke="url(#goldReflective)"
+              strokeWidth="1.5"
+              fill="none"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            />
+            {/* Left Bow circle */}
+            <motion.circle
+              cx="46"
+              cy="45"
+              r="3.5"
+              stroke="url(#goldReflective)"
+              strokeWidth="1.5"
+              fill="none"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            />
+            {/* Right Bow circle */}
+            <motion.circle
+              cx="54"
+              cy="45"
+              r="3.5"
+              stroke="url(#goldReflective)"
+              strokeWidth="1.5"
+              fill="none"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            />
+            {/* Small Gold Monogram Bow core */}
+            <circle cx="50" cy="45" r="1.2" fill="url(#goldReflective)" />
+
+            {/* Key Shaft */}
+            <motion.rect
+              x="48.8"
+              y="48"
+              width="2.4"
+              height="18"
+              rx="0.4"
+              fill="url(#goldReflective)"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 18, opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.9 }}
+            />
+
+            {/* Key Shaft Collars / Accent Rings */}
+            <rect x="47.5" y="49" width="5" height="1.2" rx="0.2" fill="url(#goldReflective)" />
+            <rect x="48" y="61.5" width="4" height="1.2" rx="0.2" fill="url(#goldReflective)" />
+
+            {/* Key Toothed Bit (Lock teeth styled elegantly on the right) */}
+            <motion.path
+              d="M51.2 53 h4 v1.5 h-2.5 v1.2 h2.5 v1.5 h-2.5 v1.2 h2.5 v1.5 h-4 Z"
+              fill="url(#goldReflective)"
+              initial={{ opacity: 0, x: -3 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 1.1 }}
+            />
+
+            {/* Key Pointed Tip */}
+            <motion.path
+              d="M47.8 66 L50 69.2 L52.2 66 Z"
+              fill="url(#goldReflective)"
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1.2 }}
+            />
+          </g>
+
+          {/* 6. Top Peak Glowing Star Lens Flare */}
+          <g transform="translate(50, 13)">
+            <ellipse cx="0" cy="0" rx="1.5" ry="11" fill="#FFFFFF" filter="url(#sparkleGlow)" />
+            <ellipse cx="0" cy="0" rx="11" ry="1.5" fill="#FFFFFF" filter="url(#sparkleGlow)" />
+            <circle cx="0" cy="0" r="3" fill="#FFFFFF" filter="url(#sparkleGlow)" />
+          </g>
         </svg>
       </div>
 
