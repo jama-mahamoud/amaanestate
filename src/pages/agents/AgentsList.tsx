@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, 
   ArrowUpRight, 
@@ -42,11 +42,21 @@ export default function AgentsList() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  
   // Enterprise Division-based navigation Tabs
-  const [division, setDivision] = useState<'agents' | 'brokers' | 'registry'>('agents');
+  const [division, setDivision] = useState<'agents' | 'brokers' | 'registry'>(() => {
+    if (initialTab === 'brokers') return 'brokers';
+    if (initialTab === 'registry') return 'registry';
+    return 'agents';
+  });
   
   // Sub-navigation state hooks for high fidelity role separation
-  const [agentsSubTab, setAgentsSubTab] = useState<'directory' | 'verified' | 'join' | 'reviews'>('directory');
+  const [agentsSubTab, setAgentsSubTab] = useState<'directory' | 'verified' | 'join' | 'reviews'>(() => {
+    if (initialTab === 'verified') return 'verified';
+    return 'directory';
+  });
   const [brokersSubTab, setBrokersSubTab] = useState<'verified-brokers' | 'agencies-directory' | 'apply' | 'corporate-agencies'>('verified-brokers');
   const [registrySubTab, setRegistrySubTab] = useState<'center' | 'applications' | 'compliance' | 'approved'>('center');
 
@@ -65,8 +75,27 @@ export default function AgentsList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('All');
   const [selectedPropType, setSelectedPropType] = useState('All');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(() => {
+    return initialTab === 'verified';
+  });
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'brokers') {
+      setDivision('brokers');
+    } else if (tab === 'registry') {
+      setDivision('registry');
+    } else if (tab === 'agents') {
+      setDivision('agents');
+      setVerifiedOnly(false);
+      setAgentsSubTab('directory');
+    } else if (tab === 'verified') {
+      setDivision('agents');
+      setVerifiedOnly(true);
+      setAgentsSubTab('verified');
+    }
+  }, [searchParams]);
 
   // Mock reviewer data and agents lists for premium visual engagement
   const mockAgentReviews = [

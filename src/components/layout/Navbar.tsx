@@ -140,17 +140,11 @@ export default function Navbar() {
       title: 'Agents & Registry',
       sections: [
         {
-          title: 'Agent Network',
+          title: 'Ecosystem Directory',
           items: [
-            { title: 'Verified Agents', href: '/agents' },
-            { title: 'Apply to Register', href: '/agents/apply' },
-          ]
-        },
-        {
-          title: 'Broker Registry',
-          items: [
-            { title: 'Agent List', href: '/agents' },
-            { title: 'Verify Badge Check', href: '/agents' },
+            { title: 'Agents', href: '/agents?tab=agents' },
+            { title: 'Verified Agents', href: '/agents?tab=verified' },
+            { title: 'Broker Registry', href: '/agents?tab=registry' },
           ]
         }
       ]
@@ -223,29 +217,29 @@ export default function Navbar() {
 
       {/* Main Navbar */}
       <div className={`container mx-auto max-w-7xl px-4 md:px-6 flex items-center justify-between transition-all duration-500 ${
-        isScrolled ? 'py-3' : 'py-4'
+        isScrolled ? 'py-2.5' : 'py-3.5'
       }`}>
         {/* LEFT AREA: Logo */}
-        <div className="flex items-center shrink-0 lg:flex-1">
+        <div className="flex items-center shrink-0">
           <Link to="/" className="flex items-center group outline-none">
-            <PremiumLogo className="h-6 md:h-8" variant="white" />
+            <PremiumLogo className="h-6 md:h-7.5" variant="white" />
           </Link>
         </div>
         
-        {/* Desktop Nav - Centered */}
-        <nav className="hidden lg:flex items-center gap-6 justify-center flex-none text-white/70">
+        {/* Desktop Nav - Left Aligned and beautifully spaced */}
+        <nav className="hidden lg:flex items-center gap-x-5 xl:gap-x-6 justify-start flex-1 ml-6 xl:ml-12 text-white/70 overflow-hidden">
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} isDark={true} />
           ))}
-          <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Agreements')}</Link>
-          <Link to="/news" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('News')}</Link>
-          <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Jobs')}</Link>
-          <Link to="/about" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('About')}</Link>
-          <Link to="/contact" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Contact')}</Link>
+          <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agreements')}</Link>
+          <Link to="/news" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('News')}</Link>
+          <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
+          <Link to="/about" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('About')}</Link>
+          <Link to="/contact" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Contact')}</Link>
         </nav>
 
         {/* Desktop Actions - Right */}
-        <div className="hidden lg:flex items-center gap-6 shrink-0 lg:flex-1 justify-end">
+        <div className="hidden lg:flex items-center gap-5 xl:gap-6 shrink-0 justify-end ml-4">
              {/* Language Dropdown Start */}
              <div className="relative">
               <div 

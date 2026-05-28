@@ -291,11 +291,10 @@ export default function Home() {
               className="flex flex-col sm:flex-row items-center justify-start gap-4 w-full"
             >
               <Link
-                to="/properties"
-                onClick={scrollToListings}
+                to="/agents/apply"
                 className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-black bg-[#C5A059] hover:bg-white transition-all rounded-2xl shadow-xl shadow-[#C5A059]/10 hover:-translate-y-0.5"
               >
-                Browse Marketplace
+                Become an Agent / Broker
               </Link>
 
               <Link

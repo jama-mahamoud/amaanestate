@@ -39,6 +39,8 @@ const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
 const AgentsList = lazy(() => import('./pages/agents/AgentsList'));
 const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
 const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
+const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
+const BrokerRegister = lazy(() => import('./pages/agents/BrokerRegister'));
 
 // Careers and Jobs Module
 const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
@@ -108,6 +110,8 @@ export default function App() {
                 <Route path="agents" element={<AgentsList />} />
                 <Route path="agents/:id" element={<AgentDetails />} />
                 <Route path="agents/apply" element={<AgentApply />} />
+                <Route path="agent-register" element={<AgentRegister />} />
+                <Route path="broker-register" element={<BrokerRegister />} />
 
 
                 {/* Other Services and Pages */}

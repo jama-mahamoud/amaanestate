@@ -154,7 +154,7 @@ export interface Professional {
   isVerified: boolean;
 }
 
-export type UserRole = 'admin' | 'editor' | 'agent' | 'agency' | 'verified_professional' | 'normal_user';
+export type UserRole = 'admin' | 'editor' | 'agent' | 'broker' | 'agency' | 'verified_professional' | 'normal_user';
 
 export interface UserProfile {
   uid: string;
