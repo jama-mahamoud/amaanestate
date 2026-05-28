@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { User, Mail, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumLogo from '@/components/brand/PremiumLogo';
+import { parseAuthError } from '@/utils/firebaseErrors';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -31,7 +32,7 @@ export default function Register() {
       await signUp(email, password, name);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -44,7 +45,7 @@ export default function Register() {
       await signInWithGoogle();
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Google sign in failed');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -84,58 +85,58 @@ export default function Register() {
           <form className="space-y-6" onSubmit={handleRegister}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative group md:col-span-2">
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   placeholder="Full Name" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
 
               <div className="relative group md:col-span-2">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   type="email" 
                   placeholder="Email Address" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   type="password" 
                   placeholder="Password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
 
               <div className="relative group">
-                <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   type="password" 
                   placeholder="Confirm Password" 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
             </div>
 
             <div className="p-6 bg-white/5 border border-white/5 rounded-2xl">
               <label className="flex items-start gap-3 text-xs text-white/40 cursor-pointer group leading-relaxed">
-                <input type="checkbox" required className="mt-1 w-4 h-4 rounded bg-white/10 border-white/10 checked:bg-emerald-500 accent-emerald-500" />
+                <input type="checkbox" required className="mt-1 w-4 h-4 rounded bg-white/10 border-white/10 checked:bg-[#C5A059] accent-[#C5A059]" />
                 <span>
-                  I agree to the <Link to="/terms" className="text-emerald-400 hover:underline">Terms</Link> and <Link to="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>.
+                  I agree to the <Link to="/terms" className="text-[#C5A059] hover:underline">Terms</Link> and <Link to="/privacy" className="text-[#C5A059] hover:underline">Privacy Policy</Link>.
                 </span>
               </label>
             </div>
@@ -143,7 +144,7 @@ export default function Register() {
             <div className="space-y-4">
               <Button 
                 type="submit"
-                className="w-full bg-emerald-500 text-white hover:bg-emerald-600 transition-all h-14 rounded-2xl font-bold text-base shadow-xl shadow-emerald-500/10"
+                className="w-full bg-[#C5A059] text-black hover:bg-[#D4AF37] transition-all h-14 rounded-2xl font-bold text-base shadow-xl shadow-[#C5A059]/10"
                 disabled={loading}
               >
                 {loading ? 'Creating...' : 'Create Account'}
@@ -164,7 +165,7 @@ export default function Register() {
             <div className="text-center pt-8 border-t border-white/5">
               <p className="text-white/40 text-xs font-medium">
                 Already have an account?{' '}
-                <Link to="/auth/login" className="text-white font-bold text-sm hover:text-emerald-400 transition-colors ml-2">
+                <Link to="/auth/login" className="text-white font-bold text-sm hover:text-[#C5A059] transition-colors ml-2">
                   Sign In
                 </Link>
               </p>

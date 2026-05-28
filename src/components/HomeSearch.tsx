@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const cities = [
   'Mogadishu', 'Hargeisa', 'Bosaso', 'Garowe', 'Kismayo', 'Baidoa', 'Burco', 'Laascaanood',
   'Beledweyne', 'Galkayo', 'Jowhar', 'Marka', 'Baraawe', 'Dhusamareb', 'Afgooye', 'Erigavo',
-  'Berbera', 'Jigjiga', 'Dire Dawa', 'Other'
+  'Berbera', 'Jigjiga', 'Dire Dawa', 'Addis Ababa', 'Other'
 ];
 
 interface HomeSearchProps {

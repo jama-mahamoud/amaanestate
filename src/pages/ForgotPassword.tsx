@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AmaanLogo from '@/components/brand/AmaanLogo';
+import { parseAuthError } from '@/utils/firebaseErrors';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
       }
       setSubmitted(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send recovery email. Verify details and try again.');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }

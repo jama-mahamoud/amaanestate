@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { jobService } from '@/services/jobService';
 import { Job, CompanyProfile, CandidateProfile, JobApplication } from '@/types';
+import PremiumSelect from '@/components/ui/PremiumSelect';
 
 const CATEGORIES = [
   'Real Estate', 'Construction', 'Engineering', 'Security', 'Cleaning', 
@@ -521,53 +522,37 @@ export default function JobsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Sector Class</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C5A059] text-white"
-                    >
-                      <option value="All">All Sectors</option>
-                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </div>
+                  <PremiumSelect
+                    label="Sector Class"
+                    value={category}
+                    onChange={setCategory}
+                    options={[{ label: 'All Sectors', value: 'All' }, ...CATEGORIES]}
+                    icon={<Briefcase size={14} />}
+                  />
 
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Metro Hub</label>
-                    <select
-                      value={locFilter}
-                      onChange={(e) => setLocFilter(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C5A059] text-white"
-                    >
-                      <option value="All">All Cities</option>
-                      {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
+                  <PremiumSelect
+                    label="Metro Hub"
+                    value={locFilter}
+                    onChange={setLocFilter}
+                    options={[{ label: 'All Cities', value: 'All' }, ...CITIES]}
+                    icon={<MapPin size={14} />}
+                  />
 
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Workplace Arrangement</label>
-                    <select
-                      value={workplace}
-                      onChange={(e) => setWorkplace(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none text-white"
-                    >
-                      <option value="All font-bold">All Types</option>
-                      {WORKPLACE_TYPES.map(wp => <option key={wp} value={wp}>{wp}</option>)}
-                    </select>
-                  </div>
+                  <PremiumSelect
+                    label="Workplace Arrangement"
+                    value={workplace}
+                    onChange={setWorkplace}
+                    options={[{ label: 'All Types', value: 'All' }, ...WORKPLACE_TYPES]}
+                    icon={<Building size={14} />}
+                  />
 
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Employment Terms</label>
-                    <select
-                      value={employment}
-                      onChange={(e) => setEmployment(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none text-white"
-                    >
-                      <option value="All">All Contracts</option>
-                      {EMPLOYMENT_TYPES.map(em => <option key={em} value={em}>{em}</option>)}
-                    </select>
-                  </div>
+                  <PremiumSelect
+                    label="Employment Terms"
+                    value={employment}
+                    onChange={setEmployment}
+                    options={[{ label: 'All Contracts', value: 'All' }, ...EMPLOYMENT_TYPES]}
+                    icon={<Clock size={14} />}
+                  />
 
                   <div className="pt-2 border-t border-white/5">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -1033,49 +1018,37 @@ export default function JobsPage() {
                               className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C5A059]"
                             />
                           </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Industrial Category*</label>
-                            <select
-                              value={formCategory}
-                              onChange={(e) => setFormCategory(e.target.value)}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                            >
-                              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
+                          <PremiumSelect
+                            label="Industrial Category*"
+                            value={formCategory}
+                            onChange={setFormCategory}
+                            options={CATEGORIES}
+                            icon={<Briefcase size={14} />}
+                          />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Metro Center Location*</label>
-                            <select
-                              value={formLocation}
-                              onChange={(e) => setFormLocation(e.target.value)}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                            >
-                              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Employment Type*</label>
-                            <select
-                              value={formEmployment}
-                              onChange={(e) => setFormEmployment(e.target.value as any)}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                            >
-                              {EMPLOYMENT_TYPES.map(e => <option key={e} value={e}>{e}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Workplace Style*</label>
-                            <select
-                              value={formWorkplace}
-                              onChange={(e) => setFormWorkplace(e.target.value as any)}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                            >
-                              {WORKPLACE_TYPES.map(w => <option key={w} value={w}>{w}</option>)}
-                            </select>
-                          </div>
+                          <PremiumSelect
+                            label="Metro Center Location*"
+                            value={formLocation}
+                            onChange={setFormLocation}
+                            options={CITIES}
+                            icon={<MapPin size={14} />}
+                          />
+                          <PremiumSelect
+                            label="Employment Type*"
+                            value={formEmployment}
+                            onChange={(val) => setFormEmployment(val as any)}
+                            options={EMPLOYMENT_TYPES}
+                            icon={<Clock size={14} />}
+                          />
+                          <PremiumSelect
+                            label="Workplace Style*"
+                            value={formWorkplace}
+                            onChange={(val) => setFormWorkplace(val as any)}
+                            options={WORKPLACE_TYPES}
+                            icon={<Building size={14} />}
+                          />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

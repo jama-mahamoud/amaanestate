@@ -9,7 +9,8 @@ import {
   updateProfile,
   setPersistence,
   browserLocalPersistence,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
@@ -56,10 +57,13 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  emailVerified: boolean;
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string) => Promise<void>;
+  resendVerification: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   passwordReset: (email: string) => Promise<void>;
 }
 
@@ -68,6 +72,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -87,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         setUser(user);
+        setEmailVerified(user ? user.emailVerified : false);
         if (user) {
           // Ensure profile exists first
           const userRef = doc(db, 'users', user.uid);
@@ -232,9 +238,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         await updateProfile(userCredential.user, { displayName: name });
+        await sendEmailVerification(userCredential.user);
     } catch (err) {
         console.error("Sign-up error:", err);
         throw err;
+    }
+  };
+
+  const resendVerification = async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+    } else {
+      throw new Error("No user is currently signed in.");
+    }
+  };
+
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      const updatedUser = auth.currentUser;
+      setUser(updatedUser);
+      setEmailVerified(updatedUser.emailVerified);
+      
+      // Update isVerified in the Firestore user profile if verified now
+      if (updatedUser.emailVerified) {
+        try {
+          const userRef = doc(db, 'users', updatedUser.uid);
+          await setDoc(userRef, { isVerified: true }, { merge: true });
+        } catch (err) {
+          console.warn("Failed to update isVerified in firestore:", err);
+        }
+      }
     }
   };
 
@@ -248,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, logout, signInWithGoogle, signIn, signUp, passwordReset }}>
+    <AuthContext.Provider value={{ user, profile, loading, emailVerified, logout, signInWithGoogle, signIn, signUp, resendVerification, refreshUser, passwordReset }}>
       {children}
     </AuthContext.Provider>
   );

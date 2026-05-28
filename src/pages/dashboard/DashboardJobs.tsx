@@ -4,13 +4,14 @@ import {
   LayoutDashboard, Plus, Briefcase, FileText, Building, Users, FileSignature, 
   HelpCircle, CheckCircle, XCircle, Sparkles, TrendingUp, Search, Calendar, 
   MapPin, DollarSign, Trash2, ShieldCheck, Check, Edit, Mail, Phone, 
-  ExternalLink, Loader2, Award, Zap
+  ExternalLink, Loader2, Award, Zap, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { jobService } from '@/services/jobService';
 import { Job, CompanyProfile, CandidateProfile, JobApplication } from '@/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import PremiumSelect from '@/components/ui/PremiumSelect';
 
 type TabType = 
   | 'overview' 
@@ -362,16 +363,13 @@ export default function DashboardJobs() {
         {/* ATS Space Left Sub Navigation */}
         <div className="lg:col-span-1 space-y-2">
           <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl block lg:hidden">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/40 block mb-2 font-black">Navigate Modules</span>
-            <select 
+            <PremiumSelect
+              label="Navigate Modules"
               value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as TabType)}
-              className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C5A059]"
-            >
-              {sideSubTabs.map(st => (
-                <option key={st.value} value={st.value}>{st.label}</option>
-              ))}
-            </select>
+              onChange={(val) => setActiveTab(val as TabType)}
+              options={sideSubTabs.map(st => ({ label: st.label, value: st.value }))}
+              icon={<LayoutDashboard size={14} />}
+            />
           </div>
 
           <div className="hidden lg:block bg-black/40 border border-white/5 p-3.5 rounded-3xl space-y-1">
@@ -554,55 +552,47 @@ export default function DashboardJobs() {
                         />
                       </div>
 
-                      <div>
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Vacancy Category*</label>
-                        <select
-                          value={formCategory}
-                          onChange={(e) => setFormCategory(e.target.value)}
-                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-luxury-gold"
-                        >
-                          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
+                      <PremiumSelect
+                        label="Vacancy Category*"
+                        value={formCategory}
+                        onChange={setFormCategory}
+                        options={CATEGORIES}
+                        icon={<Briefcase size={14} />}
+                      />
 
-                      <div>
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Location Precinct*</label>
-                        <select
-                          value={formLocation}
-                          onChange={(e) => setFormLocation(e.target.value)}
-                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-luxury-gold"
-                        >
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
+                      <PremiumSelect
+                        label="Location Precinct*"
+                        value={formLocation}
+                        onChange={setFormLocation}
+                        options={CITIES}
+                        icon={<MapPin size={14} />}
+                      />
 
-                      <div>
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Workplace Style*</label>
-                        <select
-                          value={formWorkplace}
-                          onChange={(e) => setFormWorkplace(e.target.value as any)}
-                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-luxury-gold"
-                        >
-                          <option value="on-site">On-Site (Precinct HQ)</option>
-                          <option value="hybrid">Hybrid (Flexible Coordinates)</option>
-                          <option value="remote">Fully Remote (Diaspora)</option>
-                        </select>
-                      </div>
+                      <PremiumSelect
+                        label="Workplace Style*"
+                        value={formWorkplace}
+                        onChange={(val) => setFormWorkplace(val as any)}
+                        options={[
+                          { label: 'On-Site (Precinct HQ)', value: 'on-site' },
+                          { label: 'Hybrid (Flexible Coordinates)', value: 'hybrid' },
+                          { label: 'Fully Remote (Diaspora)', value: 'remote' }
+                        ]}
+                        icon={<Building size={14} />}
+                      />
 
-                      <div>
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Employment Terms*</label>
-                        <select
-                          value={formEmployment}
-                          onChange={(e) => setFormEmployment(e.target.value as any)}
-                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-luxury-gold"
-                        >
-                          <option value="full-time">Full-Time Career</option>
-                          <option value="part-time">Part-Time Role</option>
-                          <option value="remote">Remote Contractor</option>
-                          <option value="contract">Compliance Contract</option>
-                          <option value="freelance">Freelance Workspace</option>
-                        </select>
-                      </div>
+                      <PremiumSelect
+                        label="Employment Terms*"
+                        value={formEmployment}
+                        onChange={(val) => setFormEmployment(val as any)}
+                        options={[
+                          { label: 'Full-Time Career', value: 'full-time' },
+                          { label: 'Part-Time Role', value: 'part-time' },
+                          { label: 'Remote Contractor', value: 'remote' },
+                          { label: 'Compliance Contract', value: 'contract' },
+                          { label: 'Freelance Workspace', value: 'freelance' }
+                        ]}
+                        icon={<Clock size={14} />}
+                      />
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -744,14 +734,14 @@ export default function DashboardJobs() {
                           className="w-full bg-black border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-[#C5A059]"
                         />
                       </div>
-                      <select
+                      <PremiumSelect
+                        label=""
                         value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="bg-black border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none"
-                      >
-                        <option value="All">All Categories</option>
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                        onChange={setCategoryFilter}
+                        options={[{ label: 'All Categories', value: 'All' }, ...CATEGORIES]}
+                        icon={<Briefcase size={14} />}
+                        className="md:w-64"
+                      />
                     </div>
 
                     {filteredJobs.length === 0 ? (

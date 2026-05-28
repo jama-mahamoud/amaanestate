@@ -8,6 +8,7 @@ service cloud.firestore {
 
     // 1. Core Functions & RBAC
     function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     
     // Attempt to read the user's role from the users collection
@@ -180,16 +181,16 @@ service cloud.firestore {
 
     // Professionals Directory
     match /professionals/{profileId} {
-      allow read: if true;
-      allow create: if isOwner(profileId) && isValidProfessional(incoming());
-      allow update: if (isOwner(profileId) && !('isVerified' in incoming().diff(existing()).affectedKeys())) || isAdmin();
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() && isOwner(profileId) && isValidProfessional(incoming());
+      allow update: if (isEmailVerified() && isOwner(profileId) && !('isVerified' in incoming().diff(existing()).affectedKeys())) || isAdmin();
       allow delete: if isAdmin();
     }
 
     // Listings System
     match /listings/{listingId} {
-      allow read: if true;
-      allow create: if isSignedIn() 
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() 
         && isValidListing(incoming())
         && incoming().status == 'pending'
         && incoming().verificationStatus == 'pending'
@@ -197,7 +198,7 @@ service cloud.firestore {
         && incoming().legalChecked == false
         && incoming().ownershipVerified == false;
       allow update: if (
-        (isOwner(existing().ownerId) || (isSignedIn() && existing().createdBy == request.auth.uid)) && (
+        isEmailVerified() && (isOwner(existing().ownerId) || existing().createdBy == request.auth.uid) && (
           incoming().diff(existing()).affectedKeys().hasOnly([
             'title', 'description', 'price', 'currency', 'city', 'location', 
             'images', 'features', 'updatedAt', 'metadata', 'subcategory',
@@ -209,15 +210,15 @@ service cloud.firestore {
         )
       ) || isAdmin();
       allow delete: if (
-        isSignedIn() && (existing().ownerId == request.auth.uid || existing().createdBy == request.auth.uid)
+        isEmailVerified() && (existing().ownerId == request.auth.uid || existing().createdBy == request.auth.uid)
       ) || isAdmin();
     }
 
     // Services
     match /professionalServices/{serviceId} {
-      allow read: if true;
-      allow create: if isSignedIn() && isValidService(incoming());
-      allow update: if isOwner(existing().providerId) || isAdmin();
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() && isValidService(incoming());
+      allow update: if (isEmailVerified() && isOwner(existing().providerId)) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -378,33 +379,33 @@ service cloud.firestore {
 
     // Companies Collection Security
     match /companies/{companyId} {
-      allow read: if true;
-      allow create: if isSignedIn() && incoming().ownerId == request.auth.uid;
-      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() && incoming().ownerId == request.auth.uid;
+      allow update: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
       allow delete: if isAdmin();
     }
 
     // Candidate Profiles Collection Security
     match /candidateProfiles/{candidateId} {
-      allow read: if true;
-      allow create: if isOwner(candidateId);
-      allow update: if isOwner(candidateId) || isAdmin();
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() && isOwner(candidateId);
+      allow update: if (isEmailVerified() && isOwner(candidateId)) || isAdmin();
       allow delete: if isAdmin();
     }
 
     // Jobs Collection Security
     match /jobs/{jobId} {
-      allow read: if true;
-      allow create: if isSignedIn() && incoming().ownerId == request.auth.uid;
-      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
-      allow delete: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow read: if isEmailVerified();
+      allow create: if isEmailVerified() && incoming().ownerId == request.auth.uid;
+      allow update: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow delete: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
     }
 
     // Job Applications Collection Security
     match /jobApplications/{applicationId} {
-      allow read: if isSignedIn() && (resource.data.candidateId == request.auth.uid || resource.data.get('employerId', '') == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && incoming().candidateId == request.auth.uid;
-      allow update: if isSignedIn() && (existing().candidateId == request.auth.uid || existing().get('employerId', '') == request.auth.uid || isAdmin());
+      allow read: if isEmailVerified() && (resource.data.candidateId == request.auth.uid || resource.data.get('employerId', '') == request.auth.uid || isAdmin());
+      allow create: if isEmailVerified() && incoming().candidateId == request.auth.uid;
+      allow update: if isEmailVerified() && (existing().candidateId == request.auth.uid || existing().get('employerId', '') == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
   }

@@ -16,11 +16,40 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  XCircle
+  XCircle,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
 import somaliHeroImg from '@/assets/images/somali_agency_hero_1779895169818.png';
+
+const SECTORS_LIST = [
+  { label: 'All Sectors', value: '' },
+  { label: 'Houses', value: 'house' },
+  { label: 'Villas', value: 'villa' },
+  { label: 'Apartments', value: 'apartment' },
+  { label: 'Land Plotting', value: 'land' },
+  { label: 'Commercial Buildings', value: 'commercial' }
+];
+
+const CITIES_LIST = [
+  { label: 'All Cities', value: '' },
+  { label: 'Mogadishu Coastal', value: 'Mogadishu' },
+  { label: 'Hargeisa Hub', value: 'Hargeisa' },
+  { label: 'Garowe Province', value: 'Garowe' },
+  { label: 'Bosaso Port', value: 'Bosaso' },
+  { label: 'Jigjiga Capital', value: 'Jigjiga' },
+  { label: 'Dire Dawa Region', value: 'Dire Dawa' },
+  { label: 'Addis Ababa Region', value: 'Addis Ababa' }
+];
+
+const PURPOSE_LIST = [
+  { label: 'All Agreements', value: '' },
+  { label: 'For Sale', value: 'sale' },
+  { label: 'For Rent', value: 'rent' }
+];
 
 export default function Home() {
   const navigate = useNavigate();
@@ -40,6 +69,7 @@ export default function Home() {
   const [filterSubcategory, setFilterSubcategory] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>(''); 
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const propertiesSectionRef = useRef<HTMLDivElement>(null);
 
@@ -266,7 +296,7 @@ export default function Home() {
 
       {/* Main Listings Body */}
       <section ref={propertiesSectionRef} className="py-24 bg-super-black scroll-mt-24 border-t border-white/5">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
             <div className="max-w-xl">
               <h2 className="text-3xl font-display text-white mb-4">Latest Properties</h2>
@@ -285,20 +315,20 @@ export default function Home() {
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-wrap items-center gap-3 mb-12"
+              className="flex flex-wrap items-center gap-3 mb-10"
             >
               {filterCity && (
-                <span className="premium-pill bg-white/5 text-white border border-white/10 flex items-center gap-2">
+                <span className="premium-pill bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-2">
                   City: {filterCity}
                 </span>
               )}
               {filterSubcategory && (
-                <span className="premium-pill bg-white/5 text-white border border-white/10 flex items-center gap-2">
+                <span className="premium-pill bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-2">
                   Type: {filterSubcategory}
                 </span>
               )}
               {filterStatus && (
-                <span className="premium-pill bg-white/5 text-white border border-white/10 flex items-center gap-2">
+                <span className="premium-pill bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-2">
                   {filterStatus === 'rent' ? 'For Rent' : 'For Sale'}
                 </span>
               )}
@@ -311,56 +341,225 @@ export default function Home() {
             </motion.div>
           )}
 
-          {allProperties.length === 0 ? (
-            <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40">
-              <p className="font-display">No matching properties found.</p>
-              <button
-                onClick={handleResetFilters}
-                className="mt-4 text-xs font-bold text-white hover:underline"
+          {/* TWO-COLUMN LAYOUT DESKTOP / RESPONSIVE STACK MOBILE */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            {/* LEFT COLUMN: PREMIUM CATEGORIES & FILTER SIDEBAR */}
+            <div className="lg:col-span-1 space-y-6">
+              
+              {/* Mobile Collapsible Button */}
+              <button 
+                onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+                className="w-full lg:hidden bg-white/[0.02] border border-white/10 hover:border-[#C5A059]/40 h-14 px-5 rounded-2xl flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white transition-all cursor-pointer"
               >
-                Reset Search
+                <span className="flex items-center gap-2 text-[#C5A059]">
+                  <SlidersHorizontal size={14} /> Filter Inventory ({allProperties.length})
+                </span>
+                <ChevronDown 
+                  size={16} 
+                  className={`transition-transform duration-300 ${isMobileFiltersOpen ? 'rotate-180 text-[#C5A059]' : 'rotate-0 text-white/50'}`} 
+                />
               </button>
-            </div>
-          ) : (
-            <div className="space-y-16">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {displayedProperties.map(property => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
-              </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-3 pt-8">
-                  <button
-                    onClick={() => {
-                      setCurrentPage(p => Math.max(1, p - 1));
-                      propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                    disabled={safeCurrentPage === 1}
-                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
+              {/* Sidebar Content (Always visible on desktop, toggleable on mobile) */}
+              <div className={`space-y-6 ${isMobileFiltersOpen ? 'block animate-in fade-in slide-in-from-top-4 duration-300' : 'hidden lg:block'}`}>
+                
+                {/* Categories container */}
+                <div className="bg-[#111111]/90 rounded-[2.5rem] border border-white/5 p-6 space-y-6 shadow-2xl relative overflow-hidden backdrop-blur-md">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-2xl rounded-full pointer-events-none" />
                   
-                  <div className="text-[10px] font-bold text-white/40 px-4">
-                    Page {safeCurrentPage} of {totalPages}
+                  {/* Category Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Property Sectors</h4>
+                    <div className="flex flex-col gap-1.5">
+                      {SECTORS_LIST.map((sect) => (
+                        <button
+                          key={sect.value}
+                          onClick={() => {
+                            setFilterSubcategory(sect.value);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
+                            filterSubcategory === sect.value
+                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
+                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
+                          }`}
+                        >
+                          <span>{sect.label}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
+                            filterSubcategory === sect.value 
+                              ? 'bg-black/15 text-black' 
+                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
+                          }`}>
+                            {visibleProperties.filter(item => {
+                              const itemSub = (item.subcategory || '').toLowerCase().trim();
+                              const querySub = sect.value.toLowerCase().trim();
+                              if (!sect.value) return true;
+                              return itemSub.includes(querySub) || querySub.includes(itemSub);
+                            }).length}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setCurrentPage(p => Math.min(totalPages, p + 1));
-                      propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                    disabled={safeCurrentPage === totalPages}
-                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
+                  {/* Cities Section */}
+                  <div className="space-y-3 pt-5 border-t border-white/5">
+                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Metro Locations</h4>
+                    <div className="flex flex-col gap-1.5">
+                      {CITIES_LIST.map((cityOpt) => (
+                        <button
+                          key={cityOpt.value}
+                          onClick={() => {
+                            setFilterCity(cityOpt.value);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
+                            filterCity === cityOpt.value
+                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
+                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
+                          }`}
+                        >
+                          <span>{cityOpt.label}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
+                            filterCity === cityOpt.value 
+                              ? 'bg-black/15 text-black' 
+                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
+                          }`}>
+                            {visibleProperties.filter(item => {
+                              const itemCity = (item.city || '').toLowerCase().trim();
+                              const queryCity = cityOpt.value.toLowerCase().trim();
+                              if (!cityOpt.value) return true;
+                              return itemCity === queryCity;
+                            }).length}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Purpose Section */}
+                  <div className="space-y-3 pt-5 border-t border-white/5">
+                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Transaction Type</h4>
+                    <div className="flex flex-col gap-1.5">
+                      {PURPOSE_LIST.map((purp) => (
+                        <button
+                          key={purp.value}
+                          onClick={() => {
+                            setFilterStatus(purp.value);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
+                            filterStatus === purp.value
+                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
+                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
+                          }`}
+                        >
+                          <span>{purp.label}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
+                            filterStatus === purp.value 
+                              ? 'bg-black/15 text-black' 
+                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
+                          }`}>
+                            {visibleProperties.filter(item => {
+                              const itemType = (item.listingType || '').toLowerCase().trim();
+                              const queryType = purp.value.toLowerCase().trim();
+                              if (!purp.value) return true;
+                              return itemType === queryType;
+                            }).length}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Verification promo badge */}
+                <div className="bg-gradient-to-br from-[#121212] to-black border border-[#C5A059]/10 rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-xl rounded-full" />
+                  <p className="text-[10px] font-bold text-[#C5A059] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">🛡️ Shield Verification</p>
+                  <p className="text-[11px] text-white/50 leading-relaxed font-light mb-4">Every residential lease and property title deed on our network is triple-verified by licensed land registers and compliance agents.</p>
+                  <button 
+                    onClick={() => navigate('/about')}
+                    className="w-full h-11 border border-white/10 hover:border-white/30 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl hover:bg-white/5 transition-all cursor-pointer"
                   >
-                    <ChevronRight size={18} />
+                    Learn Security Protocol
                   </button>
                 </div>
-              )}
+
+              </div>
+
             </div>
-          )}
+
+            {/* RIGHT COLUMN: MAIN CONTENT (PROPERTIES GRID) */}
+            <div className="lg:col-span-3 space-y-8">
+              
+              {/* Header metrics & label stats */}
+              <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                  Showing {allProperties.length === 0 ? '0' : `${(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(safeCurrentPage * ITEMS_PER_PAGE, allProperties.length)}`} of {allProperties.length} Matches
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  ● Real-time Title Audits
+                </span>
+              </div>
+
+              {allProperties.length === 0 ? (
+                <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40">
+                  <p className="font-display">No matching properties found in this division.</p>
+                  <button
+                    onClick={handleResetFilters}
+                    className="mt-4 text-xs font-bold text-[#C5A059] hover:underline"
+                  >
+                    Reset Inventory filters
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-16 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {displayedProperties.map(property => (
+                      <PropertyCard key={property.id} property={property} />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-3 pt-8">
+                      <button
+                        onClick={() => {
+                          setCurrentPage(p => Math.max(1, p - 1));
+                          propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        disabled={safeCurrentPage === 1}
+                        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      
+                      <div className="text-[10px] font-bold text-white/40 px-4">
+                        Page {safeCurrentPage} of {totalPages}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setCurrentPage(p => Math.min(totalPages, p + 1));
+                          propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        disabled={safeCurrentPage === totalPages}
+                        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+          </div>
+
         </div>
       </section>
 

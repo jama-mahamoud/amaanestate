@@ -7,6 +7,8 @@ import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumLogo from '@/components/brand/PremiumLogo';
 
+import { parseAuthError } from '@/utils/firebaseErrors';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +26,7 @@ export default function Login() {
       await signIn(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,7 @@ export default function Login() {
       await signInWithGoogle();
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Google sign in failed');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -77,36 +79,36 @@ export default function Login() {
           <form className="space-y-8" onSubmit={handleLogin}>
             <div className="space-y-5">
               <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email Address" 
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-400 transition-colors" size={18} />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
                 <Input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password" 
                   required
-                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-emerald-500/30 text-base"
+                  className="bg-white/5 border-0 h-14 pl-14 rounded-2xl text-white placeholder:text-white/30 focus-visible:ring-[#C5A059]/30 text-base"
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between text-xs font-bold">
               <label className="flex items-center gap-2 text-white/40 cursor-pointer hover:text-white transition-colors">
-                <input type="checkbox" className="w-4 h-4 rounded-lg bg-white/5 border-white/10 checked:bg-emerald-500 accent-emerald-500" />
+                <input type="checkbox" className="w-4 h-4 rounded-lg bg-white/5 border-white/10 checked:bg-[#C5A059] accent-[#C5A059]" />
                 Remember me
               </label>
-              <Link to="/auth/forgot-password" stroke-width="2" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+              <Link to="/auth/forgot-password" className="text-[#C5A059] hover:text-[#D4AF37] transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -114,7 +116,7 @@ export default function Login() {
             <div className="space-y-4">
               <Button 
                 type="submit"
-                className="w-full bg-emerald-500 text-white hover:bg-emerald-600 transition-all h-14 rounded-2xl font-bold text-base shadow-xl shadow-emerald-500/10"
+                className="w-full bg-[#C5A059] text-black hover:bg-[#D4AF37] transition-all h-14 rounded-2xl font-bold text-base shadow-xl shadow-[#C5A059]/10"
                 disabled={loading}
               >
                 {loading ? 'Authenticating...' : 'Sign In'}
@@ -145,7 +147,7 @@ export default function Login() {
               <p className="text-white/40 text-xs font-medium mb-4">
                 Don't have an account yet?
               </p>
-              <Link to="/auth/register" className="text-white font-bold text-sm hover:text-emerald-400 transition-colors">
+              <Link to="/auth/register" className="text-white font-bold text-sm hover:text-[#C5A059] transition-colors">
                 Create a New Account
               </Link>
             </div>
