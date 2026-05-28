@@ -44,6 +44,20 @@ export interface ListingFilter {
 const listingCache = new Map<string, { data: any, timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
+export const clearListingCaches = () => {
+  listingCache.clear();
+  console.log('[Cache] Listing caches invalidated successfully');
+};
+
+const getCacheKey = (filters: ListingFilter = {}) => {
+  // Serialize filters safely, mapping lastDoc to some identifier if present
+  const keys = {
+    ...filters,
+    lastDoc: filters.lastDoc ? filters.lastDoc.id : undefined
+  };
+  return JSON.stringify(keys);
+};
+
 export const listingService = {
   /**
    * Internal normalization for legacy documents and consistency
@@ -80,6 +94,12 @@ export const listingService = {
   },
 
   async getListings(filters: ListingFilter = {}) {
+    const cacheKey = `listings_${getCacheKey(filters)}`;
+    const cached = listingCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+      return cached.data;
+    }
+
     const listingsRef = collection(db, 'listings');
     const filterConstraints: any[] = [];
 
@@ -171,10 +191,13 @@ export const listingService = {
         return bTime - aTime;
       });
 
-      return {
+      const response = {
         listings,
         lastDoc: snapshot.docs[snapshot.docs.length - 1]
       };
+
+      listingCache.set(cacheKey, { data: response, timestamp: Date.now() });
+      return response;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'listings');
       return { listings: [], lastDoc: undefined };
@@ -182,11 +205,19 @@ export const listingService = {
   },
 
   async getListingById(id: string): Promise<Listing | null> {
+    const cacheKey = `listing_by_id_${id}`;
+    const cached = listingCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+      return cached.data;
+    }
+
     const listingRef = doc(db, 'listings', id);
     try {
       const snapshot = await getDoc(listingRef);
       if (snapshot.exists()) {
-        return this.normalizeListing(snapshot.data(), snapshot.id);
+        const listing = this.normalizeListing(snapshot.data(), snapshot.id);
+        listingCache.set(cacheKey, { data: listing, timestamp: Date.now() });
+        return listing;
       }
       return null;
     } catch (error) {
@@ -226,6 +257,7 @@ export const listingService = {
 
     try {
       const docRef = await addDoc(listingsRef, newListing);
+      clearListingCaches();
       return docRef.id;
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'listings');
@@ -264,6 +296,7 @@ export const listingService = {
 
     try {
       await setDoc(listingRef, newListing);
+      clearListingCaches();
       return id;
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `listings/${id}`);
@@ -294,6 +327,7 @@ export const listingService = {
         ...cleanData,
         updatedAt: serverTimestamp(),
       });
+      clearListingCaches();
       return true;
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `listings/${id}`);
@@ -346,6 +380,7 @@ export const listingService = {
     const listingRef = doc(db, 'listings', id);
     try {
       await deleteDoc(listingRef);
+      clearListingCaches();
       return true;
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `listings/${id}`);

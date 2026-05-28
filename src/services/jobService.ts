@@ -15,6 +15,16 @@ import {
 import { notificationService } from './notificationService';
 import { Job, CompanyProfile, CandidateProfile, JobApplication } from '@/types';
 
+const jobsCache = new Map<string, { data: Job[], timestamp: number }>();
+const jobDetailCache = new Map<string, { data: Job, timestamp: number }>();
+const JOB_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+export const clearJobCaches = () => {
+  jobsCache.clear();
+  jobDetailCache.clear();
+  console.log('[Cache] Job caches cleared');
+};
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -55,6 +65,12 @@ export const jobService = {
     status?: 'pending' | 'approved' | 'rejected' | 'expired' | 'draft';
     ownerId?: string;
   } = {}): Promise<Job[]> {
+    const cacheKey = JSON.stringify(filters);
+    const cached = jobsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < JOB_CACHE_TTL) {
+      return cached.data;
+    }
+
     const path = 'jobs';
     try {
       const colRef = collection(db, path);
@@ -123,6 +139,7 @@ export const jobService = {
         return dateB - dateA;
       });
 
+      jobsCache.set(cacheKey, { data: results, timestamp: Date.now() });
       return results;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, path);
@@ -131,12 +148,20 @@ export const jobService = {
   },
 
   async getJobById(jobId: string): Promise<Job | null> {
+    const cacheKey = `job_by_id_${jobId}`;
+    const cached = jobDetailCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < JOB_CACHE_TTL) {
+      return cached.data;
+    }
+
     const path = `jobs/${jobId}`;
     try {
       const docRef = doc(db, 'jobs', jobId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as Job;
+        const job = { id: docSnap.id, ...docSnap.data() } as Job;
+        jobDetailCache.set(cacheKey, { data: job, timestamp: Date.now() });
+        return job;
       }
       return null;
     } catch (error) {
@@ -161,6 +186,7 @@ export const jobService = {
       };
 
       await setDoc(newDocRef, payload);
+      clearJobCaches();
       
       // Notify admins
       await notificationService.createNotification(
@@ -185,6 +211,7 @@ export const jobService = {
         ...updates,
         updatedAt: serverTimestamp()
       });
+      clearJobCaches();
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
@@ -195,6 +222,7 @@ export const jobService = {
     try {
       const docRef = doc(db, 'jobs', jobId);
       await deleteDoc(docRef);
+      clearJobCaches();
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
     }

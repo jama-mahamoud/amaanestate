@@ -24,6 +24,7 @@ import {
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
 import somaliHeroImg from '@/assets/images/somali_agency_hero_1779895169818.png';
+import { useSEO } from '@/hooks/useSEO';
 
 const SECTORS_LIST = [
   { label: 'All Sectors', value: '' },
@@ -54,6 +55,24 @@ const PURPOSE_LIST = [
 export default function Home() {
   const navigate = useNavigate();
   const { t } = useSettings();
+
+  useSEO({
+    title: 'Home — Premium Real Estate & Verified Marketplace',
+    description: 'AmaanEstate is the premium portal for verified properties, land plot listings, luxury vehicles, and careers in Somalia. Secure, vetted, and trusted local deals.',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateAgent',
+      'name': 'AmaanEstate',
+      'description': 'AmaanEstate is a real estate and jobs marketplace centered on verified accounts, secure transactions, and trust score computations.',
+      'url': 'https://amaanestate.com',
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': 'https://amaanestate.com/?city={search_term_string}',
+        'query-input': 'required name=search_term_string'
+      }
+    }
+  });
+
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
 

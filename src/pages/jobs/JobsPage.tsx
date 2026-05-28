@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { jobService } from '@/services/jobService';
 import { Job, CompanyProfile, CandidateProfile, JobApplication } from '@/types';
 import PremiumSelect from '@/components/ui/PremiumSelect';
+import { useSEO } from '@/hooks/useSEO';
 
 const CATEGORIES = [
   'Real Estate', 'Construction', 'Engineering', 'Security', 'Cleaning', 
@@ -23,6 +24,19 @@ const CITIES = ['Mogadishu', 'Hargeisa', 'Garowe', 'Kismayo', 'Bosaso', 'Baidoa'
 
 export default function JobsPage() {
   const { user, profile } = useAuth();
+
+  useSEO({
+    title: 'Careers & Jobs Portal — Verified Job Placements',
+    description: 'Find verified local and remote jobs in Somalia. Real-time hiring from vetted companies. Post job listings and connect with top Somali candidates.',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      'name': 'AmaanEstate Jobs Board',
+      'url': 'https://amaanestate.com/jobs',
+      'description': 'Verified jobs and career listing board by AmaanEstate.'
+    }
+  });
+
   const isAdmin = useMemo(() => profile?.role === 'admin' || user?.email === 'towinnow0@gmail.com', [profile, user]);
   const bypassVerification = true;
 

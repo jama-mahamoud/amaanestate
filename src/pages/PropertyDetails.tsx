@@ -22,12 +22,51 @@ import PropertyDetailMap from '@/components/location/PropertyDetailMap';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
 import { toast } from 'sonner';
+import { useSEO } from '@/hooks/useSEO';
 
 export default function PropertyDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { listing, loading, error, refresh } = useListing(id);
   const property = listing as Property | null;
+
+  // Handle default photos check (declared early to be used in dynamic SEO hooks)
+  const images = useMemo(() => {
+    if (property?.images?.length) return property.images;
+    return [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
+    ];
+  }, [property]);
+
+  // Dynamic SEO & Structured Schema Data for Search Crawlers (Zillow/Airbnb Grade)
+  useSEO({
+    title: property ? `${property.title} in ${property.city}` : 'Property Catalog Details',
+    description: property ? `${property.title} in ${property.city}. ${property.description.slice(0, 160)}...` : 'Explore premium and vetted properties in Somalia.',
+    image: images[0],
+    structuredData: property ? {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      'name': property.title,
+      'description': property.description,
+      'image': images,
+      'offers': {
+        '@type': 'Offer',
+        'price': property.price,
+        'priceCurrency': property.currency || 'USD',
+        'availability': 'https://schema.org/InStock',
+        'validFrom': property.createdAt ? (property.createdAt.toMillis ? new Date(property.createdAt.toMillis()).toISOString() : new Date().toISOString()) : new Date().toISOString()
+      },
+      'address': {
+        '@type': 'PostalAddress',
+        'addressLocality': property.city,
+        'addressRegion': property.region || property.city,
+        'addressCountry': 'SO'
+      }
+    } : undefined
+  });
 
   const { user, profile } = useAuth();
   const isAdmin = profile?.role?.toString().toLowerCase().trim() === 'admin';
@@ -87,17 +126,6 @@ export default function PropertyDetails() {
       .filter(l => l.id !== property.id && (l.city === property.city || l.subcategory === property.subcategory))
       .slice(0, 3) as Property[];
   }, [allListings, property]);
-
-  // Handle default photos check
-  const images = useMemo(() => {
-    if (property?.images?.length) return property.images;
-    return [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=2070&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
-    ];
-  }, [property]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
