@@ -189,7 +189,10 @@ export default function Home() {
       <section className="relative pt-20 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
         {/* Immersive Background Image with High-Contrast Overlays (Desktop & Tablet only) */}
         <div className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none">
-          <img 
+          <motion.img 
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.05, 1.02, 1.05, 1] }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
             src={somaliHeroImg} 
             alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
             className="w-full h-full object-cover filter brightness-[0.7] saturate-[1.1] object-center"
@@ -207,10 +210,13 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/[0.02]"
           >
-            <img 
+            <motion.img 
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.05, 1.02, 1.05, 1] }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
               src={somaliHeroImg} 
               alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
-              className="w-full h-auto object-contain filter brightness-[0.9] saturate-[1.1]"
+              className="w-full h-auto object-contain filter brightness-[0.9] saturate-[1.1] origin-center"
               referrerPolicy="no-referrer"
             />
             {/* Soft ambient inner gradient to blend with the interface of the mobile app */}

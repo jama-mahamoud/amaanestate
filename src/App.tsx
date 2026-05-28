@@ -40,6 +40,9 @@ const AgentsList = lazy(() => import('./pages/agents/AgentsList'));
 const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
 const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
 
+// Careers and Jobs Module
+const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
+
 // Product Custom Editors
 const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
@@ -70,6 +73,7 @@ const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
 const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
 const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
 const AgenciesBrokersManagement = lazy(() => import('./pages/dashboard/AgenciesBrokersManagement'));
+const DashboardJobs = lazy(() => import('./pages/dashboard/DashboardJobs'));
 
 export default function App() {
   return (
@@ -107,6 +111,7 @@ export default function App() {
 
 
                 {/* Other Services and Pages */}
+                <Route path="jobs" element={<JobsPage />} />
                 <Route path="news" element={<News />} />
                 <Route path="news/:id" element={<ArticleDetails />} />
                 <Route path="about" element={<About />} />
@@ -143,6 +148,7 @@ export default function App() {
                   <Route path="favorites" element={<DashboardFavorites />} />
                   <Route path="profile" element={<DashboardProfile />} />
                   <Route path="settings" element={<DashboardSettings />} />
+                  <Route path="jobs" element={<DashboardJobs />} />
                 </Route>
               </Route>
             </Routes>

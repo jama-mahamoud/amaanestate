@@ -278,3 +278,91 @@ export interface Agency {
   updatedAt?: any;
   trustScore?: number;
 }
+
+export interface CompanyProfile {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  website?: string;
+  location: string;
+  size?: string;
+  isVerified: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  ownerId: string;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface CandidateProfile {
+  id: string; // matches userId
+  displayName: string;
+  photoURL?: string;
+  bio?: string;
+  skills: string[];
+  education: Array<{
+    school: string;
+    degree: string;
+    field: string;
+    startYear: string;
+    endYear: string;
+  }>;
+  experience: Array<{
+    company: string;
+    role: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    current?: boolean;
+  }>;
+  languages: string[];
+  certifications: string[];
+  portfolioLinks: string[];
+  resumeUrl?: string; // pdf etc.
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  companyId: string;
+  companyName: string;
+  companyLogo?: string;
+  category: string;
+  location: string;
+  description: string;
+  requirements?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency: string;
+  employmentType: 'full-time' | 'part-time' | 'remote' | 'contract' | 'freelance';
+  workplaceType: 'on-site' | 'hybrid' | 'remote';
+  isUrgent?: boolean;
+  isFeatured?: boolean;
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'expired';
+  ownerId: string;
+  deadline?: any;
+  benefits?: string;
+  featuredImage?: string;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  companyId: string;
+  companyName: string;
+  candidateId: string; // ownerId
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  resumeUrl: string;
+  coverLetter?: string;
+  status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired';
+  createdAt: any;
+  updatedAt?: any;
+}
+

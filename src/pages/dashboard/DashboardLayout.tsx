@@ -56,6 +56,7 @@ function DashboardContent() {
       items.push({ name: 'Insights', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
       items.push({ name: 'Verification', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
       items.push({ name: 'Activity Logs', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
+      items.push({ name: 'Jobs Workspace', path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
     }
 
     if (isAgency) {

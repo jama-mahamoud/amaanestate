@@ -375,5 +375,37 @@ service cloud.firestore {
       );
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
+
+    // Companies Collection Security
+    match /companies/{companyId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Candidate Profiles Collection Security
+    match /candidateProfiles/{candidateId} {
+      allow read: if true;
+      allow create: if isOwner(candidateId);
+      allow update: if isOwner(candidateId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Jobs Collection Security
+    match /jobs/{jobId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow delete: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+    }
+
+    // Job Applications Collection Security
+    match /jobApplications/{applicationId} {
+      allow read: if isSignedIn() && (resource.data.candidateId == request.auth.uid || resource.data.get('employerId', '') == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().candidateId == request.auth.uid;
+      allow update: if isSignedIn() && (existing().candidateId == request.auth.uid || existing().get('employerId', '') == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
   }
 }

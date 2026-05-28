@@ -239,6 +239,7 @@ export default function Navbar() {
           ))}
           <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Agreements')}</Link>
           <Link to="/news" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('News')}</Link>
+          <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Jobs')}</Link>
           <Link to="/about" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('About')}</Link>
           <Link to="/contact" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors">{t('Contact')}</Link>
         </nav>
@@ -359,6 +360,7 @@ export default function Navbar() {
 
                 <Link to="/agreements" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agreements')}</Link>
                 <Link to="/news" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('News')}</Link>
+                <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>
                 <Link to="/about" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('About')}</Link>
                 <Link to="/contact" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Contact')}</Link>
               </nav>

@@ -178,6 +178,90 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "CompanyProfile": {
+      "title": "Company Profile",
+      "description": "Employer and company branding profile",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logo": { "type": "string" },
+        "description": { "type": "string" },
+        "website": { "type": "string" },
+        "location": { "type": "string" },
+        "size": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "logo", "description", "location", "isVerified", "status", "ownerId", "createdAt"]
+    },
+    "CandidateProfile": {
+      "title": "Candidate Career Profile",
+      "description": "Career and resume profile for job seekers",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "bio": { "type": "string" },
+        "skills": { "type": "array" },
+        "education": { "type": "array" },
+        "experience": { "type": "array" },
+        "languages": { "type": "array" },
+        "certifications": { "type": "array" },
+        "portfolioLinks": { "type": "array" },
+        "resumeUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "skills", "education", "experience", "createdAt"]
+    },
+    "Job": {
+      "title": "Job Posting",
+      "description": "Premium job vacancy listed on the platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "companyId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "companyLogo": { "type": "string" },
+        "category": { "type": "string" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "requirements": { "type": "string" },
+        "salaryMin": { "type": "number" },
+        "salaryMax": { "type": "number" },
+        "currency": { "type": "string" },
+        "employmentType": { "type": "string", "enum": ["full-time", "part-time", "remote", "contract", "freelance"] },
+        "workplaceType": { "type": "string", "enum": ["on-site", "hybrid", "remote"] },
+        "isUrgent": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "expired"] },
+        "ownerId": { "type": "string" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "companyId", "companyName", "category", "location", "description", "employmentType", "workplaceType", "status", "ownerId", "createdAt"]
+    },
+    "JobApplication": {
+      "title": "Job Application",
+      "description": "Submission of candidacy for an open listing",
+      "type": "object",
+      "properties": {
+        "jobId": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "companyId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "candidateId": { "type": "string" },
+        "candidateName": { "type": "string" },
+        "candidateEmail": { "type": "string" },
+        "candidatePhone": { "type": "string" },
+        "resumeUrl": { "type": "string" },
+        "coverLetter": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "shortlisted", "rejected", "hired"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["jobId", "jobTitle", "companyId", "companyName", "candidateId", "candidateName", "candidateEmail", "resumeUrl", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -282,6 +366,22 @@
     "/notifications/{notificationId}": {
       "schema": "Notification",
       "description": "In-app system and direct user notifications"
+    },
+    "/companies/{companyId}": {
+      "schema": "CompanyProfile",
+      "description": "Employer and company profile descriptions"
+    },
+    "/candidateProfiles/{candidateId}": {
+      "schema": "CandidateProfile",
+      "description": "User career resumes and visual profiles"
+    },
+    "/jobs/{jobId}": {
+      "schema": "Job",
+      "description": "Collection of listed high-end job vacancies"
+    },
+    "/jobApplications/{applicationId}": {
+      "schema": "JobApplication",
+      "description": "Collection of active and historic candidate applications"
     }
   }
 }
