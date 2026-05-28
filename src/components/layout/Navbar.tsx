@@ -227,7 +227,7 @@ export default function Navbar() {
         </div>
         
         {/* Desktop Nav - Left Aligned and beautifully spaced */}
-        <nav className="hidden lg:flex items-center gap-x-5 xl:gap-x-6 justify-start flex-1 ml-6 xl:ml-12 text-white/70 overflow-hidden">
+        <nav className="hidden lg:flex items-center gap-x-5 xl:gap-x-6 justify-start flex-1 ml-6 xl:ml-12 text-white/70">
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} isDark={true} />
           ))}
