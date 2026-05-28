@@ -135,19 +135,6 @@ export default function Navbar() {
           ]
         }
       ]
-    },
-    {
-      title: 'Agents & Registry',
-      sections: [
-        {
-          title: 'Ecosystem Directory',
-          items: [
-            { title: 'Agents', href: '/agents?tab=agents' },
-            { title: 'Verified Agents', href: '/agents?tab=verified' },
-            { title: 'Broker Registry', href: '/agents?tab=registry' },
-          ]
-        }
-      ]
     }
   ], []);
 
@@ -231,6 +218,7 @@ export default function Navbar() {
           {menuData.map((menu) => (
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} isDark={true} />
           ))}
+          <Link to="/agents" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agents')}</Link>
           <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agreements')}</Link>
           <Link to="/news" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('News')}</Link>
           <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
@@ -352,6 +340,7 @@ export default function Navbar() {
                   />
                 ))}
 
+                <Link to="/agents" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agents')}</Link>
                 <Link to="/agreements" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agreements')}</Link>
                 <Link to="/news" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('News')}</Link>
                 <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>

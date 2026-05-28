@@ -38,9 +38,6 @@ const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
 // Verified Agents Module
 const AgentsList = lazy(() => import('./pages/agents/AgentsList'));
 const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
-const AgentApply = lazy(() => import('./pages/agents/AgentApply'));
-const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
-const BrokerRegister = lazy(() => import('./pages/agents/BrokerRegister'));
 
 // Careers and Jobs Module
 const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
@@ -50,6 +47,7 @@ const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPa
 
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const Disclaimer = lazy(() => import('./pages/Disclaimer'));
 
 // Lazy Loaded Auth Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -109,9 +107,6 @@ export default function App() {
                 {/* Agents Module */}
                 <Route path="agents" element={<AgentsList />} />
                 <Route path="agents/:id" element={<AgentDetails />} />
-                <Route path="agents/apply" element={<AgentApply />} />
-                <Route path="agent-register" element={<AgentRegister />} />
-                <Route path="broker-register" element={<BrokerRegister />} />
 
 
                 {/* Other Services and Pages */}
@@ -122,6 +117,7 @@ export default function App() {
                 <Route path="contact" element={<Contact />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />
                 <Route path="terms" element={<TermsOfService />} />
+                <Route path="disclaimer" element={<Disclaimer />} />
                 
                 {/* Auth Routes - Public Only */}
                 <Route element={<PublicRoute />}>
