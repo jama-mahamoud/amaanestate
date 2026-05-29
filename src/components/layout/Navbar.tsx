@@ -276,7 +276,7 @@ export default function Navbar() {
             )}
 
           <Link 
-            to="/agents/apply"
+            to="/agents/register"
             className="px-6 py-2.5 rounded-full text-xs font-bold transition-all bg-[#C5A059] text-black hover:bg-white hover:text-black shadow-lg shadow-[#C5A059]/10"
           >
             {t('Join Us')}
@@ -376,7 +376,7 @@ export default function Navbar() {
                   </Button>
                 )}
                 <Button asChild className="w-full bg-[#C5A059] text-black hover:bg-white h-14 rounded-xl font-bold text-sm shadow-xl shadow-[#C5A059]/10">
-                  <Link to="/agents/apply" onClick={closeMobileMenu}>{t('Join Us')}</Link>
+                  <Link to="/agents/register" onClick={closeMobileMenu}>{t('Join Us')}</Link>
                 </Button>
               </div>
             </div>

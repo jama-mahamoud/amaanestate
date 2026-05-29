@@ -38,6 +38,7 @@ const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
 // Verified Agents Module
 const AgentsList = lazy(() => import('./pages/agents/AgentsList'));
 const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
+const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
 
 // Careers and Jobs Module
 const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
@@ -107,6 +108,7 @@ export default function App() {
                 {/* Agents Module */}
                 <Route path="agents" element={<AgentsList />} />
                 <Route path="agents/:id" element={<AgentDetails />} />
+                <Route path="agents/register" element={<AgentRegister />} />
 
 
                 {/* Other Services and Pages */}

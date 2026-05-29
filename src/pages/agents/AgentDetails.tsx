@@ -218,15 +218,15 @@ export default function AgentDetails() {
 
     if (saved) {
       try {
-        setReviews(JSON.parse(saved));
+        setReviews([]);
       } catch (e) {
         console.error("Failed to parse local reviews:", e);
-        setReviews(seedReviews);
+        setReviews([]);
       }
     } else {
-      setReviews(seedReviews);
+      setReviews([]);
       try {
-        localStorage.setItem(key, JSON.stringify(seedReviews));
+        localStorage.setItem(key, JSON.stringify([]));
       } catch (e) {
         console.warn("Storage write failed:", e);
       }
@@ -331,48 +331,7 @@ export default function AgentDetails() {
 
   // Mock Premium Profile Timeline Activities
   const generatedTimelineEvents = useMemo<TimelineActivity[]>(() => {
-    const defaultEvents: TimelineActivity[] = [
-      {
-        id: 'act-1',
-        type: 'verification',
-        title: 'Premium Verification Approval Renewed',
-        description: 'Completed structural trust appraisal and security vetting by regional land regulators. Verified tax references and license clearance under compliance laws.',
-        timestamp: 'May 20, 2026',
-        location: 'Jigjiga Capital Office'
-      },
-      {
-        id: 'act-2',
-        type: 'sale',
-        title: 'Closed Transaction: Premium Villa Compound',
-        description: 'Facilitated official double-deed validation and secured transfer coordinates for High-Net Worth expat client.',
-        timestamp: 'May 10, 2026',
-        location: 'AmaanEstate Secure Trade Portal',
-        metric: '$520,000'
-      },
-      {
-        id: 'act-3',
-        type: 'listing',
-        title: 'Indexed Exclusive Real-Estate Lot',
-        description: 'Introduced 12-hectare sub-divided development site, legally verified with secure digital deed stamps.',
-        timestamp: 'April 28, 2026',
-        location: 'Deex-Yax, Somali Region'
-      },
-      {
-        id: 'act-4',
-        type: 'article',
-        title: 'Published Market Report',
-        description: 'Released analysis on modern investment zones, soil safety testing, and title guarantee guidelines in Jigjiga.',
-        timestamp: 'April 15, 2026'
-      },
-      {
-        id: 'act-5',
-        type: 'partnership',
-        title: 'Joined AmaanEstate Governance Circle',
-        description: 'Successfully accredited as a licensed enterprise, receiving Tier-1 Digital Signature keys.',
-        timestamp: 'March 12, 2026'
-      }
-    ];
-    return defaultEvents;
+    return [];
   }, []);
 
   // Filter brokers assigned to this agency
@@ -411,35 +370,21 @@ export default function AgentDetails() {
       <div className="min-h-screen bg-[#070707] flex items-center justify-center pt-24 pb-20">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 rounded-full border-2 border-[#C5A059] border-t-transparent animate-spin mx-auto"></div>
-          <p className="text-xs uppercase tracking-[0.25em] text-[#C5A059] font-bold animate-pulse">Decrypting Security Credentials</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#C5A059] font-bold animate-pulse">Loading Profile</p>
         </div>
       </div>
     );
   }
 
-  if (!broker && !agency) {
-    return (
-      <div className="min-h-screen bg-[#070707] flex items-center justify-center pt-24 pb-20 text-white">
-        <div className="text-center space-y-4 max-w-md p-6">
-          <Info size={40} className="text-[#C5A059] mx-auto animate-pulse" />
-          <h2 className="text-2xl font-bold font-display text-white tracking-tight">Registry Profile Unavailable</h2>
-          <p className="text-white/40 text-sm">The license index code did not return an active broker record inside the regional database registry.</p>
-          <Button asChild className="bg-[#C5A059] text-black hover:bg-white transition-colors duration-300 rounded-xl h-11 px-6">
-            <Link to="/agents">Browse Active Directory</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   // Profile fields normalization & fallback placeholders for gorgeous UI fidelity
-  const name = broker ? broker.fullName : agency!.agencyName;
-  const logo = broker ? broker.profilePhotoUrl : agency!.logo;
-  const phoneVal = broker ? broker.phone : agency!.phone;
-  const emailVal = broker ? broker.email : agency!.email;
-  const cityVal = broker ? broker.city : (agency as any).city || 'Jigjiga Capital';
-  const regionVal = broker ? broker.region : (agency as any).region || 'Somali Region';
-  const isVerifiedProfile = broker ? broker.isVerified : (agency!.verified || agency!.isVerified);
+  const name = broker?.fullName || agency?.agencyName || 'Profile Unavailable';
+  const logo = broker?.profilePhotoUrl || agency?.logo || '';
+  const phoneVal = broker?.phone || agency?.phone || '';
+  const emailVal = broker?.email || agency?.email || '';
+  const cityVal = broker?.city || agency?.city || 'Jigjiga Capital';
+  const regionVal = broker?.region || agency?.region || 'Somali Region';
+  const isVerifiedProfile = broker?.isVerified || agency?.verified || agency?.isVerified || false;
 
   // Dynamic values that represent a luxurious professional
   const yearsExp = broker ? (broker.yearsOfExperience || 5) : 8;
@@ -455,8 +400,8 @@ export default function AgentDetails() {
     : (broker ? `BRK-REG-${broker.id.substring(0, 5).toUpperCase()}` : `AE-REG-${agency?.id.substring(0, 5).toUpperCase() || '2026-0041'}`);
 
   // Multi-lingual specialties
-  const languagesSpoken = broker?.languagesSpoken || ['Somali', 'English', 'Arabic'];
-  const specializations = broker?.propertySpecialization || ['Residential Estate Sales', 'Custom Beachfront Lots', 'Sub-divided Farmlands', 'Deed Verification'];
+  const languagesSpoken = broker?.languagesSpoken || [];
+  const specializations = broker?.propertySpecialization || [];
 
   return (
     <div id="full-profile-system" className="min-h-screen bg-[#070707] text-white selection:bg-[#C5A059]/30 selection:text-white pb-32">
@@ -504,162 +449,73 @@ export default function AgentDetails() {
           </div>
         </div>
 
-        {/* Identity Glass Card */}
-        <div className="bg-gradient-to-br from-[#121212]/95 to-[#0b0b0b]/98 border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md relative overflow-hidden">
-          {/* Subtle luxurious ambient glow patterns */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#C5A059]/[0.02] rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between relative z-10">
+          {/* Identity Glass Card */}
+          <div className="bg-[#111]/90 border border-white/5 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            {/* Subtle luxurious ambient glow patterns */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C5A059]/[0.02] rounded-full blur-3xl pointer-events-none" />
             
-            {/* Left Box: Photo and essential metadata */}
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8 w-full md:w-auto">
+            <div className="flex flex-col lg:flex-row gap-8 items-start justify-between relative z-10">
               
-              {/* Profile Photo / Company Logo layout */}
-              <div id="author-avatar-badge" className="relative group shrink-0">
-                <div className="w-28 h-28 md:w-40 md:h-40 rounded-[2.2rem] overflow-hidden bg-neutral-900 border-2 border-white/10 relative shadow-2xl flex items-center justify-center transition-all duration-500 group-hover:border-[#C5A059]/60">
-                  {logo ? (
-                    <img referrerPolicy="no-referrer" src={logo} alt={name} className="w-full h-full object-cover transition duration-700 ease-out group-hover:scale-110" />
-                  ) : (
-                    <div className="text-white/30 font-display font-bold text-3xl uppercase tracking-widest">{name.substring(0, 2)}</div>
-                  )}
-                  
-                  {/* Glowing Bottom Corner Verification Aura Badge */}
-                  {isVerifiedProfile && (
-                    <div className="absolute bottom-2 right-2 w-8 h-8 bg-black rounded-full border border-[#C5A059]/30 flex items-center justify-center shadow-2xl animate-pulse">
-                      <ShieldCheck size={16} className="text-[#C5A059]" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Bio Titles, ratings and location lines */}
-              <div className="space-y-3.5 min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-white leading-tight">
-                    {name}
-                  </h1>
-                  {broker?.isVerified && (
-                    <span className="bg-[#C5A059] text-black text-[9px] font-black tracking-widest px-2.5 py-1 rounded uppercase shadow-sm">
-                      TOP BROKER
-                    </span>
-                  )}
-                  {agency && (
-                    <span className="bg-[#C5A059] text-black text-[9px] font-black tracking-widest px-2.5 py-1 rounded uppercase shadow-sm">
-                      PREMIUM AGENCY
-                    </span>
-                  )}
+              {/* Left Box: Photo and essential metadata */}
+              <div className="flex items-center gap-6 w-full lg:w-auto">
+                {/* Profile Photo */}
+                <div className="relative group shrink-0">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 flex items-center justify-center transition-all duration-500">
+                    {logo ? (
+                      <img referrerPolicy="no-referrer" src={logo} alt={name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-white/30 font-display font-medium text-2xl uppercase">{name.substring(0, 2)}</div>
+                    )}
+                  </div>
                 </div>
 
-                <p className="text-[#C5A059] font-display font-medium text-base tracking-wide flex items-center gap-2">
-                  {broker ? (
-                    <>
-                      <Briefcase size={16} />
-                      <span>Certified Real Estate Broker & Wealth Advisor</span>
-                    </>
-                  ) : (
-                    <>
-                      <Building2 size={16} />
-                      <span>National Real Estate Advisory Agency Corporation</span>
-                    </>
-                  )}
-                </p>
-
-                {/* Sub-details line */}
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-white/50 font-medium">
-                  <span className="flex items-center gap-1.5">
+                {/* Identity Metadata */}
+                <div className="space-y-1">
+                  <h1 className="text-3xl font-display font-bold tracking-tight text-white">{name}</h1>
+                  <p className="text-white/50 text-sm font-medium flex items-center gap-2">
                     <MapPin size={14} className="text-[#C5A059]" />
-                    <span>{cityVal}, {regionVal}</span>
-                  </span>
-                  <span className="h-4 w-0.5 bg-white/5 hidden sm:inline" />
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={14} className="text-[#C5A059]" />
-                    <span>Active Brokerage since {broker?.yearEstablished || '2021'}</span>
-                  </span>
-                  <span className="h-4 w-0.5 bg-white/5 hidden sm:inline" />
-                  <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/10 px-2 py-0.5 rounded-md font-bold text-[10px] uppercase">
-                    <Star size={10} fill="currentColor" className="mr-0.5" />
-                    <span>Score: {calculatedStats.average} ({reviews.length} Client Reviews)</span>
-                  </span>
-                </div>
-
-                {/* Broker specifics details line */}
-                {broker && broker.companyName && (
-                  <p className="text-white/70 text-sm">
-                    Affiliated With: <span className="text-[#C5A059] font-semibold">{broker.companyName}</span>
+                    {cityVal || 'Location not specified'}
                   </p>
-                )}
+                  
+                  <div className="flex items-center gap-3 mt-2">
+                    {isVerifiedProfile && (
+                      <div className="flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 px-2 py-0.5 rounded-md font-bold tracking-wider uppercase">
+                        <ShieldCheck size={10} />
+                        Verified
+                      </div>
+                    )}
+                    <div className="text-[10px] text-white/30">Member since {broker?.yearEstablished || '2021'}</div>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Right Box: Floating Interactive Call-to-Actions for quick inquiries */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto justify-end border-t border-white/5 lg:border-t-0 pt-6 lg:pt-0 shrink-0">
-              <Button 
-                variant="outline" 
-                className="border-white/10 text-white hover:bg-white/5 h-13 text-xs font-bold uppercase tracking-widest rounded-xl px-5 flex items-center gap-2" 
-                asChild
-              >
-                <a href={phoneVal ? `tel:${phoneVal}` : '#'}>
-                  <Phone size={14} className="text-emerald-400" />
-                  <span>Call Direct</span>
-                </a>
-              </Button>
-              
-              <Button 
-                className="bg-[#C5A059] hover:bg-white text-black h-13 px-6 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 shadow-md shadow-[#C5A059]/10" 
-                asChild
-              >
-                {phoneVal ? (
-                  <a 
-                    href={`https://wa.me/${(()=>{
-                      const clean = phoneVal.replace(/\D/g, '');
-                      return clean.startsWith('9') || clean.startsWith('7') ? '251' + clean : clean;
-                    })()}?text=Hello%20${name},%20I%20am%20reviewing%20your%20authorized%20premium%20profile%20on%20AmaanEstate%20and%20would%20like%20to%20consult%20regarding%20active%20listings.`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle size={15} />
-                    <span>WhatsApp Inquiry</span>
-                  </a>
-                ) : (
-                  <span className="opacity-50 cursor-not-allowed">
-                    <MessageCircle size={15} />
-                    <span>WhatsApp Closed</span>
-                  </span>
-                )}
-              </Button>
-            </div>
-
-          </div>
-
-          {/* Quick Stats Grid Pill */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-8 pt-8 border-t border-white/5 text-center">
-            
-            <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded-2xl">
-              <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Active Inventory</p>
-              <h4 className="text-2xl font-display font-bold text-white mt-1">{agentListings.length} Active Listings</h4>
-            </div>
-
-            <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded-2xl">
-              <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Completed Deals</p>
-              <h4 className="text-2xl font-display font-bold text-[#C5A059] mt-1">{totalCompletedDeals} Transactions</h4>
-            </div>
-
-            <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded-2xl">
-              <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Client trust rate</p>
-              <h4 className="text-2xl font-display font-bold text-emerald-400 mt-1">{calculatedStats.recommendPercentage}% Recommend</h4>
-            </div>
-
-            <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded-2xl">
-              <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Trust score</p>
-              <div className="flex items-center justify-center gap-1 mt-1 text-2xl font-display font-bold text-[#C5A059]">
-                <ShieldCheck size={18} className="text-[#C5A059]" />
-                <span>9.8 / 10</span>
+              {/* Right Box: Action buttons */}
+              <div className="flex flex-row gap-3 w-full lg:w-auto mt-6 lg:mt-0 justify-start lg:justify-end">
+                <Button variant="outline" className="h-10 text-xs px-5 border-white/10 rounded-xl" asChild>
+                  <a href={phoneVal ? `tel:${phoneVal}` : '#'}>Call</a>
+                </Button>
+                
+                <Button className="h-10 text-xs px-6 rounded-xl bg-[#C5A059] text-black hover:bg-white" asChild>
+                  <a href={phoneVal ? `https://wa.me/` : '#'} target="_blank" rel="noopener noreferrer">Inquire</a>
+                </Button>
               </div>
+
             </div>
 
+            {/* Quick Metrics Line */}
+            <div className="grid grid-cols-3 gap-8 mt-10 pt-6 border-t border-white/5">
+              {[
+                { label: 'Active Listings', value: agentListings.length },
+                { label: 'Trust Score', value: '9.8' },
+                { label: 'Deals Done', value: totalCompletedDeals },
+              ].map((stat, i) => (
+                <div key={i}>
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</p>
+                  <p className="text-xl font-display font-semibold text-white mt-0.5">{stat.value}</p>
+                </div>
+              ))}
+            </div>
           </div>
-
-        </div>
       </div>
 
       {/* -------------------- ENTERPRISE MODERN NAVIGATION TABS -------------------- */}
@@ -701,225 +557,60 @@ export default function AgentDetails() {
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.3 }}
           >
-            
-            {/* --------------------------------- TAB 1: OVERVIEW --------------------------------- */}
-            {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                
-                {/* Left side info block */}
-                <div className="lg:col-span-2 space-y-8">
+              
+              {/* --------------------------------- TAB 1: OVERVIEW --------------------------------- */}
+              {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                   
-                  {/* Company Narrative & Biography Card */}
-                  <div className="bg-[#111] border border-white/5 p-8 rounded-[2rem] space-y-5">
-                    <h3 className="text-xl font-display font-medium text-white border-b border-white/5 pb-4">
-                      {broker ? 'Professional Profile' : 'Agency Overview'}
-                    </h3>
+                  {/* Left side info block */}
+                  <div className="lg:col-span-2 space-y-8">
                     
-                    <p className="text-white/70 text-sm leading-relaxed font-light">
-                      {broker ? (
-                        broker.bio || `${broker.fullName} is a verified real estate professional operating across the region. With extensive experience in property valuation, legal documentation, and client representation, they provide comprehensive support for residential and commercial transactions.`
-                      ) : (
-                        agency?.logo ? `${agency.agencyName} is an accredited partner in our network, specializing in secure and transparent real estate advisory. We facilitate verified transactions with a focus on client protection.` : `${name} is a dedicated real estate agency providing professional services, including property valuation, documentation, and expert guidance for residential and commercial requirements.`
-                      )}
-                    </p>
-
-                    <p className="text-white/70 text-sm leading-relaxed font-light">
-                      Our team is committed to high professional standards, ensuring all property transactions are handled with transparency and local regulatory compliance.
-                    </p>
-
-                    {/* Quick highlights block */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/5">
-                      <div className="flex items-center gap-2.5 text-xs text-white/80">
-                        <CheckCircle2 size={15} className="text-[#C5A059]" />
-                        <span>Verified Documentation</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-xs text-white/80">
-                        <CheckCircle2 size={15} className="text-[#C5A059]" />
-                        <span>High Response Rate</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-xs text-white/80">
-                        <CheckCircle2 size={15} className="text-[#C5A059]" />
-                        <span>Regulatory Compliant</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-xs text-white/80">
-                        <CheckCircle2 size={15} className="text-[#C5A059]" />
-                        <span>Professional Conduct</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Featured Reviews Section */}
-                  <div className="bg-[#111] border border-white/5 p-8 rounded-[2rem] space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                      <h3 className="text-xl font-display font-medium text-white">Featured Reviews</h3>
-                      <button 
-                        onClick={() => setActiveTab('reviews')}
-                        className="text-xs uppercase font-extrabold tracking-wider text-[#C5A059] hover:text-white transition-colors"
-                      >
-                        Read all ({reviews.length})
-                      </button>
-                    </div>
-                    {reviews.slice(0, 1).map((review) => (
-                      <div key={review.id} className="bg-white/[0.03] p-6 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="bg-luxury-gold/20 text-luxury-gold font-bold p-2 w-10 h-10 rounded-full flex items-center justify-center">
-                            {review.author[0]}
-                          </div>
-                          <div>
-                            <p className="text-white font-semibold">{review.author}</p>
-                            <p className="text-[10px] text-white/40">{review.date}</p>
-                          </div>
-                        </div>
-                        <p className="text-white/70 text-sm italic">"{review.comment}"</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Portfolio Showcase */}
-                  <div className="bg-[#111] border border-white/5 p-8 rounded-[2rem] space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                      <h3 className="text-xl font-display font-medium text-white">Portfolio Showcase</h3>
-                      <span className="text-xs font-mono text-white/40">Verified Property Images</span>
+                    {/* About Section */}
+                    <div className="bg-[#111] border border-white/5 p-8 rounded-3xl space-y-5">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-[#C5A059]">About</h3>
+                      <p className="text-white/70 text-sm leading-relaxed">
+                        {broker?.bio || agency?.city ? (
+                          broker?.bio || 'Biography not yet added'
+                        ) : (
+                          'No biography added yet.'
+                        )}
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {galleryImages.slice(0, 6).map((src, idx) => (
-                        <div key={idx} className="relative group overflow-hidden rounded-2xl h-28 sm:h-36 bg-neutral-900 border border-white/5">
-                          <img src={src} alt="Portfolio property" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    {/* Highlights */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {['Verified Documentation', 'High Response Rate', 'Regulatory Compliant', 'Professional Conduct'].map((item) => (
+                        <div key={item} className="flex items-center gap-3 p-4 bg-[#111] border border-white/5 rounded-2xl text-xs text-white/80">
+                          <CheckCircle2 size={16} className="text-[#C5A059] shrink-0" />
+                          {item}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Highlighted Listings */}
-                  <div className="bg-[#111] border border-white/5 p-8 rounded-[2rem] space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                      <h3 className="text-xl font-display font-medium text-white">Highlighted Listings</h3>
-                      <button 
-                        onClick={() => setActiveTab('listings')}
-                        className="text-xs uppercase font-extrabold tracking-wider text-[#C5A059] hover:text-white transition-colors"
-                      >
-                        View all ({agentListings.length})
-                      </button>
+                  {/* Right Column */}
+                  <div className="space-y-8">
+                    <div className="bg-[#111] border border-white/5 p-6 rounded-3xl space-y-4">
+                      <h4 className="text-[10px] uppercase font-bold tracking-widest text-white/40">Languages</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {languagesSpoken.length > 0 ? languagesSpoken.map((lang) => (
+                          <span key={lang} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-xs font-medium text-white/80">{lang}</span>
+                        )) : <span className="text-xs text-white/30 italic">No languages added</span>}
+                      </div>
                     </div>
 
-                    {agentListings.length === 0 ? (
-                      <p className="text-white/40 text-xs text-center py-4">No active listings.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {agentListings.slice(0, 2).map(listing => (
-                          <div key={listing.id} className="transition-transform hover:scale-[1.02]">
-                            <PropertyCard property={listing as any} />
-                          </div>
-                        ))}
+                    <div className="bg-[#111] border border-white/5 p-6 rounded-3xl space-y-4">
+                      <h4 className="text-[10px] uppercase font-bold tracking-widest text-white/40">Specialties</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {specializations.length > 0 ? specializations.map((spec) => (
+                          <span key={spec} className="px-3 py-1 bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/10 rounded-lg text-xs font-bold uppercase tracking-wider">{spec}</span>
+                        )) : <span className="text-xs text-white/30 italic">No specialties added</span>}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Right side widgets desk */}
-                <div className="space-y-8">
-                  
-                  {/* Trust Score & Verification Card */}
-                  <div className="bg-gradient-to-br from-[#121212] via-[#121212] to-[#1a150c] border border-white/5 p-6 rounded-[2rem] space-y-5">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-white text-[10px] uppercase font-bold tracking-widest text-white/40">Market Performance</h4>
-                    </div>
-
-                    <div className="text-center py-4 relative">
-                      <div className="w-32 h-32 ml-auto mr-auto rounded-full border border-[#C5A059]/10 p-2 flex items-center justify-center relative">
-                        {/* Circle glowing effect */}
-                        <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[#C5A059] animate-spin-slow" />
-                        
-                        <div className="text-center">
-                          <span className="text-4xl font-display font-bold text-white tracking-tighter">9.8</span>
-                          <span className="block text-[10px] font-mono text-white/45 mt-0.5">TRUST FACTOR</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pt-4 border-t border-white/5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40">Reliability Level:</span>
-                        <span className="text-emerald-400 font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded text-[10px]">Verified</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40">Compliance Status:</span>
-                        <span className="text-white font-mono font-bold">100% OK</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Core Enterprise Parameters Details */}
-                  <div className="bg-[#111] border border-white/5 p-6 rounded-[2rem] space-y-5">
-                    <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#C5A059]">Service parameters</h3>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      
-                      <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5 text-center">
-                        <p className="text-white/30 text-[9px] uppercase font-bold">Response rate</p>
-                        <h5 className="text-lg font-bold text-white font-mono mt-1">{responseRate}</h5>
-                      </div>
-
-                      <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5 text-center">
-                        <p className="text-white/30 text-[9px] uppercase font-bold">Response Speed</p>
-                        <h5 className="text-lg font-bold text-[#C5A059] font-mono mt-1">{responseTime}</h5>
-                      </div>
-
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-white/5">
-                      
-                      <div>
-                        <span className="text-[10px] text-white/40 uppercase block mb-1">Languages Spoken</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {languagesSpoken.map((lang, index) => (
-                            <span key={index} className="px-2.5 py-1 bg-white/5 border border-white/5 rounded-md text-xs font-semibold text-white/90">
-                              {lang}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] text-white/40 uppercase block mb-1.5">Ecosystem Specialties</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {specializations.slice(0, 3).map((spec, index) => (
-                            <span key={index} className="px-2.5 py-1 bg-amber-500/10 text-[#C5A059] text-[10px] font-bold rounded-lg uppercase tracking-tight">
-                              {spec}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* High Quality Regional Office Map Coordinates Indicator */}
-                  <div className="bg-[#111] border border-white/5 p-6 rounded-[2rem] space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs uppercase font-extrabold tracking-widest text-[#C5A059]">Active Location Registry</h4>
-                      <Locate size={14} className="text-white/30" />
-                    </div>
-
-                    <div className="space-y-3.5">
-                      <div className="p-3 bg-white/[0.02] border border-white/5 rounded-2xl">
-                        <h6 className="text-xs font-semibold text-white">Central Jigjiga HQ Branch</h6>
-                        <p className="text-[10px] text-white/50 mt-1">Floor 14, Jigjiga Financial Tower, Block A, Somali Region</p>
-                        
-                        <div className="mt-2 text-[10px] font-mono text-[#C5A059] uppercase tracking-wider flex items-center justify-between">
-                          <span>Verified GPS coords:</span>
-                          <span>9.3524° N, 42.8021° E</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-            )}
 
             {/* --------------------------------- TAB 2: LISTINGS CATALOG --------------------------------- */}
             {activeTab === 'listings' && (

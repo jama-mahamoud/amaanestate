@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/extension-bubble-menu';
+import { FloatingMenu } from '@tiptap/extension-floating-menu';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -18,11 +20,26 @@ import CharacterCount from '@tiptap/extension-character-count';
 import Placeholder from '@tiptap/extension-placeholder';
 import Youtube from '@tiptap/extension-youtube';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
-import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import { Extension, Node as TiptapNode, mergeAttributes } from '@tiptap/core';
 import { common, createLowlight } from 'lowlight';
 import { motion, AnimatePresence } from 'framer-motion';
+// ... (omitted) ...
+
+const Callout = TiptapNode.create({
+  name: 'callout',
+  group: 'block',
+  content: 'block+',
+  draggable: true,
+  parseHTML() {
+    return [{ tag: 'div[data-type="callout"]' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 
+      'data-type': 'callout', 
+      class: 'callout-block bg-luxury-gold/5 border-l-4 border-luxury-gold p-8 my-10 rounded-r-3xl relative' 
+    }), 0]
+  },
+})
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
