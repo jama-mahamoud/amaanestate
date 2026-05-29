@@ -29,6 +29,12 @@ export interface Listing {
   legalTitleDeedUrl?: string;
   sellerNationalIdUrl?: string;
   associatedBrokerId?: string;
+  extAgentName?: string;
+  extAgencyName?: string;
+  extPhone?: string;
+  extWhatsapp?: string;
+  extLocation?: string;
+  extProfileImageUrl?: string;
   legalReferenceNumber?: string;
   governmentRegistryNumber?: string;
   images: string[];

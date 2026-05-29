@@ -21,6 +21,7 @@ import PropertyCard from '@/components/PropertyCard';
 import PropertyDetailMap from '@/components/location/PropertyDetailMap';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
+import { brokerService } from '@/services/brokerService';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -109,6 +110,39 @@ export default function PropertyDetails() {
   const [calcInterestRate, setCalcInterestRate] = useState(7.5);
   const [calcDuration, setCalcDuration] = useState(20);
   
+  // Dynamic Broker/Partner Agent Resolution
+  const [broker, setBroker] = useState<any>(null);
+  const [brokerLoading, setBrokerLoading] = useState(false);
+
+  useEffect(() => {
+    const brokerId = property?.associatedBrokerId || property?.ownerId;
+    if (!brokerId) {
+      setBroker(null);
+      return;
+    }
+
+    let active = true;
+    setBrokerLoading(true);
+    brokerService.getBroker(brokerId)
+      .then((data) => {
+        if (active && data) {
+          setBroker(data);
+        } else if (active) {
+          setBroker(null);
+        }
+      })
+      .catch((err) => {
+        console.warn('Error fetching broker for details page:', err);
+      })
+      .finally(() => {
+        if (active) setBrokerLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [property?.associatedBrokerId, property?.ownerId]);
+  
   // Visit scheduling custom state
   const [visitingDate, setVisitingDate] = useState('');
   const [visitingTime, setVisitingTime] = useState('');
@@ -160,12 +194,12 @@ export default function PropertyDetails() {
     if (!property) return '#';
     const priceText = formatPrice(property.price, property.currency);
     const message = `Asc Salaam/Hello AmaanEstate, I am interested in your listing: "${property.title}" listed for ${priceText} in ${property.city}. ID Ref: ${property.id}.`;
-    const contactPhone = property.phone || property.features?.phone || '';
+    const contactPhone = broker?.phone || broker?.whatsapp || property.extWhatsapp || property.extPhone || property.phone || property.features?.phone || '';
     if (!contactPhone) return '#';
     const cleanPhone = contactPhone.replace(/\D/g, '');
     const prefix = cleanPhone.startsWith('9') || cleanPhone.startsWith('7') ? '251' + cleanPhone : cleanPhone;
     return `https://wa.me/${prefix}?text=${encodeURIComponent(message)}`;
-  }, [property]);
+  }, [property, broker]);
 
   // Submit visit booking
   const handleScheduleVisit = useCallback((e: React.FormEvent) => {
@@ -676,33 +710,98 @@ export default function PropertyDetails() {
 
                 <div className="space-y-4 sm:space-y-6">
                    <div className="flex items-center gap-3.5 pb-4 sm:pb-6 border-b border-white/10 relative">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold relative text-sm sm:text-base shrink-0">
-                        AS
-                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
-                          <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                        </div>
-                      </div>
-                      <div className="space-y-0.5 min-w-0">
-                        <h4 className="text-white font-bold text-xs sm:text-sm truncate">Amaan Certified Concierge</h4>
-                        <p className="text-luxury-gold text-[8px] sm:text-[9px] font-bold tracking-widest uppercase truncate">Verified Premier Agent</p>
-                        <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase font-bold">
-                          <Clock size={11} className="text-emerald-400 shrink-0" />
-                          <span>Response: &lt; 10 Mins</span>
-                        </div>
-                      </div>
+                     {broker ? (
+                       <Link to={`/agents/${broker.id}`} className="flex items-center gap-3.5 hover:opacity-90 group/agent min-w-0 flex-1">
+                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#C5A059]/15 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] font-black relative text-sm sm:text-base shrink-0 overflow-hidden text-center">
+                           {broker.profilePhotoUrl ? (
+                             <img src={broker.profilePhotoUrl} className="w-full h-full object-cover transition-transform group-hover/agent:scale-105" alt={broker.fullName} referrerPolicy="no-referrer" />
+                           ) : (
+                             broker.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                           )}
+                           <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
+                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                           </div>
+                         </div>
+                         <div className="space-y-0.5 min-w-0 flex-1">
+                           <h4 className="text-white font-bold text-xs sm:text-sm truncate font-display group-hover/agent:text-luxury-gold transition-colors flex items-center gap-1">
+                             <span className="truncate">{broker.fullName}</span>
+                             {broker.isVerified && <ShieldCheck size={12} className="text-emerald-400 shrink-0" />}
+                           </h4>
+                           <p className="text-luxury-gold text-[8px] sm:text-[9px] font-bold tracking-widest uppercase truncate">
+                             {broker.companyName || 'Verified Partner Agent'}
+                           </p>
+                           {broker.region && (
+                             <p className="text-white/40 text-[9px] font-medium truncate">
+                               Active in {broker.city || broker.region}
+                             </p>
+                           )}
+                         </div>
+                       </Link>
+                     ) : property?.extAgentName ? (
+                       <div className="flex items-center gap-3.5 min-w-0 flex-1 text-left font-sans">
+                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#C5A059]/15 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] font-black relative text-sm sm:text-base shrink-0 overflow-hidden text-center">
+                           {property.extProfileImageUrl ? (
+                             <img src={property.extProfileImageUrl} className="w-full h-full object-cover" alt={property.extAgentName} referrerPolicy="no-referrer" />
+                           ) : (
+                             property.extAgentName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                           )}
+                           <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#C5A059] border border-luxury-black flex items-center justify-center">
+                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                           </div>
+                         </div>
+                         <div className="space-y-1 min-w-0 flex-1">
+                           <span className="text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/25 font-black tracking-widest uppercase inline-block">
+                             Partner Agent
+                           </span>
+                           <h4 className="text-white font-bold text-xs sm:text-sm truncate font-display">
+                             {property.extAgentName}
+                           </h4>
+                           {property.extAgencyName && (
+                             <p className="text-luxury-gold text-[8px] sm:text-[9px] font-bold tracking-widest uppercase truncate leading-none mt-1">
+                               {property.extAgencyName}
+                             </p>
+                           )}
+                           {property.extLocation && (
+                             <p className="text-white/40 text-[9px] font-medium truncate font-sans">
+                               HQ Location: {property.extLocation}
+                             </p>
+                           )}
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold relative text-sm sm:text-base shrink-0">
+                           AS
+                           <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center">
+                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                           </div>
+                         </div>
+                         <div className="space-y-0.5 min-w-0 flex-1">
+                           <h4 className="text-white font-bold text-xs sm:text-sm truncate font-display">Amaan Certified Concierge</h4>
+                           <p className="text-luxury-gold text-[8px] sm:text-[9px] font-bold tracking-widest uppercase truncate">Verified Premier Agent</p>
+                           <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase font-bold">
+                             <Clock size={11} className="text-emerald-400 shrink-0" />
+                             <span>Response: &lt; 10 Mins</span>
+                           </div>
+                         </div>
+                       </div>
+                     )}
                    </div>
 
                    <div className="space-y-2.5 pt-1">
                      <Button asChild className="w-full bg-[#C5A059] text-black hover:bg-white hover:text-black hover:shadow-xl transition-all h-14 sm:h-16 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold cursor-pointer">
                        <a href={whatsAppInquiryUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                          <MessageSquare size={18} />
-                         <span>WhatsApp Inquire</span>
+                         <span>WhatsApp Inquiry</span>
                        </a>
                      </Button>
                      <Button variant="outline" asChild className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-14 sm:h-16 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold cursor-pointer">
-                       <a href={property.phone || property.features?.phone ? `tel:${property.phone || property.features?.phone}` : '#'} className="flex items-center justify-center gap-2">
+                       <a 
+                         href={(broker?.phone || broker?.whatsapp || property?.extPhone || property?.extWhatsapp || property?.phone || property?.features?.phone) ? `tel:${broker?.phone || broker?.whatsapp || property?.extPhone || property?.extWhatsapp || property?.phone || property?.features?.phone}` : '#'}
+                         className="flex items-center justify-center gap-2"
+                       >
                          <Phone size={16} />
-                         <span>Direct Call Line</span>
+                         <span>Call Hotline</span>
                        </a>
                      </Button>
                    </div>
@@ -713,6 +812,17 @@ export default function PropertyDetails() {
                   <p className="text-white/50 text-[10px] sm:text-[11px] leading-relaxed">
                     Diaspora acquisitions are supported through our exclusive banking and power-of-attorney legal compliance frameworks.
                   </p>
+                </div>
+
+                {/* Join as Verified Agent CTA */}
+                <div className="pt-4 border-t border-white/5 text-center space-y-2">
+                  <p className="text-[10px] text-white/40 font-medium">Are you an independent agent or local broker?</p>
+                  <Link 
+                    to="/agents/register" 
+                    className="inline-flex h-9 px-4 items-center justify-center rounded-lg border border-[#C5A059]/30 hover:border-[#C5A059] text-[#C5A059] bg-[#C5A059]/5 hover:bg-[#C5A059]/10 text-[9px] tracking-widest font-black uppercase transition-all w-full"
+                  >
+                    Join as Verified Agent
+                  </Link>
                 </div>
               </div>
 

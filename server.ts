@@ -482,9 +482,12 @@ async function startServer() {
         const cleanContent = (article.content || "").replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         const desc = article.seoDescription || article.summary || (cleanContent ? cleanContent.substring(0, 160) + "..." : "A premium news development and localized intelligence briefing from AmaanEstate.");
         
-        let imageUrl = article.socialImage || article.thumbnail || article.featuredImage;
+        let imageUrl = article.socialImage || article.featuredImage;
         if (!imageUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
           imageUrl = article.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
+        }
+        if (!imageUrl) {
+          imageUrl = "/house_luxury_icon.png";
         }
         
         let absoluteImgUrl = "";
@@ -502,6 +505,7 @@ async function startServer() {
         
         template = template
           .replace(/<title>[^<]*<\/title>/gi, `<title>${title}</title>`)
+          .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
           .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
           .replace(/<meta[^>]*property="og:title"[^>]*>/gi, '')
           .replace(/<meta[^>]*property="og:description"[^>]*>/gi, '')
@@ -530,6 +534,7 @@ async function startServer() {
     <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
     <meta name="twitter:url" content="${absolutePageUrl}" />
     ${absoluteImgUrl ? `<meta name="twitter:image" content="${absoluteImgUrl}" />` : ''}
+    <link rel="canonical" href="${absolutePageUrl}" />
         `;
         
         template = template.replace(/<head>/i, `<head>${dynamicMetaTags}`);

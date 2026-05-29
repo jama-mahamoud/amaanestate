@@ -20,11 +20,14 @@ export default function ArticleDetails() {
   // Compute dynamic metadata details
   const metaImageUrl = (() => {
     if (!article) return undefined;
-    let rawUrl = article.socialImage || (article as any).thumbnail || article.featuredImage;
+    let rawUrl = article.socialImage || article.featuredImage;
     if (!rawUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
       rawUrl = article.gallery.find(g => typeof g === 'string' && g.trim() !== '');
     }
-    if (!rawUrl) return undefined;
+    // Use branded high-quality fallback logo/cover if no article images were uploaded
+    if (!rawUrl) {
+      rawUrl = '/house_luxury_icon.png';
+    }
     
     if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
       return rawUrl;

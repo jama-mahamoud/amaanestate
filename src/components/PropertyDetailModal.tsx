@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, BedDouble, Bath, Square, Share2, 
@@ -12,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
 import { listingService } from '@/services/listingService';
+import { brokerService } from '@/services/brokerService';
 import { toast } from 'sonner';
 import PropertyDetailMap from '@/components/location/PropertyDetailMap';
 
@@ -26,6 +28,39 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
   const [favorite, setFavorite] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [fullProperty, setFullProperty] = useState<any>(property);
+
+  // Dynamic Broker/Partner Agent Resolution
+  const [broker, setBroker] = useState<any>(null);
+  const [brokerLoading, setBrokerLoading] = useState(false);
+
+  useEffect(() => {
+    const brokerId = fullProperty?.associatedBrokerId || fullProperty?.ownerId;
+    if (!brokerId) {
+      setBroker(null);
+      return;
+    }
+
+    let active = true;
+    setBrokerLoading(true);
+    brokerService.getBroker(brokerId)
+      .then((data) => {
+        if (active && data) {
+          setBroker(data);
+        } else if (active) {
+          setBroker(null);
+        }
+      })
+      .catch((err) => {
+        console.warn('Error fetching broker for modal details:', err);
+      })
+      .finally(() => {
+        if (active) setBrokerLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [fullProperty?.associatedBrokerId, fullProperty?.ownerId]);
 
   // Scheduling state
   const [visitingDate, setVisitingDate] = useState('');
@@ -79,12 +114,12 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
   const whatsAppInquiryUrl = useMemo(() => {
     if (!fullProperty) return '#';
     const message = `Asc Salaam/Hello AmaanEstate, I am interested in your listing: "${fullProperty.title}" listed for ${displayPrice} in ${fullProperty.city}. ID Ref: ${fullProperty.id}.`;
-    const contactPhone = fullProperty.phone || '';
+    const contactPhone = broker?.phone || broker?.whatsapp || fullProperty.extWhatsapp || fullProperty.extPhone || fullProperty.phone || '';
     if (!contactPhone) return '#';
     const cleanPhone = contactPhone.replace(/\D/g, '');
     const prefix = cleanPhone.startsWith('9') || cleanPhone.startsWith('7') ? '251' + cleanPhone : cleanPhone;
     return `https://wa.me/${prefix}?text=${encodeURIComponent(message)}`;
-  }, [fullProperty, displayPrice]);
+  }, [fullProperty, displayPrice, broker]);
 
   const handleScheduleVisit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,10 +384,70 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
                   {/* Immediate Support */}
                   <div className="glass-card border border-white/5 rounded-3xl p-6 flex flex-col justify-between space-y-6">
                     <div>
-                      <h4 className="text-base font-display font-semibold text-white">Direct Agent Consulting</h4>
-                      <p className="text-xs text-white/40 mt-1 leading-relaxed">Instantly reach verified registrar officers for detailed deed analysis, contract validation, and diaspora payment coordination.</p>
+                      <h4 className="text-base font-display font-semibold text-white mb-4">Direct Agent Consulting</h4>
                       
-                      <div className="mt-5 space-y-3 text-xs">
+                      {broker ? (
+                        <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.02] border border-white/5 mb-4 font-sans">
+                          <Link to={`/agents/${broker.id}`} onClick={onClose} className="w-12 h-12 rounded-xl bg-[#C5A059]/15 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] font-black relative text-xs shrink-0 overflow-hidden hover:opacity-90 transition-opacity">
+                            {broker.profilePhotoUrl ? (
+                              <img src={broker.profilePhotoUrl} className="w-full h-full object-cover" alt={broker.fullName} referrerPolicy="no-referrer" />
+                            ) : (
+                              broker.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-luxury-black flex items-center justify-center font-sans">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            </div>
+                          </Link>
+                          <div className="min-w-0 flex-1">
+                            <Link to={`/agents/${broker.id}`} onClick={onClose} className="text-sm font-bold text-white hover:text-luxury-gold transition-colors block truncate font-display">
+                              {broker.fullName}
+                            </Link>
+                            <span className="text-luxury-gold text-[9px] font-bold tracking-widest uppercase truncate mt-0.5 block">
+                              {broker.companyName || 'Verified Partner Agent'}
+                            </span>
+                            {broker.region && (
+                              <span className="text-white/40 text-[9px] font-medium truncate mt-0.5 block">
+                                Operations: {broker.city || broker.region}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : fullProperty?.extAgentName ? (
+                        <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.02] border border-white/5 mb-4 font-sans text-left">
+                          <div className="w-12 h-12 rounded-xl bg-[#C5A059]/15 border border-[#C5A059]/40 flex items-center justify-center text-[#C5A059] font-black relative text-xs shrink-0 overflow-hidden text-center">
+                            {fullProperty.extProfileImageUrl ? (
+                              <img src={fullProperty.extProfileImageUrl} className="w-full h-full object-cover" alt={fullProperty.extAgentName} referrerPolicy="no-referrer" />
+                            ) : (
+                              fullProperty.extAgentName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#C5A059] border border-luxury-black flex items-center justify-center">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[#C5A059] text-[8.5px] font-black tracking-widest uppercase inline-block mb-1">
+                              Partner Agent
+                            </span>
+                            <h4 className="text-sm font-bold text-white font-display truncate">
+                              {fullProperty.extAgentName}
+                            </h4>
+                            {fullProperty.extAgencyName && (
+                              <span className="text-white/60 text-[9.5px] truncate mt-0.5 block">
+                                {fullProperty.extAgencyName}
+                              </span>
+                            )}
+                            {fullProperty.extLocation && (
+                              <span className="text-white/40 text-[8.5px] truncate mt-0.5 block font-sans">
+                                Location: {fullProperty.extLocation}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-white/40 mt-1 leading-relaxed mb-4">Instantly reach verified registrar officers for detailed deed analysis, contract validation, and diaspora payment coordination.</p>
+                      )}
+
+                      <div className="space-y-3 text-xs">
                         <div className="flex items-center gap-3 text-white/70">
                           <ShieldCheck size={14} className="text-luxury-gold shrink-0" />
                           <span>Amaan Certified Registrar Protection</span>
@@ -364,21 +459,35 @@ export default function PropertyDetailModal({ isOpen, onClose, property }: Prope
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <a 
-                        href={whatsAppInquiryUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-900/10"
-                      >
-                        <MessageSquare size={16} /> Inquiry on WhatsApp
-                      </a>
-                      <a 
-                        href={fullProperty?.phone ? `tel:${fullProperty.phone}` : '#'}
-                        className="w-full h-12 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all cursor-pointer"
-                      >
-                        <Phone size={14} /> Call Agent hotline
-                      </a>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <a 
+                          href={whatsAppInquiryUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-900/10"
+                        >
+                          <MessageSquare size={16} /> Inquiry on WhatsApp
+                        </a>
+                        <a 
+                          href={(broker?.phone || broker?.whatsapp || fullProperty?.extPhone || fullProperty?.extWhatsapp || fullProperty?.phone) ? `tel:${broker?.phone || broker?.whatsapp || fullProperty?.extPhone || fullProperty?.extWhatsapp || fullProperty?.phone}` : '#'}
+                          className="w-full h-12 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <Phone size={14} /> Call Agent hotline
+                        </a>
+                      </div>
+
+                      {/* Join as Verified Agent CTA */}
+                      <div className="pt-3.5 border-t border-white/5 text-center">
+                        <p className="text-[10px] text-white/40 font-medium mb-2">Are you an independent agent or local broker?</p>
+                        <Link 
+                          to="/agents/register" 
+                          onClick={onClose}
+                          className="inline-flex h-9 px-4 items-center justify-center rounded-lg border border-luxury-gold/30 hover:border-luxury-gold text-luxury-gold bg-luxury-gold/5 hover:bg-luxury-gold/10 text-[9px] tracking-widest font-black uppercase transition-all w-full"
+                        >
+                          Join as Verified Agent
+                        </Link>
+                      </div>
                     </div>
                   </div>
 

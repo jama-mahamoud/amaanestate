@@ -67,6 +67,14 @@ interface FormState {
   // Step 6: Verification & Agreement
   termsAccepted: boolean;
   digitalSignature: string;
+
+  // External Agent Attribution Support fields (optional)
+  extAgentName: string;
+  extAgencyName: string;
+  extPhone: string;
+  extWhatsapp: string;
+  extLocation: string;
+  extProfileImageUrl: string;
 }
 
 const INITIAL_STATE: FormState = {
@@ -105,6 +113,12 @@ const INITIAL_STATE: FormState = {
   preferredContact: 'WhatsApp',
   termsAccepted: false,
   digitalSignature: '',
+  extAgentName: '',
+  extAgencyName: '',
+  extPhone: '',
+  extWhatsapp: '',
+  extLocation: '',
+  extProfileImageUrl: '',
 };
 
 export default function PropertyListingFormPage() {
@@ -200,6 +214,12 @@ export default function PropertyListingFormPage() {
               preferredContact: (listing.metadata?.preferredContact as any) || 'WhatsApp',
               termsAccepted: true,
               digitalSignature: listing.metadata?.digitalSignature || '',
+              extAgentName: listing.extAgentName || '',
+              extAgencyName: listing.extAgencyName || '',
+              extPhone: listing.extPhone || '',
+              extWhatsapp: listing.extWhatsapp || '',
+              extLocation: listing.extLocation || '',
+              extProfileImageUrl: listing.extProfileImageUrl || '',
             });
 
             if (listing.images && listing.images.length > 0) {
@@ -384,6 +404,12 @@ export default function PropertyListingFormPage() {
         phone: formData.phone,
         whatsapp: formData.whatsapp,
         email: formData.email,
+        extAgentName: formData.extAgentName || null,
+        extAgencyName: formData.extAgencyName || null,
+        extPhone: formData.extPhone || null,
+        extWhatsapp: formData.extWhatsapp || null,
+        extLocation: formData.extLocation || null,
+        extProfileImageUrl: formData.extProfileImageUrl || null,
         legalOwnershipCertificateUrl: finalOwnershipUrl,
         sellerNationalIdUrl: finalIdentityUrl,
         features: featuresObj,
@@ -1049,6 +1075,95 @@ export default function PropertyListingFormPage() {
                       })}
                     </div>
                   </div>
+
+                  {/* External Agent Attribution (Admin/Import Use) */}
+                  <div className="pt-6 border-t border-white/5 space-y-4">
+                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-luxury-gold flex items-center gap-2">
+                          <Info size={14} className="text-luxury-gold" />
+                          External Agent Attribution (Optional)
+                        </h4>
+                        <p className="text-[10px] text-white/40 mt-1 uppercase font-semibold tracking-wider">
+                          For Manual Imports (Freelance Brokers, Independent Agents, Construction Companies)
+                        </p>
+                      </div>
+
+                      <div className="text-[11px] text-white/50 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
+                        Assign this listing to an external local partner. If filled, this contact and branding card will take priority on the public property card and details page, without requiring a registered account.
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">External Agent / Contact Person</label>
+                          <Input 
+                            placeholder="e.g. Liban Shibe" 
+                            name="extAgentName"
+                            value={formData.extAgentName}
+                            onChange={handleTextChange}
+                            className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">Agency / Company Name</label>
+                          <Input 
+                            placeholder="e.g. Sool Construction Co / Freelance Broker" 
+                            name="extAgencyName"
+                            value={formData.extAgencyName}
+                            onChange={handleTextChange}
+                            className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">External Phone Number</label>
+                          <Input 
+                            placeholder="e.g. +252 63 4441111" 
+                            name="extPhone"
+                            value={formData.extPhone}
+                            onChange={handleTextChange}
+                            className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">External WhatsApp</label>
+                          <Input 
+                            placeholder="e.g. +252 63 4441111" 
+                            name="extWhatsapp"
+                            value={formData.extWhatsapp}
+                            onChange={handleTextChange}
+                            className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">Agent Location/City</label>
+                          <Input 
+                            placeholder="e.g. Hargeisa" 
+                            name="extLocation"
+                            value={formData.extLocation}
+                            onChange={handleTextChange}
+                            className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase font-bold tracking-widest text-white/40 ml-1">Agent Profile Image URL (optional)</label>
+                        <Input 
+                          placeholder="e.g. https://images.unsplash.com/... or upload link" 
+                          name="extProfileImageUrl"
+                          value={formData.extProfileImageUrl}
+                          onChange={handleTextChange}
+                          className="bg-white/5 border-white/5 h-11 rounded-lg text-white text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1211,6 +1326,37 @@ export default function PropertyListingFormPage() {
                         <p className="text-xs font-bold text-luxury-gold truncate">{formData.preferredContact}</p>
                       </div>
                     </div>
+
+                    {formData.extAgentName && (
+                      <div className="border-t border-white/5 pt-4 space-y-3">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/30">External Agent Attribution Card</p>
+                        <div className="flex items-center gap-3 bg-white/5 p-3.5 rounded-2xl border border-white/5">
+                          {formData.extProfileImageUrl ? (
+                            <img 
+                              src={formData.extProfileImageUrl} 
+                              alt={formData.extAgentName} 
+                              className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] font-black text-xs shrink-0 uppercase">
+                              {(formData.extAgentName || 'EA').split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1 text-left">
+                            <p className="text-xs font-bold text-white truncate">{formData.extAgentName}</p>
+                            <p className="text-[9px] text-[#C5A059] font-bold uppercase tracking-widest mt-0.5 truncate">
+                              {formData.extAgencyName || 'Independent Agent'} • {formData.extLocation || 'Local Partner'}
+                            </p>
+                            {(formData.extPhone || formData.extWhatsapp) && (
+                              <p className="text-[9px] text-white/40 mt-0.5 font-mono">
+                                Phone: {formData.extPhone || 'N/A'} | WA: {formData.extWhatsapp || 'N/A'}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6 bg-luxury-gold/5 border border-luxury-gold/20 rounded-2xl flex items-start gap-4">
