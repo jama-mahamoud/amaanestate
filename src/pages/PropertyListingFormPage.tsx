@@ -287,10 +287,18 @@ export default function PropertyListingFormPage() {
   };
 
   const handleFinalSubmit = async () => {
-    if (!user) return;
+    console.log("handleFinalSubmit triggered");
+    
+    if (!user) {
+      console.error("No user found");
+      toast.error("You must be logged in to publish a listing.");
+      return;
+    }
+    
     setIsSubmitting(true);
     setUploadProgress(10);
     setUploadStatus('Preparing secure listing payload...');
+    console.log("Submitting with data:", formData);
 
     try {
       let finalImages: string[] = isEditMode ? [...existingImagesList] : [];
@@ -391,6 +399,7 @@ export default function PropertyListingFormPage() {
       let resultId = '';
       if (isEditMode && editId) {
         setUploadStatus('Applying delta state changes to registry...');
+        console.log("Updating listing:", editId);
         const success = await listingService.updateListing(editId, listingPayload);
         if (!success) {
           throw new Error('Verification database update rejected check inputs.');
@@ -398,6 +407,7 @@ export default function PropertyListingFormPage() {
         resultId = editId;
       } else {
         setUploadStatus('Publishing registry node and computing score indices...');
+        console.log("Creating listing");
         const newId = await listingService.createListing(listingPayload);
         if (!newId) {
           throw new Error('Database registry server rejected listing creation.');
@@ -411,7 +421,15 @@ export default function PropertyListingFormPage() {
       toast.success(isEditMode ? 'Listing certificates updated successfully' : 'Your listing request has been queued for moderation.');
     } catch (err: any) {
       console.error('Final Listing submission error:', err);
-      toast.error(`Submission Rejection: ${err.message || 'Verification check failed.'}`);
+      // Attempt to parse if it's the JSON stringified from handleFirestoreError
+      let errorMessage = err.message || 'Verification check failed.';
+      try {
+        const parsedError = JSON.parse(err.message);
+        if (parsedError.error) errorMessage = parsedError.error;
+      } catch (e) {
+        // ignore parse error
+      }
+      toast.error(`Submission Rejection: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
