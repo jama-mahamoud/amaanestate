@@ -3,9 +3,12 @@ import path from "path";
 import dotenv from "dotenv";
 import http from "http";
 import fs from "fs";
+import { Resend } from 'resend';
 
 // Load environment variables immediately
 dotenv.config();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Critical Startup Diagnostics for Production
 console.log("=== BACKEND PRODUCTION INITIALIZATION START ===");
@@ -374,6 +377,32 @@ ${contextData.articlesStr}
     const cleanedMsg = errMsg.replace(/AIzaSy[A-Za-z0-9_\-]{33}/g, "[REDACTED_API_KEY]");
     console.error("[PROD] AI Assistant API error:", cleanedMsg);
     res.json({ text: "Waan ka xunnahay, adeegga AI hadda wuu mashquulsan yahay. Fadlan dib iskugu day waxyar ka dib." });
+  }
+});
+
+app.post("/api/contact", async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Name, email, and message are required" });
+  }
+  try {
+    await resend.emails.send({
+      from: 'AmaanEstate <onboarding@resend.dev>', // Use verified domain later
+      to: 'info@amaanestate.com',
+      subject: `New Contact Form Submission: ${subject}`,
+      html: `
+        <h2>New Inquiry</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong> ${message}</p>
+      `
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Resend error:", error);
+    res.status(500).json({ error: "Failed to send email" });
   }
 });
 

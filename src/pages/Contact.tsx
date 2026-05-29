@@ -44,7 +44,25 @@ export default function Contact() {
         userId: authUserId
       };
 
-      const docRef = await addDoc(collection(db, 'contactMessages'), submissionData);
+      // Save to Firebase
+      await addDoc(collection(db, 'contactMessages'), submissionData);
+      
+      // Also send email via API
+      const contactResponse = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message
+        })
+      });
+
+      if (!contactResponse.ok) {
+        throw new Error('Could not send email notification');
+      }
       
       setSuccess(true);
       toast.success('Inquiry dispatched successfully');
@@ -115,14 +133,14 @@ export default function Contact() {
                </a>
 
                <a 
-                href="mailto:support@amaanestate.com" 
+                href="mailto:info@amaanestate.com" 
                 className="glass-card p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] group hover:border-luxury-gold/20 transition-all duration-700 block"
                >
                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold mb-6 md:mb-8 group-hover:bg-luxury-gold group-hover:text-luxury-black transition-all duration-500">
                     <Mail size={20} />
                  </div>
                  <h4 className="text-lg md:text-xl font-display font-bold text-white mb-2 tracking-tight">Official Inbox</h4>
-                 <p className="text-white/20 text-xs md:text-sm font-light italic tracking-wider transition-colors group-hover:text-white/60">support@amaanestate.com</p>
+                 <p className="text-white/20 text-xs md:text-sm font-light italic tracking-wider transition-colors group-hover:text-white/60">info@amaanestate.com</p>
                </a>
             </div>
 

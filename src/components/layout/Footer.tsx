@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { 
-  Facebook, Instagram, MessageCircle, MapPin, Music2
+  Facebook, Instagram, MessageCircle, MapPin, Music2, Mail, Phone
 } from 'lucide-react';
 import PremiumLogo from '../brand/PremiumLogo';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -133,13 +133,22 @@ export default function Footer() {
             </h3>
             <div className="space-y-6">
               <a 
-                href="https://wa.me/251910012794" 
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:info@amaanestate.com"
                 className="flex items-center gap-3 group outline-none"
               >
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#C5A059] transition-colors">
-                  <MessageCircle size={14} className="text-white/60 group-hover:text-black transition-colors" />
+                  <Mail size={14} className="text-white/60 group-hover:text-black transition-colors" />
+                </div>
+                <span className="text-xs text-white/50 group-hover:text-white transition-colors font-medium">
+                  info@amaanestate.com
+                </span>
+              </a>
+              <a 
+                href="tel:+251910012794"
+                className="flex items-center gap-3 group outline-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#C5A059] transition-colors">
+                  <Phone size={14} className="text-white/60 group-hover:text-black transition-colors" />
                 </div>
                 <span className="text-xs text-white/50 group-hover:text-white transition-colors font-medium">
                   +251 910 012 794
