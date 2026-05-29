@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { articleService } from '@/services/articleService';
 import { Article, ArticleStatus } from '@/types';
 import Editor from './Editor';
@@ -15,10 +14,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Eye, Save, Globe, Info, Layout, Palette, 
-  Settings2, Share2, Sparkles, AlertCircle,
-  Smartphone, Tablet, Monitor, History, Clock, CheckCircle2,
-  Image as ImageIcon
+  Eye, Layout, Palette, Settings2, Sparkles, AlertCircle,
+  Smartphone, Tablet, Monitor, Info, Check, X,
+  Search, RefreshCw, EyeOff, Globe, BookOpen, Clock, Tag, ExternalLink
 } from 'lucide-react';
 
 export default function ArticleForm({ initialData }: { initialData?: Article }) {
@@ -27,6 +25,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
   const [showPreview, setShowPreview] = useState(false);
   const [splitPreview, setSplitPreview] = useState(false);
   const [previewSize, setPreviewSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const [seoPreviewTab, setSeoPreviewTab] = useState<'desktop' | 'mobile' | 'social'>('desktop');
   
   const isAdminOrEditor = profile?.role?.toString().trim().toLowerCase() === 'admin' || profile?.role?.toString().trim().toLowerCase() === 'editor';
   
@@ -69,19 +68,97 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // SEO Score auto-calculation
-  useEffect(() => {
-    let score = 0;
-    if (formData.title && formData.title.length > 20) score += 20;
-    if (formData.summary && formData.summary.length > 60) score += 20;
-    const wordCount = formData.content ? formData.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length : 0;
-    if (wordCount > 100) score += 20;
-    if (formData.focusKeyword && formData.content?.toLowerCase().includes(formData.focusKeyword.toLowerCase())) score += 20;
-    if (formData.featuredImage) score += 20;
-    setFormData(prev => ({ ...prev, seoScore: score }));
-  }, [formData.title, formData.summary, formData.content, formData.focusKeyword, formData.featuredImage]);
+  // Real-time calculations for SEO
+  const totalWordCount = useMemo(() => {
+    if (!formData.content) return 0;
+    return formData.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+  }, [formData.content]);
 
-  // Reactive automated slug generation as title is typed (only matches if slug is empty or simple draft name)
+  const seoChecks = useMemo(() => {
+    const focusKeywordLower = (formData.focusKeyword || '').toLowerCase().trim();
+    const hasFocus = focusKeywordLower.length > 0;
+    
+    const title = formData.title || '';
+    const desc = formData.seoDescription || formData.summary || '';
+    const firstParagraph = formData.content ? formData.content.replace(/<[^>]*>/g, '').substring(0, 300) : '';
+
+    return [
+      {
+        id: 'title-presence',
+        label: 'Focus Keyword in Article Title',
+        description: 'Ensure the main target keyword appears early in your headline.',
+        passed: hasFocus && title.toLowerCase().includes(focusKeywordLower),
+        impact: 20
+      },
+      {
+        id: 'desc-presence',
+        label: 'Focus Keyword in Meta Description',
+        description: 'Focus keyword must be cleanly written inside the search summary.',
+        passed: hasFocus && desc.toLowerCase().includes(focusKeywordLower),
+        impact: 15
+      },
+      {
+        id: 'content-start',
+        label: 'Focus Keyword in First Paragraph',
+        description: 'Introduce your reader and search bots to your target keyword immediately.',
+        passed: hasFocus && firstParagraph.toLowerCase().includes(focusKeywordLower),
+        impact: 15
+      },
+      {
+        id: 'title-length',
+        label: 'Headline Length Optimization',
+        description: 'Title should be 20+ characters for high editorial readability.',
+        passed: title.length >= 20 && title.length <= 80,
+        current: `${title.length} chars`,
+        recommended: '20 - 80 chars',
+        impact: 15
+      },
+      {
+        id: 'desc-length',
+        label: 'Meta Description Length',
+        description: 'Publishing snippets perform best between 60 and 160 characters.',
+        passed: desc.length >= 60 && desc.length <= 160,
+        current: `${desc.length} chars`,
+        recommended: '60 - 160 chars',
+        impact: 15
+      },
+      {
+        id: 'word-count',
+        label: 'Sufficient Content Length',
+        description: 'Detailed writing provides stronger search engines indexing (>100 words).',
+        passed: totalWordCount >= 100,
+        current: `${totalWordCount} words`,
+        recommended: '>= 100 words',
+        impact: 10
+      },
+      {
+        id: 'featured-image',
+        label: 'Featured Cover Photo Configured',
+        description: 'Visual cues boost article click-through rates dramatically.',
+        passed: !!formData.featuredImage,
+        impact: 10
+      }
+    ];
+  }, [formData.focusKeyword, formData.title, formData.seoDescription, formData.summary, formData.content, formData.featuredImage, totalWordCount]);
+
+  // Dynamically calculate score
+  const computedSeoScore = useMemo(() => {
+    let score = 0;
+    seoChecks.forEach(c => {
+      if (c.passed) score += c.impact;
+    });
+    return score;
+  }, [seoChecks]);
+
+  // Sync computed score directly to form state
+  useEffect(() => {
+    setFormData(prev => {
+      if (prev.seoScore === computedSeoScore) return prev;
+      return { ...prev, seoScore: computedSeoScore };
+    });
+  }, [computedSeoScore]);
+
+  // Auto slug generation as headline is typed
   useEffect(() => {
     if (formData.title && !initialData && (!formData.slug || formData.slug === 'draft-briefing')) {
       const gSlug = formData.title
@@ -97,14 +174,13 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
   const validateFormSEO = (): boolean => {
     const issues: string[] = [];
     if (!formData.title?.trim()) issues.push('Headline/Title');
-    if (!formData.summary?.trim()) issues.push('Summary/Meta description');
+    if (!formData.summary?.trim()) issues.push('Short Description/Meta Classifiers');
     if (!formData.featuredImage?.trim()) issues.push('Featured Image');
-    const wordCount = formData.content ? formData.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length : 0;
-    if (wordCount < 40) issues.push(`Sufficient word count (currently ${wordCount} words, minimum 40 requested)`);
-    if (!formData.category?.trim()) issues.push('Subject category');
+    if (totalWordCount < 40) issues.push(`Sufficient word count (currently ${totalWordCount} words, minimum 40 words required)`);
+    if (!formData.category?.trim()) issues.push('Category Selection');
 
     if (issues.length > 0) {
-      toast.error(`Publish Restricted: Missing required fields (${issues.join(', ')}). Work can still be saved as "Hold" (Draft).`);
+      toast.error(`Publishing Denied: Please complete required details (${issues.join(', ')}). Work can still be saved as a Draft.`);
       return false;
     }
     return true;
@@ -113,7 +189,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
   const handleSubmit = async (e: React.FormEvent, asDraft: boolean = false) => {
     e.preventDefault();
     
-    // Core structural check on high-level broadcast
+    // Validate if publishing
     if (!asDraft) {
       const isValid = validateFormSEO();
       if (!isValid) return;
@@ -135,20 +211,20 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
       if (initialData) {
         await articleService.updateArticle(initialData.id, dataToSave);
         if (asDraft) {
-          toast.success('Briefing updated successfully as DRAFT HOLD');
+          toast.success('Draft saved successfully');
         } else if (finalStatus === 'published') {
-          toast.success('Briefing published and active live!');
+          toast.success('Published premium article live');
         } else {
-          toast.success('Briefing submitted for review and approval.');
+          toast.success('Submitted for editorial approval review');
         }
       } else {
         await articleService.createArticle(dataToSave as any);
         if (asDraft) {
-          toast.success('Briefing saved successfully as DRAFT HOLD');
+          toast.success('Draft saved successfully');
         } else if (finalStatus === 'published') {
-          toast.success('Briefing published and active live!');
+          toast.success('Published premium article live');
         } else {
-          toast.success('Briefing submitted for review and approval.');
+          toast.success('Submitted for editorial approval review');
         }
       }
       
@@ -162,173 +238,148 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
   };
 
   const previewContent = (
-     <div className={`transition-all duration-700 ease-in-out ${previewSize === 'mobile' ? 'max-w-[400px]' : previewSize === 'tablet' ? 'max-w-[800px]' : 'max-w-7xl'} mx-auto bg-[#050505] min-h-screen rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl`}>
-        {formData.featuredImage && (
-          <div className="w-full aspect-[21/9] relative overflow-hidden">
-            <img src={formData.featuredImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
-          </div>
-        )}
-        <div className="p-8 md:p-16">
-          <div className="flex gap-3 mb-10">
-            <span className="bg-luxury-gold text-luxury-black px-6 py-2 text-[10px] font-black uppercase tracking-[0.4em] rounded-full">{formData.category} ANALYSIS</span>
-          </div>
-          <h1 className="text-4xl md:text-7xl font-display font-black text-white tracking-tighter mb-10 leading-[0.85] uppercase">{formData.title || 'Briefing Headline Required'}</h1>
-          <div className="text-xl text-white/50 leading-relaxed italic mb-16 font-serif border-l-4 border-luxury-gold pl-10">
-            {formData.summary || 'Awaiting executive summary synchronization...'}
-          </div>
-          <article 
-            className={`
-              prose prose-invert max-w-none break-words
-              prose-p:text-white/80 prose-p:leading-[1.8] prose-p:font-normal prose-p:mb-6 prose-p:text-base sm:prose-p:text-lg prose-p:tracking-normal
-              prose-headings:text-white prose-headings:font-display prose-headings:font-semibold prose-headings:tracking-tight prose-headings:mb-4
-              prose-h2:text-xl sm:prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:font-medium
-              prose-h3:text-lg sm:prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-medium
-              prose-strong:text-[#C5A059] prose-strong:font-bold
-              prose-blockquote:border-l-[#C5A059] prose-blockquote:bg-white/[0.01] prose-blockquote:p-5 sm:prose-blockquote:p-8 prose-blockquote:rounded-r-xl prose-blockquote:italic prose-blockquote:text-white/70 prose-blockquote:my-8 prose-blockquote:border-l-2
-              prose-img:rounded-xl prose-img:border prose-img:border-white/5 prose-img:my-8 prose-img:w-full prose-img:object-cover
-              prose-a:text-[#C5A059] hover:prose-a:text-white prose-a:transition-colors prose-a:font-semibold prose-a:underline prose-a:underline-offset-4
-              prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-6 prose-ul:text-white/70 prose-ul:space-y-2
-              prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-6 prose-ol:text-white/70 prose-ol:space-y-2
-              prose-li:text-base sm:prose-li:text-lg
-              ${formData.layoutType === 'magazine' ? 'first-letter:text-6xl sm:first-letter:text-7xl first-letter:font-bold first-letter:text-[#C5A059] first-letter:mr-3 first-letter:float-left first-letter:leading-none' : ''}
-            `}
-            dangerouslySetInnerHTML={{ __html: formData.content || '' }}
-          />
+    <div className={`transition-all duration-500 ease-in-out ${previewSize === 'mobile' ? 'max-w-[390px]' : previewSize === 'tablet' ? 'max-w-[768px]' : 'max-w-6xl'} mx-auto bg-[#070707] min-h-screen rounded-[1.5rem] overflow-hidden border border-white/5 shadow-2xl`}>
+      {formData.featuredImage && (
+        <div className="w-full aspect-[21/9] relative overflow-hidden">
+          <img src={formData.featuredImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={formData.title} />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#070707] via-[#070707]/30 to-transparent" />
         </div>
-     </div>
+      )}
+      <div className="p-6 md:p-12 space-y-6">
+        <div className="flex gap-2">
+          <span className="bg-[#C5A059]/10 text-[#C5A059] px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-md border border-[#C5A059]/25">{formData.category}</span>
+        </div>
+        <h1 className="text-2xl md:text-5xl font-display font-light text-white tracking-tight leading-[1.1]">{formData.title || 'Headline Required'}</h1>
+        <div className="text-base text-white/50 leading-relaxed italic border-l-2 border-[#C5A059] pl-4">
+          {formData.summary || 'Awaiting short description snippet...'}
+        </div>
+        <article 
+          className={`
+            prose prose-invert max-w-none break-words text-white/80 leading-relaxed
+            prose-p:text-white/80 prose-p:leading-[1.7] prose-p:mb-5 prose-p:text-sm sm:prose-p:text-base
+            prose-headings:text-white prose-headings:font-display prose-headings:font-light prose-headings:tracking-tight prose-headings:mb-3
+            prose-strong:text-[#C5A059] prose-strong:font-bold
+            prose-blockquote:border-l-[#C5A059] prose-blockquote:bg-white/[0.01] prose-blockquote:p-4 prose-blockquote:rounded-r-md prose-blockquote:italic
+            prose-img:rounded-lg prose-img:border prose-img:border-white/5 prose-img:my-6
+            prose-a:text-[#C5A059] hover:prose-a:text-white prose-a:transition-colors prose-a:underline
+            ${formData.layoutType === 'magazine' ? 'first-letter:text-5xl first-letter:font-light first-letter:text-[#C5A059] first-letter:mr-2 first-letter:float-left first-letter:leading-none' : ''}
+          `}
+          dangerouslySetInnerHTML={{ __html: formData.content || '' }}
+        />
+      </div>
+    </div>
   );
 
   return (
-    <div className={`max-w-full mx-auto min-h-screen flex flex-col ${splitPreview ? 'overflow-hidden h-screen' : ''}`}>
+    <div className={`max-w-full mx-auto min-h-screen flex flex-col ${splitPreview ? 'overflow-hidden h-screen' : ''} bg-[#070707] text-white font-sans antialiased`}>
       
-      {/* Editorial Navigation Header */}
-      <header className="sticky top-0 z-[60] bg-black/60 backdrop-blur-3xl border-b border-white/5 px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+      {/* Modern Premium Publishing Studio Header */}
+      <header className="sticky top-0 z-[60] bg-[#070707]/90 backdrop-blur-xl border-b border-white/5 px-6 sm:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
            <div>
-              <h1 className="text-xl font-display font-black text-white tracking-[0.2em] uppercase">Editorial Deck</h1>
-              <p className="text-luxury-gold text-[8px] tracking-[0.5em] font-black uppercase mt-1">Amaan Intelligence System • Secure Access</p>
-           </div>
-           <div className="w-px h-10 bg-white/10 hidden md:block" />
-           <div className="hidden lg:flex items-center gap-8">
-              <a href="#content" className="text-[10px] uppercase font-black tracking-widest text-white/40 hover:text-luxury-gold transition-colors">01. Intel</a>
-              <a href="#media" className="text-[10px] uppercase font-black tracking-widest text-white/40 hover:text-luxury-gold transition-colors">02. Assets</a>
-              <a href="#layout" className="text-[10px] uppercase font-black tracking-widest text-white/40 hover:text-luxury-gold transition-colors">03. Framework</a>
-              <a href="#seo" className="text-[10px] uppercase font-black tracking-widest text-white/40 hover:text-luxury-gold transition-colors">04. Indexing</a>
+              <h1 className="text-base sm:text-lg font-display font-light text-white tracking-tight flex items-center gap-2">
+                 <span>Amaan Editorial Studio</span>
+                 <span className="px-1.5 py-0.5 rounded text-[9px] bg-white/5 border border-white/10 text-white/40 tracking-wider font-mono">CMS</span>
+              </h1>
+              <p className="text-white/40 text-[11px] leading-none mt-1 hidden sm:block">Create, optimize, and publish premium editorial content.</p>
            </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Button 
             type="button"
             variant="outline" 
             onClick={() => setSplitPreview(!splitPreview)}
-            className={`border-white/10 text-white h-11 rounded-xl hidden xl:flex hover:bg-white/5 px-6 font-bold uppercase text-[9px] tracking-widest ${splitPreview ? 'bg-luxury-gold/10 border-luxury-gold/50 text-luxury-gold' : ''}`}
+            className={`border-white/5 bg-white/[0.02] text-white hover:bg-white/5 h-10 rounded-xl hidden xl:flex px-4 font-medium text-xs ${splitPreview ? 'bg-[#C5A059]/10 border-[#C5A059]/30 text-[#C5A059]' : ''}`}
           >
-            <Layout size={14} className="mr-3" /> Split View
+            <Layout size={14} className="mr-2" /> Preview
           </Button>
           <Button 
             type="button"
             variant="outline" 
-            className="border-white/10 text-white h-11 rounded-xl hover:bg-white/5 px-6 font-bold uppercase text-[9px] tracking-widest"
+            className="border-white/5 bg-white/[0.02] text-white hover:bg-white/5 h-10 rounded-xl px-4 font-medium text-xs"
             onClick={() => setShowPreview(true)}
           >
-            <Eye size={14} className="mr-3 text-luxury-gold" /> Full Render
+            <Eye size={14} className="mr-2 text-[#C5A059]" /> Fullscreen
           </Button>
-          <div className="w-px h-8 bg-white/10 mx-2" />
+          <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
           <Button 
             type="button"
             onClick={(e) => handleSubmit(e, true)}
             disabled={isSaving}
-            className="bg-white/5 border border-white/10 text-white h-11 rounded-xl hover:bg-white/10 px-6 text-[10px] font-black uppercase tracking-widest"
+            className="bg-white/5 border border-white/10 text-white h-10 rounded-xl hover:bg-white/10 px-4 text-xs font-semibold"
           >
-            Hold
+            Save Draft
           </Button>
           <Button 
             type="button"
             onClick={(e) => handleSubmit(e, false)}
             disabled={isSaving}
-            className="bg-luxury-gold text-luxury-black h-11 rounded-xl hover:bg-white px-8 font-black uppercase tracking-widest shadow-2xl shadow-luxury-gold/20"
+            className="bg-[#C5A059] text-black h-10 rounded-xl hover:bg-white px-5 text-xs font-semibold shadow-md shadow-[#C5A059]/10"
           >
-            Publish
+            Publish Article
           </Button>
         </div>
       </header>
 
+      {/* Editor Main Desk Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Editor Section */}
-        <div className={`flex-1 overflow-y-auto luxury-scroll px-8 py-12 ${splitPreview ? 'max-w-[50%]' : 'max-w-screen-xl mx-auto'}`}>
-          <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-24 pb-40">
+        
+        {/* Left Side: Editorial Form Settings */}
+        <div className={`flex-1 overflow-y-auto luxury-scroll px-4 sm:px-8 py-8 ${splitPreview ? 'max-w-[50%]' : 'max-w-5xl mx-auto'}`}>
+          <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-12 pb-32">
             
-            {/* 01. CONTENT */}
-            <section id="content" className="space-y-10 scroll-mt-32">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="w-8 h-8 rounded-full bg-luxury-gold text-luxury-black flex items-center justify-center font-black text-xs">01</span>
-                <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Editorial Insight</h2>
-              </div>
+            {/* Article */}
+            <section id="content" className="space-y-5 scroll-mt-24">
+              <h2 className="text-sm font-display font-medium text-white tracking-tight px-1">Content</h2>
               
-              <div className="glass-card p-12 rounded-[3.5rem] border border-white/5 space-y-12 shadow-2xl">
-                <div className="space-y-4">
-                  <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Briefing Identification</label>
+              <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-6 shadow-xl relative overflow-hidden">
+                <div className="space-y-1.5">
                   <Input 
                     value={formData.title} 
                     onChange={e => setFormData({...formData, title: e.target.value})} 
                     required 
-                    placeholder="Enter briefing headline..."
-                    className="bg-white/5 border-0 text-white text-4xl h-24 rounded-3xl placeholder:text-white/5 font-display font-black tracking-tight px-10" 
+                    placeholder="Article Headline"
+                    className="bg-white/[0.02] border border-white/5 text-white text-lg rounded-xl placeholder:text-white/20 px-4 focus-visible:ring-[#C5A059]" 
                   />
                 </div>
 
-                <div className="space-y-4">
-                  <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Executive Precis</label>
+                <div className="space-y-1.5">
                   <Textarea 
                     value={formData.summary} 
                     onChange={e => setFormData({...formData, summary: e.target.value})} 
                     required 
-                    placeholder="Sophisticated summary for high-level clearance..."
-                    className="bg-white/5 border-0 text-white min-h-[160px] rounded-3xl resize-none placeholder:text-white/5 text-xl leading-relaxed pt-10 px-10 font-serif italic" 
+                    placeholder="Short description for preview..."
+                    className="bg-white/[0.02] border border-white/5 text-white min-h-[100px] rounded-xl resize-none placeholder:text-white/20 text-sm leading-relaxed p-4 focus-visible:ring-[#C5A059]" 
                   />
                 </div>
                 
-                <div className="space-y-4">
-                  <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Intelligence Body</label>
-                  <Editor content={formData.content || ''} onChange={(html) => setFormData({...formData, content: html})} />
+                <div className="space-y-2">
+                  <div className="text-[11px] text-white/50 mb-2 flex items-center gap-1.5 px-1 font-medium">
+                    <Sparkles size={12} className="text-[#C5A059]" />
+                    <span>Writing Canvas</span>
+                  </div>
+                  <div className="bg-white/[0.01] border border-white/5 rounded-xl overflow-hidden p-1">
+                    <Editor content={formData.content || ''} onChange={(html) => setFormData({...formData, content: html})} />
+                  </div>
                 </div>
               </div>
             </section>
 
-            {/* 02. MEDIA */}
-            <section id="media" className="space-y-10 scroll-mt-32">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="w-8 h-8 rounded-full bg-luxury-gold text-luxury-black flex items-center justify-center font-black text-xs">02</span>
-                <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Visual Surveillance</h2>
-              </div>
+            {/* Visuals */}
+            <section id="visuals" className="space-y-5 scroll-mt-24">
+              <h2 className="text-sm font-display font-medium text-white tracking-tight px-1">Visuals</h2>
               
-              <div className="glass-card p-12 rounded-[3.5rem] border border-white/5 space-y-12 shadow-2xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-6 shadow-xl">
+                 <div className="p-1 rounded-xl bg-white/[0.01] border border-white/5">
                    <ImageUpload 
-                     label="Primary Vector Hero" 
+                     label="Featured Image" 
                      value={formData.featuredImage || ''} 
                      onChange={(url) => setFormData({...formData, featuredImage: url})} 
                    />
-                   <div className="flex flex-col justify-center space-y-8">
-                      <div className="p-8 bg-white/5 rounded-3xl border border-white/5 relative overflow-hidden">
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-                         <h4 className="text-white font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-3">
-                            <Sparkles size={16} className="text-luxury-gold" /> Optical Normalization
-                         </h4>
-                         <p className="text-white/40 text-sm leading-relaxed font-light">
-                            Visual assets are processed for 21:9 Ultra-Wide fidelity. Use high-contrast RAW imagery for maximum perceptual impact.
-                         </p>
-                      </div>
-                      <div className="flex items-center gap-4 p-6 bg-luxury-gold/5 rounded-2xl border border-luxury-gold/10">
-                         <Info size={18} className="text-luxury-gold" />
-                         <p className="text-luxury-gold text-[9px] font-black uppercase tracking-widest uppercase">Encryption Mode: Edge Secure • Ready for Broadcast</p>
-                      </div>
-                   </div>
-                </div>
+                 </div>
                 
-                <div className="pt-12 border-t border-white/5">
+                <div className="pt-2">
                    <GalleryUpload 
                      value={formData.gallery || []} 
                      onChange={(urls) => setFormData({...formData, gallery: urls})} 
@@ -337,90 +388,81 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
               </div>
             </section>
 
-            {/* 03. LAYOUT */}
-            <section id="layout" className="space-y-10 scroll-mt-32">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="w-8 h-8 rounded-full bg-luxury-gold text-luxury-black flex items-center justify-center font-black text-xs">03</span>
-                <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Structural Protocol</h2>
-              </div>
+            {/* Design */}
+            <section id="design" className="space-y-5 scroll-mt-24">
+              <h2 className="text-sm font-display font-medium text-white tracking-tight px-1">Design</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass-card p-10 rounded-[3rem] border border-white/5 space-y-10 shadow-2xl">
-                  <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-4 opacity-40">
-                    Framework Alignment
-                  </h3>
-                  <div className="space-y-8">
-                    <div className="space-y-3">
-                      <label className="text-luxury-gold text-[9px] uppercase font-black tracking-[0.4em] ml-1">Display Template</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-4 shadow-xl">
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-white/50 text-[11px] font-medium">Layout</label>
                       <Select value={formData.layoutType} onValueChange={(val: any) => setFormData({...formData, layoutType: val})}>
-                        <SelectTrigger className="bg-white/10 border-0 text-white h-14 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-black px-6">
+                        <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3 focus-visible:ring-[#C5A059]">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                          <SelectItem value="single" className="rounded-xl py-4 text-[10px] uppercase font-black">Minimal Centralized</SelectItem>
-                          <SelectItem value="two-column" className="rounded-xl py-4 text-[10px] uppercase font-black">Dual Wing Editorial</SelectItem>
-                          <SelectItem value="featured" className="rounded-xl py-4 text-[10px] uppercase font-black">Hero Immersive</SelectItem>
-                          <SelectItem value="magazine" className="rounded-xl py-4 text-[10px] uppercase font-black">Signature Magazine</SelectItem>
+                        <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                          <SelectItem value="single" className="rounded-lg text-xs py-2 h-9">Minimal</SelectItem>
+                          <SelectItem value="two-column" className="rounded-lg text-xs py-2 h-9">Dual Column</SelectItem>
+                          <SelectItem value="featured" className="rounded-lg text-xs py-2 h-9">Hero Immersive</SelectItem>
+                          <SelectItem value="magazine" className="rounded-lg text-xs py-2 h-9">Signature</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="text-luxury-gold text-[9px] uppercase font-black tracking-[0.4em] ml-1">Sidebar Logic</label>
+                    <div className="space-y-1.5">
+                      <label className="text-white/50 text-[11px] font-medium">Sidebar</label>
                       <Select value={formData.sidebarPlacement} onValueChange={(val: any) => setFormData({...formData, sidebarPlacement: val})}>
-                        <SelectTrigger className="bg-white/10 border-0 text-white h-14 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-black px-6">
+                        <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                          <SelectItem value="none" className="rounded-xl py-4 text-[10px] uppercase font-black">No Secondary Wing</SelectItem>
-                          <SelectItem value="left" className="rounded-xl py-4 text-[10px] uppercase font-black">Left Alignment</SelectItem>
-                          <SelectItem value="right" className="rounded-xl py-4 text-[10px] uppercase font-black">Right Alignment</SelectItem>
+                        <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                          <SelectItem value="none" className="rounded-lg text-xs py-2 h-9">None</SelectItem>
+                          <SelectItem value="left" className="rounded-lg text-xs py-2 h-9">Left</SelectItem>
+                          <SelectItem value="right" className="rounded-lg text-xs py-2 h-9">Right</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                 </div>
 
-                <div className="glass-card p-10 rounded-[3rem] border border-white/5 space-y-10 shadow-2xl">
-                   <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-4 opacity-40">
-                    Aesthetic Vibe
-                  </h3>
-                  <div className="space-y-8">
-                    <div className="space-y-3">
-                      <label className="text-luxury-gold text-[9px] uppercase font-black tracking-[0.4em] ml-1">Canvas Render</label>
+                <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-4 shadow-xl">
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-white/50 text-[11px] font-medium">Theme</label>
                       <Select value={formData.cardStyle} onValueChange={(val: any) => setFormData({...formData, cardStyle: val})}>
-                        <SelectTrigger className="bg-white/10 border-0 text-white h-14 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-black px-6">
+                        <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                          <SelectItem value="default" className="rounded-xl py-4 text-[10px] uppercase font-black">Global Default</SelectItem>
-                          <SelectItem value="glass" className="rounded-xl py-4 text-[10px] uppercase font-black">Amaan Glassmorphism</SelectItem>
-                          <SelectItem value="plain" className="rounded-xl py-4 text-[10px] uppercase font-black">Bare Minimalism</SelectItem>
-                          <SelectItem value="premium" className="rounded-xl py-4 text-[10px] uppercase font-black">Premium Halo</SelectItem>
+                        <SelectContent className="bg-[#0f0f0f] border border-[#0f0f0f] text-white p-1 rounded-xl">
+                          <SelectItem value="default" className="rounded-lg text-xs py-2 h-9">Standard</SelectItem>
+                          <SelectItem value="glass" className="rounded-lg text-xs py-2 h-9">Glass</SelectItem>
+                          <SelectItem value="plain" className="rounded-lg text-xs py-2 h-9">Minimalist</SelectItem>
+                          <SelectItem value="premium" className="rounded-lg text-xs py-2 h-9">Premium</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-8">
-                       <div className="space-y-3">
-                          <label className="text-luxury-gold text-[9px] uppercase font-black tracking-[0.4em] ml-1">Corner Precision</label>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-1.5">
+                          <label className="text-white/50 text-[11px] font-medium">Radius</label>
                           <Input 
                             type="number"
                             value={formData.borderRadius}
-                            onChange={e => setFormData({...formData, borderRadius: parseInt(e.target.value)})}
-                            className="bg-white/10 border-0 text-white h-14 rounded-2xl font-mono px-6"
+                            onChange={e => setFormData({...formData, borderRadius: parseInt(e.target.value) || 0})}
+                            className="bg-white/5 border border-white/5 text-white h-11 rounded-lg font-mono text-xs px-3 focus-visible:ring-[#C5A059]"
                           />
                        </div>
-                       <div className="space-y-3">
-                          <label className="text-luxury-gold text-[9px] uppercase font-black tracking-[0.4em] ml-1">Depth Factor</label>
+                       <div className="space-y-1.5">
+                          <label className="text-white/50 text-[11px] font-medium">Shadow</label>
                           <Select value={formData.shadowIntensity} onValueChange={(val: any) => setFormData({...formData, shadowIntensity: val})}>
-                            <SelectTrigger className="bg-white/10 border-0 text-white h-14 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-black px-6">
+                            <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                              <SelectItem value="none" className="rounded-xl py-4 text-[10px] uppercase font-black">Flat</SelectItem>
-                              <SelectItem value="soft" className="rounded-xl py-4 text-[10px] uppercase font-black">Ambient</SelectItem>
-                              <SelectItem value="heavy" className="rounded-xl py-4 text-[10px] uppercase font-black">Heavy Drop</SelectItem>
+                            <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                              <SelectItem value="none" className="rounded-lg text-xs py-2 h-9">None</SelectItem>
+                              <SelectItem value="soft" className="rounded-lg text-xs py-2 h-9">Soft</SelectItem>
+                              <SelectItem value="heavy" className="rounded-lg text-xs py-2 h-9">Heavy</SelectItem>
                             </SelectContent>
                           </Select>
                        </div>
@@ -430,146 +472,226 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
               </div>
             </section>
 
-            {/* 04. SEO */}
-            <section id="seo" className="space-y-10 scroll-mt-32">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="w-8 h-8 rounded-full bg-luxury-gold text-luxury-black flex items-center justify-center font-black text-xs">04</span>
-                <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Global Indexing</h2>
-              </div>
+            {/* SEO */}
+            <section id="seo" className="space-y-5 scroll-mt-24">
+              <h2 className="text-sm font-display font-medium text-white tracking-tight px-1">SEO</h2>
 
-              <div className="glass-card p-12 rounded-[3.5rem] border border-white/5 space-y-10 shadow-2xl">
-                <div className="flex items-center justify-between pb-8 border-b border-white/5">
-                   <h3 className="text-xl font-display font-black text-white uppercase tracking-widest">SEO Vital Signs</h3>
-                   <div className="flex items-center gap-6 bg-white/5 p-4 rounded-3xl border border-white/5">
-                      <div className="text-right">
-                         <p className="text-[8px] uppercase font-black text-white/40 tracking-widest">Index Quality Rank</p>
-                         <p className={`text-2xl font-mono font-black mt-1 ${formData.seoScore! > 80 ? 'text-emerald-500' : formData.seoScore! > 50 ? 'text-luxury-gold' : 'text-rose-500'}`}>
-                           {formData.seoScore}%
-                         </p>
+              <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-8 shadow-xl">
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-white/5">
+                   <div>
+                     <h3 className="text-sm font-medium text-white">SEO Analysis</h3>
+                     <p className="text-white/40 text-[11px] mt-0.5">Optimize search visibility</p>
+                   </div>
+                   
+                   <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-3 px-5 rounded-2xl">
+                      <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+                         <svg className="absolute w-full h-full transform -rotate-90">
+                            <circle cx="20" cy="20" r="17" stroke="rgba(255,255,255,0.05)" strokeWidth="3" fill="transparent" />
+                            <circle 
+                              cx="20" 
+                              cy="20" 
+                              r="17" 
+                              stroke={computedSeoScore >= 80 ? '#10b981' : computedSeoScore >= 50 ? '#f59e0b' : '#ef4444'} 
+                              strokeWidth="3.5" 
+                              fill="transparent" 
+                              strokeDasharray={2 * Math.PI * 17}
+                              strokeDashoffset={2 * Math.PI * 17 * (1 - computedSeoScore / 100)}
+                              className="transition-all duration-1000 ease-out"
+                            />
+                         </svg>
+                         <span className="text-[10px] font-mono font-bold text-white z-10">{computedSeoScore}%</span>
                       </div>
-                      <div className="w-1 h-12 bg-white/5 rounded-full overflow-hidden">
-                         <div className={`w-full transition-all duration-1000 ease-out rounded-full ${formData.seoScore! > 80 ? 'bg-emerald-500' : formData.seoScore! > 50 ? 'bg-luxury-gold' : 'bg-rose-500'}`} style={{ height: `${formData.seoScore}%`, marginTop: `${100 - formData.seoScore!}%` }} />
+                      <div className="text-xs font-semibold uppercase tracking-wider">
+                         <span className={computedSeoScore >= 80 ? 'text-emerald-400' : computedSeoScore >= 50 ? 'text-amber-400' : 'text-rose-400'}>
+                           {computedSeoScore >= 80 ? 'Excellent' : computedSeoScore >= 50 ? 'Good' : 'Needs Work'}
+                         </span>
                       </div>
                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                   <div className="space-y-10">
-                      <div className="space-y-3">
-                         <label className="text-luxury-gold text-[9px] font-black uppercase tracking-[0.4em] ml-1">Focus Intellectual Keyword</label>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                   
+                   <div className="space-y-4">
+                      <div className="space-y-1.5">
+                         <label className="text-white/60 text-[11px] font-medium">Focus Keyword</label>
                          <Input 
                            value={formData.focusKeyword} 
                            onChange={e => setFormData({...formData, focusKeyword: e.target.value})} 
-                           placeholder="e.g. Mogadishu Capital Market"
-                           className="bg-white/5 border-0 text-white h-16 rounded-2xl px-8 text-sm" 
+                           placeholder="Enter primary keyword..."
+                           className="bg-white/5 border border-white/5 text-white h-11 rounded-lg px-4 text-xs focus-visible:ring-[#C5A059]" 
                          />
                       </div>
-                      <div className="space-y-3">
-                         <label className="text-luxury-gold text-[9px] font-black uppercase tracking-[0.4em] ml-1">Meta Intelligence Summary</label>
+                      
+                      <div className="space-y-1.5">
+                         <label className="text-white/60 text-[11px] font-medium">Meta Description</label>
                          <Textarea 
                            value={formData.seoDescription} 
                            onChange={e => setFormData({...formData, seoDescription: e.target.value})} 
-                           className="bg-white/5 border-0 text-white min-h-[140px] rounded-3xl resize-none p-8 text-base" 
+                           placeholder="Snippet description..."
+                           className="bg-white/5 border border-white/5 text-white min-h-[80px] rounded-lg resize-none p-4 text-xs focus-visible:ring-[#C5A059]" 
                          />
                       </div>
+
+                      <div className="space-y-2">
+                        <h4 className="text-[11px] font-medium text-white/50 mb-2 uppercase tracking-wide">Checks</h4>
+                        <div className="space-y-2 max-h-[180px] overflow-y-auto luxury-scroll pr-1">
+                           {seoChecks.map(c => (
+                              <div key={c.id} className="flex items-start gap-2.5 p-2 rounded-lg bg-white/[0.01] border border-white/[0.03]">
+                                 {c.passed ? (
+                                    <Check size={12} className="text-emerald-500 shrink-0 mt-0.5" />
+                                 ) : (
+                                    <AlertCircle size={12} className="text-amber-500 shrink-0 mt-0.5" />
+                                 )}
+                                 <span className="text-[11px] text-white/80 leading-snug">{c.label}</span>
+                              </div>
+                           ))}
+                        </div>
+                      </div>
                    </div>
-                   <div className="space-y-10">
+
+                   <div className="space-y-4">
                       <ImageUpload 
-                        label="Open Graph Proxy Asset" 
+                        label="Social Image" 
                         value={formData.socialImage || ''} 
                         onChange={(url) => setFormData({...formData, socialImage: url})} 
                       />
-                      <div className="p-8 bg-luxury-black rounded-3xl border border-white/5">
-                         <h4 className="text-blue-400 text-base font-bold hover:underline mb-2 cursor-pointer">{formData.seoTitle || formData.title || 'Briefing Headline...'}</h4>
-                         <p className="text-emerald-400/50 text-[10px] mb-3 font-mono">https://amaanestate.so/news/{formData.slug || 'url'}</p>
-                         <p className="text-white/40 text-[11px] line-clamp-2 italic leading-relaxed">
-                           {formData.seoDescription || formData.summary || 'Editorial meta will appear on external networks...'}
-                         </p>
+
+                      <div className="border border-white/5 bg-white/[0.01] rounded-2xl overflow-hidden shadow-inner">
+                         <div className="flex border-b border-white/5 bg-white/[0.01] p-1 gap-1">
+                            {['desktop', 'mobile', 'social'].map(tab => (
+                              <button 
+                                key={tab}
+                                type="button" 
+                                onClick={() => setSeoPreviewTab(tab as any)}
+                                className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${seoPreviewTab === tab ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+                              >
+                                {tab}
+                              </button>
+                            ))}
+                         </div>
+
+                         <div className="p-5 min-h-[120px] flex items-center justify-center">
+                            {seoPreviewTab === 'desktop' && (
+                               <div className="w-full text-left font-serif max-w-sm">
+                                  <div className="flex items-center gap-1 text-[10px] text-white/30 mb-1">
+                                     <span>amaanestate.so</span>
+                                  </div>
+                                  <h4 className="text-sky-400 text-sm font-sans font-medium hover:underline cursor-pointer leading-tight mb-0.5">
+                                     {formData.seoTitle || formData.title || 'Headline'}
+                                  </h4>
+                                  <p className="text-white/50 text-[11px] leading-relaxed line-clamp-2">
+                                     {formData.seoDescription || formData.summary || 'Snippet...'}
+                                  </p>
+                               </div>
+                            )}
+
+                            {seoPreviewTab === 'mobile' && (
+                               <div className="w-full text-left max-w-xs bg-[#0b0b0b] p-3 rounded-lg border border-white/5 font-serif text-[10px]">
+                                  <div className="text-white/40 mb-0.5">amaanestate.so</div>
+                                  <h4 className="text-[#C5A059] font-sans font-medium leading-snug mb-0.5">
+                                     {formData.seoTitle || formData.title || 'Headline'}
+                                  </h4>
+                                  <p className="text-white/40 leading-normal line-clamp-2">
+                                     {formData.seoDescription || formData.summary || 'Snippet...'}
+                                  </p>
+                               </div>
+                            )}
+
+                            {seoPreviewTab === 'social' && (
+                               <div className="w-full text-left max-w-xs bg-white/[0.01] rounded-lg border border-white/5 overflow-hidden font-sans">
+                                  <div className="aspect-[1.91/1] w-full bg-white/5 relative flex items-center justify-center overflow-hidden">
+                                     {formData.socialImage || formData.featuredImage ? (
+                                        <img src={formData.socialImage || formData.featuredImage || ''} className="w-full h-full object-cover" alt="Social card" />
+                                     ) : (
+                                        <div className="text-center p-2 text-[10px] text-white/20">Preview</div>
+                                     )}
+                                  </div>
+                                  <div className="p-2 border-t border-white/5">
+                                     <h5 className="text-[10px] font-semibold text-white truncate">{formData.seoTitle || formData.title || 'Headline'}</h5>
+                                  </div>
+                               </div>
+                            )}
+                         </div>
                       </div>
                    </div>
                 </div>
               </div>
             </section>
 
-            {/* 05. ADVANCED */}
-            <section id="advanced" className="space-y-10 scroll-mt-32">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="w-8 h-8 rounded-full bg-luxury-gold text-luxury-black flex items-center justify-center font-black text-xs">05</span>
-                <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Administrative Protocol</h2>
-              </div>
+            {/* Publishing */}
+            <section id="publishing" className="space-y-5 scroll-mt-24">
+              <h2 className="text-sm font-display font-medium text-white tracking-tight px-1">Publishing</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass-card p-12 rounded-[3.5rem] border border-white/5 space-y-10 shadow-2xl">
-                   <div className="space-y-8">
-                      <div className="flex items-center justify-between p-8 bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-white/10 group cursor-pointer" onClick={() => setFormData({...formData, showAuthor: !formData.showAuthor})}>
-                         <div>
-                            <p className="text-white font-black text-sm uppercase tracking-widest group-hover:text-luxury-gold transition-colors">Verified Signature</p>
-                            <p className="text-white/30 text-[9px] mt-1 uppercase tracking-[0.3em] font-black">Link Intelligence Unit ID</p>
-                         </div>
-                         <div className={`w-14 h-8 rounded-full border border-white/10 p-1 transition-all ${formData.showAuthor ? 'bg-luxury-gold' : 'bg-white/5'}`}>
-                            <div className={`w-5 h-5 rounded-full bg-white transition-all ${formData.showAuthor ? 'translate-x-6' : ''}`} />
-                         </div>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between p-3 bg-white/[0.01] rounded-lg border border-white/5 cursor-pointer" onClick={() => setFormData({...formData, showAuthor: !formData.showAuthor})}>
+                          <p className="text-white font-medium text-xs">Show Author</p>
+                          <div className={`w-9 h-5 rounded-full border border-white/10 p-0.5 transition-all ${formData.showAuthor ? 'bg-[#C5A059]' : 'bg-white/5'}`}>
+                             <div className={`w-4 h-4 rounded-full bg-[#070707] transition-all ${formData.showAuthor ? 'translate-x-4' : ''}`} />
+                          </div>
+                    </div>
 
-                      <div className="space-y-3">
-                        <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Priority Classification</label>
-                        <Select value={formData.priority?.toString()} onValueChange={(val) => setFormData({...formData, priority: parseInt(val)})}>
-                          <SelectTrigger className="bg-white/5 border-0 text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                            <SelectItem value="0" className="rounded-xl py-4 text-[10px] font-black uppercase">Level 0: Standard Feed</SelectItem>
-                            <SelectItem value="1" className="rounded-xl py-4 text-[10px] font-black uppercase">Level 1: Elevated Sight</SelectItem>
-                            <SelectItem value="2" className="rounded-xl py-4 text-[10px] font-black uppercase text-luxury-gold">Level 2: Priority Signal</SelectItem>
-                            <SelectItem value="3" className="rounded-xl py-4 text-[10px] font-black uppercase text-rose-500">Level 3: Critical Alert</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">Priority</label>
+                         <Select value={formData.priority?.toString()} onValueChange={(val) => setFormData({...formData, priority: parseInt(val) || 0})}>
+                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                             <SelectItem value="0" className="rounded-lg text-xs py-2">Standard</SelectItem>
+                             <SelectItem value="1" className="rounded-lg text-xs py-2">Elevated</SelectItem>
+                             <SelectItem value="2" className="rounded-lg text-xs py-2">Elite</SelectItem>
+                             <SelectItem value="3" className="rounded-lg text-xs py-2 text-rose-500">Alert</SelectItem>
+                           </SelectContent>
+                         </Select>
+                    </div>
 
-                      <div className="space-y-3">
-                        <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Display Persistence</label>
-                        <Select value={formData.homepageSection} onValueChange={(val) => setFormData({...formData, homepageSection: val})}>
-                          <SelectTrigger className="bg-white/5 border-0 text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                            <SelectItem value="default" className="rounded-xl py-4 text-[10px] font-black uppercase">Global Stream</SelectItem>
-                            <SelectItem value="hero" className="rounded-xl py-4 text-[10px] font-black uppercase">Elite Feature Slot</SelectItem>
-                            <SelectItem value="sidebar" className="rounded-xl py-4 text-[10px] font-black uppercase">Peripheral Insight Feed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                   </div>
+                    <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">Visibility</label>
+                         <Select value={formData.homepageSection} onValueChange={(val) => setFormData({...formData, homepageSection: val})}>
+                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                             <SelectItem value="default" className="rounded-lg text-xs py-2">Global Feed</SelectItem>
+                             <SelectItem value="hero" className="rounded-lg text-xs py-2">Masthead</SelectItem>
+                             <SelectItem value="sidebar" className="rounded-lg text-xs py-2">Sidebar</SelectItem>
+                           </SelectContent>
+                         </Select>
+                    </div>
                 </div>
 
-                <div className="glass-card p-12 rounded-[3.5rem] border border-white/5 space-y-10 shadow-2xl">
-                   <div className="space-y-8">
-                      <div className="space-y-3">
-                        <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Identification Slug</label>
-                        <Input 
-                          value={formData.slug} 
-                          onChange={e => setFormData({...formData, slug: e.target.value})} 
-                          className="bg-white/5 border-0 text-white h-14 rounded-2xl font-mono px-6" 
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Editorial Subject</label>
-                        <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                          <SelectTrigger className="bg-white/5 border-0 text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-luxury-black border-white/10 text-white p-2 rounded-2xl">
-                            <SelectItem value="news" className="rounded-xl py-4 text-[10px] font-black uppercase">Intelligence News</SelectItem>
-                            <SelectItem value="report" className="rounded-xl py-4 text-[10px] font-black uppercase">Market Report</SelectItem>
-                            <SelectItem value="opportunity" className="rounded-xl py-4 text-[10px] font-black uppercase">Capital Opportunity</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-3">
-                         <label className="text-white/30 text-[9px] font-black uppercase tracking-[0.4em] ml-1">Metadata Classifiers</label>
-                         <TagsInput value={formData.tags || []} onChange={tags => setFormData({...formData, tags})} />
-                      </div>
-                   </div>
+                <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-4 shadow-xl">
+                       <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">URL Slug</label>
+                         <Input 
+                           value={formData.slug} 
+                           onChange={e => setFormData({...formData, slug: e.target.value})} 
+                           className="bg-white/5 border border-white/5 text-white h-11 rounded-lg font-mono text-xs px-3 focus-visible:ring-[#C5A059]" 
+                         />
+                       </div>
+                       
+                       <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">Category</label>
+                         <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
+                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                             <SelectItem value="news" className="rounded-lg text-xs py-2">News</SelectItem>
+                             <SelectItem value="report" className="rounded-lg text-xs py-2">Reports</SelectItem>
+                             <SelectItem value="opportunity" className="rounded-lg text-xs py-2">Opportunities</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       
+                       <div className="space-y-1.5">
+                          <label className="text-white/50 text-[11px] font-medium">Tags</label>
+                          <div className="bg-white/[0.01] border border-white/5 rounded-lg p-2.5">
+                             <TagsInput value={formData.tags || []} onChange={tags => setFormData({...formData, tags})} />
+                          </div>
+                       </div>
                 </div>
               </div>
             </section>
@@ -577,16 +699,15 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
           </form>
         </div>
 
-
-        {/* Real-time Split Preview Panel */}
+        {/* Real-time split preview layout block */}
         {splitPreview && (
-          <div className="w-1/2 border-l border-white/5 bg-black/40 overflow-y-auto luxury-scroll p-12">
-            <div className="flex items-center justify-between mb-10">
-               <h3 className="text-luxury-gold font-display font-black text-base uppercase tracking-[0.5em]">Live Pulse Render</h3>
-               <div className="flex items-center gap-3 bg-white/5 p-1.5 rounded-xl border border-white/5">
-                 <button onClick={() => setPreviewSize('mobile')} className={`p-2 rounded-lg transition-all ${previewSize === 'mobile' ? 'bg-luxury-gold text-luxury-black' : 'text-white/40'}`}><Smartphone size={14} /></button>
-                 <button onClick={() => setPreviewSize('tablet')} className={`p-2 rounded-lg transition-all ${previewSize === 'tablet' ? 'bg-luxury-gold text-luxury-black' : 'text-white/40'}`}><Tablet size={14} /></button>
-                 <button onClick={() => setPreviewSize('desktop')} className={`p-2 rounded-lg transition-all ${previewSize === 'desktop' ? 'bg-luxury-gold text-luxury-black' : 'text-white/40'}`}><Monitor size={14} /></button>
+          <div className="w-1/2 border-l border-white/5 bg-black/40 overflow-y-auto luxury-scroll p-8">
+            <div className="flex items-center justify-between mb-8">
+               <h3 className="text-[#C5A059] font-display font-light text-sm uppercase tracking-[0.3em]">Live Pulse Render</h3>
+               <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/5">
+                 <button type="button" onClick={() => setPreviewSize('mobile')} className={`p-2 rounded-lg transition-all ${previewSize === 'mobile' ? 'bg-[#C5A059] text-black' : 'text-white/40'}`}><Smartphone size={13} /></button>
+                 <button type="button" onClick={() => setPreviewSize('tablet')} className={`p-2 rounded-lg transition-all ${previewSize === 'tablet' ? 'bg-[#C5A059] text-black' : 'text-white/40'}`}><Tablet size={13} /></button>
+                 <button type="button" onClick={() => setPreviewSize('desktop')} className={`p-2 rounded-lg transition-all ${previewSize === 'desktop' ? 'bg-[#C5A059] text-black' : 'text-white/40'}`}><Monitor size={13} /></button>
                </div>
             </div>
             {previewContent}
@@ -594,7 +715,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
         )}
       </div>
 
-      {/* Full Modal Preview */}
+      {/* Full modal overlay screen */}
       <AnimatePresence>
         {showPreview && (
           <motion.div 
@@ -603,18 +724,18 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black flex flex-col"
           >
-             <header className="h-24 border-b border-white/5 px-12 flex items-center justify-between bg-black/80 backdrop-blur-3xl">
-                <div className="flex items-center gap-12">
-                   <h2 className="text-luxury-gold font-display font-black text-2xl uppercase tracking-[0.5em]">Cinema Render</h2>
-                   <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
-                      <button onClick={() => setPreviewSize('mobile')} className={`p-4 rounded-xl transition-all ${previewSize === 'mobile' ? 'bg-luxury-gold text-luxury-black font-black' : 'text-white/40 text-[10px] uppercase tracking-widest font-bold'}`}>Mobile</button>
-                      <button onClick={() => setPreviewSize('tablet')} className={`p-4 rounded-xl transition-all ${previewSize === 'tablet' ? 'bg-luxury-gold text-luxury-black font-black' : 'text-white/40 text-[10px] uppercase tracking-widest font-bold'}`}>Tablet</button>
-                      <button onClick={() => setPreviewSize('desktop')} className={`p-4 rounded-xl transition-all ${previewSize === 'desktop' ? 'bg-luxury-gold text-luxury-black font-black' : 'text-white/40 text-[10px] uppercase tracking-widest font-bold'}`}>Desktop</button>
+             <header className="h-20 border-b border-white/5 px-8 flex items-center justify-between bg-black/90 backdrop-blur-xl">
+                <div className="flex items-center gap-8">
+                   <h2 className="text-[#C5A059] font-display font-light text-base uppercase tracking-[0.3em]">Cinema Render</h2>
+                   <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/5">
+                      <button type="button" onClick={() => setPreviewSize('mobile')} className={`py-1.5 px-3 rounded-lg transition-all ${previewSize === 'mobile' ? 'bg-[#C5A059] text-black font-semibold' : 'text-white/40 text-[10px] uppercase font-bold'}`}>Mobile</button>
+                      <button type="button" onClick={() => setPreviewSize('tablet')} className={`py-1.5 px-3 rounded-lg transition-all ${previewSize === 'tablet' ? 'bg-[#C5A059] text-black font-semibold' : 'text-white/40 text-[10px] uppercase font-bold'}`}>Tablet</button>
+                      <button type="button" onClick={() => setPreviewSize('desktop')} className={`py-1.5 px-3 rounded-lg transition-all ${previewSize === 'desktop' ? 'bg-[#C5A059] text-black font-semibold' : 'text-white/40 text-[10px] uppercase font-bold'}`}>Desktop</button>
                    </div>
                 </div>
-                <Button variant="ghost" onClick={() => setShowPreview(false)} className="text-white hover:bg-white/10 h-14 rounded-2xl px-8 text-[11px] font-black uppercase tracking-widest border border-white/10">Abort Simulation</Button>
+                <Button variant="ghost" onClick={() => setShowPreview(false)} className="text-white hover:bg-white/10 h-10 rounded-xl px-4 text-xs font-semibold border border-white/10">Back to Studio</Button>
              </header>
-             <main className="flex-1 overflow-auto bg-[#050505] p-20 luxury-scroll">
+             <main className="flex-1 overflow-auto bg-[#070707] p-8 sm:p-16 luxury-scroll">
                 {previewContent}
              </main>
           </motion.div>
@@ -623,5 +744,3 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     </div>
   );
 }
-
-

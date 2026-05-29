@@ -279,11 +279,11 @@ export default function DashboardArticles() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-8 border-b border-white/5">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-4xl sm:text-5xl font-display font-medium mb-1 tracking-tight">Editorial Hub</h1>
+            <h1 className="text-4xl sm:text-5xl font-display font-light mb-1 tracking-tight">Editorial Hub</h1>
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse mt-3" title="Realtime socket connected" />
           </div>
-          <p className="text-luxury-gold text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2">
-            <span>Knowledge Base & Regional Intelligence Registry</span>
+          <p className="text-[#C5A059] text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>Manage, audit, and organize published articles</span>
             <span className="text-white/20">|</span>
             <span className="text-emerald-400">Live Connection Active</span>
           </p>
@@ -292,13 +292,13 @@ export default function DashboardArticles() {
         <div className="flex items-center gap-3 w-full md:w-auto">
           {isAdminOrEditor && (
             <div className="hidden lg:flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.02] border border-white/5">
-              <span className="text-luxury-gold text-[9px] font-black uppercase tracking-wider">Staff Role:</span>
-              <span className="text-white text-[9px] font-bold uppercase bg-luxury-gold/10 px-2 py-0.5 rounded border border-luxury-gold/20">{profile?.role}</span>
+              <span className="text-[#C5A059] text-[9px] font-bold uppercase tracking-wider">Staff Role:</span>
+              <span className="text-white text-[9px] font-bold uppercase bg-[#C5A059]/10 px-2 py-0.5 rounded border border-[#C5A059]/20">{profile?.role}</span>
             </div>
           )}
-          <Button asChild className="w-full md:w-auto bg-luxury-gold text-luxury-black hover:bg-white h-14 px-8 rounded-2xl font-bold font-sans text-xs uppercase tracking-wider shadow-xl shadow-luxury-gold/5 transition-all duration-300 hover:-translate-y-0.5">
+          <Button asChild className="w-full md:w-auto bg-[#C5A059] text-black hover:bg-white h-14 px-8 rounded-2xl font-bold font-sans text-xs uppercase tracking-wider shadow-xl shadow-[#C5A059]/5 transition-all duration-300 hover:-translate-y-0.5">
             <Link to="/dashboard/articles/create">
-              <Plus size={16} className="mr-2.5" /> Draft New Report
+              <Plus size={16} className="mr-2.5" /> Write New Article
             </Link>
           </Button>
         </div>
@@ -307,12 +307,12 @@ export default function DashboardArticles() {
       {/* Modern Filter Rail & Search Bar */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1 group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-luxury-gold transition-colors" size={18} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#C5A059] transition-colors" size={18} />
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Query headline, classification, or description..." 
-            className="bg-white/5 border-white/5 h-14 pl-14 rounded-2xl text-white placeholder:text-white/25 text-sm focus-visible:ring-luxury-gold/25" 
+            placeholder="Search articles..." 
+            className="bg-white/5 border-white/5 h-14 pl-14 rounded-2xl text-white placeholder:text-white/25 text-sm focus-visible:ring-[#C5A059]/25" 
           />
         </div>
         
@@ -338,9 +338,9 @@ export default function DashboardArticles() {
       <div className="flex flex-wrap gap-2.5 border-b border-white/5 pb-2">
         {([
           { id: 'all', label: 'All Articles', icon: <FileText size={14} /> },
-          { id: 'draft', label: 'Draft Archives', icon: <History size={14} /> },
-          { id: 'pending', label: 'Approve Section', icon: <CheckCircle2 size={14} className="text-amber-400" /> },
-          { id: 'published', label: 'Active Section', icon: <Eye size={14} className="text-emerald-400" /> }
+          { id: 'draft', label: 'Drafts', icon: <History size={14} /> },
+          { id: 'pending', label: 'Under Review', icon: <CheckCircle2 size={14} className="text-amber-400" /> },
+          { id: 'published', label: 'Published', icon: <Eye size={14} className="text-emerald-400" /> }
         ] as const).map((tab) => {
           const count = statusCounts[tab.id as keyof typeof statusCounts] || 0;
           const isActive = selectedStatus === tab.id;
@@ -349,14 +349,14 @@ export default function DashboardArticles() {
               key={tab.id}
               variant="outline"
               onClick={() => setSelectedStatus(tab.id)}
-              className={`h-12 px-6 rounded-xl text-[10px] uppercase font-black tracking-widest transition-all border flex items-center gap-2.5 ${
+              className={`h-12 px-6 rounded-xl text-[10px] uppercase font-bold tracking-wider transition-all border flex items-center gap-2.5 ${
                 isActive 
                   ? tab.id === 'pending' 
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30' 
+                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/20 hover:bg-amber-500/20' 
                     : tab.id === 'published'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
-                      : 'bg-luxury-gold text-black border-luxury-gold hover:bg-white hover:text-black font-bold'
-                  : 'bg-white/5 border-white/5 hover:bg-white/10 text-white/50 hover:text-white'
+                      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/20'
+                      : 'bg-[#C5A059] text-black border-[#C5A059] hover:bg-white hover:text-black font-bold'
+                  : 'bg-[#111] border-white/5 hover:bg-white/5 text-white/50 hover:text-white'
               }`}
             >
               {tab.icon}
@@ -364,7 +364,7 @@ export default function DashboardArticles() {
               {count > 0 && (
                 <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold ${
                   isActive 
-                    ? 'bg-white/10 text-current' 
+                    ? 'bg-white/15 text-current' 
                     : 'bg-white/5 text-white/40'
                 }`}>
                   {count}
@@ -376,24 +376,24 @@ export default function DashboardArticles() {
       </div>
 
       {/* Core Editorial Table Container */}
-      <div className="glass-card rounded-[2.5rem] overflow-hidden relative border border-white/5 shadow-2xl bg-white/[0.01]">
+      <div className="glass-card rounded-2xl overflow-hidden relative border border-white/5 shadow-2xl bg-[#0f0f0f]">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <Loader2 className="animate-spin text-luxury-gold mb-4" size={32} />
-            <p className="text-white/30 text-[9px] uppercase font-black tracking-[0.3em]">Synching Editorial Stream...</p>
+            <Loader2 className="animate-spin text-[#C5A059] mb-4" size={32} />
+            <p className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Loading publishing desk...</p>
           </div>
         ) : filteredArticles.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead className="bg-white/[0.02] border-b border-white/5">
                 <tr>
-                  <th className="p-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Intelligence Briefing</th>
-                  <th className="p-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Status</th>
-                  <th className="p-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Classification</th>
+                  <th className="p-6 text-[10px] font-bold uppercase tracking-wider text-white/40">Article Headline</th>
+                  <th className="p-6 text-[10px] font-bold uppercase tracking-wider text-white/40">Status</th>
+                  <th className="p-6 text-[10px] font-bold uppercase tracking-wider text-white/40">Category</th>
                   {isAdminOrEditor && (
-                    <th className="p-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 text-center">Editorial Action & Verification Room</th>
+                    <th className="p-6 text-[10px] font-bold uppercase tracking-wider text-white/40 text-center">Actions & Reviews</th>
                   )}
-                  <th className="p-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 text-right">Actions</th>
+                  <th className="p-6 text-[10px] font-bold uppercase tracking-wider text-white/40 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">

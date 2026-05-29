@@ -50,26 +50,26 @@ function DashboardContent() {
     const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
 
     if (isAdmin) {
-      items.push({ name: 'Moderation', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
-      items.push({ name: 'Agencies & Brokers', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
-      items.push({ name: 'Agreements', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
-      items.push({ name: 'Insights', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
+      items.push({ name: 'Content Review', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+      items.push({ name: 'Agencies', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
+      items.push({ name: 'Contracts', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
+      items.push({ name: 'Analytics', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
       items.push({ name: 'Verification', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
-      items.push({ name: 'Activity Logs', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
-      items.push({ name: 'Jobs Workspace', path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
+      items.push({ name: 'Activity', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
+      items.push({ name: 'Jobs', path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
     }
 
     if (isAgency) {
-      items.push({ name: 'Agency Profile', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
-      items.push({ name: 'Listings', path: '/dashboard/properties', icon: <Home size={18} /> });
+      items.push({ name: 'Account', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
+      items.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
     } else {
-      items.push({ name: 'My Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
-      items.push({ name: 'My Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+      items.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+      items.push({ name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
     }
     
-    items.push({ name: 'Favorites', path: '/dashboard/favorites', icon: <Heart size={18} /> });
+    items.push({ name: 'Saved', path: '/dashboard/favorites', icon: <Heart size={18} /> });
     if (!isAgency) {
-        items.push({ name: 'Profile', path: '/dashboard/profile', icon: <UserIcon size={18} /> });
+        items.push({ name: 'Account', path: '/dashboard/profile', icon: <UserIcon size={18} /> });
     }
 
     if (isEditor) {
@@ -77,7 +77,7 @@ function DashboardContent() {
     }
 
     if (isAdmin) {
-      items.push({ name: 'Registry', path: '/dashboard/users', icon: <Users size={18} /> });
+      items.push({ name: 'Directory', path: '/dashboard/users', icon: <Users size={18} /> });
     }
 
     items.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> });
@@ -108,51 +108,62 @@ function DashboardContent() {
             </Button>
           </div>
 
-          <div className="px-6 mb-4 sm:mb-8 text-[9px] uppercase tracking-[0.4em] font-bold text-white/50 ml-4">
-             Management
+          <div className="px-6 mb-4 sm:mb-8 text-[10px] uppercase tracking-wider font-bold text-white/30 ml-4">
+             Workspace
           </div>
 
-          <div className="flex-1 px-4 sm:px-6 overflow-y-auto space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={() => setIsSidebarOpen(false)}
-                className={`flex items-center gap-4 px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 group relative ${
-                  location.pathname === item.path 
-                    ? 'bg-white/10 text-white font-bold' 
-                    : 'text-white/70 hover:bg-white/[0.05] hover:text-white'
-                }`}
-              >
-                {location.pathname === item.path && (
-                  <motion.div 
-                    layoutId="active-nav"
-                    className="absolute left-0 w-1 h-6 bg-luxury-gold rounded-full"
-                  />
-                )}
-                <span className={location.pathname === item.path ? 'text-luxury-gold' : 'text-white/60 group-hover:text-luxury-gold transition-colors'}>
-                  {item.icon}
-                </span>
-                <span className={`text-[10px] sm:text-[11px] uppercase tracking-[0.2em] transition-colors ${
-                  location.pathname === item.path ? 'text-white font-bold' : 'text-white/70 group-hover:text-white'
-                }`}>{item.name}</span>
-              </Link>
-            ))}
+          <div className="flex-1 px-4 sm:px-6 overflow-y-auto space-y-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={() => setIsSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${
+                    isActive 
+                      ? 'bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/10 shadow-[0_4px_20px_rgba(197,160,89,0.05)] font-medium' 
+                      : 'text-white/60 border border-transparent hover:bg-white/[0.03] hover:text-white'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="active-nav-glow"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#C5A059]/5 to-transparent pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  )}
+                  <span className={isActive ? 'text-[#C5A059]' : 'text-white/40 group-hover:text-[#C5A059] transition-colors shrink-0'}>
+                    {item.icon}
+                  </span>
+                  <span className="text-xs transition-colors font-sans">{item.name}</span>
+                </Link>
+              );
+            })}
           </div>
 
           <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
-            <div className="glass-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-luxury-gold/5 blur-2xl rounded-full" />
-              <p className="text-[9px] uppercase tracking-[0.4em] font-bold text-white/40 mb-3 sm:mb-4">User Profile</p>
-              <div className="flex items-center gap-3.5 relative z-10">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[1rem] bg-white/5 border border-white/15 flex items-center justify-center text-luxury-gold group-hover:scale-110 transition-transform duration-500 shrink-0">
-                  <Briefcase size={16} className="sm:size-[20px]" />
+            <div className="glass-card p-4 sm:p-5 rounded-2xl sm:rounded-[1.25rem] relative overflow-hidden group border border-white/5 bg-[#111]/80 backdrop-blur-xl">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-luxury-gold/5 blur-2xl rounded-full" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#C5A059] to-[#E6C587] p-[1.5px] shrink-0">
+                    <div className="w-full h-full rounded-full bg-[#111] flex items-center justify-center text-luxury-gold text-xs font-bold">
+                      {user?.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'SO'}
+                    </div>
+                  </div>
+                  {/* Subtle online indicator pill */}
+                  <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#111] animate-pulse" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-white truncate tracking-tight uppercase">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold text-white truncate tracking-tight uppercase">
                     {user?.displayName || 'System Operator'}
                   </p>
-                  <p className="text-[9px] text-white/60 uppercase font-black tracking-widest leading-none mt-1 truncate">Role: {profile?.role?.replace('_', ' ') || 'Pending'}</p>
+                  <p className="inline-block mt-1 px-1.5 py-0.5 rounded-md text-[8px] text-[#C5A059] bg-[#C5A059]/10 border border-[#C5A059]/20 uppercase tracking-widest font-bold">
+                    {profile?.role?.replace('_', ' ') || 'User'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -177,10 +188,10 @@ function DashboardContent() {
               <Menu size={22} />
             </Button>
             <div className="min-w-0">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold tracking-tighter text-white truncate">
+              <h2 className="text-xl sm:text-2xl font-display font-light tracking-tight text-white truncate">
                 {navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}
               </h2>
-              <p className="text-[9px] uppercase tracking-[0.3em] text-white/20 font-bold hidden sm:block">Active Connection</p>
+              <p className="text-[11px] text-white/40 hidden sm:block">Workspace content control</p>
             </div>
           </div>
 

@@ -12,7 +12,7 @@ export default function CreateArticle() {
            <Button variant="ghost" onClick={() => navigate(-1)} className="text-white/40 hover:text-white px-0 hover:bg-transparent -ml-2 mb-4">
              <ArrowLeft size={16} className="mr-2" /> Back to Archive
            </Button>
-           <h1 className="text-5xl font-display font-bold tracking-tighter text-white">Draft <span className="text-white/20">Report</span></h1>
+           <h1 className="text-4xl font-display font-light text-white tracking-tight">New <span className="text-white/40">Article</span></h1>
         </div>
       </div>
       <ArticleForm />
