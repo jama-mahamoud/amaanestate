@@ -406,10 +406,41 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
+// Helper to fetch details for dynamic SEO tags from the firestore collection
+async function getArticleMetadata(idOrSlug: string) {
+  const firestoreDb = getAdminDb();
+  if (!firestoreDb) {
+    console.error("[SEO SERVER] No admin DB connection.");
+    return null;
+  }
+  try {
+    // Try Doc ID first
+    const docRef = firestoreDb.collection("articles").doc(idOrSlug);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    
+    // Fallback: try by slug
+    const querySnap = await firestoreDb.collection("articles")
+      .where("slug", "==", idOrSlug)
+      .limit(1)
+      .get();
+    
+    if (!querySnap.empty) {
+      const doc = querySnap.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+  } catch (error) {
+    console.error("[SEO SERVER] Error fetching article by doc id or slug:", error);
+  }
+  return null;
+}
+
 async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
-  // Vite middleware for development
+  // Vite middleware for development setup (moved up so we can reuse instance)
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -417,17 +448,117 @@ async function startServer() {
       appType: "custom",
     });
     app.use(vite.middlewares);
+    app.set('vite', vite);
+  }
 
+  // Intercept news / article specific routes for crawlers and dynamic metadata injection
+  app.get("/news/:id", async (req, res, next) => {
+    try {
+      const idOrSlug = req.params.id;
+      const article = await getArticleMetadata(idOrSlug);
+      
+      let templatePath = "";
+      if (process.env.NODE_ENV !== "production") {
+        templatePath = path.resolve(process.cwd(), 'index.html');
+      } else {
+        templatePath = path.resolve(process.cwd(), 'dist', 'index.html');
+      }
+      
+      if (!fs.existsSync(templatePath)) {
+        return next();
+      }
+      
+      let template = fs.readFileSync(templatePath, 'utf-8');
+      
+      if (process.env.NODE_ENV !== "production") {
+        const vite = app.get('vite');
+        if (vite) {
+          template = await vite.transformIndexHtml(req.originalUrl, template);
+        }
+      }
+      
+      if (article) {
+        const title = (article.seoTitle || article.title || "Amaan Intelligence Report") + " | AmaanEstate";
+        const cleanContent = (article.content || "").replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const desc = article.seoDescription || article.summary || (cleanContent ? cleanContent.substring(0, 160) + "..." : "A premium news development and localized intelligence briefing from AmaanEstate.");
+        
+        let imageUrl = article.socialImage || article.thumbnail || article.featuredImage;
+        if (!imageUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
+          imageUrl = article.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
+        }
+        
+        let absoluteImgUrl = "";
+        if (imageUrl) {
+          if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            absoluteImgUrl = imageUrl;
+          } else {
+            const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+            const host = req.get('host') || 'amaanestate.com';
+            absoluteImgUrl = `${protocol}://${host}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+          }
+        }
+        
+        const absolutePageUrl = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.get('host') || 'amaanestate.com'}/news/${idOrSlug}`;
+        
+        template = template
+          .replace(/<title>[^<]*<\/title>/gi, `<title>${title}</title>`)
+          .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="og:title"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="og:description"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="og:image"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="og:url"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="og:type"[^>]*>/gi, '')
+          .replace(/<meta[^>]*name="twitter:title"[^>]*>/gi, '')
+          .replace(/<meta[^>]*name="twitter:description"[^>]*>/gi, '')
+          .replace(/<meta[^>]*name="twitter:image"[^>]*>/gi, '')
+          .replace(/<meta[^>]*name="twitter:card"[^>]*>/gi, '')
+          .replace(/<meta[^>]*name="twitter:url"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="twitter:title"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="twitter:description"[^>]*>/gi, '')
+          .replace(/<meta[^>]*property="twitter:image"[^>]*>/gi, '');
+          
+        const dynamicMetaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${absolutePageUrl}" />
+    ${absoluteImgUrl ? `<meta property="og:image" content="${absoluteImgUrl}" />` : ''}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:url" content="${absolutePageUrl}" />
+    ${absoluteImgUrl ? `<meta name="twitter:image" content="${absoluteImgUrl}" />` : ''}
+        `;
+        
+        template = template.replace(/<head>/i, `<head>${dynamicMetaTags}`);
+      }
+      
+      res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+    } catch (err) {
+      console.error("[SEO SERVER] Interceptor failed:", err);
+      next(err);
+    }
+  });
+
+  if (process.env.NODE_ENV !== "production") {
     app.use("*", async (req, res, next) => {
       if (req.originalUrl.startsWith('/api')) return next();
       
       try {
         const url = req.originalUrl;
         let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
+        const vite = app.get('vite');
+        if (vite) {
+          template = await vite.transformIndexHtml(url, template);
+        }
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e: any) {
-        vite.ssrFixStacktrace(e);
+        const vite = app.get('vite');
+        if (vite) {
+          vite.ssrFixStacktrace(e);
+        }
         next(e);
       }
     });

@@ -36,6 +36,9 @@ export function useSEO({ title, description, image, url, type = 'website', struc
     setMetaTag('property', 'og:type', type);
     if (image) {
       setMetaTag('property', 'og:image', image);
+    } else {
+      const el = document.querySelector('meta[property="og:image"]');
+      if (el) el.remove();
     }
     if (url) {
       setMetaTag('property', 'og:url', url);
@@ -49,6 +52,9 @@ export function useSEO({ title, description, image, url, type = 'website', struc
     setMetaTag('name', 'twitter:description', description);
     if (image) {
       setMetaTag('name', 'twitter:image', image);
+    } else {
+      const el = document.querySelector('meta[name="twitter:image"]');
+      if (el) el.remove();
     }
 
     // 3. Structured Data JSON-LD Schema Injection

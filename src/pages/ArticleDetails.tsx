@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { articleService } from '@/services/articleService';
 import { Article } from '@/types';
 import { toast } from 'sonner';
+import { useSEO } from '@/hooks/useSEO';
 
 import NotFoundState from '@/components/NotFoundState';
 
@@ -15,6 +16,33 @@ export default function ArticleDetails() {
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Compute dynamic metadata details
+  const metaImageUrl = (() => {
+    if (!article) return undefined;
+    let rawUrl = article.socialImage || (article as any).thumbnail || article.featuredImage;
+    if (!rawUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
+      rawUrl = article.gallery.find(g => typeof g === 'string' && g.trim() !== '');
+    }
+    if (!rawUrl) return undefined;
+    
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      return rawUrl;
+    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://amaanestate.com';
+    return `${origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+  })();
+
+  const cleanContentText = article ? (article.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  const metaDesc = article ? (article.seoDescription || article.summary || (cleanContentText ? cleanContentText.substring(0, 160) + '...' : '')) : '';
+
+  useSEO({
+    title: article ? (article.seoTitle || article.title) : 'Intelligence Report',
+    description: metaDesc,
+    image: metaImageUrl,
+    url: article ? `https://amaanestate.com/news/${article.slug || article.id}` : undefined,
+    type: 'article'
+  });
 
   useEffect(() => {
     let active = true;
@@ -99,9 +127,16 @@ export default function ArticleDetails() {
     <div className="min-h-screen bg-[#050505] pb-24 font-sans text-white antialiased">
       <Helmet>
         <title>{article.seoTitle || article.title} | Amaan Intelligence</title>
-        <meta name="description" content={article.seoDescription || article.summary} />
-        {article.featuredImage && <meta property="og:image" content={article.featuredImage} />}
-        <link rel="canonical" href={`https://amaanestate.so/news/${article.slug || article.id}`} />
+        <meta name="description" content={metaDesc} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={article.seoTitle || article.title} />
+        <meta property="og:description" content={metaDesc} />
+        {metaImageUrl && <meta property="og:image" content={metaImageUrl} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.seoTitle || article.title} />
+        <meta name="twitter:description" content={metaDesc} />
+        {metaImageUrl && <meta name="twitter:image" content={metaImageUrl} />}
+        <link rel="canonical" href={`https://amaanestate.com/news/${article.slug || article.id}`} />
       </Helmet>
 
       {/* Hero Banner Background & Top Meta */}
