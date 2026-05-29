@@ -161,6 +161,7 @@ export const articleService = {
 
   async createArticle(data: Omit<Article, 'id' | 'authorId' | 'createdAt' | 'updatedAt' | 'views'>) {
     if (!auth.currentUser) throw new Error('Authentication required');
+    console.log("Creating new article:", data.title);
     try {
       clearCaches();
       // Ensure slug is auto-generated or validated
@@ -173,7 +174,7 @@ export const articleService = {
       
       const cleanContent = cleanHtmlContent(data.content);
       
-      const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), {
+      const articleData = {
         ...data,
         slug: finalSlug,
         content: cleanContent,
@@ -181,9 +182,14 @@ export const articleService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         views: 0
-      });
+      };
+      console.log("Saving article data to Firestore:", articleData);
+      
+      const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), articleData);
+      console.log("Article created with ID:", docRef.id);
       return docRef.id;
     } catch (error) {
+      console.error("Error creating article:", error);
       handleFirestoreError(error, OperationType.WRITE, ARTICLES_COLLECTION);
       return null;
     }
