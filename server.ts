@@ -21,7 +21,6 @@ if (process.env.GEMINI_API_KEY) {
 }
 console.log("================================================");
 
-import { createServer as createViteServer } from "vite";
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { GoogleGenAI } from "@google/genai";
