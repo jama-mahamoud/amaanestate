@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User, Building2, Phone, MapPin, Loader2, Sparkles, X, ChevronRight } from 'lucide-react';
+import { User, Building2, Phone, MapPin, Loader2, Sparkles, X, ChevronRight, Upload } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { brokerService } from '@/services/brokerService';
+import { uploadToCloudinary } from '@/services/cloudinaryUpload';
 
 const SPECIALTIES_OPTIONS = ['Residential', 'Commercial', 'Beachfront', 'Farmlands', 'Luxury Villas', 'Development Land'];
 
@@ -13,6 +14,7 @@ export default function AgentRegister() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -28,12 +30,29 @@ export default function AgentRegister() {
     city: '',
     region: 'Somali Region',
     officeAddress: '',
+    profilePhotoUrl: '',
     propertySpecialization: [] as string[],
     languagesSpoken: '',
     yearsOfExperience: '',
     licenseNumber: '',
     businessHours: '',
   });
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingPhoto(true);
+    try {
+      const result = await uploadToCloudinary(file);
+      setFormData(prev => ({ ...prev, profilePhotoUrl: result.secure_url }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload image.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +68,14 @@ export default function AgentRegister() {
         city: formData.city,
         officeAddress: formData.officeAddress,
         companyName: formData.companyName,
-        governmentIdUrl: 'N/A', // TODO: Add upload
-        businessLicenseUrl: 'N/A', // TODO: Add upload
+        governmentIdUrl: 'N/A', 
+        businessLicenseUrl: 'N/A', 
         yearsOfExperience: parseInt(formData.yearsOfExperience) || 0,
         areasOfOperation: [formData.city, formData.region],
         propertySpecialization: formData.propertySpecialization,
         languagesSpoken: formData.languagesSpoken.split(',').map(s => s.trim()),
         bio: formData.bio,
+        profilePhotoUrl: formData.profilePhotoUrl,
       });
       navigate('/dashboard');
     } catch (err) {
@@ -96,9 +116,28 @@ export default function AgentRegister() {
                 <h2 className="text-xl font-display font-semibold text-white">Identity & Branding</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Photo Upload */}
+                <div className="flex items-center gap-6 p-4 bg-white/5 rounded-2xl md:col-span-2">
+                  <div className="w-20 h-20 rounded-2xl bg-neutral-900 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                    {formData.profilePhotoUrl ? (
+                      <img src={formData.profilePhotoUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="text-white/20" size={32} />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-white mb-2">Profile Photo</label>
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" id="photo-upload" />
+                    <label htmlFor="photo-upload" className="inline-flex items-center gap-2 px-4 py-2 bg-[#C5A059] text-black font-semibold rounded-xl text-sm cursor-pointer hover:bg-white transition-all">
+                      {uploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                    </label>
+                  </div>
+                </div>
+
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16}/>
-                  <Input placeholder="Full Name" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required className="bg-white/5 border-none h-14 rounded-2xl pl-12" />
+                  <Input placeholder="Full Name" value={formData.fullName} onChange={e => {setFormData({...formData, fullName: e.target.value})}} required className="bg-white/5 border-none h-14 rounded-2xl pl-12" />
                 </div>
                 <div className="relative">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16}/>
