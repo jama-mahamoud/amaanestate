@@ -451,6 +451,130 @@ async function startServer() {
     app.set('vite', vite);
   }
 
+  // Sitemap.xml dynamic generator
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const urls: Array<{ loc: string; changefreq: string; priority: string }> = [
+        { loc: "https://www.amaanestate.com/", changefreq: "daily", priority: "1.0" },
+        { loc: "https://www.amaanestate.com/properties", changefreq: "daily", priority: "0.9" },
+        { loc: "https://www.amaanestate.com/vehicles", changefreq: "daily", priority: "0.9" },
+        { loc: "https://www.amaanestate.com/agents", changefreq: "daily", priority: "0.8" },
+        { loc: "https://www.amaanestate.com/news", changefreq: "daily", priority: "0.8" },
+        { loc: "https://www.amaanestate.com/jobs", changefreq: "daily", priority: "0.8" },
+        { loc: "https://www.amaanestate.com/about", changefreq: "monthly", priority: "0.7" },
+        { loc: "https://www.amaanestate.com/contact", changefreq: "monthly", priority: "0.7" },
+        { loc: "https://www.amaanestate.com/privacy", changefreq: "monthly", priority: "0.3" },
+        { loc: "https://www.amaanestate.com/terms", changefreq: "monthly", priority: "0.3" },
+        { loc: "https://www.amaanestate.com/disclaimer", changefreq: "monthly", priority: "0.3" },
+      ];
+
+      const firestoreDb = getAdminDb();
+      if (firestoreDb) {
+        // Fetch active properties and vehicles
+        try {
+          const listingsSnap = await firestoreDb.collection("listings")
+            .where("status", "==", "active")
+            .get();
+          
+          listingsSnap.docs.forEach((docSnapshot: any) => {
+            const data = docSnapshot.data();
+            const id = docSnapshot.id;
+            if (data.category === "vehicle") {
+              urls.push({
+                loc: `https://www.amaanestate.com/vehicles/${id}`,
+                changefreq: "weekly",
+                priority: "0.7"
+              });
+            } else {
+              urls.push({
+                loc: `https://www.amaanestate.com/properties/${id}`,
+                changefreq: "weekly",
+                priority: "0.7"
+              });
+            }
+          });
+        } catch (dbErr) {
+          console.error("[SITEMAP] Error fetching listings:", dbErr);
+        }
+
+        // Fetch approved brokers/agents
+        try {
+          const brokerSnap = await firestoreDb.collection("brokers")
+            .where("status", "==", "approved")
+            .get();
+          
+          brokerSnap.docs.forEach((docSnapshot: any) => {
+            const id = docSnapshot.id;
+            urls.push({
+              loc: `https://www.amaanestate.com/agents/${id}`,
+              changefreq: "weekly",
+              priority: "0.6"
+            });
+          });
+        } catch (dbErr) {
+          console.error("[SITEMAP] Error fetching brokers:", dbErr);
+        }
+
+        // Fetch published articles
+        try {
+          const articleSnap = await firestoreDb.collection("articles")
+            .where("published", "==", true)
+            .get();
+          
+          articleSnap.docs.forEach((docSnapshot: any) => {
+            const id = docSnapshot.id;
+            urls.push({
+              loc: `https://www.amaanestate.com/news/${id}`,
+              changefreq: "weekly",
+              priority: "0.6"
+            });
+          });
+        } catch (dbErr) {
+          console.error("[SITEMAP] Error fetching articles:", dbErr);
+        }
+      }
+
+      // Build XML
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      
+      urls.forEach(url => {
+        xml += `  <url>\n`;
+        xml += `    <loc>${url.loc}</loc>\n`;
+        xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
+        xml += `    <priority>${url.priority}</priority>\n`;
+        xml += `  </url>\n`;
+      });
+      
+      xml += `</urlset>`;
+
+      console.log(`[SITEMAP] Successfully generated ${urls.length} URLs for sitemap.`);
+      res.status(200).header("Content-Type", "application/xml").send(xml);
+    } catch (err: any) {
+      console.error("[SITEMAP] Failed to generate sitemap.xml, serving fallback:", err);
+      const simpleXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.amaanestate.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.amaanestate.com/properties</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+</urlset>`;
+      res.status(200).header("Content-Type", "application/xml").send(simpleXml);
+    }
+  });
+
+  // Robots.txt direct support
+  app.get("/robots.txt", (req, res) => {
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: https://www.amaanestate.com/sitemap.xml\n`;
+    res.status(200).header("Content-Type", "text/plain").send(robotsTxt);
+  });
+
   // Intercept news / article specific routes for crawlers and dynamic metadata injection
   app.get("/news/:id", async (req, res, next) => {
     try {
