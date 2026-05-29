@@ -388,7 +388,7 @@ app.post("/api/contact", async (req, res) => {
   try {
     await resend.emails.send({
       from: 'AmaanEstate <onboarding@resend.dev>', // Use verified domain later
-      to: 'info@amaanestate.com',
+      to: 'jamamahamoud01@farrmuu',
       subject: `New Contact Form Submission: ${subject}`,
       html: `
         <h2>New Inquiry</h2>
