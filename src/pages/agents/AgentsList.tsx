@@ -74,15 +74,27 @@ export default function AgentsList() {
 
   return (
     <div className="pt-24 pb-28 min-h-screen bg-[#070707] text-white">
-      {/* Agents Header */}
+      {/* Hero Section */}
       <section className="relative py-16 md:py-24 border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center space-y-5">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-light text-white tracking-tight">
-            Our Agents
+        <div className="max-w-3xl mx-auto px-4 md:px-6 text-center space-y-6">
+          <h1 className="text-3xl sm:text-5xl font-display font-light text-white tracking-tight">
+            Real Estate Professionals Network
           </h1>
-          <div className="max-w-xl mx-auto mt-8 flex gap-3">
+          <p className="text-white/60 text-sm md:text-base leading-relaxed">
+            Discover property professionals across Somalia and Ethiopia or join the AmaanEstate network to grow your business.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Button className="w-full sm:w-auto bg-[#C5A059] hover:bg-white text-black font-bold h-12 px-8 rounded-xl" asChild>
+              <Link to="/agents/register">Become an Agent</Link>
+            </Button>
+            <Button className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white font-bold h-12 px-8 rounded-xl border border-white/10" asChild>
+              <Link to="/list-property">List Your Property</Link>
+            </Button>
+          </div>
+          
+          <div className="max-w-xl mx-auto mt-12 flex gap-3">
              <Input 
-                placeholder="Search name, city or neighborhood..."
+                placeholder="Search agent, agency, city or location..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="bg-[#111] border-white/10 h-12 text-white text-xs focus-visible:ring-[#C5A059]"
@@ -99,28 +111,57 @@ export default function AgentsList() {
       </section>
 
       {/* Directory Content */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {allAgents.map(p => (
-            <div key={p.id} className="bg-[#111] p-6 rounded-2xl border border-white/5 hover:border-[#C5A059]/20 transition-all">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/5 flex items-center justify-center text-[#C5A059] font-bold shrink-0 border border-white/10">
+            <div key={p.id} className="bg-[#111]/50 p-6 rounded-2xl border border-white/5 hover:border-[#C5A059]/20 transition-all group flex flex-col">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-white/5 flex items-center justify-center text-[#C5A059] font-bold shrink-0 border border-white/10">
                     {(p as any).profilePhotoUrl || (p as any).logo ? (
-                      <img src={(p as any).profilePhotoUrl || (p as any).logo} alt={p.fullName} className="w-full h-full object-cover" />
+                      <img 
+                        src={(p as any).profilePhotoUrl || (p as any).logo} 
+                        alt={p.fullName} 
+                        width={56}
+                        height={56}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover" 
+                      />
                     ) : (
                       p.fullName.substring(0, 2).toUpperCase()
                     )}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">{p.fullName}</h4>
-                    <span className="text-[10px] text-white/50">{(p as any).isAgency ? 'Agency Professional' : 'Independent Specialist'}</span>
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#C5A059] transition-colors">{p.fullName}</h4>
+                    <p className="text-[11px] text-white/50 space-x-1.5 flex items-center">
+                        <span className="capitalize">{(p as any).isAgency ? 'Agency Professional' : 'Independent Specialist'}</span>
+                        {(p as any).city && (
+                            <>
+                                <span>•</span>
+                                <span className="flex items-center gap-0.5"><MapPin size={10} /> {(p as any).city}</span>
+                            </>
+                        )}
+                    </p>
                   </div>
                 </div>
-                <Button className="w-full bg-[#C5A059] hover:bg-white text-black font-bold h-10 mt-4" asChild>
-                   <Link to={`/agents/${p.id}`}>View Profile</Link>
-                </Button>
+                <div className="mt-auto">
+                    <Button className="w-full bg-white/5 hover:bg-[#C5A059] hover:text-black text-white font-bold h-10 border border-white/5" asChild>
+                       <Link to={`/agents/${p.id}`}>View Profile</Link>
+                    </Button>
+                </div>
             </div>
            ))}
+        </div>
+      </section>
+
+      {/* Acquisition CTA */}
+      <section className="py-20 border-t border-white/5">
+        <div className="max-w-3xl mx-auto px-4 text-center space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-display font-light text-white">Own or Manage a Real Estate Agency?</h2>
+            <p className="text-white/60 text-sm md:text-base">Join AmaanEstate and showcase your properties to buyers across Somalia and Ethiopia.</p>
+            <Button className="bg-[#C5A059] hover:bg-white text-black font-bold h-12 px-8 rounded-xl" asChild>
+              <Link to="/agents/register">Become an Agent / Broker</Link>
+            </Button>
         </div>
       </section>
     </div>

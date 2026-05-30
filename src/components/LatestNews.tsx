@@ -47,13 +47,21 @@ const formatDate = (dateValue: any) => {
 const FeaturedArticleCard = ({ article }: { article: Article }) => {
   const readTime = calculateReadTime(article.content || '');
   const summary = article.summary || cleanSummaryText(article.content || '', 240);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 768);
+    }
+  }, []);
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      id={`featured-article-${article.id}`}
+      initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+      viewport={isMobile ? undefined : { once: true }}
+      transition={isMobile ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' }}
       className="group relative bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:border-[#C5A059]/30 transition-all duration-500 shadow-xl hover:shadow-2xl mb-16"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
@@ -62,6 +70,8 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
           <img 
             src={article.featuredImage || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200'} 
             alt={article.title}
+            width={800}
+            height={500}
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
             loading="lazy"
           />
@@ -129,19 +139,29 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
 const ArticleCard = ({ article, index }: { article: Article; index: number }) => {
   const readTime = calculateReadTime(article.content || '');
   const summary = article.summary || cleanSummaryText(article.content || '', 140);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 768);
+    }
+  }, []);
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
+      id={`article-card-${article.id}`}
+      initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 25 }}
+      whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+      viewport={isMobile ? undefined : { once: true }}
+      transition={isMobile ? { duration: 0 } : { duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
       className="group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:border-[#C5A059]/30 hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <img 
           src={article.featuredImage || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} 
           alt={article.title}
+          width={400}
+          height={250}
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out"
           loading="lazy"
         />

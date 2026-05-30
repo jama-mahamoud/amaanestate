@@ -4,13 +4,20 @@ import { Gauge, Fuel, Calendar, ArrowRight, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { VehicleListing } from '@/types';
 import { formatPrice } from '@/lib/utils';
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 
 interface VehicleCardProps {
   vehicle: VehicleListing;
 }
 
 const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 768);
+    }
+  }, []);
+
   const mainImage = vehicle.images?.[0] || 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop';
   const displayPrice = vehicle.price 
     ? formatPrice(vehicle.price, vehicle.currency || 'ETB') 
@@ -18,9 +25,10 @@ const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+      viewport={isMobile ? undefined : { once: true }}
+      transition={isMobile ? { duration: 0 } : undefined}
       className="group h-full"
     >
       <Link to={`/vehicles/${vehicle.id}`} className="block h-full">

@@ -96,12 +96,20 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
     if (property.features.garden) amenities.push('Garden');
   }
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 768);
+    }
+  }, []);
+
   return (
     <motion.div
       id={`property-card-${property.id}`}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+      viewport={isMobile ? undefined : { once: true }}
+      transition={isMobile ? { duration: 0 } : undefined}
       className="group h-full"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

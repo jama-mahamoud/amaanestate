@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
-import somaliHeroImg from '@/assets/images/somali_agency_hero_1779895169818.png';
+import somaliHeroImg from '@/assets/images/somali_agency_hero.webp';
 import { useSEO } from '@/hooks/useSEO';
 
 const SECTORS_LIST = [
@@ -76,6 +76,36 @@ export default function Home() {
 
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mobileQuery = window.matchMedia('(max-width: 768px)');
+      setIsMobile(mobileQuery.matches);
+      
+      const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+      mobileQuery.addEventListener('change', listener);
+      
+      // Dynamic preload link for WebP hero image on desktop
+      if (!mobileQuery.matches) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = somaliHeroImg;
+        link.type = 'image/webp';
+        link.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(link);
+        return () => {
+          mobileQuery.removeEventListener('change', listener);
+          document.head.removeChild(link);
+        };
+      }
+      
+      return () => {
+        mobileQuery.removeEventListener('change', listener);
+      };
+    }
+  }, []);
 
   const scrollToListings = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -262,9 +292,9 @@ export default function Home() {
 
           <div className="max-w-2xl text-left">
             <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
+              initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={isMobile ? { duration: 0 } : { delay: 0.1 }}
               className="text-2xl sm:text-5xl md:text-6xl font-display text-white mb-6 leading-[1.15] tracking-widest font-extrabold uppercase text-left"
             >
               RENTALS.<br />
@@ -273,9 +303,9 @@ export default function Home() {
             </motion.h1>
 
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={isMobile ? { duration: 0 } : { delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center justify-start gap-4 w-full"
             >
               <Link
@@ -371,7 +401,7 @@ export default function Home() {
               <div className={`space-y-6 ${isMobileFiltersOpen ? 'block animate-in fade-in slide-in-from-top-4 duration-300' : 'hidden lg:block'}`}>
                 
                 {/* Categories container */}
-                <div className="bg-[#111111]/90 rounded-[2.5rem] border border-white/5 p-6 space-y-6 shadow-2xl relative overflow-hidden backdrop-blur-md">
+                <div className="bg-[#111111]/90 rounded-[2.5rem] border border-white/5 p-6 space-y-6 shadow-2xl relative overflow-hidden md:backdrop-blur-md">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-2xl rounded-full pointer-events-none" />
                   
                   {/* Category Section */}
