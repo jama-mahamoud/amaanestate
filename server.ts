@@ -737,34 +737,7 @@ async function startServer() {
     app.set('vite', vite);
   }
 
-  // Sitemap.xml dynamic generator
-  app.get("/sitemap.xml", async (req, res) => {
-    try {
-      const { xml } = await generateSitemapXml();
-      res.status(200).header("Content-Type", "application/xml").send(xml);
-    } catch (err: any) {
-      console.error("[SITEMAP] Handler failed, serving fallback:", err);
-      const simpleXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.amaanestate.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://www.amaanestate.com/properties</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-</urlset>`;
-      res.status(200).header("Content-Type", "application/xml").send(simpleXml);
-    }
-  });
 
-  // Robots.txt direct support
-  app.get("/robots.txt", (req, res) => {
-    res.status(200).header("Content-Type", "text/plain").send(generateRobotsTxt());
-  });
 
 
 
