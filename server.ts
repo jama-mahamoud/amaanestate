@@ -791,7 +791,9 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
   } catch (err) {
     console.error("[SEO SERVER] servePageWithMetadata failed:", err);
-    next(err);
+    // Instead of crashing the request, fall through to the SPA (next())
+    // which will present the page correctly.
+    next();
   }
 }
 
@@ -868,7 +870,7 @@ async function startServer() {
       }
     } catch (err) {
       console.error("[SEO SERVER] News route handler failed:", err);
-      next(err);
+      next();
     }
   });
 
@@ -893,7 +895,7 @@ async function startServer() {
       }
     } catch (err) {
       console.error("[SEO SERVER] Property route handler failed:", err);
-      next(err);
+      next();
     }
   });
 
@@ -918,7 +920,7 @@ async function startServer() {
       }
     } catch (err) {
       console.error("[SEO SERVER] Vehicle route handler failed:", err);
-      next(err);
+      next();
     }
   });
 
@@ -943,7 +945,7 @@ async function startServer() {
       }
     } catch (err) {
       console.error("[SEO SERVER] Agent route handler failed:", err);
-      next(err);
+      next();
     }
   });
 
