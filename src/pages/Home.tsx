@@ -236,41 +236,37 @@ export default function Home() {
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
       <section className="relative pt-20 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
-        {/* Immersive Background Image with High-Contrast Overlays (Desktop & Tablet only) */}
-        <div className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none">
+        <motion.div 
+          className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none"
+        >
           <motion.img 
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1.02, 1.05, 1] }}
-            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            animate={{ scale: [1, 1.05, 1, 1.05, 1] }}
+            transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
             src={somaliHeroImg} 
-            alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
+            alt="Somali real estate hero"
+            width={1920}
+            height={1080}
             className="w-full h-full object-cover filter brightness-[0.7] saturate-[1.1] object-center"
             referrerPolicy="no-referrer"
           />
-          {/* Black gradient overlays designed to preserve background visibility while keeping white text extremely legible */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-black/25" />
-        </div>
+        </motion.div>
 
         <div className="container mx-auto px-4 relative z-10 w-full">
-          {/* Full-view Mobile-friendly Image Container (Mobile only) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div 
             className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/[0.02]"
           >
-            <motion.img 
-              initial={{ scale: 1 }}
-              animate={{ scale: [1, 1.05, 1.02, 1.05, 1] }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            <img 
               src={somaliHeroImg} 
-              alt="Warm key handover with Somali real estate agent and a family in modest Islamic dress in front of high-end home" 
+              alt="Somali real estate hero"
+              width={800}
+              height={600}
               className="w-full h-auto object-contain filter brightness-[0.9] saturate-[1.1] origin-center"
               referrerPolicy="no-referrer"
             />
-            {/* Soft ambient inner gradient to blend with the interface of the mobile app */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-          </motion.div>
+          </div>
 
           <div className="max-w-2xl text-left">
             <motion.h1 
@@ -299,7 +295,7 @@ export default function Home() {
 
               <Link
                 to="/list-property"
-                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-white border border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all rounded-2xl hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-white border border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 md:backdrop-blur-md transition-all rounded-2xl hover:-translate-y-0.5"
               >
                 List your Property
               </Link>

@@ -123,22 +123,24 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
               src={mainImage} 
               alt={property.title} 
               loading="lazy"
+              width={400}
+              height={300}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             
             {/* Elegant glassmorphism badges over image */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
-              <span className={`text-[9px] uppercase tracking-widest font-bold px-3 py-1.5 backdrop-blur-md rounded-full shadow-sm border ${
+              <span className={`text-[9px] uppercase tracking-widest font-bold px-3 py-1.5 md:backdrop-blur-md rounded-full shadow-sm border ${
                 property.listingType === 'sale' 
-                  ? 'bg-emerald-600 text-white border-emerald-500/20' 
-                  : 'bg-white text-super-black border-white/10'
+                  ? 'bg-emerald-600/90 text-white border-emerald-500/20' 
+                  : 'bg-white/90 text-super-black border-white/10'
               }`}>
                 {property.listingType === 'sale' ? 'For Sale' : 'For Rent'}
               </span>
               
               {property.isVerified && (
-                <span className="bg-emerald-500 text-white backdrop-blur-md flex items-center gap-1 rounded-full px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold shadow-sm">
+                <span className="bg-emerald-500/90 text-white md:backdrop-blur-md flex items-center gap-1 rounded-full px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold shadow-sm">
                   <ShieldCheck size={10} className="text-white" />
                   <span>Verified</span>
                 </span>

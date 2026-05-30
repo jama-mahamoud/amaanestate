@@ -30,13 +30,15 @@ const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
               src={mainImage} 
               alt={vehicle.title} 
               loading="lazy"
+              width={400}
+              height={300}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             
             {/* Elegant glassmorphism dark/gold badges over image */}
             <div className="absolute top-4 left-4 flex gap-2 z-10">
-              <span className={`text-[9px] uppercase tracking-widest font-bold px-3.5 py-1.5 rounded-full border shadow-sm backdrop-blur-md transition-all ${
+              <span className={`text-[9px] uppercase tracking-widest font-bold px-3.5 py-1.5 rounded-full border shadow-sm md:backdrop-blur-md transition-all ${
                 vehicle.listingType === 'sale' 
                   ? 'bg-black/80 text-[#C5A059] border-[#C5A059]/30' 
                   : 'bg-emerald-950/80 text-emerald-400 border-emerald-500/20'
