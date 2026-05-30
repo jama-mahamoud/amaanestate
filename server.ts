@@ -39,6 +39,27 @@ export const app = express();
 
 app.use(express.json());
 
+// Vercel path mapping translator middleware (translates serverless route rewrites back to native Express routes)
+app.use((req, res, next) => {
+  const queryPath = (req.query.path as string || "").toLowerCase();
+  const queryId = req.query.id as string || "";
+  
+  if (queryPath === "sitemap.xml") {
+    req.url = "/sitemap.xml";
+  } else if (queryPath === "robots.txt") {
+    req.url = "/robots.txt";
+  } else if (queryPath === "news" && queryId) {
+    req.url = `/news/${queryId}`;
+  } else if (queryPath === "properties" && queryId) {
+    req.url = `/properties/${queryId}`;
+  } else if (queryPath === "vehicles" && queryId) {
+    req.url = `/vehicles/${queryId}`;
+  } else if (queryPath === "agents" && queryId) {
+    req.url = `/agents/${queryId}`;
+  }
+  next();
+});
+
 // Helper functions for dynamic sitemap and robots.txt generation
 async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -670,6 +691,110 @@ async function getArticleMetadata(idOrSlug: string) {
   return null;
 }
 
+async function getListingMetadata(id: string) {
+  const firestoreDb = getAdminDb();
+  if (!firestoreDb) return null;
+  try {
+    const docRef = firestoreDb.collection("listings").doc(id);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+  } catch (error) {
+    console.error("[SEO SERVER] Error fetching listing metadata:", error);
+  }
+  return null;
+}
+
+async function getBrokerMetadata(id: string) {
+  const firestoreDb = getAdminDb();
+  if (!firestoreDb) return null;
+  try {
+    const docRef = firestoreDb.collection("brokers").doc(id);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+  } catch (error) {
+    console.error("[SEO SERVER] Error fetching broker metadata:", error);
+  }
+  return null;
+}
+
+async function servePageWithMetadata(req: express.Request, res: express.Response, next: express.NextFunction, seoData: { title: string; description: string; imageUrl?: string; urlPath: string }) {
+  try {
+    let templatePath = "";
+    const searchPaths = [
+      path.resolve(process.cwd(), 'dist', 'index.html'),
+      path.resolve(process.cwd(), 'index.html'),
+      path.resolve(__dirname, '..', 'dist', 'index.html'),
+      path.resolve(__dirname, '..', 'index.html'),
+      path.resolve(__dirname, 'index.html')
+    ];
+    
+    for (const p of searchPaths) {
+      if (fs.existsSync(p)) {
+        templatePath = p;
+        break;
+      }
+    }
+    
+    if (!templatePath) {
+      return next();
+    }
+    
+    let template = fs.readFileSync(templatePath, 'utf-8');
+    
+    if (process.env.NODE_ENV !== "production") {
+      const vite = app.get('vite');
+      if (vite) {
+        template = await vite.transformIndexHtml(req.originalUrl, template);
+      }
+    }
+    
+    const title = seoData.title + " | AmaanEstate";
+    const desc = seoData.description.substring(0, 160);
+    let imageUrl = seoData.imageUrl || "https://www.amaanestate.com/house_luxury_icon.png";
+    if (imageUrl.startsWith("/")) {
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const host = req.get('host') || 'www.amaanestate.com';
+      imageUrl = `${protocol}://${host}${imageUrl}`;
+    }
+    const absolutePageUrl = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.get('host') || 'www.amaanestate.com'}${seoData.urlPath}`;
+    
+    // Clean old meta tags
+    template = template
+      .replace(/<title>[^<]*<\/title>/gi, '')
+      .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
+      .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+      .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
+      .replace(/<meta[^>]*property="twitter:[^>]*>/gi, '')
+      .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
+      
+    const dynamicMetaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${absolutePageUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:url" content="${absolutePageUrl}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <link rel="canonical" href="${absolutePageUrl}" />
+    `;
+    
+    template = template.replace(/<head>/i, `<head>\n${dynamicMetaTags}`);
+    res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+  } catch (err) {
+    console.error("[SEO SERVER] servePageWithMetadata failed:", err);
+    next(err);
+  }
+}
+
 async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
@@ -719,28 +844,8 @@ async function startServer() {
       const idOrSlug = req.params.id;
       const article = await getArticleMetadata(idOrSlug);
       
-      let templatePath = "";
-      if (process.env.NODE_ENV !== "production") {
-        templatePath = path.resolve(process.cwd(), 'index.html');
-      } else {
-        templatePath = path.resolve(process.cwd(), 'dist', 'index.html');
-      }
-      
-      if (!fs.existsSync(templatePath)) {
-        return next();
-      }
-      
-      let template = fs.readFileSync(templatePath, 'utf-8');
-      
-      if (process.env.NODE_ENV !== "production") {
-        const vite = app.get('vite');
-        if (vite) {
-          template = await vite.transformIndexHtml(req.originalUrl, template);
-        }
-      }
-      
       if (article) {
-        const title = (article.seoTitle || article.title || "Amaan Intelligence Report") + " | AmaanEstate";
+        const title = (article.seoTitle || article.title || "Amaan Intelligence Report");
         const cleanContent = (article.content || "").replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         const desc = article.seoDescription || article.summary || (cleanContent ? cleanContent.substring(0, 160) + "..." : "A premium news development and localized intelligence briefing from AmaanEstate.");
         
@@ -752,59 +857,92 @@ async function startServer() {
           imageUrl = "/house_luxury_icon.png";
         }
         
-        let absoluteImgUrl = "";
-        if (imageUrl) {
-          if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-            absoluteImgUrl = imageUrl;
-          } else {
-            const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-            const host = req.get('host') || 'amaanestate.com';
-            absoluteImgUrl = `${protocol}://${host}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-          }
-        }
-        
-        const absolutePageUrl = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.get('host') || 'amaanestate.com'}/news/${idOrSlug}`;
-        
-        template = template
-          .replace(/<title>[^<]*<\/title>/gi, `<title>${title}</title>`)
-          .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="og:title"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="og:description"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="og:image"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="og:url"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="og:type"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="twitter:title"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="twitter:description"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="twitter:image"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="twitter:card"[^>]*>/gi, '')
-          .replace(/<meta[^>]*name="twitter:url"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="twitter:title"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="twitter:description"[^>]*>/gi, '')
-          .replace(/<meta[^>]*property="twitter:image"[^>]*>/gi, '');
-          
-        const dynamicMetaTags = `
-    <title>${title}</title>
-    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
-    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:url" content="${absolutePageUrl}" />
-    ${absoluteImgUrl ? `<meta property="og:image" content="${absoluteImgUrl}" />` : ''}
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
-    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta name="twitter:url" content="${absolutePageUrl}" />
-    ${absoluteImgUrl ? `<meta name="twitter:image" content="${absoluteImgUrl}" />` : ''}
-    <link rel="canonical" href="${absolutePageUrl}" />
-        `;
-        
-        template = template.replace(/<head>/i, `<head>${dynamicMetaTags}`);
+        await servePageWithMetadata(req, res, next, {
+          title,
+          description: desc,
+          imageUrl,
+          urlPath: `/news/${idOrSlug}`
+        });
+      } else {
+        next();
       }
-      
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
     } catch (err) {
-      console.error("[SEO SERVER] Interceptor failed:", err);
+      console.error("[SEO SERVER] News route handler failed:", err);
+      next(err);
+    }
+  });
+
+  // Dynamic properties metadata endpoint
+  app.get("/properties/:id", async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const listing = await getListingMetadata(id);
+      if (listing) {
+        const title = (listing.title || "Elite Property");
+        const desc = listing.description || `Premium real estate in the Somali Region. Location: ${listing.location || "Jigjiga"}. Price: ${listing.price || "Contact Us"}`;
+        const imageUrl = listing.images && listing.images[0] ? listing.images[0] : "/house_luxury_icon.png";
+        
+        await servePageWithMetadata(req, res, next, {
+          title,
+          description: desc,
+          imageUrl,
+          urlPath: `/properties/${id}`
+        });
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Property route handler failed:", err);
+      next(err);
+    }
+  });
+
+  // Dynamic vehicles metadata endpoint
+  app.get("/vehicles/:id", async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const listing = await getListingMetadata(id);
+      if (listing) {
+        const title = (listing.title || "Premium Vehicle");
+        const desc = listing.description || `Luxury vehicle for hire or sale in Jigjiga, Somali Region. Location: ${listing.location || "Jigjiga"}. Price: ${listing.price || "Contact Us"}`;
+        const imageUrl = listing.images && listing.images[0] ? listing.images[0] : "/house_luxury_icon.png";
+        
+        await servePageWithMetadata(req, res, next, {
+          title,
+          description: desc,
+          imageUrl,
+          urlPath: `/vehicles/${id}`
+        });
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Vehicle route handler failed:", err);
+      next(err);
+    }
+  });
+
+  // Dynamic agents metadata endpoint
+  app.get("/agents/:id", async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const broker = await getBrokerMetadata(id);
+      if (broker) {
+        const title = (broker.fullName || broker.name || "Amaan Broker Agent") + " - Verified Broker Agent";
+        const desc = broker.bio || `Connect with ${broker.fullName || broker.name || "verified broker agent"} on AmaanEstate. Specialty: ${broker.specialties || "Real Estate & Vehicles"}. Location: ${broker.location || "Somali Region"}.`;
+        const imageUrl = broker.profileImage || "/house_luxury_icon.png";
+        
+        await servePageWithMetadata(req, res, next, {
+          title,
+          description: desc,
+          imageUrl,
+          urlPath: `/agents/${id}`
+        });
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Agent route handler failed:", err);
       next(err);
     }
   });
@@ -845,12 +983,10 @@ async function startServer() {
   }
 }
 
-// Check if we should start the server (standalone vs imported)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  startServer().catch(err => {
-    console.error("[CRITICAL] Failed to start server:", err);
-  });
-}
+// Start the server (registers all middleware, sitemap/robots endpoints, and dynamic SEO handlers)
+startServer().catch(err => {
+  console.error("[CRITICAL] Failed to start server:", err);
+});
 
 // Initialize Firebase Admin for backend privileged access
 let adminDb: any = null;
