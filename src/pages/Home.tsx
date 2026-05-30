@@ -52,6 +52,7 @@ const PURPOSE_LIST = [
   { label: 'For Rent', value: 'rent' }
 ];
 
+
 export default function Home() {
   const navigate = useNavigate();
   const { t } = useSettings();
@@ -255,17 +256,8 @@ export default function Home() {
 
         <div className="container mx-auto px-4 relative z-10 w-full">
           <div 
-            className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/[0.02]"
+            className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-gradient-to-br from-luxury-black via-[#1a1a1a] to-[#2a2a2a] min-h-[300px]"
           >
-            <img 
-              src={somaliHeroImg} 
-              alt="Somali real estate hero"
-              width={800}
-              height={600}
-              className="w-full h-auto object-contain filter brightness-[0.9] saturate-[1.1] origin-center"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
           </div>
 
           <div className="max-w-2xl text-left">
