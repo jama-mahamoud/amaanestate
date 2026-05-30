@@ -266,7 +266,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
-      <section className="relative pt-20 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
+      <section className="relative pt-10 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
         <motion.div 
           className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none"
         >
@@ -286,11 +286,21 @@ export default function Home() {
 
         <div className="container mx-auto px-4 relative z-10 w-full">
           <div 
-            className="block md:hidden w-full relative mb-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-gradient-to-br from-luxury-black via-[#1a1a1a] to-[#2a2a2a] min-h-[300px]"
+            className="block md:hidden w-full relative mb-1 rounded-2xl overflow-hidden border border-white/10 shadow-2xl h-auto"
           >
+            <img 
+              src={somaliHeroImg}
+              alt="Somali real estate hero"
+              width={400}
+              height={218}
+              loading="lazy"
+              className="w-full h-auto object-cover filter brightness-[0.7]"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
           </div>
 
-          <div className="max-w-2xl text-left">
+          <div className="max-w-2xl text-left -mt-1 md:mt-0">
             <motion.h1 
               initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

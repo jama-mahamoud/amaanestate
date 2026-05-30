@@ -737,9 +737,123 @@ async function startServer() {
     app.set('vite', vite);
   }
 
+  // XML Sitemap Endpoint
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const { xml } = await generateSitemapXml();
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err) {
+      console.error("[SEO SERVER] Sitemap generation error:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
+  // robots.txt Endpoint
+  app.get("/robots.txt", (req, res) => {
+    res.header("Content-Type", "text/plain");
+    res.send(generateRobotsTxt());
+  });
 
+  // Dynamic SEO Middleware Interceptor for news articles
+  app.get("/news/:id", async (req, res, next) => {
+    const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!hasCredentials) {
+      return next();
+    }
+    try {
+      const meta = await getArticleMetadata(req.params.id);
+      if (meta) {
+        const title = meta.title || "Latest News Article";
+        const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
+        const imageUrl = meta.featuredImage || "/house_luxury_icon.png";
+        return servePageWithMetadata(req, res, next, {
+          title,
+          description,
+          imageUrl,
+          urlPath: `/news/${req.params.id}`
+        });
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Error handling news page metadata:", err);
+    }
+    next();
+  });
 
+  // Dynamic SEO Middleware Interceptor for Properties
+  app.get("/properties/:id", async (req, res, next) => {
+    const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!hasCredentials) {
+      return next();
+    }
+    try {
+      const meta = await getListingMetadata(req.params.id);
+      if (meta) {
+        const title = meta.title || "Premium Real Estate Property";
+        const description = meta.description || `View features of this ${meta.category || "property"} in ${meta.city || "Somali Region"}.`;
+        const imageUrl = meta.images?.[0] || "/house_luxury_icon.png";
+        return servePageWithMetadata(req, res, next, {
+          title,
+          description,
+          imageUrl,
+          urlPath: `/properties/${req.params.id}`
+        });
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Error handling properties page metadata:", err);
+    }
+    next();
+  });
+
+  // Dynamic SEO Middleware Interceptor for Vehicles
+  app.get("/vehicles/:id", async (req, res, next) => {
+    const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!hasCredentials) {
+      return next();
+    }
+    try {
+      const meta = await getListingMetadata(req.params.id);
+      if (meta) {
+        const title = meta.title || "Luxury Vehicle Rental";
+        const description = meta.description || `View features of this vehicle/luxury hire in ${meta.city || "Somali Region"}.`;
+        const imageUrl = meta.images?.[0] || "/house_luxury_icon.png";
+        return servePageWithMetadata(req, res, next, {
+          title,
+          description,
+          imageUrl,
+          urlPath: `/vehicles/${req.params.id}`
+        });
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Error handling vehicles page metadata:", err);
+    }
+    next();
+  });
+
+  // Dynamic SEO Middleware Interceptor for Agents/Brokers
+  app.get("/agents/:id", async (req, res, next) => {
+    const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!hasCredentials) {
+      return next();
+    }
+    try {
+      const meta = await getBrokerMetadata(req.params.id);
+      if (meta) {
+        const title = meta.fullName || "Certified Broker";
+        const description = `Contact professional real estate specialist in ${meta.city || "Somali Region"}. Learn more details.`;
+        const imageUrl = meta.profilePhotoUrl || meta.logo || "/house_luxury_icon.png";
+        return servePageWithMetadata(req, res, next, {
+          title,
+          description,
+          imageUrl,
+          urlPath: `/agents/${req.params.id}`
+        });
+      }
+    } catch (err) {
+      console.error("[SEO SERVER] Error handling agents page metadata:", err);
+    }
+    next();
+  });
 
   if (process.env.NODE_ENV !== "production") {
     app.use("*", async (req, res, next) => {
