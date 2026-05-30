@@ -39,27 +39,6 @@ export const app = express();
 
 app.use(express.json());
 
-// Vercel path mapping translator middleware (translates serverless route rewrites back to native Express routes)
-app.use((req, res, next) => {
-  const queryPath = (req.query.path as string || "").toLowerCase();
-  const queryId = req.query.id as string || "";
-  
-  if (queryPath === "sitemap.xml") {
-    req.url = "/sitemap.xml";
-  } else if (queryPath === "robots.txt") {
-    req.url = "/robots.txt";
-  } else if (queryPath === "news" && queryId) {
-    req.url = `/news/${queryId}`;
-  } else if (queryPath === "properties" && queryId) {
-    req.url = `/properties/${queryId}`;
-  } else if (queryPath === "vehicles" && queryId) {
-    req.url = `/vehicles/${queryId}`;
-  } else if (queryPath === "agents" && queryId) {
-    req.url = `/agents/${queryId}`;
-  }
-  next();
-});
-
 // Helper functions for dynamic sitemap and robots.txt generation
 async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -229,59 +208,6 @@ function generateRobotsTxt() {
   return `User-agent: *\nAllow: /\n\nSitemap: https://www.amaanestate.com/sitemap.xml\n`;
 }
 
-// Global interceptor for sitemap.xml and robots.txt to overcome Vercel routing challenges
-app.use((req, res, next) => {
-  const urlPath = req.path.toLowerCase();
-  const queryPath = (req.query.path as string || "").toLowerCase();
-  const originalUrl = (req.originalUrl || "").toLowerCase();
-  const xMatchedPath = (req.headers['x-matched-path'] as string || "").toLowerCase();
-
-  const isSitemap = 
-    urlPath === "/sitemap.xml" || 
-    urlPath === "/api/sitemap.xml" || 
-    queryPath === "sitemap.xml" || 
-    xMatchedPath === "/sitemap.xml" ||
-    originalUrl.includes("sitemap.xml");
-
-  if (isSitemap) {
-    generateSitemapXml()
-      .then(({ xml }) => {
-        res.status(200).header("Content-Type", "application/xml").send(xml);
-      })
-      .catch((err) => {
-        console.error("[SITEMAP MIDDLEWARE] Error, serving fallback:", err);
-        const simpleXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.amaanestate.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://www.amaanestate.com/properties</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-</urlset>`;
-        res.status(200).header("Content-Type", "application/xml").send(simpleXml);
-      });
-    return;
-  }
-
-  const isRobots = 
-    urlPath === "/robots.txt" || 
-    urlPath === "/api/robots.txt" || 
-    queryPath === "robots.txt" || 
-    xMatchedPath === "/robots.txt" ||
-    originalUrl.includes("robots.txt");
-
-  if (isRobots) {
-    res.status(200).header("Content-Type", "text/plain").send(generateRobotsTxt());
-    return;
-  }
-
-  next();
-});
 
 // Initialize Gemini Client Lazily using secure system variable
 let genAI: any = null;
@@ -840,114 +766,7 @@ async function startServer() {
     res.status(200).header("Content-Type", "text/plain").send(generateRobotsTxt());
   });
 
-  // Intercept news / article specific routes for crawlers and dynamic metadata injection
-  app.get("/news/:id", async (req, res, next) => {
-    try {
-      const idOrSlug = req.params.id;
-      const article = await getArticleMetadata(idOrSlug);
-      
-      if (article) {
-        const title = (article.seoTitle || article.title || "Amaan Intelligence Report");
-        const cleanContent = (article.content || "").replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        const desc = article.seoDescription || article.summary || (cleanContent ? cleanContent.substring(0, 160) + "..." : "A premium news development and localized intelligence briefing from AmaanEstate.");
-        
-        let imageUrl = article.socialImage || article.featuredImage;
-        if (!imageUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
-          imageUrl = article.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
-        }
-        if (!imageUrl) {
-          imageUrl = "/house_luxury_icon.png";
-        }
-        
-        await servePageWithMetadata(req, res, next, {
-          title,
-          description: desc,
-          imageUrl,
-          urlPath: `/news/${idOrSlug}`
-        });
-      } else {
-        next();
-      }
-    } catch (err) {
-      console.error("[SEO SERVER] News route handler failed:", err);
-      next();
-    }
-  });
 
-  // Dynamic properties metadata endpoint
-  app.get("/properties/:id", async (req, res, next) => {
-    try {
-      const id = req.params.id;
-      const listing = await getListingMetadata(id);
-      if (listing) {
-        const title = (listing.title || "Elite Property");
-        const desc = listing.description || `Premium real estate in the Somali Region. Location: ${listing.location || "Jigjiga"}. Price: ${listing.price || "Contact Us"}`;
-        const imageUrl = listing.images && listing.images[0] ? listing.images[0] : "/house_luxury_icon.png";
-        
-        await servePageWithMetadata(req, res, next, {
-          title,
-          description: desc,
-          imageUrl,
-          urlPath: `/properties/${id}`
-        });
-      } else {
-        next();
-      }
-    } catch (err) {
-      console.error("[SEO SERVER] Property route handler failed:", err);
-      next();
-    }
-  });
-
-  // Dynamic vehicles metadata endpoint
-  app.get("/vehicles/:id", async (req, res, next) => {
-    try {
-      const id = req.params.id;
-      const listing = await getListingMetadata(id);
-      if (listing) {
-        const title = (listing.title || "Premium Vehicle");
-        const desc = listing.description || `Luxury vehicle for hire or sale in Jigjiga, Somali Region. Location: ${listing.location || "Jigjiga"}. Price: ${listing.price || "Contact Us"}`;
-        const imageUrl = listing.images && listing.images[0] ? listing.images[0] : "/house_luxury_icon.png";
-        
-        await servePageWithMetadata(req, res, next, {
-          title,
-          description: desc,
-          imageUrl,
-          urlPath: `/vehicles/${id}`
-        });
-      } else {
-        next();
-      }
-    } catch (err) {
-      console.error("[SEO SERVER] Vehicle route handler failed:", err);
-      next();
-    }
-  });
-
-  // Dynamic agents metadata endpoint
-  app.get("/agents/:id", async (req, res, next) => {
-    try {
-      const id = req.params.id;
-      const broker = await getBrokerMetadata(id);
-      if (broker) {
-        const title = (broker.fullName || broker.name || "Amaan Broker Agent") + " - Verified Broker Agent";
-        const desc = broker.bio || `Connect with ${broker.fullName || broker.name || "verified broker agent"} on AmaanEstate. Specialty: ${broker.specialties || "Real Estate & Vehicles"}. Location: ${broker.location || "Somali Region"}.`;
-        const imageUrl = broker.profileImage || "/house_luxury_icon.png";
-        
-        await servePageWithMetadata(req, res, next, {
-          title,
-          description: desc,
-          imageUrl,
-          urlPath: `/agents/${id}`
-        });
-      } else {
-        next();
-      }
-    } catch (err) {
-      console.error("[SEO SERVER] Agent route handler failed:", err);
-      next();
-    }
-  });
 
   if (process.env.NODE_ENV !== "production") {
     app.use("*", async (req, res, next) => {
