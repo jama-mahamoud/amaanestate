@@ -40,6 +40,23 @@ export const app = express();
 app.use(express.json());
 
 // Helper functions for dynamic sitemap and robots.txt generation
+async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[SITEMAP] Query timed out after ${ms}ms.`);
+      resolve(failureValue);
+    }, ms);
+  });
+  return Promise.race([
+    promise.then((res) => {
+      clearTimeout(timeoutId);
+      return res;
+    }),
+    timeoutPromise
+  ]);
+}
+
 async function generateSitemapXml() {
   const urls: Array<{ loc: string; changefreq: string; priority: string }> = [
     { loc: "https://www.amaanestate.com/", changefreq: "daily", priority: "1.0" },
@@ -56,87 +73,119 @@ async function generateSitemapXml() {
   ];
 
   const firestoreDb = getAdminDb();
-  if (firestoreDb) {
+  
+  // CRITICAL: On Vercel, if process.env.FIREBASE_SERVICE_ACCOUNT is not defined, 
+  // any attempt to connect to Cloud Firestore will hang/timeout and fail with 500 FUNCTION_INVOCATION_FAILED.
+  // We explicitly bypass Firestore calls on Vercel if service account is not provided.
+  const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
+
+  if (firestoreDb && hasCredentials) {
     // 1. Fetch active properties and vehicles
     try {
-      const listingsSnap = await firestoreDb.collection("listings")
-        .where("status", "==", "active")
-        .get();
+      const listingsSnap = await withTimeout(
+        firestoreDb.collection("listings")
+          .where("status", "==", "active")
+          .get(),
+        2000,
+        null
+      );
       
-      listingsSnap.docs.forEach((docSnapshot: any) => {
-        const data = docSnapshot.data();
-        const id = docSnapshot.id;
-        if (data.category === "vehicle") {
-          urls.push({
-            loc: `https://www.amaanestate.com/vehicles/${id}`,
-            changefreq: "weekly",
-            priority: "0.7"
-          });
-        } else {
-          urls.push({
-            loc: `https://www.amaanestate.com/properties/${id}`,
-            changefreq: "weekly",
-            priority: "0.7"
-          });
-        }
-      });
+      if (listingsSnap && listingsSnap.docs) {
+        listingsSnap.docs.forEach((docSnapshot: any) => {
+          const data = docSnapshot.data();
+          const id = docSnapshot.id;
+          if (data.category === "vehicle") {
+            urls.push({
+              loc: `https://www.amaanestate.com/vehicles/${id}`,
+              changefreq: "weekly",
+              priority: "0.7"
+            });
+          } else {
+            urls.push({
+              loc: `https://www.amaanestate.com/properties/${id}`,
+              changefreq: "weekly",
+              priority: "0.7"
+            });
+          }
+        });
+      }
     } catch (dbErr) {
       console.error("[SITEMAP] Error fetching listings:", dbErr);
     }
 
     // 2. Fetch approved brokers/agents
     try {
-      const brokerSnap = await firestoreDb.collection("brokers")
-        .where("status", "==", "approved")
-        .get();
+      const brokerSnap = await withTimeout(
+        firestoreDb.collection("brokers")
+          .where("status", "==", "approved")
+          .get(),
+        2000,
+        null
+      );
       
-      brokerSnap.docs.forEach((docSnapshot: any) => {
-        const id = docSnapshot.id;
-        urls.push({
-          loc: `https://www.amaanestate.com/agents/${id}`,
-          changefreq: "weekly",
-          priority: "0.6"
+      if (brokerSnap && brokerSnap.docs) {
+        brokerSnap.docs.forEach((docSnapshot: any) => {
+          const id = docSnapshot.id;
+          urls.push({
+            loc: `https://www.amaanestate.com/agents/${id}`,
+            changefreq: "weekly",
+            priority: "0.6"
+          });
         });
-      });
+      }
     } catch (dbErr) {
       console.error("[SITEMAP] Error fetching brokers:", dbErr);
     }
 
     // 3. Fetch published articles
     try {
-      const articleSnap = await firestoreDb.collection("articles")
-        .where("published", "==", true)
-        .get();
+      const articleSnap = await withTimeout(
+        firestoreDb.collection("articles")
+          .where("published", "==", true)
+          .get(),
+        2000,
+        null
+      );
       
-      articleSnap.docs.forEach((docSnapshot: any) => {
-        const id = docSnapshot.id;
-        urls.push({
-          loc: `https://www.amaanestate.com/news/${id}`,
-          changefreq: "weekly",
-          priority: "0.6"
+      if (articleSnap && articleSnap.docs) {
+        articleSnap.docs.forEach((docSnapshot: any) => {
+          const id = docSnapshot.id;
+          urls.push({
+            loc: `https://www.amaanestate.com/news/${id}`,
+            changefreq: "weekly",
+            priority: "0.6"
+          });
         });
-      });
+      }
     } catch (dbErr) {
       console.error("[SITEMAP] Error fetching articles:", dbErr);
     }
 
     // 4. Fetch approved/active jobs
     try {
-      const jobsSnap = await firestoreDb.collection("jobs")
-        .where("status", "==", "approved")
-        .get();
+      const jobsSnap = await withTimeout(
+        firestoreDb.collection("jobs")
+          .where("status", "==", "approved")
+          .get(),
+        2000,
+        null
+      );
       
-      jobsSnap.docs.forEach((docSnapshot: any) => {
-        const id = docSnapshot.id;
-        urls.push({
-          loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
-          changefreq: "weekly",
-          priority: "0.6"
+      if (jobsSnap && jobsSnap.docs) {
+        jobsSnap.docs.forEach((docSnapshot: any) => {
+          const id = docSnapshot.id;
+          urls.push({
+            loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
+            changefreq: "weekly",
+            priority: "0.6"
+          });
         });
-      });
+      }
     } catch (dbErr) {
       console.error("[SITEMAP] Error fetching jobs:", dbErr);
     }
+  } else {
+    console.log("[SITEMAP] Skipping Firestore dynamic sitemap URL queries to prevent connection hangs/timeouts due to missing credentials.");
   }
 
   // Build XML
@@ -837,7 +886,9 @@ function getAdminDb() {
       const dbId = firebaseConfig.firestoreDatabaseId;
       const finalDbId = (dbId && dbId !== '(default)' && dbId !== 'default') ? dbId : undefined;
       
-      adminDb = getFirestore(finalDbId);
+      const apps = getApps();
+      const appRef = apps.length > 0 ? apps[0] : undefined;
+      adminDb = finalDbId ? getFirestore(appRef, finalDbId) : getFirestore();
       console.log("[PROD] Firebase Admin initialized for Project ID:", firebaseConfig.projectId || "unknown");
     } catch (err) {
       console.error("[PROD] Failed to initialize Firebase Admin:", err);
