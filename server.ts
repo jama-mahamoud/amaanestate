@@ -8,7 +8,17 @@ import { Resend } from 'resend';
 // Load environment variables immediately
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+function getResendClient() {
+  if (!resendClient) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn("[WARN] RESEND_API_KEY environment variable is not defined.");
+    }
+    resendClient = new Resend(apiKey || "re_mock_key");
+  }
+  return resendClient;
+}
 
 // Critical Startup Diagnostics for Production
 console.log("=== BACKEND PRODUCTION INITIALIZATION START ===");
@@ -559,7 +569,8 @@ app.post("/api/contact", async (req, res) => {
     return res.status(400).json({ error: "Name, email, and message are required" });
   }
   try {
-    await resend.emails.send({
+    const rc = getResendClient();
+    await rc.emails.send({
       from: 'AmaanEstate <onboarding@resend.dev>', // Use verified domain later
       to: 'jamamahamoud01@farrmuu',
       subject: `New Contact Form Submission: ${subject}`,
