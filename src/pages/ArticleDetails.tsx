@@ -24,9 +24,10 @@ export default function ArticleDetails() {
     if (!rawUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
       rawUrl = article.gallery.find(g => typeof g === 'string' && g.trim() !== '');
     }
-    // Use branded high-quality fallback logo/cover if no article images were uploaded
+    
+    // No fallback images for article shares (only article-specific featured image / thumbnail)
     if (!rawUrl) {
-      rawUrl = '/house_luxury_icon.png';
+      return undefined;
     }
     
     if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {

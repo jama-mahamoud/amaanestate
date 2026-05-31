@@ -43,6 +43,10 @@ const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
 // Careers and Jobs Module
 const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
 
+// Cities Directory Module
+const CitiesIndex = lazy(() => import('./pages/cities/CitiesIndex'));
+const CityDetails = lazy(() => import('./pages/cities/CityDetails'));
+
 // Product Custom Editors
 const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
 
@@ -109,6 +113,10 @@ export default function App() {
                 <Route path="agents" element={<AgentsList />} />
                 <Route path="agents/:id" element={<AgentDetails />} />
                 <Route path="agents/register" element={<AgentRegister />} />
+
+                {/* Cities Directory Module */}
+                <Route path="cities" element={<CitiesIndex />} />
+                <Route path="cities/:slug" element={<CityDetails />} />
 
 
                 {/* Other Services and Pages */}

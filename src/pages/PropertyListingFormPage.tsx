@@ -5,7 +5,8 @@ import {
   Building2, MapPin, Bed, Bath, Ruler, Car, ShieldCheck, 
   ArrowLeft, ArrowRight, Loader2, CheckCircle2, DollarSign,
   Upload, Info, Check, Phone, Mail, FileText, Compass,
-  Sparkles, Trash2, HelpCircle, Wifi, Droplet, Zap, Shield, Building
+  Sparkles, Trash2, HelpCircle, Wifi, Droplet, Zap, Shield, Building,
+  Globe, Search, X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { listingService } from '@/services/listingService';
@@ -18,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import ImageUpload from '@/components/listing/ImageUpload';
 import MapPicker from '@/components/location/MapPicker';
 import { toast } from 'sonner';
+import { CITIES_DATA } from '@/data/cities';
 
 type PropertyType = 'House' | 'Apartment' | 'Land' | 'Commercial' | 'Villa' | 'Vehicle';
 type ListingType = 'sale' | 'rent';
@@ -82,9 +84,9 @@ const INITIAL_STATE: FormState = {
   propertyType: 'House',
   listingType: 'sale',
   description: '',
-  country: 'Kenya',
-  region: 'Nairobi',
-  city: 'Nairobi',
+  country: '',
+  region: '',
+  city: '',
   district: '',
   streetAddress: '',
   latitude: undefined,
@@ -148,6 +150,9 @@ export default function PropertyListingFormPage() {
   const [existingImagesList, setExistingImagesList] = useState<string[]>([]);
   const [existingOwnershipUrl, setExistingOwnershipUrl] = useState<string>('');
   const [existingIdentityUrl, setExistingIdentityUrl] = useState<string>('');
+
+  const [citySelected, setCitySelected] = useState<boolean>(false);
+  const [citySearchQuery, setCitySearchQuery] = useState<string>('');
 
   // Authentication Gate check
   useEffect(() => {
@@ -221,6 +226,8 @@ export default function PropertyListingFormPage() {
               extLocation: listing.extLocation || '',
               extProfileImageUrl: listing.extProfileImageUrl || '',
             });
+
+            setCitySelected(true);
 
             if (listing.images && listing.images.length > 0) {
               setExistingImagesList(listing.images);
@@ -478,10 +485,16 @@ export default function PropertyListingFormPage() {
       {/* Decorative Brand Header */}
       <div className="w-full max-w-5xl mb-12 flex items-center justify-between z-10">
         <button 
-          onClick={() => navigate(-1)} 
+          onClick={() => {
+            if (citySelected && !isEditMode) {
+              setCitySelected(false);
+            } else {
+              navigate(-1);
+            }
+          }} 
           className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-luxury-gold transition-colors"
         >
-          <ArrowLeft size={14} /> Back
+          <ArrowLeft size={14} /> {citySelected && !isEditMode ? 'Back to City Selection' : 'Back'}
         </button>
         <div className="text-right">
           <p className="text-[10px] text-luxury-gold font-black uppercase tracking-[0.4em] mb-1">AmaanEstate Host</p>
@@ -489,15 +502,132 @@ export default function PropertyListingFormPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl text-center mb-10 z-10">
-        <p className="text-luxury-gold text-xs font-black uppercase tracking-[0.3em] mb-2">List Your Property</p>
-        <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight">
-          {isEditMode ? 'Modify Listing Details' : 'List Your Premium Property'}
-        </h1>
-        <p className="text-white/40 text-sm max-w-lg mx-auto mt-2 font-light">
-          Create and publish your verified property listing to East Africa’s largest audience.
-        </p>
-      </div>
+      {!citySelected && !isEditMode ? (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-xl mx-auto z-10 pt-10"
+        >
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 space-y-6">
+            <div className="text-center space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C5A059]/5 border border-[#C5A059]/20 text-[10px] text-[#C5A059] font-medium tracking-wider uppercase mb-1">
+                <Globe className="w-3.5 h-3.5" /> Market Activation
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-display font-medium text-white tracking-tight">
+                Where is your property located?
+              </h1>
+              <p className="text-white/40 text-xs font-light">
+                Type or select the city where your property is situated to launch the listing form.
+              </p>
+            </div>
+
+            {/* Instant Filter Search Input */}
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-3.5 h-5 w-5 text-[#C5A059] pointer-events-none" />
+                <Input
+                  type="text"
+                  autoFocus
+                  placeholder="Type city name (e.g. Mogadishu, Jigjiga, Hargeisa...)"
+                  value={citySearchQuery}
+                  onChange={e => setCitySearchQuery(e.target.value)}
+                  className="pl-12 pr-10 bg-white/5 border-white/10 h-12 text-sm text-white placeholder:text-white/20 focus-visible:ring-[#C5A059] focus-visible:border-[#C5A059]/40 rounded-xl w-full"
+                />
+                {citySearchQuery && (
+                  <button 
+                    onClick={() => setCitySearchQuery('')}
+                    className="absolute right-4 top-3.5 text-white/40 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Instant Auto-complete list */}
+              <div className="max-h-[280px] overflow-y-auto rounded-xl border border-white/5 divide-y divide-white/5 bg-[#161616]">
+                {(() => {
+                  const query = citySearchQuery.toLowerCase().trim();
+                  const filtered = CITIES_DATA.filter(city => 
+                    city.name.toLowerCase().includes(query) ||
+                    city.dbValue.toLowerCase().includes(query) ||
+                    city.region.toLowerCase().includes(query)
+                  );
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-4 text-center text-white/30 text-xs">
+                        No supported marketplace hub found for "{citySearchQuery}".
+                      </div>
+                    );
+                  }
+
+                  return filtered.map(city => (
+                    <button
+                      key={city.slug}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          city: city.dbValue,
+                          region: city.region,
+                          country: city.country
+                        }));
+                        setCitySelected(true);
+                        setCitySearchQuery(''); // clear query
+                        toast.success(`Market set to ${city.dbValue}. Dynamic form ready!`);
+                      }}
+                      className="w-full text-left p-4 hover:bg-[#C5A059]/10 transition-all flex items-center justify-between group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 group-hover:border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] shrink-0">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-white group-hover:text-[#C5A059] transition-colors">
+                            {city.dbValue}
+                          </div>
+                          <div className="text-[10px] text-white/40">
+                            {city.region}, {city.country}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] text-[#C5A059] font-medium tracking-wider uppercase">Select</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
+                      </div>
+                    </button>
+                  ));
+                })()}
+              </div>
+
+              <div className="pt-2 text-center">
+                <span className="text-[10px] text-white/30 uppercase tracking-widest font-mono">
+                  AmaanEstate supports 22 municipal nodes
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <>
+          <div className="w-full max-w-5xl text-center mb-10 z-10 space-y-4">
+            <p className="text-luxury-gold text-xs font-black uppercase tracking-[0.3em]">Step 2: Property Form</p>
+            <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight">
+              {isEditMode ? `Modify Listing in ${formData.city}` : `List Property in ${formData.city}`}
+            </h1>
+            <p className="text-white/40 text-sm max-w-lg mx-auto font-light">
+              Your listing configurations have been customized relative to the market node of <span className="text-luxury-gold font-bold">{formData.city}</span>.
+            </p>
+            {!isEditMode && (
+              <button
+                type="button"
+                onClick={() => setCitySelected(false)}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-[#C5A059] hover:bg-[#C5A059]/10 hover:border-[#C5A059]/30 transition-all cursor-pointer"
+              >
+                <ArrowLeft size={12} /> Change Selected City
+              </button>
+            )}
+          </div>
 
       {/* Progress Wizard Scroller */}
       <div className="w-full max-w-5xl mb-12 hidden md:block z-10">
@@ -680,7 +810,8 @@ export default function PropertyListingFormPage() {
                         name="country"
                         value={formData.country}
                         onChange={handleTextChange}
-                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm"
+                        disabled
+                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white text-sm opacity-65 cursor-not-allowed font-medium"
                       />
                     </div>
                     <div className="space-y-2">
@@ -690,7 +821,8 @@ export default function PropertyListingFormPage() {
                         name="region"
                         value={formData.region}
                         onChange={handleTextChange}
-                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white placeholder:text-white/10 text-sm"
+                        disabled
+                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white placeholder:text-white/10 text-sm opacity-65 cursor-not-allowed font-medium"
                       />
                     </div>
                   </div>
@@ -703,7 +835,8 @@ export default function PropertyListingFormPage() {
                         name="city"
                         value={formData.city}
                         onChange={handleTextChange}
-                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white placeholder:text-white/10 text-sm"
+                        disabled
+                        className="bg-white/5 border-white/5 h-12 rounded-xl text-white placeholder:text-white/10 text-sm opacity-65 cursor-not-allowed font-medium"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1430,6 +1563,8 @@ export default function PropertyListingFormPage() {
           </motion.div>
         )}
       </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }

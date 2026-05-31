@@ -680,11 +680,20 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     
     const title = seoData.title + " | AmaanEstate";
     const desc = seoData.description.substring(0, 160);
-    let imageUrl = seoData.imageUrl || "https://www.amaanestate.com/house_luxury_icon.png";
-    if (imageUrl.startsWith("/")) {
-      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-      const host = req.get('host') || 'www.amaanestate.com';
-      imageUrl = `${protocol}://${host}${imageUrl}`;
+    let imageUrl = seoData.imageUrl;
+    
+    if (imageUrl) {
+      if (imageUrl.startsWith("/")) {
+        const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        const host = req.get('host') || 'www.amaanestate.com';
+        imageUrl = `${protocol}://${host}${imageUrl}`;
+      }
+      
+      // Append cache buster to the image URL so CDNs/scrapers don't cache stale images
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        const separator = imageUrl.includes('?') ? '&' : '?';
+        imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
+      }
     }
     const absolutePageUrl = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.get('host') || 'www.amaanestate.com'}${seoData.urlPath}`;
     
@@ -697,23 +706,32 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       .replace(/<meta[^>]*property="twitter:[^>]*>/gi, '')
       .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
       
+    const imageTags = imageUrl ? `
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:image" content="${imageUrl}" />` : '';
+
     const dynamicMetaTags = `
     <title>${title}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:url" content="${absolutePageUrl}" />
-    <meta property="og:image" content="${imageUrl}" />
+    <meta property="og:url" content="${absolutePageUrl}" />${imageTags}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
     <meta name="twitter:url" content="${absolutePageUrl}" />
-    <meta name="twitter:image" content="${imageUrl}" />
     <link rel="canonical" href="${absolutePageUrl}" />
     `;
     
     template = template.replace(/<head>/i, `<head>\n${dynamicMetaTags}`);
+    
+    // Disable HTTP/CDN caching via response headers for correct dynamic previews
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    
     res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
   } catch (err) {
     console.error("[SEO SERVER] servePageWithMetadata failed:", err);
@@ -724,7 +742,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
 }
 
 async function startServer() {
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = 3000;
 
   // Vite middleware for development setup (moved up so we can reuse instance)
   if (process.env.NODE_ENV !== "production") {
@@ -766,7 +784,7 @@ async function startServer() {
       if (meta) {
         const title = meta.title || "Latest News Article";
         const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
-        const imageUrl = meta.featuredImage || "/house_luxury_icon.png";
+        const imageUrl = (meta.featuredImage && meta.featuredImage.trim() !== '') ? meta.featuredImage : undefined;
         return servePageWithMetadata(req, res, next, {
           title,
           description,
@@ -791,7 +809,7 @@ async function startServer() {
       if (meta) {
         const title = meta.title || "Premium Real Estate Property";
         const description = meta.description || `View features of this ${meta.category || "property"} in ${meta.city || "Somali Region"}.`;
-        const imageUrl = meta.images?.[0] || "/house_luxury_icon.png";
+        const imageUrl = (meta.images?.[0] && meta.images[0].trim() !== '') ? meta.images[0] : undefined;
         return servePageWithMetadata(req, res, next, {
           title,
           description,
@@ -816,7 +834,7 @@ async function startServer() {
       if (meta) {
         const title = meta.title || "Luxury Vehicle Rental";
         const description = meta.description || `View features of this vehicle/luxury hire in ${meta.city || "Somali Region"}.`;
-        const imageUrl = meta.images?.[0] || "/house_luxury_icon.png";
+        const imageUrl = (meta.images?.[0] && meta.images[0].trim() !== '') ? meta.images[0] : undefined;
         return servePageWithMetadata(req, res, next, {
           title,
           description,
@@ -841,7 +859,7 @@ async function startServer() {
       if (meta) {
         const title = meta.fullName || "Certified Broker";
         const description = `Contact professional real estate specialist in ${meta.city || "Somali Region"}. Learn more details.`;
-        const imageUrl = meta.profilePhotoUrl || meta.logo || "/house_luxury_icon.png";
+        const imageUrl = (meta.profilePhotoUrl && meta.profilePhotoUrl.trim() !== '') ? meta.profilePhotoUrl : ((meta.logo && meta.logo.trim() !== '') ? meta.logo : undefined);
         return servePageWithMetadata(req, res, next, {
           title,
           description,

@@ -23,8 +23,9 @@ import {
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
-import somaliHeroImg from '@/assets/images/somali_agency_hero.webp';
 import { useSEO } from '@/hooks/useSEO';
+import { CITIES_DATA } from '@/data/cities';
+import { MapPin, Globe } from 'lucide-react';
 
 const SECTORS_LIST = [
   { label: 'All Sectors', value: '' },
@@ -85,21 +86,6 @@ export default function Home() {
       
       const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
       mobileQuery.addEventListener('change', listener);
-      
-      // Dynamic preload link for WebP hero image on desktop
-      if (!mobileQuery.matches) {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = somaliHeroImg;
-        link.type = 'image/webp';
-        link.setAttribute('fetchpriority', 'high');
-        document.head.appendChild(link);
-        return () => {
-          mobileQuery.removeEventListener('change', listener);
-          document.head.removeChild(link);
-        };
-      }
       
       return () => {
         mobileQuery.removeEventListener('change', listener);
@@ -266,40 +252,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
-      <section className="relative pt-10 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center">
-        <motion.div 
-          className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none"
-        >
-          <motion.img 
-            animate={{ scale: [1, 1.05, 1, 1.05, 1] }}
-            transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-            src={somaliHeroImg} 
-            alt="Somali real estate hero"
-            width={1920}
-            height={1080}
-            className="w-full h-full object-cover filter brightness-[0.7] saturate-[1.1] object-center"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-black/25" />
-        </motion.div>
-
-        <div className="container mx-auto px-4 relative z-10 w-full">
-          <div 
-            className="block md:hidden w-full relative mb-1 rounded-2xl overflow-hidden border border-white/10 shadow-2xl h-auto"
-          >
-            <img 
-              src={somaliHeroImg}
-              alt="Somali real estate hero"
-              width={400}
-              height={218}
-              loading="lazy"
-              className="w-full h-auto object-cover filter brightness-[0.7]"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-          </div>
-
+      <section className="relative pt-28 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center bg-[#0B0D17]">
+        <div className="container mx-auto px-4 relative z-20 w-full">
           <div className="max-w-2xl text-left -mt-1 md:mt-0">
             <motion.h1 
               initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -606,6 +560,60 @@ export default function Home() {
 
           </div>
 
+        </div>
+      </section>
+
+      {/* Dynamic Browse by City Section */}
+      <section className="py-24 bg-super-black border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#C5A059]/1 to-transparent pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#C5A059] uppercase tracking-widest bg-[#C5A059]/5 border border-[#C5A059]/25 px-2.5 py-1 rounded-md mb-3">
+                <Globe className="w-3 h-3" /> Regional Markets
+              </span>
+              <h2 className="text-3xl font-display text-white mb-4">Browse by City Hub</h2>
+              <p className="text-white/40 text-sm">Discover verified properties and vetted local professionals operating across 22 major cities and regions in Somalia, Somaliland, and Ethiopia.</p>
+            </div>
+            
+            <div className="shrink-0">
+              <Link 
+                to="/cities" 
+                className="inline-flex items-center gap-2 group text-xs font-bold text-[#C5A059] bg-[#C5A059]/5 hover:bg-[#C5A059] hover:text-black border border-[#C5A059]/20 hover:border-[#C5A059] px-6 py-3 rounded-xl transition-all duration-300 shadow-md shadow-[#C5A059]/5"
+              >
+                View 22 Cities Directory <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+            {CITIES_DATA.slice(0, 6).map(city => (
+              <Link
+                key={city.slug}
+                to={`/cities/${city.slug}`}
+                className="bg-[#111]/40 border border-white/5 hover:border-[#C5A059]/20 p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden block"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${city.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
+                <div className="relative z-10 space-y-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-[#C5A059]/10 border border-white/10 group-hover:border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] transition-colors duration-300">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white group-hover:text-[#C5A059] transition-colors truncate">
+                      {city.name.replace(' Coastal', '').replace(' Hub', '').replace(' Province', '').replace(' Port', '').replace(' Capital', '').replace(' Region', '')}
+                    </h4>
+                    <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider truncate">
+                      {city.region}
+                    </p>
+                  </div>
+                  <div className="text-[10px] text-[#C5A059]/80 font-medium group-hover:underline flex items-center gap-1 pt-1 justify-between">
+                    <span>Explore Hub</span>
+                    <ArrowRight className="w-3 h-3 -rotate-45 text-[#C5A059]/80 group-hover:text-white transition-colors" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
