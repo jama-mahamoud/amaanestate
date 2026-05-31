@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
-import somaliCoupleKeyImg from '@/assets/images/somali_couple_key_1780227695768.png';
+import somaliLuxuryVillaImg from '@/assets/images/somali_luxury_villa_1780228310940.png';
 import { useSEO } from '@/hooks/useSEO';
 import { CITIES_DATA } from '@/data/cities';
 import { MapPin, Globe } from 'lucide-react';
@@ -254,11 +254,11 @@ export default function Home() {
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
       <section className="relative pt-28 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center bg-[#0B0D17]">
-        {/* Background Image Overlay depicting Somali couple sharing/handing over keys */}
+        {/* Background Image Overlay presenting a premier Somali luxury villa asset */}
         <div className="absolute inset-0 z-10 w-full h-full select-none pointer-events-none overflow-hidden">
           <img 
-            src={somaliCoupleKeyImg} 
-            alt="Elegant Somali couple receiving house keys"
+            src={somaliLuxuryVillaImg} 
+            alt="Premier Somali luxury architectural villa"
             className="w-full h-full object-cover block opacity-40 brightness-[0.75] saturate-[1.1] object-center"
             referrerPolicy="no-referrer"
           />
