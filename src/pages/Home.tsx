@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
+import somaliCoupleKeyImg from '@/assets/images/somali_couple_key_1780227695768.png';
 import { useSEO } from '@/hooks/useSEO';
 import { CITIES_DATA } from '@/data/cities';
 import { MapPin, Globe } from 'lucide-react';
@@ -253,6 +254,18 @@ export default function Home() {
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
       <section className="relative pt-28 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center bg-[#0B0D17]">
+        {/* Background Image Overlay depicting Somali couple sharing/handing over keys */}
+        <div className="absolute inset-0 z-10 w-full h-full select-none pointer-events-none overflow-hidden">
+          <img 
+            src={somaliCoupleKeyImg} 
+            alt="Elegant Somali couple receiving house keys"
+            className="w-full h-full object-cover block opacity-40 brightness-[0.75] saturate-[1.1] object-center"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0D17]/95 via-[#0B0D17]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0D17] via-transparent to-[#0B0D17]/45" />
+        </div>
+
         <div className="container mx-auto px-4 relative z-20 w-full">
           <div className="max-w-2xl text-left -mt-1 md:mt-0">
             <motion.h1 
