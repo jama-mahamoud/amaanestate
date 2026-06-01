@@ -111,7 +111,14 @@ service cloud.firestore {
     }
 
     function isValidArticle(data) {
-      let allowedFields = ['title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 'gallery', 'tags', 'seoTitle', 'seoDescription', 'authorId', 'isFeatured', 'published', 'views', 'createdAt', 'updatedAt'];
+      let allowedFields = [
+        'title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 
+        'gallery', 'tags', 'seoTitle', 'seoDescription', 'authorId', 'isFeatured', 
+        'published', 'views', 'createdAt', 'updatedAt',
+        'status', 'layoutType', 'sidebarPlacement', 'backgroundColor', 'cardStyle', 
+        'borderRadius', 'shadowIntensity', 'focusKeyword', 'seoScore', 'socialImage', 
+        'priority', 'homepageSection', 'showAuthor', 'publishSchedule'
+      ];
       return data.keys().hasAll(['title', 'slug', 'content', 'category', 'language', 'authorId', 'published', 'createdAt'])
         && data.title is string && data.title.size() <= 200
         && data.slug is string && data.slug.size() <= 100

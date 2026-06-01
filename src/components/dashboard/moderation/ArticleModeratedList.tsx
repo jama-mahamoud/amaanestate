@@ -55,13 +55,13 @@ const performEditorialAudit = (article: Article): ValidationReport => {
 
   // Slug SEO Audit
   if (!article.slug || article.slug.trim() === '') {
-    issues.push({ field: 'SEO Slug', severity: 'error', message: 'SEO URL identification slug is missing. Proper routing requires a slug.' });
+    issues.push({ field: 'SEO Slug', severity: 'warning', message: 'SEO URL identification slug is missing. Proper routing requires a slug.' });
     score -= 15;
   }
 
   // Summary / Meta Description Audit
   if (!article.summary || article.summary.trim() === '') {
-    issues.push({ field: 'Summary/Meta Description', severity: 'error', message: 'Executive summary (meta description) is completely blank. Search engines and readers depend on this.' });
+    issues.push({ field: 'Summary/Meta Description', severity: 'warning', message: 'Executive summary (meta description) is completely blank. Search engines and readers depend on this.' });
     score -= 20;
   } else if (article.summary.trim().length > 250) {
     issues.push({ field: 'Summary/Meta Description', severity: 'warning', message: 'Summary is slightly verbose (exceeds recommended 250 characters).' });
@@ -70,13 +70,13 @@ const performEditorialAudit = (article: Article): ValidationReport => {
 
   // Hero Image Audit
   if (!article.featuredImage || article.featuredImage.trim() === '') {
-    issues.push({ field: 'Featured Image', severity: 'error', message: 'Primary vector hero image asset is missing. A visual anchor is required.' });
+    issues.push({ field: 'Featured Image', severity: 'warning', message: 'Primary vector hero image asset is missing. A visual anchor is required.' });
     score -= 20;
   }
 
   // Category subject classification
   if (!article.category || article.category.trim() === '') {
-    issues.push({ field: 'Subject Category', severity: 'error', message: 'Editorial database category classifier is unassigned.' });
+    issues.push({ field: 'Subject Category', severity: 'warning', message: 'Editorial database category classifier is unassigned.' });
     score -= 10;
   }
 
@@ -91,7 +91,7 @@ const performEditorialAudit = (article: Article): ValidationReport => {
   const wordCount = contentText.split(/\s+/).filter(Boolean).length;
   
   if (wordCount < 40) {
-    issues.push({ field: 'Content Body', severity: 'error', message: `Word count is critical (${wordCount} words). A professional report requires at least 40 words.` });
+    issues.push({ field: 'Content Body', severity: 'warning', message: `Word count is low (${wordCount} words). A professional report recommends at least 40 words.` });
     score -= 20;
   } else if (wordCount < 150) {
     issues.push({ field: 'Content Body', severity: 'warning', message: `Recommended length for high indexing index is 150+ words (currently ${wordCount} words).` });

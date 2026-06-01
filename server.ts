@@ -594,20 +594,24 @@ async function getArticleMetadata(idOrSlug: string) {
     return null;
   }
   try {
-    // Try Doc ID first
+    // Try Doc ID first with 1500ms timeout
     const docRef = firestoreDb.collection("articles").doc(idOrSlug);
-    const docSnap = await docRef.get();
-    if (docSnap.exists) {
+    const docSnap = await withTimeout(docRef.get(), 1500, null as any);
+    if (docSnap && docSnap.exists) {
       return { id: docSnap.id, ...docSnap.data() };
     }
     
-    // Fallback: try by slug
-    const querySnap = await firestoreDb.collection("articles")
-      .where("slug", "==", idOrSlug)
-      .limit(1)
-      .get();
+    // Fallback: try by slug with 1500ms timeout
+    const querySnap = await withTimeout(
+      firestoreDb.collection("articles")
+        .where("slug", "==", idOrSlug)
+        .limit(1)
+        .get(),
+      1500,
+      null as any
+    );
     
-    if (!querySnap.empty) {
+    if (querySnap && !querySnap.empty) {
       const doc = querySnap.docs[0];
       return { id: doc.id, ...doc.data() };
     }
@@ -622,8 +626,8 @@ async function getListingMetadata(id: string) {
   if (!firestoreDb) return null;
   try {
     const docRef = firestoreDb.collection("listings").doc(id);
-    const docSnap = await docRef.get();
-    if (docSnap.exists) {
+    const docSnap = await withTimeout(docRef.get(), 1500, null as any);
+    if (docSnap && docSnap.exists) {
       return { id: docSnap.id, ...docSnap.data() };
     }
   } catch (error) {
@@ -637,8 +641,8 @@ async function getBrokerMetadata(id: string) {
   if (!firestoreDb) return null;
   try {
     const docRef = firestoreDb.collection("brokers").doc(id);
-    const docSnap = await docRef.get();
-    if (docSnap.exists) {
+    const docSnap = await withTimeout(docRef.get(), 1500, null as any);
+    if (docSnap && docSnap.exists) {
       return { id: docSnap.id, ...docSnap.data() };
     }
   } catch (error) {

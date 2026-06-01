@@ -63,25 +63,25 @@ const performEditorialAudit = (article: Article): ValidationReport => {
 
   // Slug Audit
   if (!article.slug || article.slug.trim() === '') {
-    issues.push({ field: 'SEO URL Slug', severity: 'error', message: 'Slug ID is unassigned. Safe query engine mapping requires a slug.' });
+    issues.push({ field: 'SEO URL Slug', severity: 'warning', message: 'Slug ID is unassigned. Safe query engine mapping requires a slug.' });
     score -= 15;
   }
 
   // Summary Audit
   if (!article.summary || article.summary.trim() === '') {
-    issues.push({ field: 'Meta Description/Summary', severity: 'error', message: 'Meta description/executive summary is blank. Essential for indexing and SEO lookup.' });
+    issues.push({ field: 'Meta Description/Summary', severity: 'warning', message: 'Meta description/executive summary is blank. Essential for indexing and SEO lookup.' });
     score -= 20;
   }
 
   // Featured Image Check
   if (!article.featuredImage || article.featuredImage.trim() === '') {
-    issues.push({ field: 'Hero Media Asset', severity: 'error', message: 'Featured image is unassigned. Visual content anchors are required.' });
+    issues.push({ field: 'Hero Media Asset', severity: 'warning', message: 'Featured image is unassigned. Visual content anchors are required.' });
     score -= 20;
   }
 
   // Classification Category Check
   if (!article.category || article.category.trim() === '') {
-    issues.push({ field: 'Subject Category', severity: 'error', message: 'No target category selected for standard grid index mapping.' });
+    issues.push({ field: 'Subject Category', severity: 'warning', message: 'No target category selected for standard grid index mapping.' });
     score -= 10;
   }
 
@@ -105,7 +105,7 @@ const performEditorialAudit = (article: Article): ValidationReport => {
   const wordCount = textOnly.split(/\s+/).filter(Boolean).length;
   
   if (wordCount < 40) {
-    issues.push({ field: 'Editorial Content Body', severity: 'error', message: `Word count is too low (${wordCount} words). High tier journalism requires 40+ words.` });
+    issues.push({ field: 'Editorial Content Body', severity: 'warning', message: `Word count is low (${wordCount} words). High tier journalism recommends 40+ words.` });
     score -= 20;
   } else if (wordCount < 150) {
     issues.push({ field: 'Editorial Content Body', severity: 'warning', message: `Short brief (${wordCount} words). 150+ words is recommended for SEO density.` });

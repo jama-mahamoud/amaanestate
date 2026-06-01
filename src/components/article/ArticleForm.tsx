@@ -172,16 +172,20 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
   }, [formData.title, initialData]);
 
   const validateFormSEO = (): boolean => {
-    const issues: string[] = [];
-    if (!formData.title?.trim()) issues.push('Headline/Title');
-    if (!formData.summary?.trim()) issues.push('Short Description/Meta Classifiers');
-    if (!formData.featuredImage?.trim()) issues.push('Featured Image');
-    if (totalWordCount < 40) issues.push(`Sufficient word count (currently ${totalWordCount} words, minimum 40 words required)`);
-    if (!formData.category?.trim()) issues.push('Category Selection');
-
-    if (issues.length > 0) {
-      toast.error(`Publishing Denied: Please complete required details (${issues.join(', ')}). Work can still be saved as a Draft.`);
+    if (!formData.title?.trim()) {
+      toast.error('The article headline is required before publishing.');
       return false;
+    }
+    
+    // Warn about other fields but do not block publishing
+    const warnings: string[] = [];
+    if (!formData.summary?.trim()) warnings.push('Summary');
+    if (!formData.featuredImage?.trim()) warnings.push('Featured Image');
+    if (totalWordCount < 40) warnings.push('Word count is low (under 40 words)');
+    if (!formData.category?.trim()) warnings.push('Category');
+    
+    if (warnings.length > 0) {
+      toast.warning(`Editorial Notice: Publishing with warnings (${warnings.join(', ')}).`);
     }
     return true;
   };
