@@ -56,7 +56,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
 
   return (
     <div className="mb-20">
-      <Link to={`/news/${article.id}`} className="group block relative">
+      <Link to={`/news/${article.slug || article.id}`} className="group block relative">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-white/[0.02] hover:bg-white/[0.04] p-6 lg:p-8 rounded-[2.5rem] border border-white/5 hover:border-[#C5A059]/20 transition-all duration-500">
           <div className="lg:col-span-7 aspect-[16/10] rounded-[1.8rem] overflow-hidden relative shadow-2xl bg-white/5">
             <img 
@@ -116,7 +116,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
       className="h-full"
     >
       <Link 
-        to={`/news/${article.id}`} 
+        to={`/news/${article.slug || article.id}`} 
         className="flex flex-col h-full group bg-white/[0.02] border border-white/5 hover:border-[#C5A059]/30 rounded-2xl overflow-hidden hover:bg-white/[0.04] hover:shadow-2xl transition-all duration-300"
       >
         <div className="aspect-[16/10] overflow-hidden bg-white/5 relative">

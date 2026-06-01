@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Calendar, Clock, ArrowLeft, Share2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import NotFoundState from '@/components/NotFoundState';
 
 export default function ArticleDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,10 +59,18 @@ export default function ArticleDetails() {
         }
         
         if (active) {
-          setArticle(data);
           if (data) {
-             const allArticles = await articleService.getArticles();
-             if (active) setRelatedArticles(allArticles.filter(a => a.id !== data.id).slice(0, 3));
+            const targetSlug = data.slug || id;
+            if (id !== targetSlug) {
+              console.log(`[CLIENT-SIDE] Redirecting from /news/${id} to /news/${targetSlug}`);
+              navigate(`/news/${targetSlug}`, { replace: true });
+              return;
+            }
+            setArticle(data);
+            const allArticles = await articleService.getArticles();
+            if (active) setRelatedArticles(allArticles.filter(a => a.id !== data.id).slice(0, 3));
+          } else {
+            setArticle(null);
           }
           setLoading(false);
         }
@@ -69,7 +78,7 @@ export default function ArticleDetails() {
       fetchArticle();
     }
     return () => { active = false; };
-  }, [id]);
+  }, [id, navigate]);
 
   const formatDate = useCallback((dateValue: any) => {
     if (!dateValue || !dateValue.seconds) return 'Recently Published';

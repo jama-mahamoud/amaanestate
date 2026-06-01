@@ -90,10 +90,19 @@ export const articleService = {
       const q = query(collection(db, ARTICLES_COLLECTION));
       const snapshot = await getDocs(q);
       
-      let docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Article[];
+      let docs = snapshot.docs.map(doc => {
+        const docData = doc.data();
+        let finalSlug = docData.slug;
+        if (!finalSlug && docData.title) {
+          finalSlug = docData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+        if (!finalSlug) finalSlug = doc.id;
+        return {
+          id: doc.id,
+          ...docData,
+          slug: finalSlug
+        };
+      }) as Article[];
       
       // Client-side safe, defensive filtering
       if (publishedOnly) {
@@ -137,7 +146,13 @@ export const articleService = {
       const docRef = doc(db, ARTICLES_COLLECTION, id);
       const snapshot = await getDoc(docRef);
       if (!snapshot.exists()) return null;
-      const data = { id: snapshot.id, ...snapshot.data() } as Article;
+      const docData = snapshot.data();
+      let finalSlug = docData.slug;
+      if (!finalSlug && docData.title) {
+        finalSlug = docData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!finalSlug) finalSlug = snapshot.id;
+      const data = { id: snapshot.id, ...docData, slug: finalSlug } as Article;
       articleDetailCache[id] = { data, timestamp: Date.now() };
       return data;
     } catch (error) {
@@ -152,7 +167,12 @@ export const articleService = {
       const snapshot = await getDocs(q);
       if (snapshot.empty) return null;
       const docData = snapshot.docs[0];
-      return { id: docData.id, ...docData.data() } as Article;
+      const data = { id: docData.id, ...docData.data() } as Article;
+      if (!data.slug && data.title) {
+        data.slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!data.slug) data.slug = docData.id;
+      return data;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `${ARTICLES_COLLECTION}/slug/${slug}`);
       return null;

@@ -149,9 +149,16 @@ async function generateSitemapXml() {
       
       if (articleSnap && articleSnap.docs) {
         articleSnap.docs.forEach((docSnapshot: any) => {
-          const id = docSnapshot.id;
+          const data = docSnapshot.data();
+          let slug = data.slug;
+          if (!slug && data.title) {
+            slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+          }
+          if (!slug) {
+            slug = docSnapshot.id;
+          }
           urls.push({
-            loc: `https://www.amaanestate.com/news/${id}`,
+            loc: `https://www.amaanestate.com/news/${slug}`,
             changefreq: "weekly",
             priority: "0.6"
           });
@@ -598,7 +605,15 @@ async function getArticleMetadata(idOrSlug: string) {
     const docRef = firestoreDb.collection("articles").doc(idOrSlug);
     const docSnap = await withTimeout(docRef.get(), 1500, null as any);
     if (docSnap && docSnap.exists) {
-      return { id: docSnap.id, ...docSnap.data() };
+      const data = docSnap.data();
+      let slug = data.slug;
+      if (!slug && data.title) {
+        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!slug) {
+        slug = docSnap.id;
+      }
+      return { id: docSnap.id, ...data, slug };
     }
     
     // Fallback: try by slug with 1500ms timeout
@@ -613,7 +628,15 @@ async function getArticleMetadata(idOrSlug: string) {
     
     if (querySnap && !querySnap.empty) {
       const doc = querySnap.docs[0];
-      return { id: doc.id, ...doc.data() };
+      const data = doc.data();
+      let slug = data.slug;
+      if (!slug && data.title) {
+        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!slug) {
+        slug = doc.id;
+      }
+      return { id: doc.id, ...data, slug };
     }
   } catch (error) {
     console.error("[SEO SERVER] Error fetching article by doc id or slug:", error);
@@ -786,6 +809,13 @@ async function startServer() {
     try {
       const meta = await getArticleMetadata(req.params.id);
       if (meta) {
+        // Redirect 301 to slug if current identifier is not the slug
+        const targetSlug = meta.slug || req.params.id;
+        if (req.params.id !== targetSlug) {
+          console.log(`[SEO SERVER] Redirecting 301 from /news/${req.params.id} to /news/${targetSlug}`);
+          return res.redirect(301, `/news/${targetSlug}`);
+        }
+
         const title = meta.title || "Latest News Article";
         const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
         const imageUrl = (meta.featuredImage && meta.featuredImage.trim() !== '') ? meta.featuredImage : undefined;
@@ -793,7 +823,7 @@ async function startServer() {
           title,
           description,
           imageUrl,
-          urlPath: `/news/${req.params.id}`
+          urlPath: `/news/${targetSlug}`
         });
       }
     } catch (err) {
