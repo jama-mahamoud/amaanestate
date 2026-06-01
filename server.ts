@@ -709,7 +709,7 @@ async function getBrokerMetadata(id: string) {
   return null;
 }
 
-async function servePageWithMetadata(req: express.Request, res: express.Response, next: express.NextFunction, seoData: { title: string; description: string; imageUrl?: string; urlPath: string }) {
+async function servePageWithMetadata(req: express.Request, res: express.Response, next: express.NextFunction, seoData: { title: string; description: string; imageUrl?: string; urlPath: string; type?: string }) {
   try {
     let templatePath = "";
     const searchPaths = [
@@ -742,13 +742,18 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     
     const title = seoData.title + " | AmaanEstate";
     const desc = seoData.description.substring(0, 160);
+    const ogType = seoData.type || "website";
     let imageUrl = seoData.imageUrl;
     
+    const host = req.get('host') || 'www.amaanestate.com';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const protocol = isLocal ? 'http' : 'https';
+
     if (imageUrl) {
       if (imageUrl.startsWith("/")) {
-        const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-        const host = req.get('host') || 'www.amaanestate.com';
         imageUrl = `${protocol}://${host}${imageUrl}`;
+      } else if (!isLocal && imageUrl.startsWith('http://')) {
+        imageUrl = imageUrl.replace(/^http:\/\//i, 'https://');
       }
       
       // Append cache buster to the image URL so CDNs/scrapers don't cache stale images
@@ -757,7 +762,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
         imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
       }
     }
-    const absolutePageUrl = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.get('host') || 'www.amaanestate.com'}${seoData.urlPath}`;
+    const absolutePageUrl = `${protocol}://${host}${seoData.urlPath}`;
     
     // Clean old meta tags
     template = template
@@ -775,7 +780,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     const dynamicMetaTags = `
     <title>${title}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="${ogType}" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
     <meta property="og:url" content="${absolutePageUrl}" />${imageTags}
@@ -858,7 +863,8 @@ async function startServer() {
           title,
           description,
           imageUrl,
-          urlPath: `/news/${targetSlug}`
+          urlPath: `/news/${targetSlug}`,
+          type: 'article'
         });
       }
     } catch (err) {

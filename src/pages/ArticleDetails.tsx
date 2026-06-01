@@ -34,7 +34,7 @@ export default function ArticleDetails() {
     if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
       return rawUrl;
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://amaanestate.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.amaanestate.com';
     return `${origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
   })();
 
@@ -45,7 +45,7 @@ export default function ArticleDetails() {
     title: article ? (article.seoTitle || article.title) : 'Intelligence Report',
     description: metaDesc,
     image: metaImageUrl,
-    url: article ? `https://amaanestate.com/news/${article.slug || article.id}` : undefined,
+    url: article ? `https://www.amaanestate.com/news/${article.slug || article.id}` : undefined,
     type: 'article'
   });
 
@@ -145,11 +145,12 @@ export default function ArticleDetails() {
         <meta property="og:title" content={article.seoTitle || article.title} />
         <meta property="og:description" content={metaDesc} />
         {metaImageUrl && <meta property="og:image" content={metaImageUrl} />}
+        <meta property="og:url" content={`https://www.amaanestate.com/news/${article.slug || article.id}`} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={article.seoTitle || article.title} />
         <meta name="twitter:description" content={metaDesc} />
         {metaImageUrl && <meta name="twitter:image" content={metaImageUrl} />}
-        <link rel="canonical" href={`https://amaanestate.com/news/${article.slug || article.id}`} />
+        <link rel="canonical" href={`https://www.amaanestate.com/news/${article.slug || article.id}`} />
       </Helmet>
 
       {/* Hero Banner Background & Top Meta */}
