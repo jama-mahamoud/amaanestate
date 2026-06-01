@@ -39,17 +39,52 @@ export const app = express();
 
 app.use(express.json());
 
+// Vercel Internal URL Rewrite Adaptor Middleware
+// Intercepts requests rewritten under Vercel serverless environment mapping them back to dynamic semantic Express routes.
+app.use((req, res, next) => {
+  if (req.path === '/api/index' && req.query.path) {
+    const p = req.query.path as string;
+    const id = req.query.id as string;
+    
+    console.log(`[VERCEL REWRITE REGISTRY] Intercepted path: ${req.path}, query path: ${p}, id: ${id}`);
+    
+    if (p === 'news' && id) {
+      req.url = `/news/${id}`;
+    } else if (p === 'properties' && id) {
+      req.url = `/properties/${id}`;
+    } else if (p === 'vehicles' && id) {
+      req.url = `/vehicles/${id}`;
+    } else if (p === 'agents' && id) {
+      req.url = `/agents/${id}`;
+    } else if (p === 'sitemap.xml') {
+      req.url = `/sitemap.xml`;
+    } else if (p === 'robots.txt') {
+      req.url = `/robots.txt`;
+    }
+    console.log(`[VERCEL REWRITE REGISTRY] Internal URI adapted to: ${req.url}`);
+  }
+  next();
+});
+
 // Helper functions for dynamic sitemap and robots.txt generation
 async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;
   const timeoutPromise = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
-      console.warn(`[SITEMAP] Query timed out after ${ms}ms.`);
+      console.warn(`[TIMEOUT DETECTOR] Query timed out after ${ms}ms. Returning fallback.`);
       resolve(failureValue);
     }, ms);
   });
+  
+  // Attach direct error-capture payload immediately to prevent uncaught background promise rejections 
+  // which crash Node/Vercel serverless execution loops on asynchronous post-timeout rejections.
+  const safePromise = promise.catch((err) => {
+    console.error("[BG PROMISE DETECT] Safe handled underlying asynchronous background query rejection:", err);
+    return failureValue;
+  });
+
   return Promise.race([
-    promise.then((res) => {
+    safePromise.then((res) => {
       clearTimeout(timeoutId);
       return res;
     }),
@@ -931,9 +966,40 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      const filePath = path.join(distPath, "index.html");
+      if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+      } else {
+        console.warn("[SEO SERVER] dist/index.html not found at runtime. Rendering dynamic fallback shell.");
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(`<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AmaanEstate - Premium Portal</title>
+    <meta name="description" content="A premium real estate and luxury vehicle portal." />
+  </head>
+  <body>
+    <div id="root">Loading AmaanEstate Portal...</div>
+    <script type="module" src="/assets/index.js"></script>
+  </body>
+</html>`);
+      }
     });
   }
+
+  // Global Express Error-Parser and Exception Shielding
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("[CRITICAL SHIELD] Caught unhandled exception inside Express route pipeline:", err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    res.status(500).json({
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An internal system exception occurred, registered under ID: " + Date.now(),
+      status: 500
+    });
+  });
 
   // Only listen if not in serverless environment
   if (!process.env.VERCEL) {
