@@ -1,3 +1,6 @@
-import { app } from '../server';
-
-export default app;
+export default function handler(req, res) {
+  res.status(200).json({
+    success: true,
+    message: "AmaanEstate API working 🚀"
+  });
+}
