@@ -21,21 +21,29 @@ export default function ArticleDetails() {
   // Compute dynamic metadata details
   const metaImageUrl = (() => {
     if (!article) return undefined;
+    
     let rawUrl = article.socialImage || article.featuredImage;
     if (!rawUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
       rawUrl = article.gallery.find(g => typeof g === 'string' && g.trim() !== '');
     }
     
     // No fallback images for article shares (only article-specific featured image / thumbnail)
-    if (!rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.trim() === '') {
       return undefined;
     }
     
-    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
-      return rawUrl;
+    const trimmedUrl = rawUrl.trim();
+    
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      return trimmedUrl;
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.amaanestate.com';
-    return `${origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+    
+    if (trimmedUrl.startsWith('//')) {
+      return `https:${trimmedUrl}`;
+    }
+    
+    const cleanPath = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
+    return `https://www.amaanestate.com${cleanPath}`;
   })();
 
   const cleanContentText = article ? (article.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';

@@ -745,13 +745,16 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     const ogType = seoData.type || "website";
     let imageUrl = seoData.imageUrl;
     
-    const host = req.get('host') || 'www.amaanestate.com';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const hostHeader = req.get('host') || 'www.amaanestate.com';
+    const isLocal = hostHeader.includes('localhost') || hostHeader.includes('127.0.0.1');
+    const host = isLocal ? hostHeader : 'www.amaanestate.com';
     const protocol = isLocal ? 'http' : 'https';
 
     if (imageUrl) {
-      if (imageUrl.startsWith("/")) {
-        imageUrl = `${protocol}://${host}${imageUrl}`;
+      // Resolve dynamic absolute URLs correctly for social scrapers
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+        const separatorPath = imageUrl.startsWith("/") ? "" : "/";
+        imageUrl = `${protocol}://${host}${separatorPath}${imageUrl}`;
       } else if (!isLocal && imageUrl.startsWith('http://')) {
         imageUrl = imageUrl.replace(/^http:\/\//i, 'https://');
       }
@@ -858,7 +861,20 @@ async function startServer() {
 
         const title = meta.title || "Latest News Article";
         const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
-        const imageUrl = (meta.featuredImage && meta.featuredImage.trim() !== '') ? meta.featuredImage : undefined;
+        
+        // Resolve dynamic image with prioritized fallbacks
+        let imageUrl: string | undefined = undefined;
+        if (meta.socialImage && typeof meta.socialImage === 'string' && meta.socialImage.trim() !== '') {
+          imageUrl = meta.socialImage.trim();
+        } else if (meta.featuredImage && typeof meta.featuredImage === 'string' && meta.featuredImage.trim() !== '') {
+          imageUrl = meta.featuredImage.trim();
+        } else if (meta.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+          const firstGallery = meta.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
+          if (firstGallery) {
+            imageUrl = firstGallery.trim();
+          }
+        }
+
         return servePageWithMetadata(req, res, next, {
           title,
           description,
@@ -972,11 +988,36 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      const filePath = path.join(distPath, "index.html");
-      if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
+      // Direct API requested but unmatched route path
+      if (req.path.startsWith('/api') && !req.path.startsWith('/api/index')) {
+        return res.status(404).json({
+          error: "NotFound",
+          message: `API endpoint '${req.path}' not found`,
+          status: 404
+        });
+      }
+
+      // Find index.html in common build directories to serve client SPA
+      let templatePath = "";
+      const searchPaths = [
+        path.resolve(process.cwd(), 'dist', 'index.html'),
+        path.resolve(process.cwd(), 'index.html'),
+        path.resolve(__dirname, '..', 'dist', 'index.html'),
+        path.resolve(__dirname, '..', 'index.html'),
+        path.resolve(__dirname, 'index.html')
+      ];
+
+      for (const p of searchPaths) {
+        if (fs.existsSync(p)) {
+          templatePath = p;
+          break;
+        }
+      }
+
+      if (templatePath) {
+        res.sendFile(templatePath);
       } else {
-        console.warn("[SEO SERVER] dist/index.html not found at runtime. Rendering dynamic fallback shell.");
+        console.warn("[SEO SERVER] index.html not found in any common build directories at runtime. Rendering dynamic fallback shell.");
         res.status(200).set({ 'Content-Type': 'text/html' }).end(`<!doctype html>
 <html lang="en" class="dark">
   <head>
