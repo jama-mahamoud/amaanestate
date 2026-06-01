@@ -9,22 +9,6 @@
       "destination": "/api/index?path=robots.txt"
     },
     {
-      "source": "/news/:id",
-      "destination": "/api/index?path=news&id=:id"
-    },
-    {
-      "source": "/properties/:id",
-      "destination": "/api/index?path=properties&id=:id"
-    },
-    {
-      "source": "/vehicles/:id",
-      "destination": "/api/index?path=vehicles&id=:id"
-    },
-    {
-      "source": "/agents/:id",
-      "destination": "/api/index?path=agents&id=:id"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },
@@ -32,10 +16,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "dist/**"
-    }
-  }
+  ]
 }
