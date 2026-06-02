@@ -850,9 +850,10 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       .replace(/<meta name=["']twitter:description["'][^>]*>/gi, '')
       .replace(/<meta name=["']twitter:image["'][^>]*>/gi, '');
       
-    const imageTags = imageUrl ? `
-    <meta property="og:image" content="${imageUrl}" />
-    <meta name="twitter:image" content="${imageUrl}" />` : '';
+    const imageTags = `
+    <meta property="og:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
+    <meta name="twitter:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
+    `;
 
     const dynamicMetaTags = `
     <title>${title}</title>
