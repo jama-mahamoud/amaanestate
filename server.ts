@@ -828,27 +828,14 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     }
     const absolutePageUrl = `${protocol}://${host}${seoData.urlPath}`;
     
-    // Clean old meta tags
+    // Clean old meta tags to prevent duplicates or interference
     template = template
       .replace(/<title>[^<]*<\/title>/gi, '')
-      .replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, '')
-      .replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:url["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:type["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:title["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:description["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:image["'][^>]*>/gi, '')
-      .replace(/<meta property=["']og:site_name["'][^>]*>/gi, '')
-      .replace(/<meta property=["']twitter:card["'][^>]*>/gi, '')
-      .replace(/<meta property=["']twitter:url["'][^>]*>/gi, '')
-      .replace(/<meta property=["']twitter:title["'][^>]*>/gi, '')
-      .replace(/<meta property=["']twitter:description["'][^>]*>/gi, '')
-      .replace(/<meta property=["']twitter:image["'][^>]*>/gi, '')
-      .replace(/<meta name=["']twitter:card["'][^>]*>/gi, '')
-      .replace(/<meta name=["']twitter:url["'][^>]*>/gi, '')
-      .replace(/<meta name=["']twitter:title["'][^>]*>/gi, '')
-      .replace(/<meta name=["']twitter:description["'][^>]*>/gi, '')
-      .replace(/<meta name=["']twitter:image["'][^>]*>/gi, '');
+      .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']?description["']?[^>]*>/gi, '')
+      .replace(/<meta[^>]*property=["']?og:[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']?twitter:[^>]*>/gi, '')
+      .replace(/<meta[^>]*property=["']?twitter:[^>]*>/gi, '');
       
     const imageTags = `
     <meta property="og:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
@@ -921,53 +908,79 @@ async function startServer() {
 
   // Dynamic SEO Middleware Interceptor for news articles
   app.get("/news/:id", async (req, res, next) => {
+    const userAgent = req.headers["user-agent"] || "";
+    const isBot = /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|discordbot|TelegramBot|Slackbot/i.test(userAgent);
     const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!hasCredentials) {
-      return next();
-    }
-    try {
-      const meta = await getArticleMetadata(req.params.id);
-      if (meta) {
-        // Redirect 301 to slug if current identifier is not the slug
-        const targetSlug = meta.slug || req.params.id;
-        if (req.params.id !== targetSlug) {
-          console.log(`[SEO SERVER] Redirecting 301 from /news/${req.params.id} to /news/${targetSlug}`);
-          return res.redirect(301, `/news/${targetSlug}`);
-        }
-
-        const title = meta.title || "Latest News Article";
-        const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
-        
-        // Resolve dynamic image with prioritized fallbacks
-        let imageUrl: string | undefined = undefined;
-        if (meta.socialImage && typeof meta.socialImage === 'string' && meta.socialImage.trim() !== '') {
-          imageUrl = meta.socialImage.trim();
-        } else if (meta.featuredImage && typeof meta.featuredImage === 'string' && meta.featuredImage.trim() !== '') {
-          imageUrl = meta.featuredImage.trim();
-        } else if (meta.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
-          const firstGallery = meta.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
-          if (firstGallery) {
-            imageUrl = firstGallery.trim();
-          }
-        }
-        // Default fallback image
-        if (!imageUrl) {
-          imageUrl = '/house_luxury_icon.png';
-        }
-
-        return servePageWithMetadata(req, res, next, {
-          title,
-          description,
-          imageUrl,
-          urlPath: `/news/${targetSlug}`,
-          type: 'article'
-        });
-      } else {
-        console.warn(`[SEO SERVER] No metadata found for article: ${req.params.id}`);
+    
+    let meta: any = null;
+    if (hasCredentials) {
+      try {
+        meta = await getArticleMetadata(req.params.id);
+      } catch (err) {
+        console.error("[SEO SERVER] Error pre-fetching article metadata:", err);
       }
-    } catch (err) {
-      console.error("[SEO SERVER] Error handling news page metadata:", err);
     }
+
+    if (meta) {
+      // If we have database metadata, always serve it
+      const targetSlug = meta.slug || req.params.id;
+      if (req.params.id !== targetSlug) {
+        console.log(`[SEO SERVER] Redirecting 301 from /news/${req.params.id} to /news/${targetSlug}`);
+        return res.redirect(301, `/news/${targetSlug}`);
+      }
+
+      const title = meta.title || "Latest News Article";
+      const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
+      
+      // Resolve dynamic image with prioritized fallbacks
+      let imageUrl: string | undefined = undefined;
+      if (meta.socialImage && typeof meta.socialImage === 'string' && meta.socialImage.trim() !== '') {
+        imageUrl = meta.socialImage.trim();
+      } else if (meta.featuredImage && typeof meta.featuredImage === 'string' && meta.featuredImage.trim() !== '') {
+        imageUrl = meta.featuredImage.trim();
+      } else if (meta.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+        const firstGallery = meta.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
+        if (firstGallery) {
+          imageUrl = firstGallery.trim();
+        }
+      }
+      
+      if (!imageUrl) {
+        imageUrl = '/house_luxury_icon.png';
+      }
+
+      return servePageWithMetadata(req, res, next, {
+        title,
+        description,
+        imageUrl,
+        urlPath: `/news/${targetSlug}`,
+        type: 'article'
+      });
+    }
+
+    // If metadata was not found in database (or database timed out / errored / credentials missing), but the request is from a scraper/bot:
+    // Generate high-fidelity fallback SEO metadata dynamically based on the slug/parameters so that the bot
+    // NEVER redirects, falls back to the homepage, or receives a blank preview.
+    if (isBot) {
+      const rawId = req.params.id;
+      // Convert "amaan-estate-somalia" -> "Amaan Estate Somalia"
+      const formattedTitle = rawId
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      console.log(`[SEO SERVER] Generating on-the-fly fallback metadata for bot: ${userAgent}, slug: ${rawId}`);
+      
+      return servePageWithMetadata(req, res, next, {
+        title: formattedTitle,
+        description: `Read dynamic updates, current listings, and premium real estate news about ${formattedTitle} on AmaanEstate.`,
+        imageUrl: '/house_luxury_icon.png',
+        urlPath: `/news/${rawId}`,
+        type: 'article'
+      });
+    }
+
+    // Let regular human users load the dynamic React SPA layout router
     next();
   });
 
@@ -1069,7 +1082,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", async (req, res) => {
       // Direct API requested but unmatched route path
       if (req.path.startsWith('/api') && !req.path.startsWith('/api/index')) {
         return res.status(404).json({
@@ -1077,6 +1090,43 @@ async function startServer() {
           message: `API endpoint '${req.path}' not found`,
           status: 404
         });
+      }
+
+      // Force serve metadata for bots on dynamic news routes
+      const isBot = /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|discordbot|TelegramBot|Slackbot/i.test(req.headers["user-agent"] || "");
+      if (isBot && req.path.startsWith("/news/")) {
+        const idOrSlug = req.path.split('/')[2];
+        if (idOrSlug) {
+          const meta = await getArticleMetadata(idOrSlug);
+          const title = meta?.title || idOrSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          const description = meta?.summary || (meta?.content ? (meta.content.substring(0, 160) + "...") : `Read dynamic updates, current listings, and premium real estate news about ${title} on AmaanEstate.`);
+          
+          let imageUrl: string | undefined = undefined;
+          if (meta) {
+            if (meta.socialImage && typeof meta.socialImage === 'string' && meta.socialImage.trim() !== '') {
+              imageUrl = meta.socialImage.trim();
+            } else if (meta.featuredImage && typeof meta.featuredImage === 'string' && meta.featuredImage.trim() !== '') {
+              imageUrl = meta.featuredImage.trim();
+            } else if (meta.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+              const firstGallery = meta.gallery.find((g: any) => typeof g === 'string' && g.trim() !== '');
+              if (firstGallery) {
+                imageUrl = firstGallery.trim();
+              }
+            }
+          }
+          
+          if (!imageUrl) {
+            imageUrl = '/house_luxury_icon.png';
+          }
+
+          return servePageWithMetadata(req, res, () => {}, {
+            title,
+            description,
+            imageUrl,
+            urlPath: `/news/${meta?.slug || idOrSlug}`,
+            type: 'article'
+          });
+        }
       }
 
       // Find index.html in common build directories to serve client SPA
