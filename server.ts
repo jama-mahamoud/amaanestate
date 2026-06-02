@@ -833,9 +833,22 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       .replace(/<title>[^<]*<\/title>/gi, '')
       .replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, '')
       .replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '')
-      .replace(/<meta[^>]*property=["']og:[^>]*>/gi, '')
-      .replace(/<meta[^>]*property=["']twitter:[^>]*>/gi, '')
-      .replace(/<meta[^>]*name=["']twitter:[^>]*>/gi, '');
+      .replace(/<meta property=["']og:url["'][^>]*>/gi, '')
+      .replace(/<meta property=["']og:type["'][^>]*>/gi, '')
+      .replace(/<meta property=["']og:title["'][^>]*>/gi, '')
+      .replace(/<meta property=["']og:description["'][^>]*>/gi, '')
+      .replace(/<meta property=["']og:image["'][^>]*>/gi, '')
+      .replace(/<meta property=["']og:site_name["'][^>]*>/gi, '')
+      .replace(/<meta property=["']twitter:card["'][^>]*>/gi, '')
+      .replace(/<meta property=["']twitter:url["'][^>]*>/gi, '')
+      .replace(/<meta property=["']twitter:title["'][^>]*>/gi, '')
+      .replace(/<meta property=["']twitter:description["'][^>]*>/gi, '')
+      .replace(/<meta property=["']twitter:image["'][^>]*>/gi, '')
+      .replace(/<meta name=["']twitter:card["'][^>]*>/gi, '')
+      .replace(/<meta name=["']twitter:url["'][^>]*>/gi, '')
+      .replace(/<meta name=["']twitter:title["'][^>]*>/gi, '')
+      .replace(/<meta name=["']twitter:description["'][^>]*>/gi, '')
+      .replace(/<meta name=["']twitter:image["'][^>]*>/gi, '');
       
     const imageTags = imageUrl ? `
     <meta property="og:image" content="${imageUrl}" />
@@ -936,6 +949,10 @@ async function startServer() {
             imageUrl = firstGallery.trim();
           }
         }
+        // Default fallback image
+        if (!imageUrl) {
+          imageUrl = '/house_luxury_icon.png';
+        }
 
         return servePageWithMetadata(req, res, next, {
           title,
@@ -944,6 +961,8 @@ async function startServer() {
           urlPath: `/news/${targetSlug}`,
           type: 'article'
         });
+      } else {
+        console.warn(`[SEO SERVER] No metadata found for article: ${req.params.id}`);
       }
     } catch (err) {
       console.error("[SEO SERVER] Error handling news page metadata:", err);
