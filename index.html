@@ -1,51 +1,38 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
 
 const app = express();
 
 const HOST = "www.amaanestate.com";
 const PROTOCOL = "https";
 
-// =========================
-// STATIC PUBLIC FILES
-// =========================
-app.use(express.static(path.join(process.cwd(), "public")));
+// ===================================================
+// 1. STATIC FILE SERVE (CRITICAL FIX - NO 206 ISSUES)
+// ===================================================
+app.use(
+  express.static(path.join(process.cwd(), "public"), {
+    maxAge: "1y",
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".jpg") || filePath.endsWith(".png")) {
+        res.setHeader("Content-Type", "image/jpeg");
+      }
+    },
+  })
+);
 
-// =========================
-// DEFAULT OG IMAGE ROUTE (FIXED 100%)
-// =========================
-app.get("/default-og-image.jpg", (req, res) => {
-  const filePath = path.join(process.cwd(), "public/default-og-image.jpg");
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send("Image not found");
-  }
-
-  // FORCE clean image response (NO 206, NO streaming issues)
-  const image = fs.readFileSync(filePath);
-
-  res.writeHead(200, {
-    "Content-Type": "image/jpeg",
-    "Content-Length": image.length,
-    "Cache-Control": "public, max-age=31536000, immutable",
-    "Accept-Ranges": "none",
-  });
-
-  return res.end(image);
-});
-
-// =========================
-// BOT DETECTION
-// =========================
+// ===================================================
+// 2. BOT DETECTION
+// ===================================================
 const isBot = (req: express.Request) =>
   /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Slackbot/i.test(
     req.headers["user-agent"] || ""
   );
 
-// =========================
-// SEO RENDER ENGINE
-// =========================
+// ===================================================
+// 3. SEO RENDER ENGINE
+// ===================================================
 async function servePageWithMetadata(
   req: express.Request,
   res: express.Response,
@@ -60,18 +47,18 @@ async function servePageWithMetadata(
 ) {
   try {
     const templatePath = path.resolve(process.cwd(), "dist/index.html");
-    if (!fs.existsSync(templatePath)) return next();
+    if (!templatePath) return next();
 
-    let template = fs.readFileSync(templatePath, "utf-8");
+    let template = require("fs").readFileSync(templatePath, "utf-8");
 
     const fullUrl = `${PROTOCOL}://${HOST}${seoData.urlPath}`;
 
     const title = `${seoData.title} | AmaanEstate`;
-    const description = (seoData.description || "").substring(0, 160);
+    const description = (seoData.description || "").slice(0, 160);
 
-    // =========================
-    // IMAGE FIX (ABSOLUTE + SAFE)
-    // =========================
+    // ===================================================
+    // IMAGE FIX (ABSOLUTE + SAFE + FACEBOOK FRIENDLY)
+    // ===================================================
     let imageUrl = seoData.imageUrl || "/default-og-image.jpg";
 
     if (!imageUrl.startsWith("http")) {
@@ -80,18 +67,18 @@ async function servePageWithMetadata(
 
     imageUrl = imageUrl.replace("http://", "https://");
 
-    // =========================
+    // ===================================================
     // CLEAN OLD META TAGS
-    // =========================
+    // ===================================================
     template = template
       .replace(/<title>.*<\/title>/g, "")
       .replace(/<meta[^>]*property=["']og:.*?>/g, "")
       .replace(/<meta[^>]*name=["']twitter:.*?>/g, "")
       .replace(/<link[^>]*rel=["']canonical["']?[^>]*>/g, "");
 
-    // =========================
-    // FINAL META TAGS (FACEBOOK SAFE)
-    // =========================
+    // ===================================================
+    // FINAL META TAGS (FACEBOOK + WHATSAPP SAFE)
+    // ===================================================
     const metaTags = `
       <title>${title}</title>
 
@@ -122,9 +109,9 @@ async function servePageWithMetadata(
 
     template = template.replace("<head>", `<head>${metaTags}`);
 
-    // =========================
-    // CACHE CONTROL (PREVENT OLD PREVIEWS)
-    // =========================
+    // ===================================================
+    // NO CACHE (PREVENT OLD PREVIEWS)
+    // ===================================================
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
@@ -136,9 +123,9 @@ async function servePageWithMetadata(
   }
 }
 
-// =========================
-// NEWS ROUTE
-// =========================
+// ===================================================
+// 4. NEWS ROUTE SEO
+// ===================================================
 app.get("/news/:id", async (req, res, next) => {
   const meta = await getArticleMetadata(req.params.id);
 
