@@ -39,6 +39,29 @@ export const app = express();
 
 app.use(express.json());
 
+// Universal WHATWG URL standardizer to bypass Node 22+ url.parse deprecation warning [DEP0169]
+app.use((req, res, next) => {
+  try {
+    const rawUrl = req.url || "/";
+    const parsed = new URL(rawUrl, "http://localhost");
+    
+    // Inject a pre-parsed representation designed to satisfy express internal and parent routing tools (parseurl package)
+    // By matching the exact active URL string in '_raw' and 'href', parseurl returns this object without invocation of native url.parse.
+    // @ts-ignore
+    req._parsedUrl = {
+      pathname: parsed.pathname,
+      search: parsed.search || null,
+      query: parsed.search ? parsed.search.slice(1) : null,
+      href: rawUrl,
+      path: rawUrl,
+      _raw: rawUrl
+    };
+  } catch (err) {
+    console.warn("[DEP0169 COMPAT] Failsafe parsing standardizer exception for URI:", req.url, err);
+  }
+  next();
+});
+
 // Vercel Internal URL Rewrite Adaptor Middleware
 // Intercepts requests rewritten under Vercel serverless environment mapping them back to dynamic semantic Express routes.
 app.use((req, res, next) => {
@@ -48,20 +71,39 @@ app.use((req, res, next) => {
     
     console.log(`[VERCEL REWRITE REGISTRY] Intercepted path: ${req.path}, query path: ${p}, id: ${id}`);
     
+    let adaptedUrl: string | null = null;
     if (p === 'news' && id) {
-      req.url = `/news/${id}`;
+      adaptedUrl = `/news/${id}`;
     } else if (p === 'properties' && id) {
-      req.url = `/properties/${id}`;
+      adaptedUrl = `/properties/${id}`;
     } else if (p === 'vehicles' && id) {
-      req.url = `/vehicles/${id}`;
+      adaptedUrl = `/vehicles/${id}`;
     } else if (p === 'agents' && id) {
-      req.url = `/agents/${id}`;
+      adaptedUrl = `/agents/${id}`;
     } else if (p === 'sitemap.xml') {
-      req.url = `/sitemap.xml`;
+      adaptedUrl = `/sitemap.xml`;
     } else if (p === 'robots.txt') {
-      req.url = `/robots.txt`;
+      adaptedUrl = `/robots.txt`;
     }
-    console.log(`[VERCEL REWRITE REGISTRY] Internal URI adapted to: ${req.url}`);
+    
+    if (adaptedUrl) {
+      req.url = adaptedUrl;
+      try {
+        const parsed = new URL(adaptedUrl, "http://localhost");
+        // @ts-ignore
+        req._parsedUrl = {
+          pathname: parsed.pathname,
+          search: parsed.search || null,
+          query: parsed.search ? parsed.search.slice(1) : null,
+          href: adaptedUrl,
+          path: adaptedUrl,
+          _raw: adaptedUrl
+        };
+      } catch (err) {
+        console.error("[VERCEL REWRITE ADAPTOR] Failed to regenerate compatible parsed URL:", err);
+      }
+      console.log(`[VERCEL REWRITE REGISTRY] Internal URI adapted to: ${req.url}`);
+    }
   }
   next();
 });
