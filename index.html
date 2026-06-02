@@ -4,37 +4,42 @@ import fs from "fs";
 
 const app = express();
 
-// =========================
-// CONFIG
-// =========================
 const HOST = "www.amaanestate.com";
 const PROTOCOL = "https";
 
 // =========================
-// STATIC FILES (IMPORTANT)
+// STATIC PUBLIC FILES
 // =========================
 app.use(express.static(path.join(process.cwd(), "public")));
 
 // =========================
-// DEFAULT OG IMAGE FIX (CRITICAL)
+// DEFAULT OG IMAGE ROUTE (FIXED 100%)
 // =========================
 app.get("/default-og-image.jpg", (req, res) => {
   const filePath = path.join(process.cwd(), "public/default-og-image.jpg");
 
   if (!fs.existsSync(filePath)) {
-    return res.status(404).send("OG image not found");
+    return res.status(404).send("Image not found");
   }
 
-  res.setHeader("Content-Type", "image/jpeg");
-  res.setHeader("Cache-Control", "public, max-age=86400, immutable");
-  return res.sendFile(filePath);
+  // FORCE clean image response (NO 206, NO streaming issues)
+  const image = fs.readFileSync(filePath);
+
+  res.writeHead(200, {
+    "Content-Type": "image/jpeg",
+    "Content-Length": image.length,
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Accept-Ranges": "none",
+  });
+
+  return res.end(image);
 });
 
 // =========================
 // BOT DETECTION
 // =========================
 const isBot = (req: express.Request) =>
-  /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot/i.test(
+  /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Slackbot/i.test(
     req.headers["user-agent"] || ""
   );
 
@@ -62,10 +67,10 @@ async function servePageWithMetadata(
     const fullUrl = `${PROTOCOL}://${HOST}${seoData.urlPath}`;
 
     const title = `${seoData.title} | AmaanEstate`;
-    const description = (seoData.description || "").slice(0, 160);
+    const description = (seoData.description || "").substring(0, 160);
 
     // =========================
-    // IMAGE FIX (VERY IMPORTANT)
+    // IMAGE FIX (ABSOLUTE + SAFE)
     // =========================
     let imageUrl = seoData.imageUrl || "/default-og-image.jpg";
 
@@ -76,7 +81,7 @@ async function servePageWithMetadata(
     imageUrl = imageUrl.replace("http://", "https://");
 
     // =========================
-    // REMOVE OLD TAGS
+    // CLEAN OLD META TAGS
     // =========================
     template = template
       .replace(/<title>.*<\/title>/g, "")
@@ -85,20 +90,28 @@ async function servePageWithMetadata(
       .replace(/<link[^>]*rel=["']canonical["']?[^>]*>/g, "");
 
     // =========================
-    // FIXED META TAGS (WITH fb:app_id)
+    // FINAL META TAGS (FACEBOOK SAFE)
     // =========================
     const metaTags = `
       <title>${title}</title>
 
       <meta name="description" content="${description}" />
-      <meta property="fb:app_id" content="YOUR_FB_APP_ID_HERE" />
 
+      <!-- OPEN GRAPH -->
       <meta property="og:type" content="${seoData.type || "website"}" />
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${description}" />
       <meta property="og:url" content="${fullUrl}" />
       <meta property="og:image" content="${imageUrl}" />
+      <meta property="og:image:secure_url" content="${imageUrl}" />
+      <meta property="og:image:type" content="image/jpeg" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
 
+      <!-- FACEBOOK FIX -->
+      <meta property="fb:app_id" content="YOUR_FB_APP_ID" />
+
+      <!-- TWITTER -->
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="${title}" />
       <meta name="twitter:description" content="${description}" />
@@ -110,7 +123,7 @@ async function servePageWithMetadata(
     template = template.replace("<head>", `<head>${metaTags}`);
 
     // =========================
-    // CACHE FIX (prevents 206 / preview bugs)
+    // CACHE CONTROL (PREVENT OLD PREVIEWS)
     // =========================
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -124,7 +137,7 @@ async function servePageWithMetadata(
 }
 
 // =========================
-// NEWS ROUTE SEO
+// NEWS ROUTE
 // =========================
 app.get("/news/:id", async (req, res, next) => {
   const meta = await getArticleMetadata(req.params.id);
