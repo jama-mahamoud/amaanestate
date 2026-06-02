@@ -56,6 +56,18 @@ app.use((req, res, next) => {
       path: rawUrl,
       _raw: rawUrl
     };
+
+    const origUrl = req.originalUrl || rawUrl;
+    const parsedOrig = new URL(origUrl, "http://localhost");
+    // @ts-ignore
+    req._parsedOriginalUrl = {
+      pathname: parsedOrig.pathname,
+      search: parsedOrig.search || null,
+      query: parsedOrig.search ? parsedOrig.search.slice(1) : null,
+      href: origUrl,
+      path: origUrl,
+      _raw: origUrl
+    };
   } catch (err) {
     console.warn("[DEP0169 COMPAT] Failsafe parsing standardizer exception for URI:", req.url, err);
   }
@@ -88,10 +100,20 @@ app.use((req, res, next) => {
     
     if (adaptedUrl) {
       req.url = adaptedUrl;
+      req.originalUrl = adaptedUrl;
       try {
         const parsed = new URL(adaptedUrl, "http://localhost");
         // @ts-ignore
         req._parsedUrl = {
+          pathname: parsed.pathname,
+          search: parsed.search || null,
+          query: parsed.search ? parsed.search.slice(1) : null,
+          href: adaptedUrl,
+          path: adaptedUrl,
+          _raw: adaptedUrl
+        };
+        // @ts-ignore
+        req._parsedOriginalUrl = {
           pathname: parsed.pathname,
           search: parsed.search || null,
           query: parsed.search ? parsed.search.slice(1) : null,
