@@ -809,36 +809,33 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     const ogType = seoData.type || "website";
     let imageUrl = seoData.imageUrl;
     
-    const hostHeader = req.get('host') || 'www.amaanestate.com';
-    const isLocal = hostHeader.includes('localhost') || hostHeader.includes('127.0.0.1');
-    const host = isLocal ? hostHeader : 'www.amaanestate.com';
-    const protocol = isLocal ? 'http' : 'https';
+    // Force absolute domain and HTTPS
+    const host = 'www.amaanestate.com';
+    const protocol = 'https';
 
     if (imageUrl) {
-      // Resolve dynamic absolute URLs correctly for social scrapers
+      // Ensure image is an absolute URL
       if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
         const separatorPath = imageUrl.startsWith("/") ? "" : "/";
         imageUrl = `${protocol}://${host}${separatorPath}${imageUrl}`;
-      } else if (!isLocal && imageUrl.startsWith('http://')) {
+      } else if (imageUrl.startsWith('http://')) {
         imageUrl = imageUrl.replace(/^http:\/\//i, 'https://');
       }
       
       // Append cache buster to the image URL so CDNs/scrapers don't cache stale images
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        const separator = imageUrl.includes('?') ? '&' : '?';
-        imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
-      }
+      const separator = imageUrl.includes('?') ? '&' : '?';
+      imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
     }
     const absolutePageUrl = `${protocol}://${host}${seoData.urlPath}`;
     
     // Clean old meta tags
     template = template
       .replace(/<title>[^<]*<\/title>/gi, '')
-      .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
-      .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
-      .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
-      .replace(/<meta[^>]*property="twitter:[^>]*>/gi, '')
-      .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
+      .replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '')
+      .replace(/<meta[^>]*property=["']og:[^>]*>/gi, '')
+      .replace(/<meta[^>]*property=["']twitter:[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']twitter:[^>]*>/gi, '');
       
     const imageTags = imageUrl ? `
     <meta property="og:image" content="${imageUrl}" />
@@ -847,6 +844,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     const dynamicMetaTags = `
     <title>${title}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:site_name" content="AmaanEstate" />
     <meta property="og:type" content="${ogType}" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
