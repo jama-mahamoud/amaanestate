@@ -5,19 +5,28 @@ import fs from "fs";
 const app = express();
 
 // =========================
-// STATIC OG IMAGE FIX (SAFE)
+// CONFIG
+// =========================
+const HOST = "www.amaanestate.com";
+const PROTOCOL = "https";
+
+// =========================
+// STATIC FILES (IMPORTANT)
+// =========================
+app.use(express.static(path.join(process.cwd(), "public")));
+
+// =========================
+// DEFAULT OG IMAGE FIX (CRITICAL)
 // =========================
 app.get("/default-og-image.jpg", (req, res) => {
-  const filePath = path.join(process.cwd(), "public", "default-og-image.jpg");
+  const filePath = path.join(process.cwd(), "public/default-og-image.jpg");
 
   if (!fs.existsSync(filePath)) {
-    console.error("[OG IMAGE] Missing file:", filePath);
-    return res.status(404).send("Image not found");
+    return res.status(404).send("OG image not found");
   }
 
   res.setHeader("Content-Type", "image/jpeg");
-  res.setHeader("Cache-Control", "public, max-age=86400");
-
+  res.setHeader("Cache-Control", "public, max-age=86400, immutable");
   return res.sendFile(filePath);
 });
 
@@ -25,12 +34,12 @@ app.get("/default-og-image.jpg", (req, res) => {
 // BOT DETECTION
 // =========================
 const isBot = (req: express.Request) =>
-  /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot/i.test(
+  /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot/i.test(
     req.headers["user-agent"] || ""
   );
 
 // =========================
-// MAIN SEO ENGINE (FIXED)
+// SEO RENDER ENGINE
 // =========================
 async function servePageWithMetadata(
   req: express.Request,
@@ -45,36 +54,29 @@ async function servePageWithMetadata(
   }
 ) {
   try {
-    const host = "www.amaanestate.com";
-    const protocol = "https";
-
     const templatePath = path.resolve(process.cwd(), "dist/index.html");
     if (!fs.existsSync(templatePath)) return next();
 
     let template = fs.readFileSync(templatePath, "utf-8");
 
-    const fullUrl = new URL(req.originalUrl, `${protocol}://${host}`).toString();
+    const fullUrl = `${PROTOCOL}://${HOST}${seoData.urlPath}`;
 
     const title = `${seoData.title} | AmaanEstate`;
-    const description = (seoData.description || "").substring(0, 160);
+    const description = (seoData.description || "").slice(0, 160);
 
     // =========================
-    // IMAGE FIX (IMPORTANT)
+    // IMAGE FIX (VERY IMPORTANT)
     // =========================
-    let imageUrl = seoData.imageUrl;
+    let imageUrl = seoData.imageUrl || "/default-og-image.jpg";
 
-    if (!imageUrl) {
-      imageUrl = `${protocol}://${host}/default-og-image.jpg`;
-    } else if (!imageUrl.startsWith("http")) {
-      imageUrl = `${protocol}://${host}${
-        imageUrl.startsWith("/") ? "" : "/"
-      }${imageUrl}`;
+    if (!imageUrl.startsWith("http")) {
+      imageUrl = `${PROTOCOL}://${HOST}${imageUrl}`;
     }
 
     imageUrl = imageUrl.replace("http://", "https://");
 
     // =========================
-    // CLEAN OLD META TAGS
+    // REMOVE OLD TAGS
     // =========================
     template = template
       .replace(/<title>.*<\/title>/g, "")
@@ -83,11 +85,13 @@ async function servePageWithMetadata(
       .replace(/<link[^>]*rel=["']canonical["']?[^>]*>/g, "");
 
     // =========================
-    // NEW META TAGS
+    // FIXED META TAGS (WITH fb:app_id)
     // =========================
     const metaTags = `
       <title>${title}</title>
+
       <meta name="description" content="${description}" />
+      <meta property="fb:app_id" content="YOUR_FB_APP_ID_HERE" />
 
       <meta property="og:type" content="${seoData.type || "website"}" />
       <meta property="og:title" content="${title}" />
@@ -101,15 +105,12 @@ async function servePageWithMetadata(
       <meta name="twitter:image" content="${imageUrl}" />
 
       <link rel="canonical" href="${fullUrl}" />
-
-      <!-- FIX: Facebook required optional property -->
-      <meta property="fb:app_id" content="1234567890" />
     `;
 
     template = template.replace("<head>", `<head>${metaTags}`);
 
     // =========================
-    // NO CACHE (IMPORTANT FOR SCRAPERS)
+    // CACHE FIX (prevents 206 / preview bugs)
     // =========================
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -123,29 +124,24 @@ async function servePageWithMetadata(
 }
 
 // =========================
-// NEWS ROUTE SEO FIX
+// NEWS ROUTE SEO
 // =========================
 app.get("/news/:id", async (req, res, next) => {
-  try {
-    const meta = await getArticleMetadata(req.params.id);
+  const meta = await getArticleMetadata(req.params.id);
 
-    if (meta) {
-      return servePageWithMetadata(req, res, next, {
-        title: meta.title || "News",
-        description:
-          meta.summary || meta.content?.substring(0, 160) || "Latest update",
-        imageUrl:
-          meta.socialImage ||
-          meta.featuredImage ||
-          "/default-og-image.jpg",
-        urlPath: req.originalUrl,
-        type: "article",
-      });
-    }
-
-    return next();
-  } catch (err) {
-    console.error("[NEWS SEO ERROR]", err);
-    return next();
+  if (meta) {
+    return servePageWithMetadata(req, res, next, {
+      title: meta.title || "News",
+      description:
+        meta.summary || meta.content?.substring(0, 160) || "Latest update",
+      imageUrl:
+        meta.socialImage ||
+        meta.featuredImage ||
+        "/default-og-image.jpg",
+      urlPath: `/news/${req.params.id}`,
+      type: "article",
+    });
   }
+
+  return next();
 });
