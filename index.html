@@ -2,15 +2,23 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 
+const app = express();
+
 // =========================
-// STATIC OG IMAGE FIX
+// STATIC OG IMAGE FIX (SAFE)
 // =========================
 app.get("/default-og-image.jpg", (req, res) => {
-  const filePath = path.join(process.cwd(), "public/default-og-image.jpg");
+  const filePath = path.join(process.cwd(), "public", "default-og-image.jpg");
+
+  if (!fs.existsSync(filePath)) {
+    console.error("[OG IMAGE] Missing file:", filePath);
+    return res.status(404).send("Image not found");
+  }
 
   res.setHeader("Content-Type", "image/jpeg");
   res.setHeader("Cache-Control", "public, max-age=86400");
-  res.status(200).sendFile(filePath);
+
+  return res.sendFile(filePath);
 });
 
 // =========================
@@ -22,7 +30,7 @@ const isBot = (req: express.Request) =>
   );
 
 // =========================
-// MAIN SEO RENDER ENGINE
+// MAIN SEO ENGINE (FIXED)
 // =========================
 async function servePageWithMetadata(
   req: express.Request,
@@ -45,30 +53,38 @@ async function servePageWithMetadata(
 
     let template = fs.readFileSync(templatePath, "utf-8");
 
-    // FULL URL FIX
     const fullUrl = new URL(req.originalUrl, `${protocol}://${host}`).toString();
 
     const title = `${seoData.title} | AmaanEstate`;
     const description = (seoData.description || "").substring(0, 160);
 
-    // IMAGE FIX (safe fallback)
-    let imageUrl =
-      seoData.imageUrl && seoData.imageUrl.startsWith("http")
-        ? seoData.imageUrl
-        : `${protocol}://${host}${
-            seoData.imageUrl || "/default-og-image.jpg"
-          }`;
+    // =========================
+    // IMAGE FIX (IMPORTANT)
+    // =========================
+    let imageUrl = seoData.imageUrl;
+
+    if (!imageUrl) {
+      imageUrl = `${protocol}://${host}/default-og-image.jpg`;
+    } else if (!imageUrl.startsWith("http")) {
+      imageUrl = `${protocol}://${host}${
+        imageUrl.startsWith("/") ? "" : "/"
+      }${imageUrl}`;
+    }
 
     imageUrl = imageUrl.replace("http://", "https://");
 
-    // REMOVE OLD META TAGS
+    // =========================
+    // CLEAN OLD META TAGS
+    // =========================
     template = template
       .replace(/<title>.*<\/title>/g, "")
       .replace(/<meta[^>]*property=["']og:.*?>/g, "")
       .replace(/<meta[^>]*name=["']twitter:.*?>/g, "")
       .replace(/<link[^>]*rel=["']canonical["']?[^>]*>/g, "");
 
-    // NEW CLEAN META
+    // =========================
+    // NEW META TAGS
+    // =========================
     const metaTags = `
       <title>${title}</title>
       <meta name="description" content="${description}" />
@@ -85,11 +101,16 @@ async function servePageWithMetadata(
       <meta name="twitter:image" content="${imageUrl}" />
 
       <link rel="canonical" href="${fullUrl}" />
+
+      <!-- FIX: Facebook required optional property -->
+      <meta property="fb:app_id" content="1234567890" />
     `;
 
     template = template.replace("<head>", `<head>${metaTags}`);
 
-    // FIX 206 + CACHE ISSUES
+    // =========================
+    // NO CACHE (IMPORTANT FOR SCRAPERS)
+    // =========================
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
@@ -102,22 +123,29 @@ async function servePageWithMetadata(
 }
 
 // =========================
-// NEWS SEO ROUTE FIX
+// NEWS ROUTE SEO FIX
 // =========================
 app.get("/news/:id", async (req, res, next) => {
-  const meta = await getArticleMetadata(req.params.id);
+  try {
+    const meta = await getArticleMetadata(req.params.id);
 
-  if (meta) {
-    return servePageWithMetadata(req, res, next, {
-      title: meta.title || "News",
-      description:
-        meta.summary || meta.content?.substring(0, 160) || "Latest update",
-      imageUrl:
-        meta.socialImage || meta.featuredImage || "/default-og-image.jpg",
-      urlPath: req.originalUrl,
-      type: "article",
-    });
+    if (meta) {
+      return servePageWithMetadata(req, res, next, {
+        title: meta.title || "News",
+        description:
+          meta.summary || meta.content?.substring(0, 160) || "Latest update",
+        imageUrl:
+          meta.socialImage ||
+          meta.featuredImage ||
+          "/default-og-image.jpg",
+        urlPath: req.originalUrl,
+        type: "article",
+      });
+    }
+
+    return next();
+  } catch (err) {
+    console.error("[NEWS SEO ERROR]", err);
+    return next();
   }
-
-  return next();
 });
