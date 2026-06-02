@@ -42,7 +42,7 @@ app.use(express.json());
 // Vercel Internal URL Rewrite Adaptor Middleware
 // Intercepts requests rewritten under Vercel serverless environment mapping them back to dynamic semantic Express routes.
 app.use((req, res, next) => {
-  if (req.path === '/api/index' && req.query.path) {
+  if (req.path.startsWith('/api/index') && req.query.path) {
     const p = req.query.path as string;
     const id = req.query.id as string;
     
@@ -815,7 +815,7 @@ async function startServer() {
   const PORT = 3000;
 
   // Vite middleware for development setup (moved up so we can reuse instance)
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -964,7 +964,7 @@ async function startServer() {
     next();
   });
 
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     app.use("*", async (req, res, next) => {
       if (req.originalUrl.startsWith('/api')) return next();
       

@@ -106,139 +106,169 @@ const PremiumLogo = ({ className = "h-8", variant = 'gold' }: PremiumLogoProps) 
           fill="none" 
         />
 
-        {/* 4. Luxury 3D Beveled Gold Triangle structure */}
-        {/* Left Bar Inside Facet */}
+        {/* 4. Luxury 3D Beveled House Roof and Portal Structure */}
+        {/* Left Roof Outer Facet */}
         <motion.path
-          d="M30 66 L50 31 L50 22 L23 69 Z"
+          d="M50 16 L18 45 L25 45 L50 24 Z"
           fill="url(#goldLeftPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.1 }}
         />
 
-        {/* Left Bar Outside Facet */}
+        {/* Right Roof Outer Facet */}
         <motion.path
-          d="M23 69 L50 22 L50 13 L16 72 Z"
-          fill="url(#goldReflectivePremium)"
+          d="M50 16 L82 45 L75 45 L50 24 Z"
+          fill="url(#goldRightPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         />
 
-        {/* Right Bar Inside Facet */}
+        {/* Left Roof Inner Facet */}
         <motion.path
-          d="M70 66 L50 31 L50 22 L77 69 Z"
-          fill="url(#goldRightPremium)"
+          d="M50 28 L28 48 L33 48 L50 34 Z"
+          fill="url(#goldLeftPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         />
 
-        {/* Right Bar Outside Facet */}
+        {/* Right Roof Inner Facet */}
         <motion.path
-          d="M77 69 L50 22 L50 13 L84 72 Z"
+          d="M50 28 L72 48 L67 48 L50 34 Z"
           fill="url(#goldRightPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         />
 
-        {/* Bottom Bar Upper Facet */}
+        {/* Bottom Steps (Foundation of Trust & Safety) */}
+        {/* Upper Step */}
         <motion.path
-          d="M30 66 L70 66 L77 69 L23 69 Z"
+          d="M20 71 L80 71 L83 74 L17 74 Z"
           fill="url(#goldBottomLightPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         />
 
-        {/* Bottom Bar Lower Facet */}
+        {/* Lower Step */}
         <motion.path
-          d="M23 69 L77 69 L84 72 L16 72 Z"
+          d="M14 74 L86 74 L89 77 L11 77 Z"
           fill="url(#goldBottomDarkPremium)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         />
 
-        {/* 5. Centerpiece Luxury Key */}
+        {/* Symmetrical Left and Right Columns */}
+        {/* Left Column Bevel A */}
+        <motion.path
+          d="M26 50 L32 50 L32 70 L26 69 Z"
+          fill="url(#goldLeftPremium)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+        />
+        {/* Left Column Bevel B */}
+        <motion.path
+          d="M32 50 L38 50 L38 70 L32 70 Z"
+          fill="url(#goldReflectivePremium)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        />
+
+        {/* Right Column Bevel A */}
+        <motion.path
+          d="M62 50 L68 50 L68 70 L62 70 Z"
+          fill="url(#goldReflectivePremium)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+        />
+        {/* Right Column Bevel B */}
+        <motion.path
+          d="M68 50 L74 50 L74 69 L68 70 Z"
+          fill="url(#goldRightPremium)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        />
+
+        {/* 5. Centerpiece 4-Point Star of Excellence (representing Trust and Safety - "Amaan") */}
         <g>
-          {/* Clover Bow (Top Three Loops) */}
-          <motion.circle
-            cx="50"
-            cy="41.5"
-            r="4"
-            stroke="url(#goldReflectivePremium)"
-            strokeWidth="1.5"
-            fill="none"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-          />
-          <motion.circle
-            cx="46"
-            cy="45"
-            r="3.5"
-            stroke="url(#goldReflectivePremium)"
-            strokeWidth="1.5"
-            fill="none"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          />
-          <motion.circle
-            cx="54"
-            cy="45"
-            r="3.5"
-            stroke="url(#goldReflectivePremium)"
-            strokeWidth="1.5"
-            fill="none"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          />
-          <circle cx="50" cy="45" r="1.2" fill="url(#goldReflectivePremium)" />
-
-          {/* Key Shaft */}
-          <motion.rect
-            x="48.8"
-            y="48"
-            width="2.4"
-            height="18"
-            rx="0.4"
-            fill="url(#goldReflectivePremium)"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 18, opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.9 }}
-          />
-
-          {/* Key Shaft Collars / Accent Rings */}
-          <rect x="47.5" y="49" width="5" height="1.2" rx="0.2" fill="url(#goldReflectivePremium)" />
-          <rect x="48" y="61.5" width="4" height="1.2" rx="0.2" fill="url(#goldReflectivePremium)" />
-
-          {/* Key Toothed Bit */}
+          {/* Top Point */}
           <motion.path
-            d="M51.2 53 h4 v1.5 h-2.5 v1.2 h2.5 v1.5 h-2.5 v1.2 h2.5 v1.5 h-4 Z"
+            d="M50 38 L50 56 L44 56 Z"
+            fill="url(#goldLeftPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+          />
+          <motion.path
+            d="M50 38 L56 56 L50 56 Z"
             fill="url(#goldReflectivePremium)"
-            initial={{ opacity: 0, x: -3 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 1.1 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
           />
 
-          {/* Key Pointed Tip */}
+          {/* Bottom Point */}
           <motion.path
-            d="M47.8 66 L50 69.2 L52.2 66 Z"
-            fill="url(#goldReflectivePremium)"
-            initial={{ opacity: 0, y: -2 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1.2 }}
+            d="M44 56 L50 56 L50 74 Z"
+            fill="url(#goldBottomLightPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
           />
+          <motion.path
+            d="M50 56 L56 56 L50 74 Z"
+            fill="url(#goldBottomDarkPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+          />
+
+          {/* Left Point */}
+          <motion.path
+            d="M32 56 L50 56 L50 50 Z"
+            fill="url(#goldLeftPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.1 }}
+          />
+          <motion.path
+            d="M32 56 L50 62 L50 56 Z"
+            fill="url(#goldBottomLightPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.1 }}
+          />
+
+          {/* Right Point */}
+          <motion.path
+            d="M50 50 L50 56 L68 56 Z"
+            fill="url(#goldReflectivePremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          />
+          <motion.path
+            d="M50 56 L50 62 L68 56 Z"
+            fill="url(#goldRightPremium)"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          />
+
+          {/* Central Brilliant Core Glow */}
+          <circle cx="50" cy="56" r="1.5" fill="#FFFFFF" />
         </g>
 
         {/* 6. Top Peak Glowing Star Lens Flare */}
         <g transform="translate(50, 13)">
-          <ellipse cx="0" cy="0" rx="1.5" ry="11" fill="#FFFFFF" filter="url(#sparkleGlowPremium)" />
-          <ellipse cx="0" cy="0" rx="11" ry="1.5" fill="#FFFFFF" filter="url(#sparkleGlowPremium)" />
           <circle cx="0" cy="0" r="3" fill="#FFFFFF" filter="url(#sparkleGlowPremium)" />
         </g>
       </svg>

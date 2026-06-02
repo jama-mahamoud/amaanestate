@@ -8,10 +8,9 @@
       "source": "/robots.txt",
       "destination": "/api/index?path=robots.txt"
     },
-
     {
-      "source": "/news/:slug",
-      "destination": "/api/index?path=news&slug=:slug"
+      "source": "/news/:id",
+      "destination": "/api/index?path=news&id=:id"
     },
     {
       "source": "/properties/:id",
@@ -25,15 +24,18 @@
       "source": "/agents/:id",
       "destination": "/api/index?path=agents&id=:id"
     },
-
     {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },
-
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "dist/**"
+    }
+  }
 }
