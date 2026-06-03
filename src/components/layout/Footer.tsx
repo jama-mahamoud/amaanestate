@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { 
   Facebook, Instagram, MessageCircle, MapPin, Music2, Mail, Phone
 } from 'lucide-react';
-import PremiumLogo from '../brand/PremiumLogo';
+import { Logo } from '../brand/Logo';
 import { useSettings } from '../../contexts/SettingsContext';
 
 export default function Footer() {
@@ -44,7 +44,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-16 mb-16 border-b border-white/5">
           <div className="lg:col-span-12 space-y-8 flex flex-col items-center text-center">
             <Link to="/" className="inline-block outline-none group">
-              <PremiumLogo className="h-10 sm:h-12" variant="white" />
+              <Logo size="lg" className="h-10 sm:h-12" noLink />
             </Link>
             <p className="text-white/60 text-base sm:text-lg leading-relaxed max-w-2xl font-light">
               The premier marketplace for verified real estate and vehicles in Somalia and Ethiopia. Built on trust, security, and professionalism.
