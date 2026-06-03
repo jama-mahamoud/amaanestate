@@ -542,7 +542,7 @@ export default function NetworkPage() {
             className="pt-6 flex flex-wrap items-center justify-center gap-4"
           >
             <Button 
-              onClick={() => handleGatedAction('JOIN_NETWORK')}
+              onClick={() => handleOpenApplication('Network Member')}
               className="bg-[#C5A059] hover:bg-[#C5A059]/90 text-black px-8 h-14 rounded-2xl font-bold uppercase tracking-wider text-xs transition-all shadow-[0_0_20px_rgba(197,160,89,0.2)]"
             >
               <UserPlus className="mr-2" size={15} /> {currT.btnJoin}
@@ -1010,7 +1010,7 @@ export default function NetworkPage() {
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
           <Button 
-            onClick={() => handleGatedAction('JOIN_NETWORK')}
+            onClick={() => handleOpenApplication('Network Member')}
             className="bg-[#C5A059] hover:bg-[#C5A059]/90 text-black px-8 h-12 rounded-xl font-bold uppercase tracking-wider text-xs"
           >
             {currT.btnJoin}
