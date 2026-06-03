@@ -62,7 +62,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
       whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
       viewport={isMobile ? undefined : { once: true }}
       transition={isMobile ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' }}
-      className="group relative bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:border-[#C5A059]/30 transition-all duration-500 shadow-xl hover:shadow-2xl mb-16"
+      className="group relative bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:border-[#C5A059]/30 transition-all duration-500 shadow-xl hover:shadow-2xl mb-10 lg:mb-12"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
         {/* Banner Image Container */}
@@ -256,11 +256,11 @@ const LatestNews = memo(() => {
   const gridArticles = articles.slice(1, 7); // Show up to 6 articles in the grid below the hero
 
   return (
-    <section className="py-24 bg-slate-50 relative overflow-hidden border-t border-slate-100 text-slate-900">
+    <section className="py-12 md:py-16 lg:py-20 bg-slate-50 relative overflow-hidden border-t border-slate-100 text-slate-900">
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
         
         {/* Editorial Section Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 lg:mb-12 gap-6">
           <div className="space-y-3">
             <span className="text-[#C5A059] text-xs font-black tracking-[0.3em] uppercase block">
               Somali Region Focus

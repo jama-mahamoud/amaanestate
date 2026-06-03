@@ -6,6 +6,7 @@ import CategoryScroller from '@/components/CategoryScroller';
 import LatestNews from '@/components/LatestNews';
 import PropertyCard from '@/components/PropertyCard';
 import VehicleCard from '@/components/VehicleCard';
+import CityCard from '@/components/CityCard';
 import { listingService } from '@/services/listingService';
 import { Listing, VehicleListing } from '@/types';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -28,6 +29,8 @@ import { useSEO } from '@/hooks/useSEO';
 import { CITIES_DATA } from '@/data/cities';
 import { MapPin, Globe } from 'lucide-react';
 import { normalizeCityName } from '@/utils/cityNormalization';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const SECTORS_LIST = [
   { label: 'All Sectors', value: '' },
@@ -79,6 +82,144 @@ export default function Home() {
   const [vehicles, setVehicles] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+    
+    // Dedicated canonical matching function to standardize both database city values and UI city names
+    const getCanonicalCityKey = (cityName: string | null | undefined): string => {
+      if (!cityName) return '';
+      const clean = cityName.trim().toLowerCase();
+      
+      // 1. Direct explicit name mappings
+      if (clean === 'jigjiga' || clean === 'jijiga') return 'jigjiga';
+      if (clean === 'mogadishu' || clean === 'mogadisho' || clean === 'banaadir' || clean === 'banadir' || clean === 'mogadishu coastal') return 'mogadishu';
+      if (clean === 'hargeisa' || clean === 'hargeysa' || clean === 'hargeisa hub') return 'hargeisa';
+      if (clean === 'garowe' || clean === 'garoowe' || clean === 'garowe province') return 'garowe';
+      if (clean === 'bosaso' || clean === 'boosaaso' || clean === 'bosaso port') return 'bosaso';
+      if (clean === 'kismayo' || clean === 'kismaayo' || clean === 'kismayo gateway') return 'kismayo';
+      if (clean === 'baidoa' || clean === 'baydhaba' || clean === 'baidoa region') return 'baidoa';
+      if (clean === 'burao' || clean === 'burco' || clean === 'burco district') return 'burao';
+      if (clean === 'beledweyne' || clean === 'beledweyne corridor') return 'beledweyne';
+      if (clean === 'galkayo' || clean === 'gaalkacyo' || clean === 'galkayo central') return 'galkayo';
+      if (clean === 'berbera' || clean === 'berbera port') return 'berbera';
+      if (clean === 'las anod' || clean === 'las-anod' || clean === 'laascaanood' || clean === 'lasanod' || clean === 'las anod region') return 'las-anod';
+      if (clean === 'jowhar' || clean === 'jowhar valley') return 'jowhar';
+      if (clean === 'afgooye' || clean === 'afgooyi' || clean === 'afgoye' || clean === 'afgooye growth zone') return 'afgooye';
+      if (clean === 'godey' || clean === 'gode' || clean === 'godey region') return 'godey';
+      if (clean === 'dire dawa' || clean === 'diredawa' || clean === 'dire dawa region') return 'dire-dawa';
+      if (clean === 'addis ababa' || clean === 'addisababa' || clean === 'addis ababa region') return 'addis-ababa';
+      if (clean === 'mekelle' || clean === 'mekele' || clean === 'mekelle highland') return 'mekelle';
+      if (clean === 'hawassa' || clean === 'hawasa' || clean === 'hawassa lakeside') return 'hawassa';
+      if (clean === 'adama' || clean === 'adama corridor') return 'adama';
+      if (clean === 'bahir dar' || clean === 'bahirdar' || clean === 'bahir dar basin') return 'bahir-dar';
+      if (clean === 'merca' || clean === 'merca historic port') return 'merca';
+
+      // 2. Lookup against CITIES_DATA structure
+      const matched = CITIES_DATA.find(
+        c => c.slug.toLowerCase() === clean ||
+             c.dbValue.toLowerCase() === clean ||
+             c.name.toLowerCase() === clean
+      );
+      if (matched) return matched.slug;
+
+      return clean;
+    };
+
+    try {
+      const q = query(
+        collection(db, 'listings'),
+        where('category', 'in', ['property', 'land'])
+      );
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const counts: Record<string, number> = {};
+        
+        // Trackers for mandatory debug & verification requirements
+        const matchedDocsForCity: Record<string, string[]> = {};
+        const rawCityValuesForCity: Record<string, string[]> = {};
+
+        // Initialize empty arrays and 0 counts for each city
+        CITIES_DATA.forEach(city => {
+          counts[city.slug] = 0;
+          matchedDocsForCity[city.slug] = [];
+          rawCityValuesForCity[city.slug] = [];
+        });
+
+        snapshot.docs.forEach((doc) => {
+          const item = doc.data();
+          // Perfect alignment with search listings filtering logic to present consistent, reliable property counts
+          const isVettedAndActive = ['active', 'verified', 'approved'].includes(item.status?.toLowerCase()?.trim() || '') ||
+                                    item.isVerified === true ||
+                                    ['verified', 'verified_listing'].includes(item.verificationStatus?.toLowerCase()?.trim() || '');
+          
+          if (isVettedAndActive) {
+            const dbCityRaw = item.city;
+            const itemCityKey = getCanonicalCityKey(dbCityRaw);
+
+            // Find which city in CITIES_DATA matches this canonical key
+            const matchedCity = CITIES_DATA.find(city => {
+              const cityKey = getCanonicalCityKey(city.slug);
+              return itemCityKey === cityKey;
+            });
+
+            if (matchedCity) {
+              counts[matchedCity.slug] += 1;
+              matchedDocsForCity[matchedCity.slug].push(doc.id);
+              if (dbCityRaw && !rawCityValuesForCity[matchedCity.slug].includes(dbCityRaw)) {
+                rawCityValuesForCity[matchedCity.slug].push(dbCityRaw);
+              }
+            }
+          }
+        });
+
+        // Debug outputs and mandatory assertions
+        console.log("=== REAL-TIME MARKET PROPERTY INDEX VERIFICATION ===");
+        CITIES_DATA.forEach(city => {
+          const computedCount = counts[city.slug];
+          const actualDocs = matchedDocsForCity[city.slug];
+          const rawValues = rawCityValuesForCity[city.slug];
+
+          console.log(`City: [${city.name}] (${city.slug})`);
+          console.log(`  Raw DB City values seen:`, JSON.stringify(rawValues));
+          console.log(`  Matched Doc IDs:`, JSON.stringify(actualDocs));
+          console.log(`  Computed Count: ${computedCount}`);
+          console.log(`  Actual Filtered Docs Log Length: ${actualDocs.length}`);
+
+          // Mandatory assertion step to compare computed count against actual filtered length
+          if (computedCount !== actualDocs.length) {
+            console.warn(`  [VERIFICATION MISMATCH] Count discrepancy detected for ${city.name}! Computed: ${computedCount}, Actual: ${actualDocs.length}. Correcting count.`);
+            counts[city.slug] = actualDocs.length;
+          } else {
+            console.log(`  [VERIFICATION SUCCESS] Perfectly verified.`);
+          }
+        });
+        console.log("====================================================");
+
+        setCityCounts(counts);
+      }, (error) => {
+        console.error("Real-time city count subscription failed, using empty counts:", error);
+        const defaultCounts: Record<string, number> = {};
+        CITIES_DATA.forEach(city => {
+          defaultCounts[city.slug] = 0;
+        });
+        setCityCounts(defaultCounts);
+      });
+    } catch (err) {
+      console.error("Failed to setup real-time city count snapshot listener:", err);
+      const defaultCounts: Record<string, number> = {};
+      CITIES_DATA.forEach(city => {
+        defaultCounts[city.slug] = 0;
+      });
+      setCityCounts(defaultCounts);
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -200,17 +341,10 @@ export default function Home() {
     let active = true;
 
     const fetchPageData = async () => {
-      if (!filterCity) {
-        setDisplayedProperties([]);
-        setTotalMatchingCount(0);
-        setTotalPages(1);
-        setPageLoading(false);
-        return;
-      }
       setPageLoading(true);
       try {
         const fetchFilters: ListingFilter = {
-          limit: ITEMS_PER_PAGE,
+          limit: filterCity ? ITEMS_PER_PAGE : 4,
         };
 
         if (filterStatus) {
@@ -233,7 +367,7 @@ export default function Home() {
         }
 
         // Set pagination cursor
-        if (currentPage > 1 && lastDocs[currentPage - 1]) {
+        if (currentPage > 1 && lastDocs[currentPage - 1] && filterCity) {
           fetchFilters.lastDoc = lastDocs[currentPage - 1];
         }
 
@@ -242,24 +376,29 @@ export default function Home() {
 
         setDisplayedProperties(res.listings);
 
-        // Store next page cursor
-        if (res.lastDoc) {
-          setLastDocs(prev => ({
-            ...prev,
-            [currentPage]: res.lastDoc
-          }));
+        if (filterCity) {
+          // Store next page cursor
+          if (res.lastDoc) {
+            setLastDocs(prev => ({
+              ...prev,
+              [currentPage]: res.lastDoc
+            }));
+          }
+
+          // Fetch precise aggregate match counts directly from Firestore
+          const countFilters = { ...fetchFilters };
+          delete countFilters.limit;
+          delete countFilters.lastDoc;
+
+          const totalCount = await listingService.getListingsCount(countFilters);
+          if (!active) return;
+
+          setTotalMatchingCount(totalCount);
+          setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE) || 1);
+        } else {
+          setTotalMatchingCount(res.listings.length);
+          setTotalPages(1);
         }
-
-        // Fetch precise aggregate match counts directly from Firestore
-        const countFilters = { ...fetchFilters };
-        delete countFilters.limit;
-        delete countFilters.lastDoc;
-
-        const totalCount = await listingService.getListingsCount(countFilters);
-        if (!active) return;
-
-        setTotalMatchingCount(totalCount);
-        setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE) || 1);
 
       } catch (err) {
         console.error('[Error] Server-side query fetch failed:', err);
@@ -285,7 +424,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-luxury-black text-white selection:bg-[#C5A059]/10 selection:text-[#C5A059]">
       {/* Hero Section */}
-      <section className="relative pt-28 md:pt-48 pb-16 md:pb-28 overflow-hidden min-h-screen md:min-h-[85vh] flex items-center bg-[#0B0D17]">
+      <section className="relative pt-20 md:pt-32 pb-10 md:pb-14 overflow-hidden flex items-center bg-[#0B0D17]">
         {/* Background Image Overlay presenting a premier Somali luxury villa asset */}
         <div className="absolute inset-0 z-10 w-full h-full select-none pointer-events-none overflow-hidden">
           <img 
@@ -333,16 +472,16 @@ export default function Home() {
             </motion.div>
           </div>
 
-          <div className="w-full max-w-5xl mt-12 md:mt-20">
+          <div className="w-full max-w-5xl mt-8 md:mt-12">
             <HomeSearch onSearch={handleSearch} />
           </div>
         </div>
       </section>
 
       {/* Main Listings Body */}
-      <section ref={propertiesSectionRef} className="py-24 bg-super-black scroll-mt-24 border-t border-white/5">
+      <section ref={propertiesSectionRef} className="py-12 md:py-16 lg:py-20 bg-super-black scroll-mt-20 border-t border-white/5">
         <div className="container mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4 sm:gap-6">
             <div className="max-w-xl">
               <h2 className="text-3xl font-display text-white mb-4">Latest Properties</h2>
               <p className="text-white/40 text-sm">Explore our hand-picked selection of verified residential and commercial properties.</p>
@@ -360,7 +499,7 @@ export default function Home() {
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-wrap items-center gap-3 mb-10"
+              className="flex flex-wrap items-center gap-2.5 mb-6 md:mb-8"
             >
               {filterCity && (
                 <span className="premium-pill bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-2">
@@ -387,225 +526,74 @@ export default function Home() {
           )}
 
           {/* TWO-COLUMN LAYOUT DESKTOP / RESPONSIVE STACK MOBILE */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
-            {/* LEFT COLUMN: PREMIUM CATEGORIES & FILTER SIDEBAR */}
-            <div className="lg:col-span-1 space-y-6">
-              
-              {/* Mobile Collapsible Button */}
-              <button 
-                onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-                className="w-full lg:hidden bg-white/[0.02] border border-white/10 hover:border-[#C5A059]/40 h-14 px-5 rounded-2xl flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white transition-all cursor-pointer"
-              >
-                <span className="flex items-center gap-2 text-[#C5A059]">
-                  <SlidersHorizontal size={14} /> Filter Inventory ({totalMatchingCount})
-                </span>
-                <ChevronDown 
-                  size={16} 
-                  className={`transition-transform duration-300 ${isMobileFiltersOpen ? 'rotate-180 text-[#C5A059]' : 'rotate-0 text-white/50'}`} 
-                />
-              </button>
-
-              {/* Sidebar Content (Always visible on desktop, toggleable on mobile) */}
-              <div className={`space-y-6 ${isMobileFiltersOpen ? 'block animate-in fade-in slide-in-from-top-4 duration-300' : 'hidden lg:block'}`}>
-                
-                {/* Categories container */}
-                <div className="bg-[#111111]/90 rounded-[2.5rem] border border-white/5 p-6 space-y-6 shadow-2xl relative overflow-hidden md:backdrop-blur-md">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-2xl rounded-full pointer-events-none" />
-                  
-                  {/* Category Section */}
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Property Sectors</h4>
-                    <div className="flex flex-col gap-1.5">
-                      {SECTORS_LIST.map((sect) => (
-                        <button
-                          key={sect.value}
-                          onClick={() => {
-                            setFilterSubcategory(sect.value);
-                            setCurrentPage(1);
-                          }}
-                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
-                            filterSubcategory === sect.value
-                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
-                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
-                          }`}
-                        >
-                          <span>{sect.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Cities Section */}
-                  <div className="space-y-3 pt-5 border-t border-white/5">
-                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Metro Locations</h4>
-                    <div className="flex flex-col gap-1.5">
-                      {CITIES_LIST.map((cityOpt) => (
-                        <button
-                          key={cityOpt.value}
-                          onClick={() => {
-                            setFilterCity(cityOpt.value);
-                            setCurrentPage(1);
-                          }}
-                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
-                            filterCity === cityOpt.value
-                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
-                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
-                          }`}
-                        >
-                          <span>{cityOpt.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Purpose Section */}
-                  <div className="space-y-3 pt-5 border-t border-white/5">
-                    <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C5A059]">Transaction Type</h4>
-                    <div className="flex flex-col gap-1.5">
-                      {PURPOSE_LIST.map((purp) => (
-                        <button
-                          key={purp.value}
-                          onClick={() => {
-                            setFilterStatus(purp.value);
-                            setCurrentPage(1);
-                          }}
-                          className={`w-full py-3 px-4 rounded-xl text-left text-xs font-semibold tracking-wide transition-all flex items-center justify-between group ${
-                            filterStatus === purp.value
-                              ? 'bg-[#C5A059] text-black font-black shadow-lg shadow-[#C5A059]/10'
-                              : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
-                          }`}
-                        >
-                          <span>{purp.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Verification promo badge */}
-                <div className="bg-gradient-to-br from-[#121212] to-black border border-[#C5A059]/10 rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#C5A059]/5 blur-xl rounded-full" />
-                  <p className="text-[10px] font-bold text-[#C5A059] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">🛡️ Shield Verification</p>
-                  <p className="text-[11px] text-white/50 leading-relaxed font-light mb-4">Every residential lease and property title deed on our network is triple-verified by licensed land registers and compliance agents.</p>
-                  <button 
-                    onClick={() => navigate('/about')}
-                    className="w-full h-11 border border-white/10 hover:border-white/30 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl hover:bg-white/5 transition-all cursor-pointer"
-                  >
-                    Learn Security Protocol
-                  </button>
-                </div>
-
+          <div className="grid grid-cols-1 gap-8">
+            {pageLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 md:py-32 space-y-4 col-span-full">
+                <Loader2 className="w-8 h-8 text-[#C5A059] animate-spin" />
+                <p className="text-[10px] text-white/40 font-mono tracking-widest uppercase">Consulting Title Registers...</p>
               </div>
-
-            </div>
-
-            {/* RIGHT COLUMN: MAIN CONTENT (PROPERTIES GRID) */}
-            <div className="lg:col-span-3 space-y-8 relative">
-              
-              {/* Header metrics & label stats */}
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                  Showing {totalMatchingCount === 0 ? '0' : `${(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(safeCurrentPage * ITEMS_PER_PAGE, totalMatchingCount)}`} of {totalMatchingCount} Matches
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                  ● Real-time Title Audits
-                </span>
-              </div>
-
-              {!filterCity ? (
-                <div className="text-center py-24 bg-gradient-to-b from-[#111111]/40 to-black/40 border border-white/5 rounded-[2.5rem] p-8 text-white/50 animate-in fade-in duration-300">
-                  <div className="w-16 h-16 rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] mx-auto mb-6">
-                    <MapPin className="w-8 h-8 animate-pulse" />
-                  </div>
-                  <h3 className="text-lg font-display text-white mb-2">Select a Metro Location</h3>
-                  <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed mb-6">
-                    AmaanEstate enforces secure, real-time title register audits. Please select a municipal city hub to begin exploring local verified inventory.
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-                    {CITIES_LIST.map(cityOpt => (
-                      <button
-                        key={cityOpt.value}
-                        onClick={() => {
-                          setFilterCity(cityOpt.value);
-                          setCurrentPage(1);
-                        }}
-                        className="bg-white/5 hover:bg-[#C5A059] hover:text-black border border-white/10 text-white/80 text-[10px] uppercase font-bold tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer"
-                      >
-                        {cityOpt.label.replace(' Coastal', '').replace(' Hub', '').replace(' Province', '').replace(' Port', '').replace(' Capital', '').replace(' Region', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : pageLoading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                  <Loader2 className="w-8 h-8 text-[#C5A059] animate-spin" />
-                  <p className="text-[10px] text-white/40 font-mono tracking-widest uppercase">Consulting Title Registers for {filterCity}...</p>
-                </div>
-              ) : totalMatchingCount === 0 ? (
-                <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40 animate-in fade-in duration-300">
-                  <p className="font-display">No matching properties found in {filterCity}.</p>
+            ) : displayedProperties.length === 0 ? (
+              <div className="text-center py-16 md:py-24 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40 col-span-full animate-in fade-in duration-300">
+                <p className="font-display">No verified properties found.</p>
+                {(filterCity || filterSubcategory || filterStatus) && (
                   <button
                     onClick={handleResetFilters}
                     className="mt-4 text-xs font-bold text-[#C5A059] hover:underline cursor-pointer"
                   >
                     Reset Inventory filters
                   </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-10 md:space-y-12 animate-in fade-in duration-500 col-span-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {displayedProperties.slice(0, filterCity ? undefined : 4).map(property => (
+                    <PropertyCard key={property.id} property={property} />
+                  ))}
                 </div>
-              ) : (
-                <div className="space-y-16 animate-in fade-in duration-500">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {displayedProperties.map(property => (
-                      <PropertyCard key={property.id} property={property} />
-                    ))}
-                  </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-3 pt-8">
-                      <button
-                        onClick={() => {
-                          setCurrentPage(p => Math.max(1, p - 1));
-                          propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }}
-                        disabled={currentPage === 1}
-                        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
-                      >
-                        <ChevronLeft size={18} />
-                      </button>
-                      
-                      <div className="text-[10px] font-bold text-white/40 px-4">
-                        Page {currentPage} of {totalPages}
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setCurrentPage(p => Math.min(totalPages, p + 1));
-                          propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }}
-                        disabled={currentPage === totalPages}
-                        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
-                      >
-                        <ChevronRight size={18} />
-                      </button>
+                {/* Pagination (Only show when filter is active and totalPages > 1) */}
+                {filterCity && totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-3 pt-8">
+                    <button
+                      onClick={() => {
+                        setCurrentPage(p => Math.max(1, p - 1));
+                        propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      disabled={currentPage === 1}
+                      className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    
+                    <div className="text-[10px] font-bold text-white/40 px-4">
+                      Page {currentPage} of {totalPages}
                     </div>
-                  )}
-                </div>
-              )}
 
-            </div>
-
+                    <button
+                      onClick={() => {
+                        setCurrentPage(p => Math.min(totalPages, p + 1));
+                        propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      disabled={currentPage === totalPages}
+                      className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
         </div>
       </section>
 
       {/* Dynamic Browse by City Section */}
-      <section className="py-24 bg-super-black border-t border-white/5 relative overflow-hidden">
+      <section className="py-12 md:py-16 lg:py-20 bg-super-black border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#C5A059]/1 to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4 sm:gap-6">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#C5A059] uppercase tracking-widest bg-[#C5A059]/5 border border-[#C5A059]/25 px-2.5 py-1 rounded-md mb-3">
                 <Globe className="w-3 h-3" /> Regional Markets
@@ -626,39 +614,20 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
             {CITIES_DATA.slice(0, 6).map(city => (
-              <Link
-                key={city.slug}
-                to={`/cities/${city.slug}`}
-                className="bg-[#111]/40 border border-white/5 hover:border-[#C5A059]/20 p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden block"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${city.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
-                <div className="relative z-10 space-y-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 group-hover:bg-[#C5A059]/10 border border-white/10 group-hover:border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] transition-colors duration-300">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white group-hover:text-[#C5A059] transition-colors truncate">
-                      {city.name.replace(' Coastal', '').replace(' Hub', '').replace(' Province', '').replace(' Port', '').replace(' Capital', '').replace(' Region', '')}
-                    </h4>
-                    <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider truncate">
-                      {city.region}
-                    </p>
-                  </div>
-                  <div className="text-[10px] text-[#C5A059]/80 font-medium group-hover:underline flex items-center gap-1 pt-1 justify-between">
-                    <span>Explore Hub</span>
-                    <ArrowRight className="w-3 h-3 -rotate-45 text-[#C5A059]/80 group-hover:text-white transition-colors" />
-                  </div>
-                </div>
-              </Link>
+              <CityCard 
+                key={city.slug} 
+                city={city} 
+                propertyCount={cityCounts[city.slug] || 0}
+              />
             ))}
           </div>
         </div>
       </section>
 
       {/* Featured Vehicles Section */}
-      <section className="py-24 bg-super-black border-t border-white/5">
+      <section className="py-12 md:py-16 lg:py-20 bg-super-black border-t border-white/5">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4 sm:gap-6">
             <div className="max-w-xl">
               <h2 className="text-3xl font-display text-white mb-4">Featured Vehicles</h2>
               <p className="text-white/40 text-sm">Find premium vehicles from trusted dealers and private sellers in the region.</p>

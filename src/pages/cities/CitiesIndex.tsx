@@ -17,6 +17,7 @@ import { brokerService } from '@/services/brokerService';
 import { normalizeCityName } from '@/utils/cityNormalization';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import CityCard from '@/components/CityCard';
 
 export default function CitiesIndex() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,67 +200,16 @@ export default function CitiesIndex() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {filteredCities.map(city => {
               const countMatchKey = city.dbValue.toLowerCase();
-              const listingsInCity = listingCounts[countMatchKey] || 0;
-              const brokersInCity = brokerCounts[countMatchKey] || 0;
-
               return (
-                <div 
-                  key={city.slug}
-                  className="bg-[#111]/45 p-6 rounded-2xl border border-white/5 hover:border-[#C5A059]/20 transition-all duration-300 group flex flex-col justify-between overflow-hidden relative"
-                >
-                  {/* Subtle Background Accent Gradient on Group Hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${city.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
-
-                  <div className="relative z-10 space-y-4">
-                    {/* City Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-white/40 tracking-widest uppercase flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-[#C5A059]/70" /> {city.region}
-                        </span>
-                        <h3 className="text-lg font-medium text-white group-hover:text-[#C5A059] transition-colors duration-300">
-                          {city.name}
-                        </h3>
-                      </div>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 font-medium text-white/60 capitalize">
-                        {city.country}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-white/50 text-xs leading-relaxed line-clamp-3 font-light">
-                      {city.description}
-                    </p>
-
-                    {/* Meta statistics badges */}
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <div className="flex items-center gap-1.5 text-white/60 text-[11px] bg-white/[0.02] border border-white/5 px-2.5 py-1 rounded-lg">
-                        <Layers className="w-3 h-3 text-[#C5A059]" />
-                        <span>{listingsInCity} {listingsInCity === 1 ? 'property' : 'properties'}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-white/60 text-[11px] bg-white/[0.02] border border-white/5 px-2.5 py-1 rounded-lg">
-                        <Users className="w-3 h-3 text-[#C5A059]" />
-                        <span>{brokersInCity} {brokersInCity === 1 ? 'agent' : 'agents'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions Area */}
-                  <div className="relative z-10 pt-6 mt-6 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-[10px] text-white/30 uppercase tracking-wider font-mono">
-                      Market code: Aa-{city.slug.substring(0, 3)}
-                    </span>
-                    <Link
-                      to={`/cities/${city.slug}`}
-                      className="inline-flex items-center gap-1.5 text-[#C5A059] hover:text-white hover:underline text-xs font-semibold tracking-wider transition-colors"
-                    >
-                      Browse City <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
+                <CityCard 
+                  key={city.slug} 
+                  city={city} 
+                  propertyCount={listingCounts[countMatchKey] || 0}
+                  agentCount={brokerCounts[countMatchKey] || 0}
+                />
               );
             })}
           </div>

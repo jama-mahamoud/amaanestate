@@ -75,8 +75,8 @@ export default function Footer() {
               Marketplace
             </h3>
             <ul className="space-y-4">
-              {propertiesPortfolio.map((link) => (
-                <li key={link.name}>
+              {propertiesPortfolio.map((link, idx) => (
+                <li key={`${link.name}-${idx}`}>
                   <Link 
                     to={link.path} 
                     className="text-white/50 hover:text-white transition-colors text-xs font-medium"
@@ -94,8 +94,8 @@ export default function Footer() {
               Vehicles
             </h3>
             <ul className="space-y-4">
-              {vehicleFleet.map((link) => (
-                <li key={link.name}>
+              {vehicleFleet.map((link, idx) => (
+                <li key={`${link.name}-${idx}`}>
                   <Link 
                     to={link.path} 
                     className="text-white/50 hover:text-white transition-colors text-xs font-medium"
@@ -113,8 +113,8 @@ export default function Footer() {
               Company
             </h3>
             <ul className="space-y-4">
-              {corporateLinks.map((link) => (
-                <li key={link.name}>
+              {corporateLinks.map((link, idx) => (
+                <li key={`${link.name}-${idx}`}>
                   <Link 
                     to={link.path} 
                     className="text-white/50 hover:text-white transition-colors text-xs font-medium"

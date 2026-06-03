@@ -78,15 +78,20 @@ export default function CityDetails() {
       setLoadingListings(true);
       setLoadingAgents(true);
       try {
+        // Align with homepage aggregation logic
         const [listingsRes, brokersRes, agenciesRes] = await Promise.all([
-          listingService.getListings({ city: cityData.dbValue, limit: 1000 }),
+          listingService.getListings({ 
+            city: cityData.dbValue, 
+            limit: 1000,
+            category: 'property' // Explicitly match aggregation category filter
+          }),
           brokerService.getVerifiedBrokers(),
           brokerService.getVerifiedAgencies()
         ]);
 
         if (!active) return;
-
-        // Since we are querying Firestore directly by city variations, listingsRes.listings contains only matched listings.
+        
+        console.log(`[CityDetails] Debug: Query results for ${cityData.dbValue}:`, listingsRes.listings.map(l => ({ id: l.id, city: l.city, status: l.status, category: l.category })));
         setAllListings(listingsRes.listings);
 
         const targetCityLower = cityData.dbValue.toLowerCase().trim();
@@ -471,7 +476,7 @@ export default function CityDetails() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          agent.fullName.substring(0, 2).toUpperCase()
+                          (agent.fullName || 'Agent').substring(0, 2).toUpperCase()
                         )}
                       </div>
                       <div className="min-w-0">

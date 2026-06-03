@@ -116,10 +116,11 @@ export const listingService = {
 
     // Default to active listings if no status is specified
     if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
-       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']));
+       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED', 'verified']));
     } else if (filters.status) {
-       const statusOptions = Array.from(new Set([filters.status, filters.status.toUpperCase(), filters.status.toLowerCase()]));
-       filterConstraints.push(where('status', 'in', statusOptions.slice(0, 3)));
+       const statusValue = filters.status.toUpperCase();
+       const statusValueLower = filters.status.toLowerCase();
+       filterConstraints.push(where('status', 'in', [statusValue, statusValueLower]));
     }
 
     if (filters.category) {
@@ -144,23 +145,8 @@ export const listingService = {
     }
 
     if (filters.city && filters.city !== 'All') {
-      const canonical = normalizeCityName(filters.city);
-      let cityOptions = [canonical, canonical.toLowerCase(), canonical.toUpperCase()];
-      
-      // Explicit strict variations for city field only to prevent any leaky region matching
-      if (canonical === 'Jigjiga') {
-        cityOptions = ['Jigjiga', 'Jijiga', 'jigjiga', 'jijiga'];
-      } else if (canonical === 'Mogadishu') {
-        cityOptions = ['Mogadishu', 'Mogadisho', 'mogadishu', 'Banaadir', 'Mogadishu Coastal'];
-      } else if (canonical === 'Hargeisa') {
-        cityOptions = ['Hargeisa', 'Hargeysa', 'hargeisa', 'Hargeisa Hub'];
-      } else if (canonical === 'Garowe') {
-        cityOptions = ['Garowe', 'Garoowe', 'garowe', 'Garowe Province'];
-      } else if (canonical === 'Bosaso') {
-        cityOptions = ['Bosaso', 'Boosaaso', 'bosaso', 'Bosaso Port'];
-      }
-      
-      const uniqueCities = Array.from(new Set(cityOptions));
+      const cityOptions = getCityQueryVariations(filters.city);
+      const uniqueCities = Array.from(new Set(cityOptions)).slice(0, 3);
       filterConstraints.push(where('city', 'in', uniqueCities));
     }
 
@@ -228,10 +214,11 @@ export const listingService = {
     }
 
     if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
-       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']));
+       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED', 'verified']));
     } else if (filters.status) {
-       const statusOptions = Array.from(new Set([filters.status, filters.status.toUpperCase(), filters.status.toLowerCase()]));
-       filterConstraints.push(where('status', 'in', statusOptions.slice(0, 3)));
+       const statusValue = filters.status.toUpperCase();
+       const statusValueLower = filters.status.toLowerCase();
+       filterConstraints.push(where('status', 'in', [statusValue, statusValueLower]));
     }
 
     if (filters.category) {
@@ -255,23 +242,8 @@ export const listingService = {
     }
 
     if (filters.city && filters.city !== 'All') {
-      const canonical = normalizeCityName(filters.city);
-      let cityOptions = [canonical, canonical.toLowerCase(), canonical.toUpperCase()];
-      
-      // Explicit strict variations for city field only to prevent any leaky region matching
-      if (canonical === 'Jigjiga') {
-        cityOptions = ['Jigjiga', 'Jijiga', 'jigjiga', 'jijiga'];
-      } else if (canonical === 'Mogadishu') {
-        cityOptions = ['Mogadishu', 'Mogadisho', 'mogadishu', 'Banaadir', 'Mogadishu Coastal'];
-      } else if (canonical === 'Hargeisa') {
-        cityOptions = ['Hargeisa', 'Hargeysa', 'hargeisa', 'Hargeisa Hub'];
-      } else if (canonical === 'Garowe') {
-        cityOptions = ['Garowe', 'Garoowe', 'garowe', 'Garowe Province'];
-      } else if (canonical === 'Bosaso') {
-        cityOptions = ['Bosaso', 'Boosaaso', 'bosaso', 'Bosaso Port'];
-      }
-      
-      const uniqueCities = Array.from(new Set(cityOptions));
+      const cityOptions = getCityQueryVariations(filters.city);
+      const uniqueCities = Array.from(new Set(cityOptions)).slice(0, 3);
       filterConstraints.push(where('city', 'in', uniqueCities));
     }
 
@@ -521,10 +493,11 @@ export const listingService = {
       const promises = CITIES_DATA.map(async (city) => {
         const vars = getCityQueryVariations(city.dbValue);
         const ref = collection(db, 'listings');
-        // Compact vars array to prevent too many disjunctions, and search city only
-        const uniqueCities = Array.from(new Set(vars.slice(0, 4)));
+        // Search city with up to 3 key variants to stay within Firestore disjunction limits (Product of query filters <= 30)
+        const uniqueCities = Array.from(new Set(vars.slice(0, 3)));
         const constraints: any[] = [
-          where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']),
+          where('status', 'in', ['ACTIVE', 'active', 'VERIFIED', 'verified']),
+          where('category', 'in', ['property', 'land']),
           where('city', 'in', uniqueCities)
         ];
         const q = query(ref, ...constraints);
