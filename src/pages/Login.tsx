@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { BrandIdentity } from '@/components/brand/BrandIdentity';
+import { BrandHeader } from '@/components/brand/BrandHeader';
 
 import { parseAuthError } from '@/utils/firebaseErrors';
 
@@ -49,7 +49,7 @@ export default function Login() {
     <div className="min-h-screen bg-super-black flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-lg relative z-10">
         <div className="flex justify-center mb-12">
-            <BrandIdentity size="md" />
+          <BrandHeader size="lg" />
         </div>
 
         <motion.div

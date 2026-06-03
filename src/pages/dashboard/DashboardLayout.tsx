@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
-// Logo removed
+import { BrandHeader } from '@/components/brand/BrandHeader';
 
 function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -100,10 +100,7 @@ function DashboardContent() {
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-[#0a0a0a] border-r border-white/5 transform transition-transform duration-500 ease-luxury lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           <div className="p-6 sm:p-10 flex items-center justify-between">
-            <Link to="/" className="flex items-center group">
-              {/* Logo removed */}
-              <div className="w-[140px] h-[40px]" />
-            </Link>
+            <BrandHeader size="sm" />
             <Button variant="ghost" size="icon" className="lg:hidden text-white/60 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />
             </Button>

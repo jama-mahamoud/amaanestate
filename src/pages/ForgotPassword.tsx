@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-// Logo removed
+import { BrandHeader } from '@/components/brand/BrandHeader';
 import { parseAuthError } from '@/utils/firebaseErrors';
 
 export default function ForgotPassword() {
@@ -43,9 +43,7 @@ export default function ForgotPassword() {
 
       <div className="w-full max-w-lg relative z-10">
         <div className="flex justify-center mb-12">
-          <Link to="/" className="flex flex-col items-center select-none gap-4 group">
-            <div className="w-[140px] h-[4px]" />
-          </Link>
+          <BrandHeader size="lg" />
         </div>
 
         <motion.div
