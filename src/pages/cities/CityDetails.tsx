@@ -79,27 +79,17 @@ export default function CityDetails() {
       setLoadingAgents(true);
       try {
         const [listingsRes, brokersRes, agenciesRes] = await Promise.all([
-          listingService.getListings({ limit: 400 }),
+          listingService.getListings({ city: cityData.dbValue, limit: 1000 }),
           brokerService.getVerifiedBrokers(),
           brokerService.getVerifiedAgencies()
         ]);
 
         if (!active) return;
 
-        // Filter listings that match this city
+        // Since we are querying Firestore directly by city variations, listingsRes.listings contains only matched listings.
+        setAllListings(listingsRes.listings);
+
         const targetCityLower = cityData.dbValue.toLowerCase().trim();
-        const matchedListings = listingsRes.listings.filter((item: any) => {
-          const itemCity = (item.city || '').toLowerCase().trim();
-          const itemRegion = (item.region || '').toLowerCase().trim();
-          
-          return (
-            itemCity === targetCityLower || 
-            itemRegion === targetCityLower ||
-            itemCity.includes(targetCityLower) ||
-            targetCityLower.includes(itemCity)
-          );
-        });
-        setAllListings(matchedListings);
 
         // Filter agents that match this city
         const combined = [

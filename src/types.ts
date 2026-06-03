@@ -45,6 +45,7 @@ export interface Listing {
   district?: string;
   landmark?: string;
   region?: string;
+  country?: string;
   phone?: string;
   whatsapp?: string;
   email?: string;

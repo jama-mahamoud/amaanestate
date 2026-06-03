@@ -14,6 +14,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { CITIES_DATA, CityData } from '@/data/cities';
 import { listingService } from '@/services/listingService';
 import { brokerService } from '@/services/brokerService';
+import { normalizeCityName } from '@/utils/cityNormalization';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -57,24 +58,15 @@ export default function CitiesIndex() {
     let active = true;
     const fetchCityCounts = async () => {
       try {
-        const [listingsResult, brokersResult, agenciesResult] = await Promise.all([
-          listingService.getListings({ limit: 400 }),
+        const [lCounts, brokersResult, agenciesResult] = await Promise.all([
+          listingService.getCityListingCounts(),
           brokerService.getVerifiedBrokers(),
           brokerService.getVerifiedAgencies()
         ]);
 
         if (!active) return;
 
-        // Calculate dynamic listing counts per city
-        const lCounts: Record<string, number> = {};
-        listingsResult.listings.forEach((item: any) => {
-          const cityVal = (item.city || '').trim().toLowerCase();
-          if (cityVal) {
-            lCounts[cityVal] = (lCounts[cityVal] || 0) + 1;
-          }
-        });
-
-        // Calculate agent counts per city
+        // Calculate agent counts per city with canonical city normalization
         const bCounts: Record<string, number> = {};
         const combineBrokers = [
           ...brokersResult.map(b => ({ ...b, isAgency: false })),
@@ -82,9 +74,9 @@ export default function CitiesIndex() {
         ];
 
         combineBrokers.forEach((item: any) => {
-          const cityVal = (item.city || '').trim().toLowerCase();
-          if (cityVal) {
-            bCounts[cityVal] = (bCounts[cityVal] || 0) + 1;
+          const normCity = normalizeCityName(item.city).toLowerCase();
+          if (normCity) {
+            bCounts[normCity] = (bCounts[normCity] || 0) + 1;
           }
         });
 

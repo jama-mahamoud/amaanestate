@@ -21,8 +21,15 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
   const [city, setCity] = useState<string>('');
   const [type, setType] = useState<string>('');
   const [listingType, setListingType] = useState<string>('');
+  const [cityRequiredError, setCityRequiredError] = useState(false);
 
   const handleSearch = () => {
+    if (!city || city === 'all') {
+      setCityRequiredError(true);
+      return;
+    }
+    setCityRequiredError(false);
+
     let resolvedCategory: any = undefined;
     let resolvedSubcategory: string | undefined = type === 'all' ? undefined : type;
 
@@ -38,7 +45,7 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
 
     onSearch({
         category: resolvedCategory,
-        city: city && city !== 'all' ? city : undefined,
+        city: city,
         listingType: listingType ? (listingType as any) : undefined,
         subcategory: resolvedSubcategory,
     });
@@ -50,17 +57,27 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
         
         {/* City */}
         <div className="relative group flex-1 min-w-0">
-          <Select value={city} onValueChange={setCity}>
-            <SelectTrigger className="bg-transparent border-0 h-14 md:h-16 rounded-2xl text-white hover:bg-white/5 transition-all px-2 md:px-6 ring-0 focus:ring-0 focus:outline-none [&>svg]:hidden md:[&>svg]:block">
+          <Select value={city} onValueChange={(val) => {
+            setCity(val);
+            setCityRequiredError(false);
+          }}>
+            <SelectTrigger className={`bg-transparent border transition-all h-14 md:h-16 rounded-2xl text-white hover:bg-white/5 px-2 md:px-6 ring-0 focus:ring-0 focus:outline-none [&>svg]:hidden md:[&>svg]:block ${
+              cityRequiredError ? 'border-red-500 bg-red-500/5 animate-pulse' : 'border-transparent'
+            }`}>
               <div className="flex flex-col items-start text-left w-full overflow-hidden">
-                <span className="text-[8px] md:text-[9px] text-white/40 font-bold uppercase tracking-wider mb-1 leading-none truncate w-full">Location</span>
-                <div className="text-[11px] md:text-sm font-semibold truncate w-full text-white">
-                  <SelectValue placeholder="City" />
+                <span className={`text-[8px] md:text-[9px] font-bold uppercase tracking-wider mb-1 leading-none truncate w-full ${
+                  cityRequiredError ? 'text-red-400' : 'text-white/40'
+                }`}>
+                  {cityRequiredError ? 'Location (Required)' : 'Location'}
+                </span>
+                <div className={`text-[11px] md:text-sm font-semibold truncate w-full ${
+                  cityRequiredError ? 'text-red-400' : 'text-white'
+                }`}>
+                  <SelectValue placeholder={cityRequiredError ? "Choose City!" : "Select City"} />
                 </div>
               </div>
             </SelectTrigger>
             <SelectContent className="bg-luxury-charcoal border-white/10 text-white max-h-[300px] rounded-2xl z-[9999]">
-              <SelectItem value="all">Everywhere</SelectItem>
               {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>

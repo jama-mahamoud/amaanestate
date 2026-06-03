@@ -1,147 +1,75 @@
-import express from "express";
-import path from "path";
-import fs from "fs";
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>AmaanEstate - Premium Real Estate & Luxury Vehicles</title>
+    
+    <!-- Theme & Security Configuration -->
+    <meta name="theme-color" content="#050505" />
+    
+    <!-- Primary SEO Metadata -->
+    <meta name="description" content="A premium, modern real estate and luxury vehicle marketplace for the Somali Region, reimagined with professional UI/UX, elite typography, and secure registrations." />
+    <meta name="keywords" content="AmaanEstate, Amaan Estate, Somali Region Real Estate, Jigjiga Real Estate, Luxury Houses, Plot sales, Vehicle hire, Lease agreements" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Favicon and App Icons (Multi-size Support) -->
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="canonical" href="https://www.amaanestate.com/" />
 
-const app = express();
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.amaanestate.com/" />
+    <meta property="og:title" content="AmaanEstate - Premium Real Estate & Luxury Vehicles" />
+    <meta property="og:description" content="A premium, modern real estate and luxury vehicle marketplace for the Somali Region, reimagined with professional UI/UX, elite typography, and secure registrations." />
+    <meta property="og:image" content="https://www.amaanestate.com/default-og-image.jpg" />
 
-// =========================
-// CONFIG
-// =========================
-const HOST = "www.amaanestate.com";
-const PROTOCOL = "https";
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.amaanestate.com/" />
+    <meta name="twitter:title" content="AmaanEstate - Premium Real Estate & Luxury Vehicles" />
+    <meta name="twitter:description" content="A premium, modern real estate and luxury vehicle marketplace for the Somali Region, reimagined with professional UI/UX, elite typography, and secure registrations." />
 
-// =========================
-// STATIC FILES (IMPORTANT)
-// =========================
-app.use(express.static(path.join(process.cwd(), "public")));
+    <!-- Structured SEO Schema JSON-LD (Organization) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "AmaanEstate",
+        "alternateName": "Amaan Estate",
+        "url": "https://amaanestate.com",
+        "logo": "https://amaanestate.com/house_luxury_icon.png",
+        "description": "A premium, modern real estate and luxury vehicle marketplace for the Somali Region, reimagined with professional UI/UX, elite typography, and secure registrations.",
+        "sameAs": [
+          "https://www.facebook.com/amaanestate",
+          "https://twitter.com/amaanestate",
+          "https://www.instagram.com/amaanestate"
+        ]
+      }
+    </script>
 
-// =========================
-// DEFAULT OG IMAGE FIX (CRITICAL)
-// =========================
-app.get("/default-og-image.jpg", (req, res) => {
-  const filePath = path.join(process.cwd(), "public/default-og-image.jpg");
+    <!-- Structured SEO Schema JSON-LD (WebSite) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "AmaanEstate",
+        "url": "https://amaanestate.com",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://amaanestate.com/properties?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send("OG image not found");
-  }
-
-  res.setHeader("Content-Type", "image/jpeg");
-  res.setHeader("Cache-Control", "public, max-age=86400, immutable");
-  return res.sendFile(filePath);
-});
-
-// =========================
-// BOT DETECTION
-// =========================
-const isBot = (req: express.Request) =>
-  /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot/i.test(
-    req.headers["user-agent"] || ""
-  );
-
-// =========================
-// SEO RENDER ENGINE
-// =========================
-async function servePageWithMetadata(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-  seoData: {
-    title: string;
-    description: string;
-    imageUrl?: string;
-    urlPath: string;
-    type?: string;
-  }
-) {
-  try {
-    const templatePath = path.resolve(process.cwd(), "dist/index.html");
-    if (!fs.existsSync(templatePath)) return next();
-
-    let template = fs.readFileSync(templatePath, "utf-8");
-
-    const fullUrl = `${PROTOCOL}://${HOST}${seoData.urlPath}`;
-
-    const title = `${seoData.title} | AmaanEstate`;
-    const description = (seoData.description || "").slice(0, 160);
-
-    // =========================
-    // IMAGE FIX (VERY IMPORTANT)
-    // =========================
-    let imageUrl = seoData.imageUrl || "/default-og-image.jpg";
-
-    if (!imageUrl.startsWith("http")) {
-      imageUrl = `${PROTOCOL}://${HOST}${imageUrl}`;
-    }
-
-    imageUrl = imageUrl.replace("http://", "https://");
-
-    // =========================
-    // REMOVE OLD TAGS
-    // =========================
-    template = template
-      .replace(/<title>.*<\/title>/g, "")
-      .replace(/<meta[^>]*property=["']og:.*?>/g, "")
-      .replace(/<meta[^>]*name=["']twitter:.*?>/g, "")
-      .replace(/<link[^>]*rel=["']canonical["']?[^>]*>/g, "");
-
-    // =========================
-    // FIXED META TAGS (WITH fb:app_id)
-    // =========================
-    const metaTags = `
-      <title>${title}</title>
-
-      <meta name="description" content="${description}" />
-      <meta property="fb:app_id" content="YOUR_FB_APP_ID_HERE" />
-
-      <meta property="og:type" content="${seoData.type || "website"}" />
-      <meta property="og:title" content="${title}" />
-      <meta property="og:description" content="${description}" />
-      <meta property="og:url" content="${fullUrl}" />
-      <meta property="og:image" content="${imageUrl}" />
-
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="${title}" />
-      <meta name="twitter:description" content="${description}" />
-      <meta name="twitter:image" content="${imageUrl}" />
-
-      <link rel="canonical" href="${fullUrl}" />
-    `;
-
-    template = template.replace("<head>", `<head>${metaTags}`);
-
-    // =========================
-    // CACHE FIX (prevents 206 / preview bugs)
-    // =========================
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-
-    return res.status(200).send(template);
-  } catch (err) {
-    console.error("[SEO ERROR]", err);
-    return next();
-  }
-}
-
-// =========================
-// NEWS ROUTE SEO
-// =========================
-app.get("/news/:id", async (req, res, next) => {
-  const meta = await getArticleMetadata(req.params.id);
-
-  if (meta) {
-    return servePageWithMetadata(req, res, next, {
-      title: meta.title || "News",
-      description:
-        meta.summary || meta.content?.substring(0, 160) || "Latest update",
-      imageUrl:
-        meta.socialImage ||
-        meta.featuredImage ||
-        "/default-og-image.jpg",
-      urlPath: `/news/${req.params.id}`,
-      type: "article",
-    });
-  }
-
-  return next();
-});

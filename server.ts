@@ -159,6 +159,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T):
 async function generateSitemapXml() {
   const urls: Array<{ loc: string; changefreq: string; priority: string }> = [
     { loc: "https://www.amaanestate.com/", changefreq: "daily", priority: "1.0" },
+    { loc: "https://www.amaanestate.com/cities", changefreq: "daily", priority: "0.8" },
     { loc: "https://www.amaanestate.com/properties", changefreq: "daily", priority: "0.9" },
     { loc: "https://www.amaanestate.com/vehicles", changefreq: "daily", priority: "0.9" },
     { loc: "https://www.amaanestate.com/agents", changefreq: "daily", priority: "0.8" },
@@ -170,6 +171,21 @@ async function generateSitemapXml() {
     { loc: "https://www.amaanestate.com/terms", changefreq: "monthly", priority: "0.3" },
     { loc: "https://www.amaanestate.com/disclaimer", changefreq: "monthly", priority: "0.3" },
   ];
+
+  const citySlugs = [
+    'mogadishu', 'hargeisa', 'garowe', 'bosaso', 'jigjiga', 'dire-dawa',
+    'addis-ababa', 'kismayo', 'baidoa', 'beledweyne', 'galkayo', 'burao',
+    'berbera', 'las-anod', 'jowhar', 'afgooye', 'godey', 'mekelle',
+    'hawassa', 'adama', 'bahir-dar', 'merca'
+  ];
+
+  citySlugs.forEach(slug => {
+    urls.push({
+      loc: `https://www.amaanestate.com/cities/${slug}`,
+      changefreq: "daily",
+      priority: "0.8"
+    });
+  });
 
   const firestoreDb = getAdminDb();
   

@@ -27,6 +27,7 @@ import somaliLuxuryVillaImg from '@/assets/images/somali_luxury_villa_1780228310
 import { useSEO } from '@/hooks/useSEO';
 import { CITIES_DATA } from '@/data/cities';
 import { MapPin, Globe } from 'lucide-react';
+import { normalizeCityName } from '@/utils/cityNormalization';
 
 const SECTORS_LIST = [
   { label: 'All Sectors', value: '' },
@@ -38,7 +39,6 @@ const SECTORS_LIST = [
 ];
 
 const CITIES_LIST = [
-  { label: 'All Cities', value: '' },
   { label: 'Mogadishu Coastal', value: 'Mogadishu' },
   { label: 'Hargeisa Hub', value: 'Hargeisa' },
   { label: 'Garowe Province', value: 'Garowe' },
@@ -76,8 +76,8 @@ export default function Home() {
     }
   });
 
-  const [allListings, setAllListings] = useState<Listing[]>([]);
-  const [listingsLoading, setListingsLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<Listing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -129,50 +129,24 @@ export default function Home() {
     }
   }, [searchParams]);
 
-  // Load all listings using the unified listingService
+  // Load featured vehicles dynamically from Firestore
   useEffect(() => {
     let active = true;
-    const fetchAllData = async () => {
-      setListingsLoading(true);
+    const fetchVehicles = async () => {
       try {
-        const { listings } = await listingService.getListings({ limit: 200 });
+        const res = await listingService.getListings({ category: 'vehicle', limit: 8 });
         if (active) {
-          setAllListings(listings);
+          setVehicles(res.listings);
         }
       } catch (err) {
-        console.error('Error fetching listings for Homepage:', err);
-      } finally {
-        if (active) {
-          setListingsLoading(false);
-        }
+        console.error('Error fetching vehicles for Homepage:', err);
       }
     };
-    fetchAllData();
+    fetchVehicles();
     return () => {
       active = false;
     };
   }, []);
-
-  // Separate properties and vehicles based on category
-  const { visibleProperties, vehicles } = useMemo(() => {
-    const propertiesList = allListings.filter(item => item.category === "property" || item.category === "land");
-    const vehiclesList = allListings.filter(item => item.category === "vehicle");
-    
-    // Visibility and basic validation filters
-    const visible = propertiesList.filter(
-      item =>
-        (item.status === "ACTIVE" || item.status === "VERIFIED" || (item as any).visibility === "public" || (item as any).approved === true)
-    );
-    
-    console.log('[DEBUG] Fetched total allListings:', allListings.length);
-    console.log('[DEBUG] Classified as properties/land:', propertiesList.length);
-    console.log('[DEBUG] Filtered visible properties/land:', visible.length);
-    
-    const landListings = visible.filter(item => item.category === 'land');
-    console.log('[DEBUG] Visible land listings:', landListings);
-
-    return { visibleProperties: visible, vehicles: vehiclesList };
-  }, [allListings]);
 
   // Handle HomeSearch component filters
   const handleSearch = useCallback((filters: ListingFilter) => {
@@ -206,48 +180,106 @@ export default function Home() {
     setCurrentPage(1);
   }, []);
 
-  // Filter matched properties dynamically
-  const allProperties = useMemo(() => {
-    const result = visibleProperties.filter(item => {
-      if (filterSubcategory) {
-        const itemSub = (item.subcategory || '').toLowerCase().trim();
-        const querySub = filterSubcategory.toLowerCase().trim();
-        if (querySub === 'rental') {
-          const itemType = (item.listingType || '').toLowerCase().trim();
-          if (itemType !== 'rent' && itemSub !== 'rental') return false;
+  // State to support server-side querying and pagination directly on Firestore
+  const [displayedProperties, setDisplayedProperties] = useState<Listing[]>([]);
+  const [totalMatchingCount, setTotalMatchingCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [lastDocs, setLastDocs] = useState<Record<number, any>>({});
+  const [pageLoading, setPageLoading] = useState(false);
+
+  const ITEMS_PER_PAGE = 20; // Dynamic pagination (20 results per page)
+
+  // Reset pagination cursors each time any UI/search filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setLastDocs({});
+  }, [filterCity, filterSubcategory, filterStatus]);
+
+  // Reactively fetch the matched subset of page listings based on current filters and active page cursor
+  useEffect(() => {
+    let active = true;
+
+    const fetchPageData = async () => {
+      if (!filterCity) {
+        setDisplayedProperties([]);
+        setTotalMatchingCount(0);
+        setTotalPages(1);
+        setPageLoading(false);
+        return;
+      }
+      setPageLoading(true);
+      try {
+        const fetchFilters: ListingFilter = {
+          limit: ITEMS_PER_PAGE,
+        };
+
+        if (filterStatus) {
+          fetchFilters.listingType = filterStatus as any;
+        }
+
+        if (filterCity) {
+          fetchFilters.city = filterCity;
+        }
+
+        if (filterSubcategory) {
+          if (filterSubcategory === 'land') {
+            fetchFilters.category = 'land';
+          } else {
+            fetchFilters.category = 'property';
+            fetchFilters.subcategory = filterSubcategory;
+          }
         } else {
-          if (!itemSub.includes(querySub) && !querySub.includes(itemSub)) return false;
+          fetchFilters.category = 'property';
+        }
+
+        // Set pagination cursor
+        if (currentPage > 1 && lastDocs[currentPage - 1]) {
+          fetchFilters.lastDoc = lastDocs[currentPage - 1];
+        }
+
+        const res = await listingService.getListings(fetchFilters);
+        if (!active) return;
+
+        setDisplayedProperties(res.listings);
+
+        // Store next page cursor
+        if (res.lastDoc) {
+          setLastDocs(prev => ({
+            ...prev,
+            [currentPage]: res.lastDoc
+          }));
+        }
+
+        // Fetch precise aggregate match counts directly from Firestore
+        const countFilters = { ...fetchFilters };
+        delete countFilters.limit;
+        delete countFilters.lastDoc;
+
+        const totalCount = await listingService.getListingsCount(countFilters);
+        if (!active) return;
+
+        setTotalMatchingCount(totalCount);
+        setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE) || 1);
+
+      } catch (err) {
+        console.error('[Error] Server-side query fetch failed:', err);
+      } finally {
+        if (active) {
+          setPageLoading(false);
         }
       }
+    };
 
-      if (filterCity) {
-        const itemCity = (item.city || '').toLowerCase().trim();
-        const queryCity = filterCity.toLowerCase().trim();
-        if (itemCity !== queryCity) return false;
-      }
+    fetchPageData();
+    return () => {
+      active = false;
+    };
+  }, [currentPage, filterCity, filterSubcategory, filterStatus, lastDocs[currentPage - 1]]);
 
-      if (filterStatus) {
-        const itemType = (item.listingType || '').toLowerCase().trim();
-        const queryType = filterStatus.toLowerCase().trim();
-        if (itemType !== queryType) return false;
-      }
-
-      return true;
-    });
-    
-    console.log('[DEBUG] Rendered total properties/land after UI filters:', result.length);
-    return result;
-  }, [visibleProperties, filterSubcategory, filterCity, filterStatus]);
-
-  const ITEMS_PER_PAGE = 8;
-  const { totalPages, safeCurrentPage, displayedProperties } = useMemo(() => {
-    const total = Math.ceil(allProperties.length / ITEMS_PER_PAGE) || 1;
-    const safePage = Math.min(currentPage, total);
-    const start = (safePage - 1) * ITEMS_PER_PAGE;
-    const displayed = allProperties.slice(start, start + ITEMS_PER_PAGE);
-    
-    return { totalPages: total, safeCurrentPage: safePage, displayedProperties: displayed };
-  }, [allProperties, currentPage]);
+  // Stabilize safeCurrentPage value to prevent UI out-of-bounds mismatches
+  const safeCurrentPage = useMemo(() => {
+    return Math.min(currentPage, totalPages);
+  }, [currentPage, totalPages]);
 
 
   return (
@@ -318,7 +350,7 @@ export default function Home() {
             
             <div className="flex items-center gap-4">
               <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
-                {allProperties.length} ACTIVE LISTINGS
+                {totalMatchingCount} ACTIVE LISTINGS
               </span>
             </div>
           </div>
@@ -366,7 +398,7 @@ export default function Home() {
                 className="w-full lg:hidden bg-white/[0.02] border border-white/10 hover:border-[#C5A059]/40 h-14 px-5 rounded-2xl flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white transition-all cursor-pointer"
               >
                 <span className="flex items-center gap-2 text-[#C5A059]">
-                  <SlidersHorizontal size={14} /> Filter Inventory ({allProperties.length})
+                  <SlidersHorizontal size={14} /> Filter Inventory ({totalMatchingCount})
                 </span>
                 <ChevronDown 
                   size={16} 
@@ -399,18 +431,6 @@ export default function Home() {
                           }`}
                         >
                           <span>{sect.label}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
-                            filterSubcategory === sect.value 
-                              ? 'bg-black/15 text-black' 
-                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
-                          }`}>
-                            {visibleProperties.filter(item => {
-                              const itemSub = (item.subcategory || '').toLowerCase().trim();
-                              const querySub = sect.value.toLowerCase().trim();
-                              if (!sect.value) return true;
-                              return itemSub.includes(querySub) || querySub.includes(itemSub);
-                            }).length}
-                          </span>
                         </button>
                       ))}
                     </div>
@@ -434,18 +454,6 @@ export default function Home() {
                           }`}
                         >
                           <span>{cityOpt.label}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
-                            filterCity === cityOpt.value 
-                              ? 'bg-black/15 text-black' 
-                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
-                          }`}>
-                            {visibleProperties.filter(item => {
-                              const itemCity = (item.city || '').toLowerCase().trim();
-                              const queryCity = cityOpt.value.toLowerCase().trim();
-                              if (!cityOpt.value) return true;
-                              return itemCity === queryCity;
-                            }).length}
-                          </span>
                         </button>
                       ))}
                     </div>
@@ -469,18 +477,6 @@ export default function Home() {
                           }`}
                         >
                           <span>{purp.label}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-mono ${
-                            filterStatus === purp.value 
-                              ? 'bg-black/15 text-black' 
-                              : 'bg-white/5 text-white/40 group-hover:text-white/60'
-                          }`}>
-                            {visibleProperties.filter(item => {
-                              const itemType = (item.listingType || '').toLowerCase().trim();
-                              const queryType = purp.value.toLowerCase().trim();
-                              if (!purp.value) return true;
-                              return itemType === queryType;
-                            }).length}
-                          </span>
                         </button>
                       ))}
                     </div>
@@ -506,24 +502,53 @@ export default function Home() {
             </div>
 
             {/* RIGHT COLUMN: MAIN CONTENT (PROPERTIES GRID) */}
-            <div className="lg:col-span-3 space-y-8">
+            <div className="lg:col-span-3 space-y-8 relative">
               
               {/* Header metrics & label stats */}
               <div className="flex justify-between items-center pb-3 border-b border-white/5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                  Showing {allProperties.length === 0 ? '0' : `${(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(safeCurrentPage * ITEMS_PER_PAGE, allProperties.length)}`} of {allProperties.length} Matches
+                  Showing {totalMatchingCount === 0 ? '0' : `${(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(safeCurrentPage * ITEMS_PER_PAGE, totalMatchingCount)}`} of {totalMatchingCount} Matches
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                   ● Real-time Title Audits
                 </span>
               </div>
 
-              {allProperties.length === 0 ? (
-                <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40">
-                  <p className="font-display">No matching properties found in this division.</p>
+              {!filterCity ? (
+                <div className="text-center py-24 bg-gradient-to-b from-[#111111]/40 to-black/40 border border-white/5 rounded-[2.5rem] p-8 text-white/50 animate-in fade-in duration-300">
+                  <div className="w-16 h-16 rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059] mx-auto mb-6">
+                    <MapPin className="w-8 h-8 animate-pulse" />
+                  </div>
+                  <h3 className="text-lg font-display text-white mb-2">Select a Metro Location</h3>
+                  <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed mb-6">
+                    AmaanEstate enforces secure, real-time title register audits. Please select a municipal city hub to begin exploring local verified inventory.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
+                    {CITIES_LIST.map(cityOpt => (
+                      <button
+                        key={cityOpt.value}
+                        onClick={() => {
+                          setFilterCity(cityOpt.value);
+                          setCurrentPage(1);
+                        }}
+                        className="bg-white/5 hover:bg-[#C5A059] hover:text-black border border-white/10 text-white/80 text-[10px] uppercase font-bold tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                      >
+                        {cityOpt.label.replace(' Coastal', '').replace(' Hub', '').replace(' Province', '').replace(' Port', '').replace(' Capital', '').replace(' Region', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : pageLoading ? (
+                <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                  <Loader2 className="w-8 h-8 text-[#C5A059] animate-spin" />
+                  <p className="text-[10px] text-white/40 font-mono tracking-widest uppercase">Consulting Title Registers for {filterCity}...</p>
+                </div>
+              ) : totalMatchingCount === 0 ? (
+                <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40 animate-in fade-in duration-300">
+                  <p className="font-display">No matching properties found in {filterCity}.</p>
                   <button
                     onClick={handleResetFilters}
-                    className="mt-4 text-xs font-bold text-[#C5A059] hover:underline"
+                    className="mt-4 text-xs font-bold text-[#C5A059] hover:underline cursor-pointer"
                   >
                     Reset Inventory filters
                   </button>
@@ -544,14 +569,14 @@ export default function Home() {
                           setCurrentPage(p => Math.max(1, p - 1));
                           propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}
-                        disabled={safeCurrentPage === 1}
+                        disabled={currentPage === 1}
                         className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
                       >
                         <ChevronLeft size={18} />
                       </button>
                       
                       <div className="text-[10px] font-bold text-white/40 px-4">
-                        Page {safeCurrentPage} of {totalPages}
+                        Page {currentPage} of {totalPages}
                       </div>
 
                       <button
@@ -559,7 +584,7 @@ export default function Home() {
                           setCurrentPage(p => Math.min(totalPages, p + 1));
                           propertiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}
-                        disabled={safeCurrentPage === totalPages}
+                        disabled={currentPage === totalPages}
                         className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 text-white disabled:opacity-20 transition-all cursor-pointer"
                       >
                         <ChevronRight size={18} />

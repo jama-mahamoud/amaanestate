@@ -18,12 +18,15 @@ import {
   QueryDocumentSnapshot,
   or,
   and,
-  Timestamp
+  Timestamp,
+  getCountFromServer
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Listing, ListingCategory, ListingStatus, ListingType } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/utils';
 import { trustService } from './trustService'; 
+import { getCityQueryVariations, normalizeCityName } from '../utils/cityNormalization';
+import { CITIES_DATA } from '../data/cities';
 
 export interface ListingFilter {
   category?: ListingCategory;
@@ -67,7 +70,7 @@ export const listingService = {
     
     // Legacy mapping
     if (status === 'pending' || status === 'PENDING') status = 'PENDING';
-    else if (status === 'active' || status === 'approved' || status === 'ACTIVE') status = 'ACTIVE';
+    else if (status === 'active' || status === 'approved' || status === 'ACTIVE' || status === 'verified' || status === 'VERIFIED') status = 'ACTIVE';
     else if (status === 'suspended' || status === 'SUSPENDED') status = 'SUSPENDED';
     else if (status === 'rejected' || status === 'REJECTED') status = 'SUSPENDED'; // Treat rejected as suspended for now
     else status = 'DRAFT';
@@ -113,10 +116,10 @@ export const listingService = {
 
     // Default to active listings if no status is specified
     if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
-       filterConstraints.push(where('status', 'in', ['active', 'approved', 'ACTIVE', 'VERIFIED']));
+       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']));
     } else if (filters.status) {
-       const statusOptions = Array.from(new Set([filters.status, filters.status.toLowerCase(), filters.status.toUpperCase()]));
-       filterConstraints.push(where('status', 'in', statusOptions));
+       const statusOptions = Array.from(new Set([filters.status, filters.status.toUpperCase(), filters.status.toLowerCase()]));
+       filterConstraints.push(where('status', 'in', statusOptions.slice(0, 3)));
     }
 
     if (filters.category) {
@@ -141,10 +144,24 @@ export const listingService = {
     }
 
     if (filters.city && filters.city !== 'All') {
-      filterConstraints.push(or(
-        where('city', '==', filters.city),
-        where('region', '==', filters.city)
-      ));
+      const canonical = normalizeCityName(filters.city);
+      let cityOptions = [canonical, canonical.toLowerCase(), canonical.toUpperCase()];
+      
+      // Explicit strict variations for city field only to prevent any leaky region matching
+      if (canonical === 'Jigjiga') {
+        cityOptions = ['Jigjiga', 'Jijiga', 'jigjiga', 'jijiga'];
+      } else if (canonical === 'Mogadishu') {
+        cityOptions = ['Mogadishu', 'Mogadisho', 'mogadishu', 'Banaadir', 'Mogadishu Coastal'];
+      } else if (canonical === 'Hargeisa') {
+        cityOptions = ['Hargeisa', 'Hargeysa', 'hargeisa', 'Hargeisa Hub'];
+      } else if (canonical === 'Garowe') {
+        cityOptions = ['Garowe', 'Garoowe', 'garowe', 'Garowe Province'];
+      } else if (canonical === 'Bosaso') {
+        cityOptions = ['Bosaso', 'Boosaaso', 'bosaso', 'Bosaso Port'];
+      }
+      
+      const uniqueCities = Array.from(new Set(cityOptions));
+      filterConstraints.push(where('city', 'in', uniqueCities));
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -158,13 +175,7 @@ export const listingService = {
 
     const queryConstraints: any[] = [];
     if (filterConstraints.length > 0) {
-      // If we are filtering by a city, our query contains an 'or' composite filter.
-      // Firestore requires all other filter conditions to be bundled with the 'or' filter under a single top-level 'and(...)'.
-      if (filters.city && filters.city !== 'All') {
-        queryConstraints.push(and(...filterConstraints));
-      } else {
-        queryConstraints.push(...filterConstraints);
-      }
+      queryConstraints.push(...filterConstraints);
     }
 
     // Pagination/Query Adjustment
@@ -204,6 +215,90 @@ export const listingService = {
     }
   },
 
+  async getListingsCount(filters: ListingFilter = {}): Promise<number> {
+    const listingsRef = collection(db, 'listings');
+    const filterConstraints: any[] = [];
+
+    if (filters.associatedBrokerId) {
+      filterConstraints.push(where('associatedBrokerId', '==', filters.associatedBrokerId));
+    }
+
+    if (filters.ownerId) {
+      filterConstraints.push(where('ownerId', '==', filters.ownerId));
+    }
+
+    if (!filters.status && !filters.ownerId && !filters.associatedBrokerId) {
+       filterConstraints.push(where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']));
+    } else if (filters.status) {
+       const statusOptions = Array.from(new Set([filters.status, filters.status.toUpperCase(), filters.status.toLowerCase()]));
+       filterConstraints.push(where('status', 'in', statusOptions.slice(0, 3)));
+    }
+
+    if (filters.category) {
+      if (filters.category === 'property') {
+        filterConstraints.push(where('category', 'in', ['property', 'land']));
+      } else {
+        filterConstraints.push(where('category', '==', filters.category));
+      }
+    }
+
+    if (filters.listingType) {
+      filterConstraints.push(where('listingType', '==', filters.listingType));
+    }
+    
+    if (filters.subcategory && filters.subcategory !== 'All') {
+      filterConstraints.push(where('subcategory', '==', filters.subcategory.trim().toLowerCase()));
+    }
+
+    if (filters.currency && filters.currency !== 'All') {
+      filterConstraints.push(where('currency', '==', filters.currency));
+    }
+
+    if (filters.city && filters.city !== 'All') {
+      const canonical = normalizeCityName(filters.city);
+      let cityOptions = [canonical, canonical.toLowerCase(), canonical.toUpperCase()];
+      
+      // Explicit strict variations for city field only to prevent any leaky region matching
+      if (canonical === 'Jigjiga') {
+        cityOptions = ['Jigjiga', 'Jijiga', 'jigjiga', 'jijiga'];
+      } else if (canonical === 'Mogadishu') {
+        cityOptions = ['Mogadishu', 'Mogadisho', 'mogadishu', 'Banaadir', 'Mogadishu Coastal'];
+      } else if (canonical === 'Hargeisa') {
+        cityOptions = ['Hargeisa', 'Hargeysa', 'hargeisa', 'Hargeisa Hub'];
+      } else if (canonical === 'Garowe') {
+        cityOptions = ['Garowe', 'Garoowe', 'garowe', 'Garowe Province'];
+      } else if (canonical === 'Bosaso') {
+        cityOptions = ['Bosaso', 'Boosaaso', 'bosaso', 'Bosaso Port'];
+      }
+      
+      const uniqueCities = Array.from(new Set(cityOptions));
+      filterConstraints.push(where('city', 'in', uniqueCities));
+    }
+
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      if (filters.minPrice !== undefined) {
+        filterConstraints.push(where('price', '>=', filters.minPrice));
+      }
+      if (filters.maxPrice !== undefined) {
+        filterConstraints.push(where('price', '<=', filters.maxPrice));
+      }
+    }
+
+    const queryConstraints: any[] = [];
+    if (filterConstraints.length > 0) {
+      queryConstraints.push(...filterConstraints);
+    }
+
+    try {
+      const q = query(listingsRef, ...queryConstraints);
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error('Error getting count from server:', error);
+      return 0;
+    }
+  },
+
   async getListingById(id: string): Promise<Listing | null> {
     const cacheKey = `listing_by_id_${id}`;
     const cached = listingCache.get(cacheKey);
@@ -240,8 +335,19 @@ export const listingService = {
       console.warn('Failed to fetch user role for listing creation, falling back to normal_user:', err);
     }
 
+    // Normalize city, region, and country to store canonical values
+    const normCityName = normalizeCityName(data.city);
+    const matchedCity = CITIES_DATA.find(c => c.dbValue === normCityName);
+    
+    const cleanCity = matchedCity ? matchedCity.dbValue : (data.city || '');
+    const cleanRegion = matchedCity ? matchedCity.region : (data.region || '');
+    const cleanCountry = matchedCity ? matchedCity.country : (data.country || 'Somalia');
+
     const newListing = {
       ...data,
+      city: cleanCity,
+      region: cleanRegion,
+      country: cleanCountry,
       ownerId: auth.currentUser.uid,
       createdBy: auth.currentUser.uid,
       createdByRole: userRole,
@@ -279,8 +385,19 @@ export const listingService = {
       console.warn('Failed to fetch user role for listing creation, falling back to normal_user:', err);
     }
 
+    // Normalize city, region, and country to store canonical values
+    const normCityName = normalizeCityName(data.city);
+    const matchedCity = CITIES_DATA.find(c => c.dbValue === normCityName);
+    
+    const cleanCity = matchedCity ? matchedCity.dbValue : (data.city || '');
+    const cleanRegion = matchedCity ? matchedCity.region : (data.region || '');
+    const cleanCountry = matchedCity ? matchedCity.country : (data.country || 'Somalia');
+
     const newListing = {
       ...data,
+      city: cleanCity,
+      region: cleanRegion,
+      country: cleanCountry,
       ownerId: auth.currentUser.uid,
       createdBy: auth.currentUser.uid,
       createdByRole: userRole,
@@ -315,6 +432,16 @@ export const listingService = {
     }
 
     const cleanData = { ...data };
+    
+    if (data.city) {
+      const normCityName = normalizeCityName(data.city);
+      const matchedCity = CITIES_DATA.find(c => c.dbValue === normCityName);
+      if (matchedCity) {
+        cleanData.city = matchedCity.dbValue;
+        cleanData.region = matchedCity.region;
+        cleanData.country = matchedCity.country;
+      }
+    }
     
     // Calculate Trust Score
     const updatedListing = { ...currentListing, ...cleanData } as Listing;
@@ -386,5 +513,28 @@ export const listingService = {
       handleFirestoreError(error, OperationType.DELETE, `listings/${id}`);
       return false;
     }
+  },
+
+  async getCityListingCounts(): Promise<Record<string, number>> {
+    const results: Record<string, number> = {};
+    try {
+      const promises = CITIES_DATA.map(async (city) => {
+        const vars = getCityQueryVariations(city.dbValue);
+        const ref = collection(db, 'listings');
+        // Compact vars array to prevent too many disjunctions, and search city only
+        const uniqueCities = Array.from(new Set(vars.slice(0, 4)));
+        const constraints: any[] = [
+          where('status', 'in', ['ACTIVE', 'active', 'VERIFIED']),
+          where('city', 'in', uniqueCities)
+        ];
+        const q = query(ref, ...constraints);
+        const snap = await getCountFromServer(q);
+        results[city.dbValue.toLowerCase()] = snap.data().count;
+      });
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('[listingService] Error fetching city listing counts:', error);
+    }
+    return results;
   }
 };
