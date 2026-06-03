@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Briefcase, MapPin, Clock, DollarSign, Search, Building, User, FileText, 
   CheckCircle, Plus, AlertCircle, ChevronRight, ExternalLink, SlidersHorizontal, 
-  Bookmark, Trash2, Calendar, Compass, Edit, Users, ShieldAlert, Check, X, Award
+  Bookmark, Trash2, Calendar, Compass, Edit, Users, ShieldAlert, Check, X, Award,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { jobService } from '@/services/jobService';
+import { uploadFile } from '@/services/uploadService';
 import { Job, CompanyProfile, CandidateProfile, JobApplication } from '@/types';
 import PremiumSelect from '@/components/ui/PremiumSelect';
 import { useSEO } from '@/hooks/useSEO';
@@ -21,6 +23,8 @@ const CATEGORIES = [
 const WORKPLACE_TYPES = ['on-site', 'hybrid', 'remote'];
 const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'remote', 'contract', 'freelance'];
 const CITIES = ['Mogadishu', 'Hargeisa', 'Garowe', 'Kismayo', 'Bosaso', 'Baidoa', 'Jigjiga', 'Diredawa', 'Addis Ababa', 'Remote'];
+
+const DEFAULT_COMP_LOGO = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop&q=80';
 
 export default function JobsPage() {
   const { user, profile } = useAuth();
@@ -96,6 +100,43 @@ export default function JobsPage() {
   const [compDesc, setCompDesc] = useState('');
   const [compWeb, setCompWeb] = useState('');
   const [compLoc, setCompLoc] = useState('Mogadishu');
+
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoProgress, setLogoProgress] = useState(0);
+
+  const handleLogoFileChange = async (file: File) => {
+    if (!file) return;
+
+    // Validate type (png, jpg, webp)
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Invalid file type! Please upload a PNG, JPG, or WebP image.');
+      return;
+    }
+
+    // Validate size (max 3MB = 3 * 1024 * 1024 bytes)
+    const maxSizeBytes = 3 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error('File too large! Max file size limit is 3MB.');
+      return;
+    }
+
+    try {
+      setLogoUploading(true);
+      setLogoProgress(10);
+      const url = await uploadFile(file, 'company-logos', (prog) => {
+        setLogoProgress(Math.max(10, Math.min(prog, 95)));
+      });
+      setCompLogo(url);
+      setLogoProgress(100);
+      toast.success('Official corporate logo uploaded successfully!');
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      toast.error('Failed to upload logo. Please try again.');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
 
   const [postedJobs, setPostedJobs] = useState<Job[]>([]);
   const [incomingApps, setIncomingApps] = useState<JobApplication[]>([]);
@@ -238,10 +279,14 @@ export default function JobsPage() {
       toast.error('Name & description are required');
       return;
     }
+    if (!compLogo) {
+      toast.error('Official corporate logo is mandatory! Please upload your brand logo to proceed.');
+      return;
+    }
     try {
       const data = {
         name: compName,
-        logo: compLogo || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop&q=80',
+        logo: compLogo,
         description: compDesc,
         website: compWeb,
         location: compLoc,
@@ -649,9 +694,12 @@ export default function JobsPage() {
                         {/* Company logo title */}
                         <div className="flex items-start gap-4 mb-4">
                           <img 
-                            src={job.companyLogo || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop&q=80'} 
-                            alt=""
+                            src={job.companyLogo || DEFAULT_COMP_LOGO} 
+                            alt={job.companyName || 'Company'}
                             className="w-12 h-12 object-cover rounded-xl border border-white/10 shrink-0" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = DEFAULT_COMP_LOGO;
+                            }}
                           />
                           <div className="min-w-0">
                             <h4 className="text-sm font-bold text-white group-hover:text-[#C5A059] transition-colors truncate">{job.title}</h4>
@@ -875,9 +923,12 @@ export default function JobsPage() {
                 <div className="lg:col-span-1 space-y-6">
                   <div className="bg-[#111] border border-white/5 rounded-3xl p-6 shadow-xl text-center">
                     <img 
-                      src={employerCompany.logo} 
-                      alt="" 
+                      src={employerCompany.logo || DEFAULT_COMP_LOGO} 
+                      alt={employerCompany.name} 
                       className="w-16 h-16 rounded-2xl object-cover border border-white/10 mx-auto mb-3"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_COMP_LOGO;
+                      }}
                     />
                     <h3 className="font-bold text-base text-white flex items-center justify-center gap-1">
                       {employerCompany.name}
@@ -1510,9 +1561,12 @@ export default function JobsPage() {
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
                   <img 
-                    src={selectedJob.companyLogo || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop&q=80'} 
-                    alt="" 
+                    src={selectedJob.companyLogo || DEFAULT_COMP_LOGO} 
+                    alt={selectedJob.companyName || 'Company'} 
                     className="w-14 h-14 object-cover rounded-2xl border border-white/10"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_COMP_LOGO;
+                    }}
                   />
                   <div>
                     <h3 className="font-bold text-lg text-white font-serif">{selectedJob.title}</h3>
@@ -1774,14 +1828,59 @@ export default function JobsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold uppercase block mb-1">Official Brand Logo Link</label>
-                  <input 
-                    type="url" 
-                    placeholder="https://..."
-                    value={compLogo}
-                    onChange={(e) => setCompLogo(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none"
-                  />
+                  <label className="text-[9px] text-gray-500 font-bold uppercase block mb-1.5">Official Corporate Logo*</label>
+                  
+                  {compLogo ? (
+                    <div className="relative group rounded-2xl overflow-hidden aspect-square w-24 h-24 border border-[#C5A059]/30 bg-white/5 mx-auto">
+                      <img 
+                        src={compLogo} 
+                        alt="Company Logo Preview" 
+                        className="w-full h-full object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-black/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => setCompLogo('')}
+                          className="text-red-400 text-[10px] font-bold hover:text-red-300 uppercase transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-24 rounded-2xl border-2 border-dashed border-white/10 hover:border-[#C5A059]/40 bg-white/5 transition-colors cursor-pointer text-center p-3 relative">
+                      {logoUploading ? (
+                        <div className="space-y-2 w-full px-4">
+                          <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-[#C5A059] h-full transition-all duration-300" style={{ width: `${logoProgress}%` }} />
+                          </div>
+                          <p className="text-[10px] font-bold text-[#C5A059] uppercase tracking-wider">{logoProgress}% Uploading...</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center">
+                          <Upload size={18} className="text-white/30 mb-1.5" />
+                          <p className="text-[11px] font-semibold text-white/60">Upload Logo Image</p>
+                          <p className="text-[9px] text-white/30 mt-0.5">PNG, JPG, WebP (Max 3MB)</p>
+                        </div>
+                      )}
+                      <input 
+                        type="file" 
+                        accept="image/png, image/jpeg, image/jpg, image/webp" 
+                        className="hidden" 
+                        disabled={logoUploading}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            handleLogoFileChange(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                  {compLogo && (
+                    <p className="text-[10px] text-[#C5A059] text-center mt-1.5 font-medium flex items-center justify-center gap-1">
+                      <CheckCircle size={10} /> Logo uploaded & verified
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1826,9 +1925,10 @@ export default function JobsPage() {
                   </Button>
                   <Button 
                     onClick={handleRegisterCompany}
-                    className="bg-[#C5A059] text-black flex-1 h-9 rounded-lg uppercase text-[10px] font-bold"
+                    disabled={logoUploading || !compLogo}
+                    className="bg-[#C5A059] hover:bg-[#C5A059]/90 text-black flex-1 h-9 rounded-lg uppercase text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Register Company
+                    {logoUploading ? 'Uploading...' : 'Register Company'}
                   </Button>
                 </div>
               </div>
