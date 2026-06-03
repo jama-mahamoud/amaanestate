@@ -55,8 +55,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const Disclaimer = lazy(() => import('./pages/Disclaimer'));
 
 // Lazy Loaded Auth Pages
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
+const AuthGateway = lazy(() => import('./pages/AuthGateway'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 // Lazy Loaded Dashboard
@@ -131,10 +130,10 @@ export default function App() {
                 
                 {/* Auth Routes - Public Only */}
                 <Route element={<PublicRoute />}>
-                  <Route path="login" element={<Login />} />
-                  <Route path="register" element={<Register />} />
-                  <Route path="auth/login" element={<Login />} />
-                  <Route path="auth/register" element={<Register />} />
+                  <Route path="login" element={<AuthGateway />} />
+                  <Route path="register" element={<AuthGateway />} />
+                  <Route path="auth/login" element={<AuthGateway />} />
+                  <Route path="auth/register" element={<AuthGateway />} />
                   <Route path="auth/forgot-password" element={<ForgotPassword />} />
                 </Route>
               </Route>

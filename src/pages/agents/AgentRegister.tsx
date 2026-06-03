@@ -95,7 +95,7 @@ export default function AgentRegister() {
     }));
   };
 
-  if (!user) return <div className="min-h-screen bg-super-black flex items-center justify-center text-white">Please sign in to apply.</div>;
+  if (!user) return <div className="min-h-screen bg-black flex items-center justify-center text-white"><div className="text-center"><p className="mb-4">Please sign in to apply.</p><a href="/auth/login" className="bg-[#C5A059] text-black px-6 py-2 rounded-xl font-bold">Sign In</a></div></div>;
 
   return (
     <div className="min-h-screen bg-super-black py-20 px-4 md:px-6">
