@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Mail, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Logo } from '@/components/brand/Logo';
+import { BrandIdentity } from '@/components/brand/BrandIdentity';
 import { parseAuthError } from '@/utils/firebaseErrors';
 
 export default function Register() {
@@ -55,7 +55,7 @@ export default function Register() {
     <div className="min-h-screen bg-super-black flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl relative z-10">
         <div className="flex justify-center mb-12">
-            <Logo />
+            <BrandIdentity size="md" />
         </div>
 
         <motion.div

@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
-import BrandLogo from '@/components/brand/BrandLogo';
+// Logo removed
 
 function DashboardContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -101,7 +101,8 @@ function DashboardContent() {
         <div className="flex flex-col h-full">
           <div className="p-6 sm:p-10 flex items-center justify-between">
             <Link to="/" className="flex items-center group">
-              <BrandLogo size="sm" />
+              {/* Logo removed */}
+              <div className="w-[140px] h-[40px]" />
             </Link>
             <Button variant="ghost" size="icon" className="lg:hidden text-white/60 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />

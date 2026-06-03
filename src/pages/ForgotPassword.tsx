@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AmaanLogo from '@/components/brand/AmaanLogo';
+// Logo removed
 import { parseAuthError } from '@/utils/firebaseErrors';
 
 export default function ForgotPassword() {
@@ -44,8 +44,7 @@ export default function ForgotPassword() {
       <div className="w-full max-w-lg relative z-10">
         <div className="flex justify-center mb-12">
           <Link to="/" className="flex flex-col items-center select-none gap-4 group">
-            <AmaanLogo size="lg" />
-            <span className="text-sm font-display font-bold tracking-[0.4em] uppercase text-white/50 group-hover:text-luxury-gold transition-colors duration-300">AmaanEstate</span>
+            <div className="w-[140px] h-[4px]" />
           </Link>
         </div>
 

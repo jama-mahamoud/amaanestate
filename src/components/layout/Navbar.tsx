@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import { Logo } from '../brand/Logo';
+import { BrandIdentity } from '../brand/BrandIdentity';
 import MegaMenu from './MegaMenu';
 import NotificationBell from './NotificationBell';
 
@@ -208,7 +208,7 @@ export default function Navbar() {
       }`}>
         {/* LEFT AREA: Logo */}
         <div className="flex items-center shrink-0">
-          <Logo />
+          <BrandIdentity size="md" />
         </div>
         
         {/* Desktop Nav - Left Aligned and beautifully spaced */}
@@ -315,7 +315,7 @@ export default function Navbar() {
             >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-2">
-                 <Logo />
+                 <BrandIdentity size="sm" />
               </div>
               <button 
                 className="text-white/30 hover:text-white transition-colors p-2" 
