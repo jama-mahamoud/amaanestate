@@ -55,9 +55,7 @@ export default function Register() {
     <div className="min-h-screen bg-super-black flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl relative z-10">
         <div className="flex justify-center mb-12">
-            <Link to="/" className="flex flex-col items-center select-none">
-               <Logo size="lg" className="h-10" noLink />
-            </Link>
+            <Logo />
         </div>
 
         <motion.div

@@ -208,9 +208,7 @@ export default function Navbar() {
       }`}>
         {/* LEFT AREA: Logo */}
         <div className="flex items-center shrink-0">
-          <Link to="/" className="flex items-center group outline-none">
-            <Logo size="md" className="h-6 md:h-7.5" noLink />
-          </Link>
+          <Logo />
         </div>
         
         {/* Desktop Nav - Left Aligned and beautifully spaced */}
@@ -317,7 +315,7 @@ export default function Navbar() {
             >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-2">
-                 <Logo size="sm" className="h-6" />
+                 <Logo />
               </div>
               <button 
                 className="text-white/30 hover:text-white transition-colors p-2" 
