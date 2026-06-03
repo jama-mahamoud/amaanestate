@@ -172,6 +172,21 @@ service cloud.firestore {
         && data.read is bool;
     }
 
+    function isValidIdea(data) {
+      return data.keys().hasAll(['focusTitle', 'suggestion', 'category', 'userId', 'createdAt'])
+        && data.focusTitle is string && data.focusTitle.size() <= 200
+        && data.suggestion is string && data.suggestion.size() <= 5000
+        && data.category is string && data.category.size() <= 100
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidContact(data) {
+      return data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
+        && data.name is string && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 200
+        && data.message is string && data.message.size() <= 5000;
+    }
+
     // 3. Collection Security Strategies
 
     // Users Collection
@@ -261,6 +276,19 @@ service cloud.firestore {
     match /contactMessages/{messageId} {
       allow read: if isAdmin();
       allow create: if isSignedIn() && isValidContactMessage(incoming()); 
+      allow update, delete: if isAdmin();
+    }
+
+    match /contacts/{contactId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidContact(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    // Ideas & Innovation Hub
+    match /ideas/{ideaId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidIdea(incoming());
       allow update, delete: if isAdmin();
     }
 

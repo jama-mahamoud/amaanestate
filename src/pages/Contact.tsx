@@ -33,39 +33,29 @@ export default function Contact() {
     setLoading(true);
 
     try {
-      const authUserId = user?.uid || null;
-      const submissionData = {
-        fullName: formData.name.trim(),
-        email: formData.email.trim(),
-        inquiryType: formData.subject,
-        message: formData.message.trim(),
-        status: 'unread',
-        createdAt: serverTimestamp(),
-        userId: authUserId
-      };
-
-      // Save to Firebase
-      await addDoc(collection(db, 'contactMessages'), submissionData);
-      
-      // Also send email via API
-      const contactResponse = await fetch('/api/contact', {
+      // Send to FormSubmit
+      const response = await fetch('https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          message: formData.message.trim(),
+          phone: formData.phone.trim(),
           subject: formData.subject,
-          message: formData.message
+          _captcha: "false"
         })
       });
 
-      if (!contactResponse.ok) {
-        throw new Error('Could not send email notification');
+      if (!response.ok) {
+        throw new Error('Failed to send message via FormSubmit');
       }
       
       setSuccess(true);
-      toast.success('Inquiry dispatched successfully');
+      toast.success('Mahadsanid! Fariintaada waa la helay.');
       setFormData({
         name: '',
         email: '',
@@ -202,16 +192,16 @@ export default function Contact() {
                     <div className="w-20 h-20 bg-luxury-gold/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
                        <CheckCircle2 size={40} className="text-luxury-gold" />
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-4 tracking-tight">Dispatch Confirmed</h3>
+                    <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-4 tracking-tight">Fariintaada waa la helay</h3>
                     <p className="text-white/40 text-sm md:text-base max-w-xs mx-auto leading-relaxed mb-10">
-                      Your institutional inquiry has been logged. Our concierge team will respond within 24 standard business hours.
+                      Mahadsanid! Fariintaada waa la helay. Kooxdayada ayaa dhowaan kula soo xiriiri doonta.
                     </p>
                     <Button 
                       onClick={() => setSuccess(false)}
                       variant="outline"
                       className="border-white/10 text-white rounded-2xl h-14 px-10"
                     >
-                      New Correspondence
+                      Fariin Cusub Dir
                     </Button>
                   </motion.div>
                 ) : (
@@ -221,12 +211,27 @@ export default function Contact() {
                        <p className="text-white/20 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Initialize official correspondence</p>
                     </div>
 
-                    <form className="space-y-6 md:space-y-8 relative z-10" onSubmit={handleSubmit}>
+                    <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }}></iframe>
+                    <form 
+                      className="space-y-6 md:space-y-8 relative z-10" 
+                      action="https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae" 
+                      method="POST" 
+                      target="hidden_iframe"
+                      onSubmit={() => {
+                        setLoading(true);
+                        setTimeout(() => {
+                          setLoading(false);
+                          setSuccess(true);
+                        }, 1000);
+                      }}
+                    >
+                      <input type="hidden" name="_captcha" value="false" />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         <div className="space-y-3">
                           <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Full Legal Name</label>
                           <Input 
                             required
+                            name="name"
                             placeholder="Enter Your Name" 
                             className="bg-white/5 border-0 h-14 md:h-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/10 text-base md:text-lg px-6 focus-visible:ring-luxury-gold/30" 
                             value={formData.name}
@@ -237,6 +242,7 @@ export default function Contact() {
                           <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Contact Email</label>
                           <Input 
                             required
+                            name="email"
                             type="email"
                             placeholder="email@example.com" 
                             className="bg-white/5 border-0 h-14 md:h-16 rounded-xl md:rounded-2xl text-white placeholder:text-white/10 text-base md:text-lg px-6 focus-visible:ring-luxury-gold/30" 
@@ -250,6 +256,7 @@ export default function Contact() {
                         <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Nature of Inquiry</label>
                         <div className="relative">
                           <select 
+                            name="subject"
                             className="flex h-14 md:h-16 w-full rounded-xl md:rounded-2xl border-0 bg-white/5 px-6 text-base md:text-lg text-white focus:outline-none appearance-none cursor-pointer"
                             value={formData.subject}
                             onChange={(e) => setFormData({...formData, subject: e.target.value})}
@@ -270,6 +277,7 @@ export default function Contact() {
                         <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-white/20 ml-2">Brief Narrative</label>
                         <Textarea 
                           required
+                          name="message"
                           placeholder="How may our regional concierge assist your vision?" 
                           className="bg-white/5 border-0 min-h-[140px] md:min-h-[180px] rounded-xl md:rounded-2xl text-white placeholder:text-white/10 text-base md:text-lg px-6 py-6 focus-visible:ring-luxury-gold/30 resize-none" 
                           value={formData.message}

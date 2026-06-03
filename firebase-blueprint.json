@@ -262,9 +262,47 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["jobId", "jobTitle", "companyId", "companyName", "candidateId", "candidateName", "candidateEmail", "resumeUrl", "status", "createdAt"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Simple quick contact message submission",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "phone": { "type": "string" },
+        "subject": { "type": "string" },
+        "userId": { "type": "string" },
+        "emailSent": { "type": "boolean" }
+      },
+      "required": ["name", "email", "message", "createdAt"]
+    },
+    "Idea": {
+      "title": "Community Idea",
+      "description": "Suggestion, feedback, or innovation proposal submitted by the community",
+      "type": "object",
+      "properties": {
+        "focusTitle": { "type": "string" },
+        "category": { "type": "string" },
+        "suggestion": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "emailSent": { "type": "boolean" }
+      },
+      "required": ["focusTitle", "category", "suggestion", "createdAt"]
     }
   },
   "firestore": {
+    "/contacts/{contactId}": {
+      "schema": "Contact",
+      "description": "Collection of simple easy-contact form submissions"
+    },
+    "/ideas/{ideaId}": {
+      "schema": "Idea",
+      "description": "Collection of community ideas and innovation hub submissions"
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "Collection of user profile documents"
