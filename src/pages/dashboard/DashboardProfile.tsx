@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { brokerService } from '@/services/brokerService';
 import { userService } from '@/services/userService';
-import { db } from '@/lib/firebase';
+import { storage, db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Agency } from '@/types';
 import ImageUpload from '@/components/listing/ImageUpload';
@@ -32,6 +33,33 @@ export default function DashboardProfile() {
   const [logo, setLogo] = useState('');
   const [visibility, setVisibility] = useState(true);
   const [logoFiles, setLogoFiles] = useState<File[]>([]);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  useEffect(() => {
+    if (logoFiles.length > 0) {
+      const uploadLogo = async () => {
+        setUploadingLogo(true);
+        try {
+          const file = logoFiles[0];
+          // Validate file size (approx 2MB limit)
+          if (file.size > 2 * 1024 * 1024) {
+             alert("File too large. Max size 2MB.");
+             return;
+          }
+          const storageRef = ref(storage, `agency-logos/${user?.uid}/${Date.now()}_${file.name}`);
+          const snapshot = await uploadBytes(storageRef, file);
+          const downloadUrl = await getDownloadURL(snapshot.ref);
+          setLogo(downloadUrl);
+        } catch (error) {
+          console.error("Logo upload failed", error);
+          alert("Failed to upload logo.");
+        } finally {
+          setUploadingLogo(false);
+        }
+      };
+      uploadLogo();
+    }
+  }, [logoFiles, user?.uid]);
 
   const isAgencyRole = profile?.role === 'agency';
 
@@ -79,7 +107,7 @@ export default function DashboardProfile() {
       if (isAgencyRole && agency) {
         // Save Agency credentials directly to Firestore agencies record
         const agencyRef = doc(db, 'agencies', agency.id);
-        const logoUrlToSave = logoFiles.length > 0 ? "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80" : logo;
+        const logoUrlToSave = logo;
         
         await updateDoc(agencyRef, {
           agencyName,
@@ -124,7 +152,12 @@ export default function DashboardProfile() {
     } finally {
       setLoading(false);
     }
-  }, [agency, agencyName, email, isAgencyRole, license, logo, logoFiles.length, phone, user?.uid, visibility, userDisplayName, userCity, userBio, userPhone]);
+  }, [agency, agencyName, email, isAgencyRole, license, logo, phone, user?.uid, visibility, userDisplayName, userCity, userBio, userPhone]);
+
+  // Utility for logo fallback
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
 
   return (
     <div className="space-y-12">
@@ -259,9 +292,24 @@ export default function DashboardProfile() {
 
                 {/* Logo Editor Section */}
                 <div className="pt-4 border-t border-white/5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-3">Update Corporate Logo</label>
+                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-3">
+                    {uploadingLogo ? 'Uploading...' : 'Update Corporate Logo'}
+                  </label>
                   <div className="flex items-center gap-6 bg-white/[0.01] border border-white/5 p-6 rounded-2xl">
-                    <img src={logo || "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=120&h=120&q=80"} alt="Logo Preview" className="w-16 h-16 rounded-xl object-cover bg-white/10 border border-white/10 shrink-0" />
+                    <div className="relative">
+                      {uploadingLogo && (
+                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
+                            <Loader2 className="animate-spin text-luxury-gold" size={24} />
+                         </div>
+                      )}
+                      {logo ? (
+                        <img src={logo} alt="Logo Preview" className="w-16 h-16 rounded-xl object-cover bg-white/10 border border-white/10 shrink-0" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#C5A059]/20 text-[#C5A059] font-bold text-xl border border-[#C5A059]/30 shrink-0">
+                          {getInitials(agencyName || 'Agency')}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <ImageUpload onImagesChange={setLogoFiles} maxFiles={1} />
                     </div>
