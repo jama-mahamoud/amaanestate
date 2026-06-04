@@ -107,9 +107,10 @@ export const articleService = {
       // Client-side safe, defensive filtering
       if (publishedOnly) {
         docs = docs.filter(art => {
-          // Backward compatibility: If published is undefined, treat as true to recover old articles
-          if (art.published === undefined) return true;
-          return art.published === true || (art as any).status === 'published' || (art as any).visibility === 'public';
+          // Strict filtering: must be published AND public
+          const isPublished = art.published === true || (art as any).status === 'published';
+          const isPublic = art.visibility === 'public' || art.visibility === undefined; // default to public if undefined for legacy
+          return isPublished && isPublic;
         });
       }
       

@@ -60,6 +60,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     // Advanced
     published: initialData?.published || false,
     isFeatured: initialData?.isFeatured || false,
+    visibility: initialData?.visibility || 'public',
     priority: initialData?.priority || 0,
     homepageSection: initialData?.homepageSection || 'default',
     showAuthor: initialData?.showAuthor ?? true,

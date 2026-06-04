@@ -214,6 +214,7 @@ export interface Article {
   readingTime?: number;
   publishSchedule?: any;
   isFeatured?: boolean;
+  visibility?: 'public' | 'private';
   status: ArticleStatus;
   published: boolean; // Deprecated, will be removed in future
   views: number;

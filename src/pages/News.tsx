@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { TrendingUp, Newspaper, Clock, ArrowRight, Calendar, Sparkles, ChevronDown } from 'lucide-react';
+import { TrendingUp, Newspaper, Clock, ArrowRight, Calendar, Sparkles, ChevronDown, Search, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { articleService } from '@/services/articleService';
@@ -164,6 +164,7 @@ export default function News() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
   const [loadingMore, setLoadingMore] = useState(false);
   
@@ -188,21 +189,35 @@ export default function News() {
     return () => { active = false; };
   }, []);
 
-  // Filter based on active category
+  // Filter based on active category and search query
   const filteredArticles = useMemo(() => {
-    if (activeCategory === 'All') return articles;
-    return articles.filter(a => a.category === activeCategory);
-  }, [articles, activeCategory]);
+    let filtered = articles;
+    
+    if (activeCategory !== 'All') {
+      filtered = filtered.filter(a => a.category === activeCategory);
+    }
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(a => 
+        a.title.toLowerCase().includes(q) || 
+        a.summary?.toLowerCase().includes(q) || 
+        (a.tags || []).some(t => t.toLowerCase().includes(q)) ||
+        a.content?.toLowerCase().includes(q)
+      );
+    }
+    
+    return filtered;
+  }, [articles, activeCategory, searchQuery]);
 
   // Featured article (first published article, or marked isFeatured)
   const featuredArticle = useMemo(() => {
-    const published = filteredArticles.filter(a => a.published !== false);
-    return published.find(a => a.isFeatured) || published[0];
+    return filteredArticles.find(a => a.isFeatured) || filteredArticles[0];
   }, [filteredArticles]);
 
   // Regular articles (all excluding the featured one)
   const regularArticles = useMemo(() => {
-    return filteredArticles.filter(a => a.published !== false && a.id !== featuredArticle?.id);
+    return filteredArticles.filter(a => a.id !== featuredArticle?.id);
   }, [filteredArticles, featuredArticle]);
 
   // Currently visible regular articles based on pagination
@@ -277,11 +292,25 @@ export default function News() {
             </p>
           </div>
           
-          <div className="flex items-center gap-2 self-start md:self-end bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl">
-            <Newspaper size={16} className="text-luxury-gold" />
-            <span className="text-xs font-mono font-semibold text-white/70">
-              {articles.filter(a => a.published !== false).length} Articles Catalogued
-            </span>
+          <div className="flex flex-col md:flex-row items-center gap-4 self-start md:self-end">
+            <div className="relative group flex-1 min-w-[280px]">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-white/30 group-focus-within:text-[#C5A059] transition-colors">
+                <Search size={16} />
+              </div>
+              <input 
+                type="text"
+                placeholder="Search by title or keyword..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 text-white pl-11 pr-4 py-3 rounded-2xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#C5A059] focus:border-[#C5A059] transition-all placeholder:text-white/20"
+              />
+            </div>
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3.5 rounded-2xl shrink-0">
+              <Newspaper size={16} className="text-luxury-gold" />
+              <span className="text-xs font-mono font-semibold text-white/70">
+                {articles.length} Articles Catalogued
+              </span>
+            </div>
           </div>
         </div>
 
@@ -289,8 +318,8 @@ export default function News() {
         <div className="sticky top-20 z-30 bg-black/90 backdrop-blur-md py-4 mb-16 flex gap-2 overflow-x-auto no-scrollbar border-y border-white/5 animate-none">
           {CATEGORIES.map(cat => {
             const count = cat === 'All' 
-              ? articles.filter(a => a.published !== false).length
-              : articles.filter(a => a.published !== false && a.category === cat).length;
+              ? articles.length
+              : articles.filter(a => a.category === cat).length;
             
             return (
               <button
@@ -380,8 +409,8 @@ export default function News() {
               </div>
             ) : (
               <div className="text-center py-24 border border-white/5 rounded-3xl bg-white/[0.01]">
-                <Newspaper size={48} className="text-white/20 mx-auto mb-4 animate-bounce" />
-                <h4 className="text-lg font-bold text-white/80 mb-2">No Reports Selected</h4>
+                <BookOpen size={48} className="text-white/20 mx-auto mb-4 animate-bounce" />
+                <h4 className="text-xl font-display font-bold text-white/80 mb-2">Wax warar ah wali lama daabicin.</h4>
                 <p className="text-white/40 max-w-sm mx-auto text-sm font-light">
                   There are currently no published intelligence updates stored inside the "{activeCategory}" register. Check back shortly.
                 </p>

@@ -250,7 +250,17 @@ const LatestNews = memo(() => {
     );
   }
 
-  if (articles.length === 0) return null;
+  if (articles.length === 0) {
+    return (
+      <section className="py-24 bg-slate-50 text-slate-900 border-t border-slate-100">
+        <div className="container mx-auto px-4 text-center">
+          <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <h3 className="text-xl font-display font-bold text-slate-400 mb-2">Wax warar ah wali lama daabicin.</h3>
+          <p className="text-slate-400 text-sm">Check back later for latest Somali region updates.</p>
+        </div>
+      </section>
+    );
+  }
 
   const featured = articles[0];
   const gridArticles = articles.slice(1, 7); // Show up to 6 articles in the grid below the hero

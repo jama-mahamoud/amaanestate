@@ -269,6 +269,7 @@ async function generateSitemapXml() {
       const articleSnap = await withTimeout(
         firestoreDb.collection("articles")
           .where("published", "==", true)
+          .where("visibility", "==", "public")
           .get(),
         2000,
         null
