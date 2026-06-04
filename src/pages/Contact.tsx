@@ -34,7 +34,7 @@ export default function Contact() {
 
     try {
       // Send to FormSubmit
-      const response = await fetch('https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae', {
+      const response = await fetch('https://formsubmit.co/ajax/b65456d54379959a0d4af14c9ba036ae', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,8 +50,9 @@ export default function Contact() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message via FormSubmit');
+      const data = await response.json();
+      if (data.success === 'false' || !response.ok) {
+        throw new Error(data.message || 'Failed to send message via FormSubmit');
       }
       
       setSuccess(true);
@@ -211,19 +212,9 @@ export default function Contact() {
                        <p className="text-white/20 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Initialize official correspondence</p>
                     </div>
 
-                    <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }}></iframe>
                     <form 
                       className="space-y-6 md:space-y-8 relative z-10" 
-                      action="https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae" 
-                      method="POST" 
-                      target="hidden_iframe"
-                      onSubmit={() => {
-                        setLoading(true);
-                        setTimeout(() => {
-                          setLoading(false);
-                          setSuccess(true);
-                        }, 1000);
-                      }}
+                      onSubmit={handleSubmit}
                     >
                       <input type="hidden" name="_captcha" value="false" />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">

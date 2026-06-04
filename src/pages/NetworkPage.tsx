@@ -447,7 +447,7 @@ export default function NetworkPage() {
     setIsSubmittingIdea(true);
     try {
       // Send to FormSubmit
-      const response = await fetch('https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae', {
+      const response = await fetch('https://formsubmit.co/ajax/b65456d54379959a0d4af14c9ba036ae', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -461,8 +461,9 @@ export default function NetworkPage() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit via FormSubmit');
+      const data = await response.json();
+      if (data.success === 'false' || !response.ok) {
+        throw new Error(data.message || 'Failed to submit via FormSubmit');
       }
       
       setIdeaSubmittedSuccessfully(true);
@@ -834,21 +835,8 @@ export default function NetworkPage() {
                   <p className="text-xs text-white/40 mt-1">{currT.formSub}</p>
                 </div>
 
-                <iframe name="hidden_idea_iframe" id="hidden_idea_iframe" style={{ display: 'none' }}></iframe>
                 <form 
-                  action="https://formsubmit.co/b65456d54379959a0d4af14c9ba036ae"
-                  method="POST"
-                  target="hidden_idea_iframe"
-                  onSubmit={() => {
-                    setIsSubmittingIdea(true);
-                    setTimeout(() => {
-                      setIsSubmittingIdea(false);
-                      setIdeaSubmittedSuccessfully(true);
-                      setIdeaTitle('');
-                      setIdeaContent('');
-                      toast.success(currT.btnSubmit);
-                    }, 1000);
-                  }}
+                  onSubmit={handleIdeaFormSubmit}
                   className="space-y-4"
                 >
                   <input type="hidden" name="_captcha" value="false" />

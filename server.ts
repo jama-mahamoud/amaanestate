@@ -157,19 +157,22 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T):
 }
 
 async function generateSitemapXml() {
-  const urls: Array<{ loc: string; changefreq: string; priority: string }> = [
-    { loc: "https://www.amaanestate.com/", changefreq: "daily", priority: "1.0" },
-    { loc: "https://www.amaanestate.com/cities", changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/properties", changefreq: "daily", priority: "0.9" },
-    { loc: "https://www.amaanestate.com/vehicles", changefreq: "daily", priority: "0.9" },
-    { loc: "https://www.amaanestate.com/agents", changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/news", changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/jobs", changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/about", changefreq: "monthly", priority: "0.7" },
-    { loc: "https://www.amaanestate.com/contact", changefreq: "monthly", priority: "0.7" },
-    { loc: "https://www.amaanestate.com/privacy", changefreq: "monthly", priority: "0.3" },
-    { loc: "https://www.amaanestate.com/terms", changefreq: "monthly", priority: "0.3" },
-    { loc: "https://www.amaanestate.com/disclaimer", changefreq: "monthly", priority: "0.3" },
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
+    { loc: "https://www.amaanestate.com/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
+    { loc: "https://www.amaanestate.com/cities", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/properties", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+    { loc: "https://www.amaanestate.com/vehicles", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+    { loc: "https://www.amaanestate.com/agents", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/jobs", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/network", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/agreements", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
+    { loc: "https://www.amaanestate.com/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
+    { loc: "https://www.amaanestate.com/privacy", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+    { loc: "https://www.amaanestate.com/terms", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+    { loc: "https://www.amaanestate.com/disclaimer", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
   ];
 
   const citySlugs = [
@@ -182,6 +185,7 @@ async function generateSitemapXml() {
   citySlugs.forEach(slug => {
     urls.push({
       loc: `https://www.amaanestate.com/cities/${slug}`,
+      lastmod: dynamicDate,
       changefreq: "daily",
       priority: "0.8"
     });
@@ -209,15 +213,19 @@ async function generateSitemapXml() {
         listingsSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
           const id = docSnapshot.id;
+          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+          
           if (data.category === "vehicle") {
             urls.push({
               loc: `https://www.amaanestate.com/vehicles/${id}`,
+              lastmod,
               changefreq: "weekly",
               priority: "0.7"
             });
           } else {
             urls.push({
               loc: `https://www.amaanestate.com/properties/${id}`,
+              lastmod,
               changefreq: "weekly",
               priority: "0.7"
             });
@@ -240,9 +248,13 @@ async function generateSitemapXml() {
       
       if (brokerSnap && brokerSnap.docs) {
         brokerSnap.docs.forEach((docSnapshot: any) => {
+          const data = docSnapshot.data();
           const id = docSnapshot.id;
+          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+          
           urls.push({
             loc: `https://www.amaanestate.com/agents/${id}`,
+            lastmod,
             changefreq: "weekly",
             priority: "0.6"
           });
@@ -265,6 +277,8 @@ async function generateSitemapXml() {
       if (articleSnap && articleSnap.docs) {
         articleSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
+          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+          
           let slug = data.slug;
           if (!slug && data.title) {
             slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
@@ -274,6 +288,7 @@ async function generateSitemapXml() {
           }
           urls.push({
             loc: `https://www.amaanestate.com/news/${slug}`,
+            lastmod,
             changefreq: "weekly",
             priority: "0.6"
           });
@@ -295,9 +310,13 @@ async function generateSitemapXml() {
       
       if (jobsSnap && jobsSnap.docs) {
         jobsSnap.docs.forEach((docSnapshot: any) => {
+          const data = docSnapshot.data();
           const id = docSnapshot.id;
+          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+          
           urls.push({
             loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
+            lastmod,
             changefreq: "weekly",
             priority: "0.6"
           });
@@ -317,6 +336,7 @@ async function generateSitemapXml() {
   urls.forEach(url => {
     xml += `  <url>\n`;
     xml += `    <loc>${url.loc}</loc>\n`;
+    xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
     xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
     xml += `    <priority>${url.priority}</priority>\n`;
     xml += `  </url>\n`;
