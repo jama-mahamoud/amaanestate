@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import { FloatingMenu } from '@tiptap/extension-floating-menu';
 import StarterKit from '@tiptap/starter-kit';
@@ -53,7 +53,8 @@ import {
   Minus, Code, Palette, Highlighter, Youtube as YoutubeIcon,
   Plus, Smartphone, Tablet, Monitor, Info, Timer,
   RemoveFormatting, Type, AlertCircle, GripHorizontal,
-  Eraser, Check, Hash, Activity, Terminal
+  Eraser, Check, Hash, Activity, Terminal,
+  X, Expand, Maximize, FileText, RefreshCw, Trash2
 } from 'lucide-react';
 
 const lowlight = createLowlight(common);
@@ -154,28 +155,433 @@ const LineHeight = Extension.create({
   },
 })
 
+function ImageNodeView({ node, updateAttributes, deleteNode, selected }: any) {
+  const { src, alt, width, align, caption, linkUrl } = node.attrs;
+  const [isEditingAlt, setIsEditingAlt] = useState(false);
+  const [isEditingLink, setIsEditingLink] = useState(false);
+  const [altText, setAltText] = useState(alt || '');
+  const [urlText, setUrlText] = useState(linkUrl || '');
+  const [captionText, setCaptionText] = useState(caption || '');
+  const [isKeyboardEditingCaption, setIsKeyboardEditingCaption] = useState(false);
+  const [isReplacing, setIsReplacing] = useState(false);
+  const fileInputRefForReplace = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Sync state on change
+  useEffect(() => {
+    setAltText(alt || '');
+  }, [alt]);
+
+  useEffect(() => {
+    setUrlText(linkUrl || '');
+  }, [linkUrl]);
+
+  useEffect(() => {
+    setCaptionText(caption || '');
+  }, [caption]);
+
+  const handleResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = imgRef.current ? imgRef.current.offsetWidth : 300;
+    const parentWidth = imgRef.current?.parentElement?.parentElement?.offsetWidth || 1;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const newWidthPixels = Math.max(100, startWidth + deltaX);
+      const newWidthPercent = Math.min(100, Math.round((newWidthPixels / parentWidth) * 100));
+      updateAttributes({ width: `${newWidthPercent}%` });
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleWidthPreset = (pct: string) => {
+    updateAttributes({ width: pct });
+  };
+
+  const handleAlignment = (alignment: string) => {
+    updateAttributes({ align: alignment });
+  };
+
+  const saveAlt = () => {
+    updateAttributes({ alt: altText });
+    setIsEditingAlt(false);
+  };
+
+  const saveLink = () => {
+    updateAttributes({ linkUrl: urlText });
+    setIsEditingLink(false);
+  };
+
+  const saveCaption = () => {
+    updateAttributes({ caption: captionText });
+    setIsKeyboardEditingCaption(false);
+  };
+
+  const handleReplaceImageClick = () => {
+    fileInputRefForReplace.current?.click();
+  };
+
+  const handleReplaceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      try {
+        setIsReplacing(true);
+        const url = await uploadFile(file, 'articles_inline');
+        updateAttributes({ src: url });
+      } catch (error) {
+        console.error('Failed to replace image:', error);
+      } finally {
+        setIsReplacing(false);
+      }
+    }
+  };
+
+  // Determine wrapper classes based on alignment
+  let alignClasses = 'mx-auto';
+  if (align === 'left') {
+    alignClasses = 'float-left mr-8 mb-4 max-w-[50%] clear-both';
+  } else if (align === 'right') {
+    alignClasses = 'float-right ml-8 mb-4 max-w-[50%] clear-both';
+  } else if (align === 'full') {
+    alignClasses = 'w-full block clear-both mx-0';
+  }
+
+  return (
+    <NodeViewWrapper className={`relative my-8 group/img select-none ${alignClasses}`} style={{ width: align === 'full' ? '100%' : width }}>
+      <div 
+        className={`relative rounded-2xl overflow-visible border transition-all ${selected ? 'border-[#C5A059] ring-2 ring-[#C5A059]/30' : 'border-white/10 group-hover/img:border-white/20'}`}
+      >
+        {/* Render Image optionally wrapped in a link */}
+        <div className="relative">
+          {isReplacing && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
+              <Loader2 className="w-8 h-8 text-luxury-gold animate-spin" />
+            </div>
+          )}
+          {linkUrl ? (
+            <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="block pointer-events-none">
+              <img 
+                ref={imgRef} 
+                src={src} 
+                alt={alt} 
+                className="rounded-2xl w-full object-cover select-none pointer-events-none" 
+              />
+            </a>
+          ) : (
+            <img 
+              ref={imgRef} 
+              src={src} 
+              alt={alt} 
+              className="rounded-2xl w-full object-cover select-none pointer-events-none" 
+            />
+          )}
+
+          {/* Clickable URL Status Indicator */}
+          {linkUrl && (
+            <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] text-white/80 rounded-full font-mono flex items-center gap-1.5 border border-white/5 pointer-events-none">
+              <LinkIcon size={12} className="text-[#C5A059]" /> Link Active
+            </div>
+          )}
+
+          {/* Drag Resize Handle */}
+          {selected && align !== 'full' && (
+            <div 
+              onMouseDown={handleResize}
+              className="absolute bottom-2 right-2 w-6 h-6 bg-[#C5A059] hover:bg-white text-black rounded-lg cursor-se-resize flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+              title="Drag to Resize"
+            >
+              <Expand size={12} />
+            </div>
+          )}
+        </div>
+
+        {/* Caption Area */}
+        <div className="mt-3 px-4 pb-2">
+          {selected || isKeyboardEditingCaption ? (
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={captionText}
+                onChange={(e) => setCaptionText(e.target.value)}
+                onFocus={() => setIsKeyboardEditingCaption(true)}
+                onBlur={saveCaption}
+                onKeyDown={(e) => e.key === 'Enter' && saveCaption()}
+                placeholder="Enter caption for this image..."
+                className="w-full bg-transparent border-0 border-b border-white/10 text-xs text-white/70 focus:outline-none focus:border-[#C5A059] py-1 italic text-center placeholder:text-white/20 font-serif"
+              />
+            </div>
+          ) : caption ? (
+            <p className="text-xs text-center text-white/50 italic font-serif leading-relaxed">
+              {caption}
+            </p>
+          ) : (
+            <p className="text-[10px] text-center text-white/20 hover:text-white/40 transition-colors uppercase tracking-wider font-semibold cursor-pointer" onClick={() => setIsKeyboardEditingCaption(true)}>
+              + Add Caption
+            </p>
+          )}
+        </div>
+
+        {/* CMS Control Toolbar */}
+        {selected && (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-16 bg-luxury-black/90 border border-white/10 p-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl flex items-center gap-1.5 z-50 text-white min-w-max">
+            {/* Alignment Controls */}
+            <div className="flex items-center gap-1 border-r border-white/10 pr-2">
+              <button 
+                type="button" 
+                onClick={() => handleAlignment('left')}
+                className={`p-1.5 rounded-lg transition-colors ${align === 'left' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/75'}`}
+                title="Left Align"
+              >
+                <AlignLeft size={14} />
+              </button>
+              <button 
+                type="button" 
+                onClick={() => handleAlignment('center')}
+                className={`p-1.5 rounded-lg transition-colors ${align === 'center' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/75'}`}
+                title="Center Align"
+              >
+                <AlignCenter size={14} />
+              </button>
+              <button 
+                type="button" 
+                onClick={() => handleAlignment('right')}
+                className={`p-1.5 rounded-lg transition-colors ${align === 'right' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/75'}`}
+                title="Right Align"
+              >
+                <AlignRight size={14} />
+              </button>
+              <button 
+                type="button" 
+                onClick={() => handleAlignment('full')}
+                className={`p-1.5 rounded-lg transition-colors ${align === 'full' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/75'}`}
+                title="Full Width"
+              >
+                <Maximize size={14} />
+              </button>
+            </div>
+
+            {/* Width Presets */}
+            {align !== 'full' && (
+              <div className="flex items-center gap-1 border-r border-white/10 px-2">
+                <button 
+                  type="button" 
+                  onClick={() => handleWidthPreset('25%')}
+                  className={`px-2 py-1 text-[10px] font-black rounded-lg transition-colors uppercase ${width === '25%' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/60'}`}
+                  title="Small Width (25%)"
+                >
+                  S
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => handleWidthPreset('50%')}
+                  className={`px-2 py-1 text-[10px] font-black rounded-lg transition-colors uppercase ${width === '50%' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/60'}`}
+                  title="Medium Width (50%)"
+                >
+                  M
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => handleWidthPreset('75%')}
+                  className={`px-2 py-1 text-[10px] font-black rounded-lg transition-colors uppercase ${width === '75%' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/60'}`}
+                  title="Large Width (75%)"
+                >
+                  L
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => handleWidthPreset('100%')}
+                  className={`px-2 py-1 text-[10px] font-black rounded-lg transition-colors uppercase ${width === '100%' ? 'bg-[#C5A059] text-black' : 'hover:bg-white/10 text-white/60'}`}
+                  title="Full width (100%)"
+                >
+                  F
+                </button>
+              </div>
+            )}
+
+            {/* Clickable URL Link */}
+            <div className="relative">
+              <button 
+                type="button" 
+                onClick={() => { setIsEditingLink(!isEditingLink); setIsEditingAlt(false); }}
+                className={`p-1.5 rounded-lg transition-colors hover:bg-white/10 ${linkUrl ? 'text-[#C5A059]' : 'text-white/75'}`}
+                title="Add Clickable Link URL"
+              >
+                <LinkIcon size={14} />
+              </button>
+
+              {isEditingLink && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-luxury-black border border-white/10 p-3 rounded-xl shadow-2xl flex flex-col gap-2 z-50 w-64 text-left">
+                  <div className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Image Clickable URL</div>
+                  <div className="flex gap-1.5">
+                    <input 
+                      type="text" 
+                      value={urlText}
+                      onChange={(e) => setUrlText(e.target.value)}
+                      className="bg-white/15 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white flex-1 focus:outline-none focus:border-[#C5A059]/50 font-mono"
+                      placeholder="https://example.com"
+                    />
+                    <button type="button" onClick={saveLink} className="bg-[#C5A059] text-black p-1 hover:bg-white rounded-lg transition-colors">
+                      <Check size={14} />
+                    </button>
+                    <button type="button" onClick={() => setIsEditingLink(false)} className="bg-white/5 text-white p-1 hover:bg-white/10 rounded-lg transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Alt Tag SEO */}
+            <div className="relative border-r border-[#ffffff20] pr-2">
+              <button 
+                type="button" 
+                onClick={() => { setIsEditingAlt(!isEditingAlt); setIsEditingLink(false); }}
+                className={`p-1.5 rounded-lg transition-colors hover:bg-white/10 ${alt ? 'text-[#C5A059]' : 'text-white/75'}`}
+                title="Define SEO ALT Tag"
+              >
+                <FileText size={14} />
+              </button>
+
+              {isEditingAlt && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-luxury-black border border-white/10 p-3 rounded-xl shadow-2xl flex flex-col gap-2 z-50 w-64 text-left font-sans">
+                  <div className="text-[9px] uppercase font-bold text-white/40 tracking-wider">SEO ALT Tag</div>
+                  <div className="flex gap-1.5">
+                    <input 
+                      type="text" 
+                      value={altText}
+                      onChange={(e) => setAltText(e.target.value)}
+                      className="bg-white/15 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white flex-1 focus:outline-none focus:border-[#C5A059]/50"
+                      placeholder="SEO ALT Text..."
+                    />
+                    <button type="button" onClick={saveAlt} className="bg-[#C5A059] text-black p-1 hover:bg-white rounded-lg transition-colors">
+                      <Check size={14} />
+                    </button>
+                    <button type="button" onClick={() => setIsEditingAlt(false)} className="bg-white/5 text-white p-1 hover:bg-white/10 rounded-lg transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Replace Image and Delete Image */}
+            <button 
+              type="button" 
+              onClick={handleReplaceImageClick}
+              className="p-1.5 hover:bg-white/10 text-white/75 rounded-lg transition-all"
+              title="Replace Media Source"
+            >
+              <RefreshCw size={14} />
+            </button>
+
+            <button 
+              type="button" 
+              onClick={deleteNode}
+              className="p-1.5 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg transition-all"
+              title="Remove Media"
+            >
+              <Trash2 size={14} />
+            </button>
+
+            <input type="file" ref={fileInputRefForReplace} onChange={handleReplaceFile} accept="image/*" className="hidden" />
+          </div>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
 const ResizableImage = Image.extend({
   addAttributes() {
     return {
-      ...this.parent?.(),
+      src: {
+        default: null,
+        parseHTML: element => element.getAttribute('src'),
+        renderHTML: attributes => ({
+          src: attributes.src,
+        }),
+      },
+      alt: {
+        default: '',
+        parseHTML: element => element.getAttribute('alt') || '',
+        renderHTML: attributes => ({
+          alt: attributes.alt,
+        }),
+      },
       width: {
         default: '100%',
-        parseHTML: element => element.style.width,
-        renderHTML: attributes => ({ style: `width: ${attributes.width}` }),
+        parseHTML: element => element.style.width || element.getAttribute('width') || '100%',
+        renderHTML: attributes => ({
+          style: `width: ${attributes.width}`,
+          width: attributes.width,
+        }),
       },
       align: {
         default: 'center',
-        parseHTML: element => element.style.textAlign,
-        renderHTML: attributes => ({ style: `text-align: ${attributes.align}` }),
+        parseHTML: element => element.getAttribute('data-align') || 'center',
+        renderHTML: attributes => ({
+          'data-align': attributes.align,
+        }),
       },
-    }
+      caption: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-caption') || '',
+        renderHTML: attributes => ({
+          'data-caption': attributes.caption,
+        }),
+      },
+      linkUrl: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-link-url') || '',
+        renderHTML: attributes => ({
+          'data-link-url': attributes.linkUrl,
+        }),
+      },
+    };
   },
-  addCommands() {
-    return {
-      ...this.parent?.(),
-      setAlign: (align: string) => ({ commands }) => commands.updateAttributes('image', { align }),
-      setWidth: (width: string) => ({ commands }) => commands.updateAttributes('image', { width }),
-    } as any
+
+  renderHTML({ HTMLAttributes }) {
+    const { src, alt, width, align, caption, linkUrl } = HTMLAttributes;
+    
+    let inlineStyle = `width: ${width || '100%'}; max-width: 100%; display: block; margin-top: 2rem; margin-bottom: 2rem;`;
+    if (align === 'left') {
+      inlineStyle += ' float: left; margin-right: 1.5rem; margin-bottom: 1rem; max-width: 50%; clear: both;';
+    } else if (align === 'right') {
+      inlineStyle += ' float: right; margin-left: 1.5rem; margin-bottom: 1rem; max-width: 50%; clear: both;';
+    } else if (align === 'center') {
+      inlineStyle += ' margin-left: auto; margin-right: auto; text-align: center;';
+    } else if (align === 'full') {
+      inlineStyle += ' width: 100%; max-width: 100%; clear: both; margin-left: 0; margin-right: 0;';
+    }
+
+    return [
+      'figure',
+      {
+        class: `tip-image-figure align-${align || 'center'}`,
+        style: inlineStyle,
+        'data-align': align || 'center',
+        'data-caption': caption || '',
+        'data-link-url': linkUrl || '',
+      },
+      [
+        linkUrl ? 'a' : 'div',
+        linkUrl ? { href: linkUrl, target: '_blank', rel: 'noopener noreferrer', style: 'display: block;' } : { style: 'display: block;' },
+        ['img', { src: src || '', alt: alt || '', style: 'width: 100%; max-width: 100%; border-radius: 1rem; display: block;' }]
+      ],
+      caption ? ['figcaption', { class: 'image-caption', style: 'text-align: center; font-style: italic; font-size: 0.8125rem; opacity: 0.6; margin-top: 0.5rem; font-family: serif;' }, caption] : ['span', { class: 'hidden' }]
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
   },
 });
 
@@ -380,11 +786,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
       TextAlign.configure({
         types: ['heading', 'paragraph', 'callout'],
       }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'rounded-2xl max-w-full my-8 border border-white/10 transition-transform hover:scale-[1.01] mx-auto block',
-        },
-      }),
+      ResizableImage,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
