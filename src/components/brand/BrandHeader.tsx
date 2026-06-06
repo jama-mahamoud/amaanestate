@@ -10,24 +10,24 @@ export const BrandHeader: React.FC<BrandHeaderProps> = ({ className = '', size =
   const [imageError, setImageError] = useState(false);
 
   const sizeClasses = {
-    sm: 'text-lg tracking-[0.15em]',
-    md: 'text-xl sm:text-2xl tracking-[0.2em]',
-    lg: 'text-2xl sm:text-3xl tracking-[0.25em]',
-    xl: 'text-3xl sm:text-4xl tracking-[0.3em]',
+    sm: 'text-base tracking-[0.12em]',
+    md: 'text-lg sm:text-xl tracking-[0.15em]',
+    lg: 'text-xl sm:text-2xl tracking-[0.2em]',
+    xl: 'text-2xl sm:text-3xl tracking-[0.25em]',
   };
 
   const iconSizes = {
-    sm: 'h-7 w-7',
-    md: 'h-9 w-9',
-    lg: 'h-14 w-14',
-    xl: 'h-16 w-16',
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12',
+    xl: 'h-14 w-14',
   };
 
   const fallbackTextSizes = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-lg',
-    xl: 'text-xl',
+    sm: 'text-[10px]',
+    md: 'text-xs',
+    lg: 'text-base',
+    xl: 'text-lg',
   };
 
   return (

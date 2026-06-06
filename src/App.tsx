@@ -123,7 +123,14 @@ export default function App() {
                 <Route path="jobs" element={<JobsPage />} />
                 <Route path="network" element={<NetworkPage />} />
                 <Route path="news" element={<News />} />
+                <Route path="news/english" element={<News />} />
                 <Route path="news/:id" element={<ArticleDetails />} />
+                <Route path="news/:type/:id" element={<ArticleDetails />} />
+                
+                {/* Language nested news routes */}
+                <Route path=":lang/news" element={<News />} />
+                <Route path=":lang/news/:id" element={<ArticleDetails />} />
+                <Route path=":lang/news/:type/:id" element={<ArticleDetails />} />
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />

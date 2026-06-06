@@ -35,6 +35,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     summary: initialData?.summary || '',
     content: initialData?.content || '',
     category: initialData?.category || 'news',
+    type: initialData?.type || 'update',
     language: initialData?.language || 'en',
     featuredImage: initialData?.featuredImage || '',
     gallery: initialData?.gallery || [],
@@ -687,6 +688,35 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
                              <SelectItem value="news" className="rounded-lg text-xs py-2">News</SelectItem>
                              <SelectItem value="report" className="rounded-lg text-xs py-2">Reports</SelectItem>
                              <SelectItem value="opportunity" className="rounded-lg text-xs py-2">Opportunities</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">Article Type (Workflow Tag)</label>
+                         <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val as any})}>
+                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                             <SelectItem value="update" className="rounded-lg text-xs py-2">Update</SelectItem>
+                             <SelectItem value="market_report" className="rounded-lg text-xs py-2">Market Report</SelectItem>
+                             <SelectItem value="announcement" className="rounded-lg text-xs py-2">Announcement</SelectItem>
+                             <SelectItem value="new_project" className="rounded-lg text-xs py-2">New Project</SelectItem>
+                             <SelectItem value="short_insight" className="rounded-lg text-xs py-2">Short Insight</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <div className="space-y-1.5">
+                         <label className="text-white/50 text-[11px] font-medium">Language Setting</label>
+                         <Select value={formData.language} onValueChange={(val) => setFormData({...formData, language: val as any})}>
+                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
+                             <SelectItem value="en" className="rounded-lg text-xs py-2">English</SelectItem>
+                             <SelectItem value="so" className="rounded-lg text-xs py-2">Somali</SelectItem>
                            </SelectContent>
                          </Select>
                        </div>

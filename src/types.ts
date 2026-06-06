@@ -177,6 +177,7 @@ export interface UserProfile {
 }
 
 export type ArticleStatus = 'draft' | 'pending' | 'approved' | 'published';
+export type ArticleType = 'update' | 'market_report' | 'announcement' | 'new_project' | 'short_insight';
 
 export interface Article {
   id: string;
@@ -185,6 +186,7 @@ export interface Article {
   summary: string;
   content: string;
   category: string;
+  type: ArticleType;
   language: 'en' | 'so';
   featuredImage?: string;
   gallery?: string[];

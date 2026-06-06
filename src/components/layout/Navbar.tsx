@@ -64,6 +64,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [currDropdownOpen, setCurrDropdownOpen] = useState(false);
+  const [newsDropdownOpen, setNewsDropdownOpen] = useState(false);
   const { user } = useAuth();
   const { language, setLanguage, currency, setCurrency, t } = useSettings();
   
@@ -220,7 +221,59 @@ export default function Navbar() {
           <Link to="/agents" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agents')}</Link>
           <Link to="/network" className="text-xs font-bold tracking-tight text-[#C5A059] hover:text-white transition-colors whitespace-nowrap shrink-0">{t('Network')}</Link>
           <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agreements')}</Link>
-          <Link to="/news" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('News')}</Link>
+          
+          {/* News Interactive Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setNewsDropdownOpen(true)}
+            onMouseLeave={() => setNewsDropdownOpen(false)}
+          >
+            <button 
+              onClick={() => setNewsDropdownOpen(prev => !prev)}
+              className={`text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap outline-none py-2 ${
+                newsDropdownOpen ? 'text-[#C5A059]' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              <span>{t('News')}</span>
+              <ChevronDown 
+                size={12} 
+                className={`opacity-50 transition-transform duration-300 ${newsDropdownOpen ? 'rotate-180 text-[#C5A059]' : ''}`} 
+              />
+            </button>
+            <AnimatePresence>
+              {newsDropdownOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full mt-2 left-0 bg-luxury-charcoal border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[180px] py-1 z-50 backdrop-blur-3xl bg-opacity-95"
+                >
+                  <Link 
+                    to="/news"
+                    className="w-full text-left block px-5 py-2.5 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
+                    onClick={() => setNewsDropdownOpen(false)}
+                  >
+                    {t('All News', 'All News')}
+                  </Link>
+                  <Link 
+                    to="/news?lang=so"
+                    className="w-full text-left block px-5 py-2.5 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
+                    onClick={() => setNewsDropdownOpen(false)}
+                  >
+                    {t('Somali News', 'Somali News')}
+                  </Link>
+                  <Link 
+                    to="/news/english"
+                    className="w-full text-left block px-5 py-2.5 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
+                    onClick={() => setNewsDropdownOpen(false)}
+                  >
+                    {t('English News', 'English News')}
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
           <Link to="/about" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('About')}</Link>
           <Link to="/contact" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Contact')}</Link>
@@ -343,7 +396,40 @@ export default function Navbar() {
                 <Link to="/agents" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agents')}</Link>
                 <Link to="/network" onClick={closeMobileMenu} className="text-lg font-bold text-[#C5A059] hover:text-[#C5A059]/80 transition-all py-4 border-b border-white/5">{t('Network')}</Link>
                 <Link to="/agreements" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agreements')}</Link>
-                <Link to="/news" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('News')}</Link>
+                
+                {/* News Collapsible Accordion on Mobile */}
+                <div className="border-b border-white/5 py-4 w-full text-left">
+                  <button 
+                    onClick={() => setActiveAccordion(activeAccordion === 'News' ? null : 'News')} 
+                    className="w-full flex justify-between items-center text-lg font-bold text-white hover:text-[#C5A059] transition-all"
+                  >
+                    <span>{t('News')}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${activeAccordion === 'News' ? 'rotate-180 text-[#C5A059]' : 'text-white/20'}`} />
+                  </button>
+                  <AnimatePresence>
+                    {activeAccordion === 'News' && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="py-4 pl-4 border-l border-white/5 flex flex-col gap-3">
+                          <Link to="/news" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1">
+                            {t('All News', 'All News')}
+                          </Link>
+                          <Link to="/news?lang=so" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1">
+                            {t('Somali News', 'Somali News')}
+                          </Link>
+                          <Link to="/news/english" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1">
+                            {t('English News', 'English News')}
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>
                 <Link to="/about" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('About')}</Link>
                 <Link to="/contact" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Contact')}</Link>

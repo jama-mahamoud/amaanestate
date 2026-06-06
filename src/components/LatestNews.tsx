@@ -43,6 +43,37 @@ const formatDate = (dateValue: any) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+// Helper for badge color
+const getTypeColor = (type?: string) => {
+  const val = (type || '').toLowerCase().trim();
+  switch (val) {
+    case 'news':
+    case 'update': return 'bg-blue-500';
+    case 'report':
+    case 'market_report': return 'bg-amber-600 text-white';
+    case 'opportunity': return 'bg-purple-600 text-white';
+    case 'announcement': return 'bg-red-500';
+    case 'new_project': return 'bg-green-600';
+    case 'short_insight': return 'bg-teal-600';
+    default: return 'bg-[#C5A059]';
+  }
+};
+
+const getTypeLabel = (type?: string) => {
+  const val = (type || '').toLowerCase().trim();
+  switch (val) {
+    case 'news':
+    case 'update': return 'Warar';
+    case 'report':
+    case 'market_report': return 'Warbixin';
+    case 'opportunity': return 'Fursad';
+    case 'announcement': return 'Ogeysiis';
+    case 'new_project': return 'Mashruuc Cusub';
+    case 'short_insight': return 'Falanqeyn';
+    default: return 'Falanqeyn';
+  }
+};
+
 // Sub-component for Featured Article Card
 const FeaturedArticleCard = ({ article }: { article: Article }) => {
   const readTime = calculateReadTime(article.content || '');
@@ -77,12 +108,12 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent lg:hidden" />
           <div className="absolute top-6 left-6 z-10">
-            <Badge className="bg-[#C5A059] text-black hover:bg-[#C5A059] uppercase tracking-widest text-[11px] font-black border-none px-4 py-1.5 shadow-sm">
-              Featured Insight
+            <Badge className={`${getTypeColor(article.type || article.category)} text-white hover:opacity-90 uppercase tracking-widest text-[11px] font-black border-none px-4 py-1.5 shadow-sm`}>
+              {getTypeLabel(article.type || article.category)}
             </Badge>
           </div>
           <div className="absolute bottom-6 left-6 right-6 lg:hidden z-10 text-white">
-            <span className="text-[#C5A059] text-xs font-bold uppercase tracking-wider block mb-2">{article.category || 'Real Estate'}</span>
+            <span className="text-white/80 text-xs font-bold uppercase tracking-wider block mb-2">{article.category || 'Real Estate'}</span>
             <h3 className="text-xl font-display font-bold leading-snug">{article.title}</h3>
           </div>
         </div>
@@ -91,8 +122,8 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
         <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-between bg-white relative">
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3 text-slate-500 text-xs font-mono">
-              <span className="flex items-center gap-1.5 uppercase tracking-widest text-[#C5A059] font-black text-[10px]">
-                <TrendingUp size={12} /> {article.category || 'Real Estate'}
+              <span className={`flex items-center gap-1.5 uppercase tracking-widest text-white font-black text-[10px] px-2 py-0.5 rounded-sm ${getTypeColor(article.type || article.category)}`}>
+                {getTypeLabel(article.type || article.category)}
               </span>
               <span className="text-slate-300">•</span>
               <span className="flex items-center gap-1">
@@ -107,7 +138,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
             </div>
 
             <h3 className="text-2xl lg:text-3xl font-display font-black text-slate-950 tracking-tight leading-tight group-hover:text-[#C5A059] transition-colors duration-300">
-              <Link to={`/news/${article.slug || article.id}`}>
+              <Link to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}>
                 {article.title}
               </Link>
             </h3>
@@ -119,7 +150,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
 
           <div className="pt-8 mt-8 border-t border-slate-100 flex items-center justify-between">
             <Link 
-              to={`/news/${article.slug || article.id}`} 
+              to={`/news/${article.type || 'update'}/${article.slug || article.id}`} 
               className="inline-flex items-center font-bold tracking-tight text-slate-900 group-hover:text-[#C5A059] transition-colors text-base"
             >
               Analyze Report 
@@ -166,8 +197,8 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
           loading="lazy"
         />
         <div className="absolute top-4 left-4">
-          <Badge className="bg-slate-950/70 text-white hover:bg-[#C5A059] hover:text-black uppercase tracking-wider text-[9px] font-bold border-none px-3 py-1">
-            {article.category || 'Market'}
+          <Badge className={`${getTypeColor(article.type || article.category)} text-white hover:opacity-90 uppercase tracking-wider text-[9px] font-bold border-none px-3 py-1`}>
+            {getTypeLabel(article.type || article.category)}
           </Badge>
         </div>
       </div>
@@ -187,7 +218,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
           </div>
 
           <h4 className="text-lg md:text-xl font-display font-bold text-slate-950 mb-3 line-clamp-2 leading-snug group-hover:text-[#C5A059] transition-colors duration-300 font-bold">
-            <Link to={`/news/${article.slug || article.id}`}>
+            <Link to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}>
               {article.title}
             </Link>
           </h4>
@@ -199,7 +230,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
 
         <div className="pt-4 border-t border-slate-100 mt-auto flex items-center justify-between">
           <Link 
-            to={`/news/${article.slug || article.id}`}
+            to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}
             className="inline-flex items-center text-xs md:text-sm font-bold text-slate-900 group-hover:text-[#C5A059] transition-colors"
           >
             Read Intelligence 
@@ -216,7 +247,7 @@ const LatestNews = memo(() => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    articleService.getArticles(undefined, undefined, true)
+    articleService.getArticles(undefined, 'so', true)
       .then(data => {
         // Safe robust sorting & client cache format resilience
         const sorted = data.sort((a, b) => {

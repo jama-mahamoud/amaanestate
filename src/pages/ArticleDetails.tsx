@@ -190,8 +190,8 @@ export default function ArticleDetails() {
           >
             {/* Category badge */}
             <div>
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#C5A059]/10 border border-[#C5A059]/20 text-[#C5A059]">
-                {article.category || 'MARKET ANALYSIS'}
+              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${article.type === 'market_report' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' : 'bg-[#C5A059]/10 border-[#C5A059]/20 text-[#C5A059]'}`}>
+                {article.type || article.category || 'MARKET ANALYSIS'}
               </span>
             </div>
 

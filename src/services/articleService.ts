@@ -86,7 +86,7 @@ export const articleService = {
     }
 
     try {
-      // Fetch all articles to perform safe, client-side, backwards-compatible, and index-free filtering
+      // Fetch all articles without category constraints so no article gets hidden by category
       const q = query(collection(db, ARTICLES_COLLECTION));
       const snapshot = await getDocs(q);
       
@@ -97,14 +97,21 @@ export const articleService = {
           finalSlug = docData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
         }
         if (!finalSlug) finalSlug = doc.id;
+        
         return {
           id: doc.id,
           ...docData,
-          slug: finalSlug
+          slug: finalSlug,
+          language: docData.language || (docData as any).lang || 'en'
         };
       }) as Article[];
       
-      // Client-side safe, defensive filtering
+      // Filter by language strictly if specified
+      if (language && language !== 'All') {
+        docs = docs.filter(art => art.language === language);
+      }
+      
+      // Client-side status/visibility filtering
       if (publishedOnly) {
         docs = docs.filter(art => {
           // Strict filtering: must be published AND public
@@ -112,14 +119,6 @@ export const articleService = {
           const isPublic = art.visibility === 'public' || art.visibility === undefined; // default to public if undefined for legacy
           return isPublished && isPublic;
         });
-      }
-      
-      if (category && category !== 'All') {
-        docs = docs.filter(art => art.category === category);
-      }
-      
-      if (language) {
-        docs = docs.filter(art => art.language === language);
       }
 
       // Client-side sort safely handling multiple Date/Timestamp formats
