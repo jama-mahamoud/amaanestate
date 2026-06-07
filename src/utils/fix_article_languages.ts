@@ -2,7 +2,7 @@ async function main() {
   const projectId = "amaanestate-97f4f";
   const databaseId = "(default)";
   const collectionName = "articles";
-  const apiKey = "AIzaSyBInp5M8dVTctLoLw9I44_mPzOx-Q7JhoE";
+  const apiKey = process.env.GOOGLE_API_KEY;
 
   const articlesToUpdate = [
     { id: "99IuUGjA7Ou5OAiw4zyO", lang: "so", title: "Ha iibsan dhul kahor intaadan hubin 5-tan arrimood" },

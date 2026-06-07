@@ -4,7 +4,13 @@ import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
+// Combine config with env var
+const config = {
+  ...firebaseConfig,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey
+};
+
+const app = initializeApp(config);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
