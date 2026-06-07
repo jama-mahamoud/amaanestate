@@ -193,23 +193,20 @@ async function generateSitemapXml() {
 
   const firestoreDb = getAdminDb();
   
-  // CRITICAL: On Vercel, if process.env.FIREBASE_SERVICE_ACCOUNT is not defined, 
-  // any attempt to connect to Cloud Firestore will hang/timeout and fail with 500 FUNCTION_INVOCATION_FAILED.
-  // We explicitly bypass Firestore calls on Vercel if service account is not provided.
-  const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
-
-  if (firestoreDb && hasCredentials) {
+  if (firestoreDb) {
+    console.log("[SITEMAP] Starting dynamic Firestore queries for sitemap...");
     // 1. Fetch active properties and vehicles
     try {
       const listingsSnap = await withTimeout(
         firestoreDb.collection("listings")
           .where("status", "==", "active")
           .get(),
-        2000,
+        10000,
         null
       );
       
       if (listingsSnap && listingsSnap.docs) {
+        console.log(`[SITEMAP] Found ${listingsSnap.docs.length} active listings`);
         listingsSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
           const id = docSnapshot.id;
@@ -242,11 +239,12 @@ async function generateSitemapXml() {
         firestoreDb.collection("brokers")
           .where("status", "==", "approved")
           .get(),
-        2000,
+        10000,
         null
       );
       
       if (brokerSnap && brokerSnap.docs) {
+        console.log(`[SITEMAP] Found ${brokerSnap.docs.length} approved brokers`);
         brokerSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
           const id = docSnapshot.id;
@@ -268,11 +266,12 @@ async function generateSitemapXml() {
     try {
       const articleSnap = await withTimeout(
         firestoreDb.collection("articles").get(),
-        5000,
+        15000,
         null
       );
       
       if (articleSnap && articleSnap.docs) {
+        console.log(`[SITEMAP] Found ${articleSnap.docs.length} raw articles to process`);
         articleSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
           
@@ -293,15 +292,15 @@ async function generateSitemapXml() {
 
             const lang = data.language || (data as any).lang || 'en';
             
-            // Add canonical news URL
+            // Add canonical news URL - explicitly requested as /news/article-slug
             urls.push({
               loc: `https://www.amaanestate.com/news/${slug}`,
               lastmod,
               changefreq: "weekly",
-              priority: "0.7"
+              priority: "0.8"
             });
 
-            // If it's a Somali article, also add the Somali-prefixed path for better indexing
+            // Also ensure language variants are indexed if they exist
             if (lang === 'so') {
               urls.push({
                 loc: `https://www.amaanestate.com/so/news/${slug}`,
@@ -310,7 +309,6 @@ async function generateSitemapXml() {
                 priority: "0.7"
               });
             } else {
-              // Also add /en/ for English articles to ensure full coverage as requested
               urls.push({
                 loc: `https://www.amaanestate.com/en/news/${slug}`,
                 lastmod,
@@ -320,6 +318,8 @@ async function generateSitemapXml() {
             }
           }
         });
+      } else {
+        console.warn("[SITEMAP] articleSnap is empty or null, skipping dynamic news indexing.");
       }
     } catch (dbErr) {
       console.error("[SITEMAP] Error fetching articles:", dbErr);
@@ -331,11 +331,12 @@ async function generateSitemapXml() {
         firestoreDb.collection("jobs")
           .where("status", "==", "approved")
           .get(),
-        2000,
+        10000,
         null
       );
       
       if (jobsSnap && jobsSnap.docs) {
+        console.log(`[SITEMAP] Found ${jobsSnap.docs.length} approved jobs`);
         jobsSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
           const id = docSnapshot.id;
@@ -353,7 +354,7 @@ async function generateSitemapXml() {
       console.error("[SITEMAP] Error fetching jobs:", dbErr);
     }
   } else {
-    console.log("[SITEMAP] Skipping Firestore dynamic sitemap URL queries to prevent connection hangs/timeouts due to missing credentials.");
+    console.error("[SITEMAP] firestoreDb is NULL. Check environment variables and firebase-applet-config.json");
   }
 
   // Build XML
