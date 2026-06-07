@@ -24,8 +24,8 @@ const NEWS_TRANSLATIONS = {
     noArticlesDesc: "There are currently no published intelligence updates stored in this register. Check back shortly.",
     createBtn: "Create Article",
     listPropertyBtn: "List Property",
-    briefing: "Read More",
-    recentBriefing: "Read More"
+    briefing: "Access Intel Briefing",
+    recentBriefing: "Access Briefing"
   },
   so: {
     spotlight: "Aqoonta Hay'adaha",
@@ -41,8 +41,8 @@ const NEWS_TRANSLATIONS = {
     noArticlesDesc: "Hadda ma jiraan wax warar ah oo ku keydsan qaybtaan. Fadlan dib u soo laabo dhawaan.",
     createBtn: "Qor Maqaal",
     listPropertyBtn: "Diiwaangeli Hanti",
-    briefing: "Akhri Dheeraad",
-    recentBriefing: "Akhri Dheeraad"
+    briefing: "Akhri Macluumaadka Kooban",
+    recentBriefing: "Akhri Warbixinta"
   }
 };
 

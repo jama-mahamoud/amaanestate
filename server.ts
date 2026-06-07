@@ -264,35 +264,61 @@ async function generateSitemapXml() {
       console.error("[SITEMAP] Error fetching brokers:", dbErr);
     }
 
-    // 3. Fetch published articles
+    // 3. Fetch published articles with improved robustness
     try {
       const articleSnap = await withTimeout(
-        firestoreDb.collection("articles")
-          .where("published", "==", true)
-          .where("visibility", "==", "public")
-          .get(),
-        2000,
+        firestoreDb.collection("articles").get(),
+        5000,
         null
       );
       
       if (articleSnap && articleSnap.docs) {
         articleSnap.docs.forEach((docSnapshot: any) => {
           const data = docSnapshot.data();
-          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
           
-          let slug = data.slug;
-          if (!slug && data.title) {
-            slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+          // Use same logic as articleService for robust filtering
+          const isPublished = data.status === 'published' || data.published === true;
+          const isPublic = data.visibility === 'public' || data.visibility === undefined;
+          
+          if (isPublished && isPublic) {
+            const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+            
+            let slug = data.slug;
+            if (!slug && data.title) {
+              slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+            }
+            if (!slug) {
+              slug = docSnapshot.id;
+            }
+
+            const lang = data.language || (data as any).lang || 'en';
+            
+            // Add canonical news URL
+            urls.push({
+              loc: `https://www.amaanestate.com/news/${slug}`,
+              lastmod,
+              changefreq: "weekly",
+              priority: "0.7"
+            });
+
+            // If it's a Somali article, also add the Somali-prefixed path for better indexing
+            if (lang === 'so') {
+              urls.push({
+                loc: `https://www.amaanestate.com/so/news/${slug}`,
+                lastmod,
+                changefreq: "weekly",
+                priority: "0.7"
+              });
+            } else {
+              // Also add /en/ for English articles to ensure full coverage as requested
+              urls.push({
+                loc: `https://www.amaanestate.com/en/news/${slug}`,
+                lastmod,
+                changefreq: "weekly",
+                priority: "0.7"
+              });
+            }
           }
-          if (!slug) {
-            slug = docSnapshot.id;
-          }
-          urls.push({
-            loc: `https://www.amaanestate.com/news/${slug}`,
-            lastmod,
-            changefreq: "weekly",
-            priority: "0.6"
-          });
         });
       }
     } catch (dbErr) {

@@ -153,7 +153,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
               to={`/news/${article.type || 'update'}/${article.slug || article.id}`} 
               className="inline-flex items-center font-bold tracking-tight text-slate-900 group-hover:text-[#C5A059] transition-colors text-base"
             >
-              Read More 
+              Analyze Report 
               <ArrowRight size={18} className="ml-2 transform group-hover:translate-x-1.5 transition-transform duration-300" />
             </Link>
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-slate-400">
@@ -233,7 +233,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
             to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}
             className="inline-flex items-center text-xs md:text-sm font-bold text-slate-900 group-hover:text-[#C5A059] transition-colors"
           >
-            Read More 
+            Read Intelligence 
             <ArrowRight size={14} className="ml-1.5 transform group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
