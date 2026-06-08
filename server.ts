@@ -267,17 +267,6 @@ async function generateSitemapXml() {
     });
   });
 
-  const firestoreDb = getAdminDb();
-  let listings: any[] = [];
-  let brokers: any[] = [];
-  let articles: any[] = [];
-  let jobs: any[] = [];
-
-  let fetchedListings = false;
-  let fetchedBrokers = false;
-  let fetchedArticles = false;
-  let fetchedJobs = false;
-
   // Retrieve projectId from local config
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
   let prjId = "amaanestate-97f4f";
@@ -292,92 +281,22 @@ async function generateSitemapXml() {
     }
   }
 
-  // Phase 1: Attempt dynamic query using Privileged Admin SDK
-  if (firestoreDb) {
-    console.log("[SITEMAP] Attempting listing queries via Firestore Admin SDK...");
-    try {
-      const listingsSnap = await withTimeout(
-        firestoreDb.collection("listings").get(),
-        10000,
-        null
-      );
-      if (listingsSnap && listingsSnap.docs) {
-        listings = listingsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        fetchedListings = true;
-        console.log(`[SITEMAP] Fetched ${listings.length} raw listings via Admin SDK`);
-      }
-    } catch (err: any) {
-      console.warn("[SITEMAP] Admin SDK listings fetch failed, falling back to REST:", err.message);
-    }
-
-    console.log("[SITEMAP] Attempting brokers queries via Firestore Admin SDK...");
-    try {
-      const brokerSnap = await withTimeout(
-        firestoreDb.collection("brokers").get(),
-        10000,
-        null
-      );
-      if (brokerSnap && brokerSnap.docs) {
-        brokers = brokerSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        fetchedBrokers = true;
-        console.log(`[SITEMAP] Fetched ${brokers.length} brokers via Admin SDK`);
-      }
-    } catch (err: any) {
-      console.warn("[SITEMAP] Admin SDK brokers fetch failed, falling back to REST:", err.message);
-    }
-
-    console.log("[SITEMAP] Attempting articles queries via Firestore Admin SDK...");
-    try {
-      const articleSnap = await withTimeout(
-        firestoreDb.collection("articles").get(),
-        15000,
-        null
-      );
-      if (articleSnap && articleSnap.docs) {
-        articles = articleSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        fetchedArticles = true;
-        console.log(`[SITEMAP] Fetched ${articles.length} articles via Admin SDK`);
-      }
-    } catch (err: any) {
-      console.warn("[SITEMAP] Admin SDK articles fetch failed, falling back to REST:", err.message);
-    }
-
-    console.log("[SITEMAP] Attempting jobs queries via Firestore Admin SDK...");
-    try {
-      const jobsSnap = await withTimeout(
-        firestoreDb.collection("jobs").get(),
-        10000,
-        null
-      );
-      if (jobsSnap && jobsSnap.docs) {
-        jobs = jobsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-        fetchedJobs = true;
-        console.log(`[SITEMAP] Fetched ${jobs.length} jobs via Admin SDK`);
-      }
-    } catch (err: any) {
-      console.warn("[SITEMAP] Admin SDK jobs fetch failed, falling back to REST:", err.message);
-    }
-  }
-
-  // Phase 2: REST Fallback for failed/non-authenticated Admin SDK queries
-  if (!fetchedListings) {
-    listings = await fetchCollectionRest("listings", prjId);
-    console.log(`[SITEMAP REST] Fallback loaded ${listings.length} listings`);
-  }
-  if (!fetchedBrokers) {
-    brokers = await fetchCollectionRest("brokers", prjId);
-    console.log(`[SITEMAP REST] Fallback loaded ${brokers.length} brokers`);
-  }
-  if (!fetchedArticles) {
-    articles = await fetchCollectionRest("articles", prjId);
-    console.log(`[SITEMAP REST] Fallback loaded ${articles.length} articles`);
-  }
-  if (!fetchedJobs) {
-    jobs = await fetchCollectionRest("jobs", prjId);
-    console.log(`[SITEMAP REST] Fallback loaded ${jobs.length} jobs`);
-  }
+  const firestoreDb = getAdminDb();
+  
+  // Directly use the established REST client for ALL data fetching to guarantee stability
+  console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
+  
+  const [listings, brokers, articles, jobs] = await Promise.all([
+    fetchCollectionRest("listings", prjId),
+    fetchCollectionRest("brokers", prjId),
+    fetchCollectionRest("articles", prjId),
+    fetchCollectionRest("jobs", prjId)
+  ]);
+  
+  console.log(`[SITEMAP] REST fetch summary: Listings:${listings.length}, Brokers:${brokers.length}, Articles:${articles.length}, Jobs:${jobs.length}`);
 
   // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
+  // ( ... rest of the processing logic remains the same ... )
   
   // A. Process Listings (properties & vehicles)
   listings.forEach((data: any) => {
