@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import http from "http";
 import fs from "fs";
+import axios from "axios";
 import { Resend } from 'resend';
 
 // Load environment variables immediately
@@ -156,6 +157,81 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, failureValue: T):
   ]);
 }
 
+// Helper parser to convert Firestore JSON REST API document into standard JS object
+function parseRestDocument(restDoc: any, docId: string) {
+  const data: any = { id: docId };
+  if (!restDoc || !restDoc.fields) return data;
+  
+  const fields = restDoc.fields;
+  Object.keys(fields).forEach(key => {
+    const val = fields[key];
+    if (val === undefined || val === null) {
+      data[key] = null;
+    } else if (val.stringValue !== undefined) {
+      data[key] = val.stringValue;
+    } else if (val.booleanValue !== undefined) {
+      data[key] = val.booleanValue;
+    } else if (val.integerValue !== undefined) {
+      data[key] = parseInt(val.integerValue, 10);
+    } else if (val.doubleValue !== undefined) {
+      data[key] = parseFloat(val.doubleValue);
+    } else if (val.timestampValue !== undefined) {
+      const dateStr = val.timestampValue;
+      const d = new Date(dateStr);
+      data[key] = {
+        seconds: Math.floor(d.getTime() / 1000),
+        nanoseconds: 0,
+        toDate: () => d,
+        toISOString: () => dateStr
+      };
+    } else if (val.arrayValue !== undefined) {
+      const values = val.arrayValue.values || [];
+      data[key] = values.map((v: any) => {
+        if (v === undefined || v === null) return null;
+        if (v.stringValue !== undefined) return v.stringValue;
+        if (v.booleanValue !== undefined) return v.booleanValue;
+        if (v.integerValue !== undefined) return parseInt(v.integerValue, 10);
+        if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
+        return v;
+      });
+    } else if (val.nullValue !== undefined) {
+      data[key] = null;
+    } else {
+      data[key] = val;
+    }
+  });
+
+  // Inject fallback timestamps from REST metadata if absent inside document fields
+  if (restDoc.updateTime && !data.updatedAt) {
+    const d = new Date(restDoc.updateTime);
+    data.updatedAt = { seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 };
+  }
+  if (restDoc.createTime && !data.createdAt) {
+    const d = new Date(restDoc.createTime);
+    data.createdAt = { seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 };
+  }
+
+  return data;
+}
+
+// Low-overhead REST client for Firestore public queries
+async function fetchCollectionRest(collectionId: string, projectId: string): Promise<any[]> {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionId}?pageSize=300`;
+    console.log(`[SITEMAP REST] Fetching collection '${collectionId}' from REST API URL: ${url}`);
+    const res = await axios.get(url, { timeout: 12000 });
+    const documents = res.data.documents || [];
+    return documents.map((doc: any) => {
+      const parts = doc.name.split('/');
+      const docId = parts[parts.length - 1];
+      return parseRestDocument(doc, docId);
+    });
+  } catch (err: any) {
+    console.error(`[SITEMAP REST] Failed to fetch collection '${collectionId}' via REST API:`, err.message);
+    return [];
+  }
+}
+
 async function generateSitemapXml() {
   const dynamicDate = new Date().toISOString().split('T')[0];
   const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
@@ -192,170 +268,219 @@ async function generateSitemapXml() {
   });
 
   const firestoreDb = getAdminDb();
-  
+  let listings: any[] = [];
+  let brokers: any[] = [];
+  let articles: any[] = [];
+  let jobs: any[] = [];
+
+  let fetchedListings = false;
+  let fetchedBrokers = false;
+  let fetchedArticles = false;
+  let fetchedJobs = false;
+
+  // Retrieve projectId from local config
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  let prjId = "amaanestate-97f4f";
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      if (config.projectId) {
+        prjId = config.projectId;
+      }
+    } catch (e) {
+      console.error("[SITEMAP] Failed to parse firebase-applet-config.json:", e);
+    }
+  }
+
+  // Phase 1: Attempt dynamic query using Privileged Admin SDK
   if (firestoreDb) {
-    console.log("[SITEMAP] Starting dynamic Firestore queries for sitemap...");
-    // 1. Fetch active properties and vehicles
+    console.log("[SITEMAP] Attempting listing queries via Firestore Admin SDK...");
     try {
       const listingsSnap = await withTimeout(
-        firestoreDb.collection("listings")
-          .where("status", "==", "active")
-          .get(),
+        firestoreDb.collection("listings").get(),
         10000,
         null
       );
-      
       if (listingsSnap && listingsSnap.docs) {
-        console.log(`[SITEMAP] Found ${listingsSnap.docs.length} active listings`);
-        listingsSnap.docs.forEach((docSnapshot: any) => {
-          const data = docSnapshot.data();
-          const id = docSnapshot.id;
-          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-          
-          if (data.category === "vehicle") {
-            urls.push({
-              loc: `https://www.amaanestate.com/vehicles/${id}`,
-              lastmod,
-              changefreq: "weekly",
-              priority: "0.7"
-            });
-          } else {
-            urls.push({
-              loc: `https://www.amaanestate.com/properties/${id}`,
-              lastmod,
-              changefreq: "weekly",
-              priority: "0.7"
-            });
-          }
-        });
+        listings = listingsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        fetchedListings = true;
+        console.log(`[SITEMAP] Fetched ${listings.length} raw listings via Admin SDK`);
       }
-    } catch (dbErr) {
-      console.error("[SITEMAP] Error fetching listings:", dbErr);
+    } catch (err: any) {
+      console.warn("[SITEMAP] Admin SDK listings fetch failed, falling back to REST:", err.message);
     }
 
-    // 2. Fetch approved brokers/agents
+    console.log("[SITEMAP] Attempting brokers queries via Firestore Admin SDK...");
     try {
       const brokerSnap = await withTimeout(
-        firestoreDb.collection("brokers")
-          .where("status", "==", "approved")
-          .get(),
+        firestoreDb.collection("brokers").get(),
         10000,
         null
       );
-      
       if (brokerSnap && brokerSnap.docs) {
-        console.log(`[SITEMAP] Found ${brokerSnap.docs.length} approved brokers`);
-        brokerSnap.docs.forEach((docSnapshot: any) => {
-          const data = docSnapshot.data();
-          const id = docSnapshot.id;
-          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-          
-          urls.push({
-            loc: `https://www.amaanestate.com/agents/${id}`,
-            lastmod,
-            changefreq: "weekly",
-            priority: "0.6"
-          });
-        });
+        brokers = brokerSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        fetchedBrokers = true;
+        console.log(`[SITEMAP] Fetched ${brokers.length} brokers via Admin SDK`);
       }
-    } catch (dbErr) {
-      console.error("[SITEMAP] Error fetching brokers:", dbErr);
+    } catch (err: any) {
+      console.warn("[SITEMAP] Admin SDK brokers fetch failed, falling back to REST:", err.message);
     }
 
-    // 3. Fetch published articles with improved robustness
+    console.log("[SITEMAP] Attempting articles queries via Firestore Admin SDK...");
     try {
       const articleSnap = await withTimeout(
         firestoreDb.collection("articles").get(),
         15000,
         null
       );
-      
       if (articleSnap && articleSnap.docs) {
-        console.log(`[SITEMAP] Found ${articleSnap.docs.length} raw articles to process`);
-        articleSnap.docs.forEach((docSnapshot: any) => {
-          const data = docSnapshot.data();
-          
-          // Use same logic as articleService for robust filtering
-          const isPublished = data.status === 'published' || data.published === true;
-          const isPublic = data.visibility === 'public' || data.visibility === undefined;
-          
-          if (isPublished && isPublic) {
-            const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-            
-            let slug = data.slug;
-            if (!slug && data.title) {
-              slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
-            }
-            if (!slug) {
-              slug = docSnapshot.id;
-            }
-
-            const lang = data.language || (data as any).lang || 'en';
-            
-            // Add canonical news URL - explicitly requested as /news/article-slug
-            urls.push({
-              loc: `https://www.amaanestate.com/news/${slug}`,
-              lastmod,
-              changefreq: "weekly",
-              priority: "0.8"
-            });
-
-            // Also ensure language variants are indexed if they exist
-            if (lang === 'so') {
-              urls.push({
-                loc: `https://www.amaanestate.com/so/news/${slug}`,
-                lastmod,
-                changefreq: "weekly",
-                priority: "0.7"
-              });
-            } else {
-              urls.push({
-                loc: `https://www.amaanestate.com/en/news/${slug}`,
-                lastmod,
-                changefreq: "weekly",
-                priority: "0.7"
-              });
-            }
-          }
-        });
-      } else {
-        console.warn("[SITEMAP] articleSnap is empty or null, skipping dynamic news indexing.");
+        articles = articleSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        fetchedArticles = true;
+        console.log(`[SITEMAP] Fetched ${articles.length} articles via Admin SDK`);
       }
-    } catch (dbErr) {
-      console.error("[SITEMAP] Error fetching articles:", dbErr);
+    } catch (err: any) {
+      console.warn("[SITEMAP] Admin SDK articles fetch failed, falling back to REST:", err.message);
     }
 
-    // 4. Fetch approved/active jobs
+    console.log("[SITEMAP] Attempting jobs queries via Firestore Admin SDK...");
     try {
       const jobsSnap = await withTimeout(
-        firestoreDb.collection("jobs")
-          .where("status", "==", "approved")
-          .get(),
+        firestoreDb.collection("jobs").get(),
         10000,
         null
       );
-      
       if (jobsSnap && jobsSnap.docs) {
-        console.log(`[SITEMAP] Found ${jobsSnap.docs.length} approved jobs`);
-        jobsSnap.docs.forEach((docSnapshot: any) => {
-          const data = docSnapshot.data();
-          const id = docSnapshot.id;
-          const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-          
-          urls.push({
-            loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
-            lastmod,
-            changefreq: "weekly",
-            priority: "0.6"
-          });
+        jobs = jobsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        fetchedJobs = true;
+        console.log(`[SITEMAP] Fetched ${jobs.length} jobs via Admin SDK`);
+      }
+    } catch (err: any) {
+      console.warn("[SITEMAP] Admin SDK jobs fetch failed, falling back to REST:", err.message);
+    }
+  }
+
+  // Phase 2: REST Fallback for failed/non-authenticated Admin SDK queries
+  if (!fetchedListings) {
+    listings = await fetchCollectionRest("listings", prjId);
+    console.log(`[SITEMAP REST] Fallback loaded ${listings.length} listings`);
+  }
+  if (!fetchedBrokers) {
+    brokers = await fetchCollectionRest("brokers", prjId);
+    console.log(`[SITEMAP REST] Fallback loaded ${brokers.length} brokers`);
+  }
+  if (!fetchedArticles) {
+    articles = await fetchCollectionRest("articles", prjId);
+    console.log(`[SITEMAP REST] Fallback loaded ${articles.length} articles`);
+  }
+  if (!fetchedJobs) {
+    jobs = await fetchCollectionRest("jobs", prjId);
+    console.log(`[SITEMAP REST] Fallback loaded ${jobs.length} jobs`);
+  }
+
+  // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
+  
+  // A. Process Listings (properties & vehicles)
+  listings.forEach((data: any) => {
+    const isVettedAndActive = ['active', 'verified', 'approved'].includes((data.status || '').toLowerCase().trim()) ||
+                              data.isVerified === true ||
+                              ['verified', 'verified_listing'].includes((data.verificationStatus || '').toLowerCase().trim());
+                              
+    if (isVettedAndActive) {
+      const id = data.id;
+      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+      
+      if (data.category === "vehicle") {
+        urls.push({
+          loc: `https://www.amaanestate.com/vehicles/${id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.7"
+        });
+      } else {
+        urls.push({
+          loc: `https://www.amaanestate.com/properties/${id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.7"
         });
       }
-    } catch (dbErr) {
-      console.error("[SITEMAP] Error fetching jobs:", dbErr);
     }
-  } else {
-    console.error("[SITEMAP] firestoreDb is NULL. Check environment variables and firebase-applet-config.json");
-  }
+  });
+
+  // B. Process Broker/Agent Profile Pages
+  brokers.forEach((data: any) => {
+    if (data.status === "approved" || data.status === "APPROVED") {
+      const id = data.id;
+      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+      
+      urls.push({
+        loc: `https://www.amaanestate.com/agents/${id}`,
+        lastmod,
+        changefreq: "weekly",
+        priority: "0.6"
+      });
+    }
+  });
+
+  // C. Process Blog/News Articles with Multi-Language Translations
+  articles.forEach((data: any) => {
+    const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
+    const isPublic = data.visibility === 'public' || data.visibility === undefined || data.visibility === 'PUBLIC';
+    
+    if (isPublished && isPublic) {
+      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+      
+      let slug = data.slug;
+      if (!slug && data.title) {
+        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!slug) {
+        slug = data.id;
+      }
+
+      const lang = data.language || data.lang || 'en';
+      
+      // Inject standard canonical route
+      urls.push({
+        loc: `https://www.amaanestate.com/news/${slug}`,
+        lastmod,
+        changefreq: "weekly",
+        priority: "0.8"
+      });
+
+      // Inject language-specific alternates
+      if (lang === 'so' || lang === 'SO') {
+        urls.push({
+          loc: `https://www.amaanestate.com/so/news/${slug}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.7"
+        });
+      } else {
+        urls.push({
+          loc: `https://www.amaanestate.com/en/news/${slug}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.7"
+        });
+      }
+    }
+  });
+
+  // D. Process Active/Approved Jobs
+  jobs.forEach((data: any) => {
+    if (data.status === "approved" || data.status === "APPROVED") {
+      const id = data.id;
+      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+      
+      urls.push({
+        loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
+        lastmod,
+        changefreq: "weekly",
+        priority: "0.6"
+      });
+    }
+  });
 
   // Build XML
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
