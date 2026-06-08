@@ -5,9 +5,21 @@ import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Combine config with env var
+const finalApiKey = import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey;
+
+if (!finalApiKey || finalApiKey === "REPLACE_ME_WITH_ENV_VAR") {
+  console.error(
+    "🚨 FIREBASE API KEY IS MISSING 🚨\n" +
+    "Firebase Authentication requires a valid API key to function.\n" +
+    "Since you removed it from firebase-applet-config.json, you MUST add it as an Environment Variable in Vercel:\n" +
+    "Name: VITE_FIREBASE_API_KEY\n" +
+    "Value: (Your Firebase Web API Key)"
+  );
+}
+
 const config = {
   ...firebaseConfig,
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey
+  apiKey: finalApiKey
 };
 
 const app = initializeApp(config);
