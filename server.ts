@@ -357,8 +357,6 @@ async function generateSitemapXml() {
         slug = data.id;
       }
 
-      const lang = data.language || data.lang || 'en';
-      
       // Inject standard canonical route
       urls.push({
         loc: `https://www.amaanestate.com/news/${slug}`,
@@ -366,23 +364,6 @@ async function generateSitemapXml() {
         changefreq: "weekly",
         priority: "0.8"
       });
-
-      // Inject language-specific alternates
-      if (lang === 'so' || lang === 'SO') {
-        urls.push({
-          loc: `https://www.amaanestate.com/so/news/${slug}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.7"
-        });
-      } else {
-        urls.push({
-          loc: `https://www.amaanestate.com/en/news/${slug}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.7"
-        });
-      }
     }
   });
 

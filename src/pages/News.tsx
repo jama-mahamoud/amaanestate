@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { ArrowRight, ChevronDown, Search, BookOpen } from 'lucide-react';
@@ -46,12 +46,8 @@ const NEWS_TRANSLATIONS = {
   }
 };
 
-const getArticleLink = (article: Article, language: string) => {
-  const langPrefix = language === 'so' ? '/so' : '/en';
-  if (article.type) {
-    return `${langPrefix}/news/${article.type}/${article.slug || article.id}`;
-  }
-  return `${langPrefix}/news/${article.slug || article.id}`;
+const getArticleLink = (article: Article) => {
+  return `/news/${article.slug || article.id}`;
 };
 
 const getTypeLabel = (type?: string, language?: string) => {
@@ -138,7 +134,7 @@ const ArticleCard = ({ article, index, language }: { article: Article; index: nu
       className="h-full"
     >
       <Link 
-        to={getArticleLink(article, language)} 
+        to={getArticleLink(article)} 
         className="flex flex-col h-full group bg-white/[0.02] border border-white/5 hover:border-[#C5A059]/30 rounded-2xl overflow-hidden hover:bg-white/[0.04] hover:shadow-2xl transition-all duration-300"
       >
         <div className="aspect-[16/10] overflow-hidden bg-white/5 relative">
@@ -184,11 +180,19 @@ const ArticleCard = ({ article, index, language }: { article: Article; index: nu
 
 export default function News() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isEnglishRoute = useMemo(() => location.pathname.endsWith('/news/english'), [location.pathname]);
   const langQuery = useMemo(() => new URLSearchParams(location.search).get('lang'), [location.search]);
   
   const { lang } = useParams();
   const { language, setLanguage } = useSettings();
+
+  useEffect(() => {
+    if (lang) {
+      const targetQuery = lang === 'so' ? '?lang=so' : (lang === 'en' ? '?lang=en' : '');
+      navigate(`/news${targetQuery}`, { replace: true });
+    }
+  }, [lang, navigate]);
 
   // Derive initial tab state safely & dynamically to bypass flickering/stale rendering
   const initialTab = isEnglishRoute ? 'en' : (langQuery === 'so' ? 'so' : (langQuery === 'en' ? 'en' : 'All'));

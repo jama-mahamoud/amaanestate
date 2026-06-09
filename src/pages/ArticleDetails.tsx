@@ -69,9 +69,10 @@ export default function ArticleDetails() {
         if (active) {
           if (data) {
             const targetSlug = data.slug || id;
-            if (id !== targetSlug) {
-              console.log(`[CLIENT-SIDE] Redirecting from /news/${id} to /news/${targetSlug}`);
-              navigate(`/news/${targetSlug}`, { replace: true });
+            const canonicalPath = `/news/${targetSlug}`;
+            if (window.location.pathname !== canonicalPath) {
+              console.log(`[CLIENT-SIDE] Redirecting from ${window.location.pathname} to canonical ${canonicalPath}`);
+              navigate(canonicalPath, { replace: true });
               return;
             }
             setArticle(data);

@@ -138,7 +138,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
             </div>
 
             <h3 className="text-2xl lg:text-3xl font-display font-black text-slate-950 tracking-tight leading-tight group-hover:text-[#C5A059] transition-colors duration-300">
-              <Link to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}>
+              <Link to={`/news/${article.slug || article.id}`}>
                 {article.title}
               </Link>
             </h3>
@@ -150,7 +150,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
 
           <div className="pt-8 mt-8 border-t border-slate-100 flex items-center justify-between">
             <Link 
-              to={`/news/${article.type || 'update'}/${article.slug || article.id}`} 
+              to={`/news/${article.slug || article.id}`} 
               className="inline-flex items-center font-bold tracking-tight text-slate-900 group-hover:text-[#C5A059] transition-colors text-base"
             >
               Analyze Report 
@@ -218,7 +218,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
           </div>
 
           <h4 className="text-lg md:text-xl font-display font-bold text-slate-950 mb-3 line-clamp-2 leading-snug group-hover:text-[#C5A059] transition-colors duration-300 font-bold">
-            <Link to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}>
+            <Link to={`/news/${article.slug || article.id}`}>
               {article.title}
             </Link>
           </h4>
@@ -230,7 +230,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
 
         <div className="pt-4 border-t border-slate-100 mt-auto flex items-center justify-between">
           <Link 
-            to={`/news/${article.type || article.category || 'update'}/${article.slug || article.id}`}
+            to={`/news/${article.slug || article.id}`}
             className="inline-flex items-center text-xs md:text-sm font-bold text-slate-900 group-hover:text-[#C5A059] transition-colors"
           >
             Read Intelligence 
