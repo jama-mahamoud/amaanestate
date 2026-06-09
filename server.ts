@@ -1246,6 +1246,9 @@ async function startServer() {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AmaanEstate - Premium Portal</title>
+    <!-- Google AdSense Verification -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7610767464764502"
+      crossorigin="anonymous"></script>
     <meta name="description" content="A premium real estate and luxury vehicle portal." />
   </head>
   <body>
