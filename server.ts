@@ -1247,7 +1247,7 @@ async function startServer() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AmaanEstate - Premium Portal</title>
     <!-- Impact.com Verification -->
-    <meta name="impact-site-verification" content="6a642db9-ba61-4889-99a4-e0e5ba0a6870" />
+    <meta name='impact-site-verification' value='8fa9a566-1050-4825-aeef-0fdbacf33e7d'>
 
     <meta name="description" content="A premium real estate and luxury vehicle portal." />
   </head>
