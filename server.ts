@@ -233,170 +233,206 @@ async function fetchCollectionRest(collectionId: string, projectId: string): Pro
 }
 
 async function generateSitemapXml() {
-  const dynamicDate = new Date().toISOString().split('T')[0];
-  const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
-    { loc: "https://www.amaanestate.com/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
-    { loc: "https://www.amaanestate.com/cities", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/properties", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-    { loc: "https://www.amaanestate.com/vehicles", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-    { loc: "https://www.amaanestate.com/agents", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/jobs", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/network", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/agreements", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-    { loc: "https://www.amaanestate.com/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-    { loc: "https://www.amaanestate.com/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-    { loc: "https://www.amaanestate.com/privacy", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
-    { loc: "https://www.amaanestate.com/terms", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
-    { loc: "https://www.amaanestate.com/disclaimer", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
-  ];
+  try {
+    const dynamicDate = new Date().toISOString().split('T')[0];
+    const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
+      { loc: "https://www.amaanestate.com/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
+      { loc: "https://www.amaanestate.com/cities", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/properties", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+      { loc: "https://www.amaanestate.com/vehicles", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+      { loc: "https://www.amaanestate.com/agents", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/jobs", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/network", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/agreements", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.amaanestate.com/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
+      { loc: "https://www.amaanestate.com/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
+      { loc: "https://www.amaanestate.com/privacy", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+      { loc: "https://www.amaanestate.com/terms", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+      { loc: "https://www.amaanestate.com/disclaimer", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+    ];
 
-  const citySlugs = [
-    'mogadishu', 'hargeisa', 'garowe', 'bosaso', 'jigjiga', 'dire-dawa',
-    'addis-ababa', 'kismayo', 'baidoa', 'beledweyne', 'galkayo', 'burao',
-    'berbera', 'las-anod', 'jowhar', 'afgooye', 'godey', 'mekelle',
-    'hawassa', 'adama', 'bahir-dar', 'merca'
-  ];
+    const citySlugs = [
+      'mogadishu', 'hargeisa', 'garowe', 'bosaso', 'jigjiga', 'dire-dawa',
+      'addis-ababa', 'kismayo', 'baidoa', 'beledweyne', 'galkayo', 'burao',
+      'berbera', 'las-anod', 'jowhar', 'afgooye', 'godey', 'mekelle',
+      'hawassa', 'adama', 'bahir-dar', 'merca'
+    ];
 
-  citySlugs.forEach(slug => {
-    urls.push({
-      loc: `https://www.amaanestate.com/cities/${slug}`,
-      lastmod: dynamicDate,
-      changefreq: "daily",
-      priority: "0.8"
-    });
-  });
-
-  // Retrieve projectId from local config
-  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-  let prjId = "amaanestate-97f4f";
-  if (fs.existsSync(configPath)) {
-    try {
-      const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-      if (config.projectId) {
-        prjId = config.projectId;
-      }
-    } catch (e) {
-      console.error("[SITEMAP] Failed to parse firebase-applet-config.json:", e);
-    }
-  }
-
-  const firestoreDb = getAdminDb();
-  
-  // Directly use the established REST client for ALL data fetching to guarantee stability
-  console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
-  
-  const [listings, brokers, articles, jobs] = await Promise.all([
-    fetchCollectionRest("listings", prjId),
-    fetchCollectionRest("brokers", prjId),
-    fetchCollectionRest("articles", prjId),
-    fetchCollectionRest("jobs", prjId)
-  ]);
-  
-  console.log(`[SITEMAP] REST fetch summary: Listings:${listings.length}, Brokers:${brokers.length}, Articles:${articles.length}, Jobs:${jobs.length}`);
-
-  // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
-  // ( ... rest of the processing logic remains the same ... )
-  
-  // A. Process Listings (properties & vehicles)
-  listings.forEach((data: any) => {
-    const isVettedAndActive = ['active', 'verified', 'approved'].includes((data.status || '').toLowerCase().trim()) ||
-                              data.isVerified === true ||
-                              ['verified', 'verified_listing'].includes((data.verificationStatus || '').toLowerCase().trim());
-                              
-    if (isVettedAndActive) {
-      const id = data.id;
-      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-      
-      if (data.category === "vehicle") {
-        urls.push({
-          loc: `https://www.amaanestate.com/vehicles/${id}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.7"
-        });
-      } else {
-        urls.push({
-          loc: `https://www.amaanestate.com/properties/${id}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.7"
-        });
-      }
-    }
-  });
-
-  // B. Process Broker/Agent Profile Pages
-  brokers.forEach((data: any) => {
-    if (data.status === "approved" || data.status === "APPROVED") {
-      const id = data.id;
-      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-      
+    citySlugs.forEach(slug => {
       urls.push({
-        loc: `https://www.amaanestate.com/agents/${id}`,
-        lastmod,
-        changefreq: "weekly",
-        priority: "0.6"
-      });
-    }
-  });
-
-  // C. Process Blog/News Articles with Multi-Language Translations
-  articles.forEach((data: any) => {
-    const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
-    const isPublic = data.visibility === 'public' || data.visibility === undefined || data.visibility === 'PUBLIC';
-    
-    if (isPublished && isPublic) {
-      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
-      
-      let slug = data.slug;
-      if (!slug && data.title) {
-        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
-      }
-      if (!slug) {
-        slug = data.id;
-      }
-
-      // Inject standard canonical route
-      urls.push({
-        loc: `https://www.amaanestate.com/news/${slug}`,
-        lastmod,
-        changefreq: "weekly",
+        loc: `https://www.amaanestate.com/cities/${slug}`,
+        lastmod: dynamicDate,
+        changefreq: "daily",
         priority: "0.8"
       });
-    }
-  });
+    });
 
-  // D. Process Active/Approved Jobs
-  jobs.forEach((data: any) => {
-    if (data.status === "approved" || data.status === "APPROVED") {
-      const id = data.id;
-      const lastmod = data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0] : (data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0] : dynamicDate);
+    // Retrieve projectId from local config
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    let prjId = "amaanestate-97f4f";
+    if (fs.existsSync(configPath)) {
+      try {
+        const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+        if (config.projectId) {
+          prjId = config.projectId;
+        }
+      } catch (e) {
+        console.error("[SITEMAP] Failed to parse firebase-applet-config.json:", e);
+      }
+    }
+
+    // Directly use the established REST client for ALL data fetching to guarantee stability
+    console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
+    
+    const [listings, brokers, articles, jobs] = await Promise.all([
+      fetchCollectionRest("listings", prjId),
+      fetchCollectionRest("brokers", prjId),
+      fetchCollectionRest("articles", prjId),
+      fetchCollectionRest("jobs", prjId)
+    ]);
+    
+    // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
+    
+    // A. Process Listings (properties & vehicles)
+    listings.forEach((data: any) => {
+      const isVettedAndActive = ['active', 'verified', 'approved'].includes((data.status || '').toLowerCase().trim()) ||
+                                data.isVerified === true ||
+                                ['verified', 'verified_listing'].includes((data.verificationStatus || '').toLowerCase().trim());
+                                
+      if (isVettedAndActive) {
+        const id = data.id;
+        let lastmod = dynamicDate;
+        try {
+          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error(`[SITEMAP] Error calculating lastmod for ${id}:`, e);
+        }
+        
+        if (data.category === "vehicle") {
+          urls.push({
+            loc: `https://www.amaanestate.com/vehicles/${id}`,
+            lastmod,
+            changefreq: "weekly",
+            priority: "0.7"
+          });
+        } else {
+          urls.push({
+            loc: `https://www.amaanestate.com/properties/${id}`,
+            lastmod,
+            changefreq: "weekly",
+            priority: "0.7"
+          });
+        }
+      }
+    });
+
+    // B. Process Broker/Agent Profile Pages
+    brokers.forEach((data: any) => {
+      if (data.status === "approved" || data.status === "APPROVED") {
+        const id = data.id;
+        let lastmod = dynamicDate;
+        try {
+          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error(`[SITEMAP] Error calculating lastmod for broker ${id}:`, e);
+        }
+        
+        urls.push({
+          loc: `https://www.amaanestate.com/agents/${id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.6"
+        });
+      }
+    });
+
+    // C. Process Blog/News Articles with Multi-Language Translations
+    articles.forEach((data: any) => {
+      const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
+      const isPublic = data.visibility === 'public' || data.visibility === undefined || data.visibility === 'PUBLIC';
       
-      urls.push({
-        loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
-        lastmod,
-        changefreq: "weekly",
-        priority: "0.6"
-      });
-    }
-  });
+      if (isPublished && isPublic) {
+        let lastmod = dynamicDate;
+        try {
+          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error(`[SITEMAP] Error calculating lastmod for article ${data.id || data.slug}:`, e);
+        }
+        
+        let slug = data.slug;
+        if (!slug && data.title) {
+          slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+        if (!slug) {
+          slug = data.id;
+        }
 
-  // Build XML
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-  
-  urls.forEach(url => {
-    xml += `  <url>\n`;
-    xml += `    <loc>${url.loc}</loc>\n`;
-    xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
-    xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
-    xml += `    <priority>${url.priority}</priority>\n`;
-    xml += `  </url>\n`;
-  });
-  
-  xml += `</urlset>`;
-  return { xml, count: urls.length };
+        // Inject standard canonical route
+        urls.push({
+          loc: `https://www.amaanestate.com/news/${slug}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.8"
+        });
+      }
+    });
+
+    // D. Process Active/Approved Jobs
+    jobs.forEach((data: any) => {
+      if (data.status === "approved" || data.status === "APPROVED") {
+        const id = data.id;
+        let lastmod = dynamicDate;
+        try {
+          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error(`[SITEMAP] Error calculating lastmod for job ${id}:`, e);
+        }
+        
+        urls.push({
+          loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.6"
+        });
+      }
+    });
+
+    // Build XML
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    
+    urls.forEach(url => {
+      xml += `  <url>\n`;
+      xml += `    <loc>${url.loc}</loc>\n`;
+      xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
+      xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
+      xml += `    <priority>${url.priority}</priority>\n`;
+      xml += `  </url>\n`;
+    });
+    
+    xml += `</urlset>`;
+    return { xml, count: urls.length };
+  } catch (err: any) {
+    console.error("[SITEMAP] CRITICAL ERROR in generation:", err.message);
+    throw err;
+  }
 }
 
 function generateRobotsTxt() {
@@ -984,9 +1020,9 @@ async function startServer() {
       const { xml } = await generateSitemapXml();
       res.header("Content-Type", "application/xml");
       res.send(xml);
-    } catch (err) {
-      console.error("[SEO SERVER] Sitemap generation error:", err);
-      res.status(500).send("Internal Server Error");
+    } catch (err: any) {
+      console.error("[SEO SERVER] Sitemap generation error:", err.message);
+      res.status(500).send("Internal Server Error: " + err.message);
     }
   });
 
