@@ -294,6 +294,11 @@ async function generateSitemapXml() {
     
     // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
     
+    const slugify = (text: string) => {
+      if (!text) return 'property';
+      return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    };
+
     // A. Process Listings (properties & vehicles)
     listings.forEach((data: any) => {
       const isVettedAndActive = ['active', 'verified', 'approved'].includes((data.status || '').toLowerCase().trim()) ||
@@ -302,6 +307,10 @@ async function generateSitemapXml() {
                                 
       if (isVettedAndActive) {
         const id = data.id;
+        const title = data.title || 'property';
+        const location = data.location || 'somalia';
+        const slug = slugify(`${title}-${location}-${id.substring(0, 5)}`);                
+        
         let lastmod = dynamicDate;
         try {
           if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
@@ -315,14 +324,14 @@ async function generateSitemapXml() {
         
         if (data.category === "vehicle") {
           urls.push({
-            loc: `https://www.amaanestate.com/vehicles/${id}`,
+            loc: `https://www.amaanestate.com/vehicles/${slug}`,
             lastmod,
             changefreq: "weekly",
             priority: "0.7"
           });
         } else {
           urls.push({
-            loc: `https://www.amaanestate.com/properties/${id}`,
+            loc: `https://www.amaanestate.com/properties/${slug}`,
             lastmod,
             changefreq: "weekly",
             priority: "0.7"
