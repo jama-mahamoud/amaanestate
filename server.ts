@@ -828,51 +828,30 @@ app.post("/api/contact", async (req, res) => {
 
 // Helper to fetch details for dynamic SEO tags from the firestore collection
 async function getArticleMetadata(idOrSlug: string) {
-  const firestoreDb = getAdminDb();
-  if (!firestoreDb) {
-    console.error("[SEO SERVER] No admin DB connection.");
-    return null;
-  }
-  try {
-    // Try Doc ID first with 1500ms timeout
-    const docRef = firestoreDb.collection("articles").doc(idOrSlug);
-    const docSnap = await withTimeout(docRef.get(), 1500, null as any);
-    if (docSnap && docSnap.exists) {
-      const data = docSnap.data();
-      let slug = data.slug;
-      if (!slug && data.title) {
-        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  let prjId = "amaanestate-97f4f";
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      if (config.projectId) {
+        prjId = config.projectId;
       }
-      if (!slug) {
-        slug = docSnap.id;
-      }
-      return { id: docSnap.id, ...data, slug };
+    } catch (e) {
+      console.error("[SEO SERVER] Failed to parse firebase-applet-config.json:", e);
     }
+  }
+
+  try {
+    const articles = await fetchCollectionRest("articles", prjId);
     
-    // Fallback: try by slug with 1500ms timeout
-    const querySnap = await withTimeout(
-      firestoreDb.collection("articles")
-        .where("slug", "==", idOrSlug)
-        .limit(1)
-        .get(),
-      1500,
-      null as any
-    );
+    // Find by ID or by slug
+    const article = articles.find((a: any) => a.id === idOrSlug || (a.slug && a.slug === idOrSlug));
     
-    if (querySnap && !querySnap.empty) {
-      const doc = querySnap.docs[0];
-      const data = doc.data();
-      let slug = data.slug;
-      if (!slug && data.title) {
-        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
-      }
-      if (!slug) {
-        slug = doc.id;
-      }
-      return { id: doc.id, ...data, slug };
+    if (article) {
+      return article;
     }
   } catch (error) {
-    console.error("[SEO SERVER] Error fetching article by doc id or slug:", error);
+    console.error("[SEO SERVER] Error fetching article by doc id or slug via REST:", error);
   }
   return null;
 }
@@ -1045,15 +1024,12 @@ async function startServer() {
   app.get("/news/:id", async (req, res, next) => {
     const userAgent = req.headers["user-agent"] || "";
     const isBot = /facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|discordbot|TelegramBot|Slackbot/i.test(userAgent);
-    const hasCredentials = !process.env.VERCEL || process.env.FIREBASE_SERVICE_ACCOUNT;
     
     let meta: any = null;
-    if (hasCredentials) {
-      try {
-        meta = await getArticleMetadata(req.params.id);
-      } catch (err) {
-        console.error("[SEO SERVER] Error pre-fetching article metadata:", err);
-      }
+    try {
+      meta = await getArticleMetadata(req.params.id);
+    } catch (err) {
+      console.error("[SEO SERVER] Error pre-fetching article metadata:", err);
     }
 
     if (meta) {
