@@ -1248,6 +1248,10 @@ async function startServer() {
     <title>AmaanEstate - Premium Portal</title>
     <!-- Impact.com Verification -->
     <meta name='impact-site-verification' value='567d6111-d094-481f-ba51-0aa4e73d9cf2'>
+    
+    <!-- Google AdSense Verification -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7610767464764502"
+      crossorigin="anonymous"></script>
 
     <meta name="description" content="A premium real estate and luxury vehicle portal." />
   </head>
