@@ -905,10 +905,12 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     }
     
     if (!templatePath) {
+      console.error("[SEO SERVER] ERROR: No template path found!");
       return next();
     }
     
     let template = fs.readFileSync(templatePath, 'utf-8');
+    console.log("[SEO SERVER] Loading template from:", templatePath);
     
     if (process.env.NODE_ENV !== "production") {
       const vite = app.get('vite');
@@ -941,15 +943,16 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     }
     const absolutePageUrl = `${protocol}://${host}${seoData.urlPath}`;
     
-    // Clean old meta tags to prevent duplicates or interference
+    // Robustly clean existing tags that might conflict
     template = template
-      .replace(/<title>[^<]*<\/title>/gi, '')
+      .replace(/<title>[\s\S]*?<\/title>/gi, '')
       .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, '')
       .replace(/<meta[^>]*name=["']?description["']?[^>]*>/gi, '')
       .replace(/<meta[^>]*property=["']?og:[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']?og:[^>]*>/gi, '')
       .replace(/<meta[^>]*name=["']?twitter:[^>]*>/gi, '')
       .replace(/<meta[^>]*property=["']?twitter:[^>]*>/gi, '');
-      
+
     const imageTags = `
     <meta property="og:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
     <meta name="twitter:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
@@ -962,7 +965,8 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     <meta property="og:type" content="${ogType}" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:url" content="${absolutePageUrl}" />${imageTags}
+    <meta property="og:url" content="${absolutePageUrl}" />
+    ${imageTags}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
@@ -970,6 +974,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     <link rel="canonical" href="${absolutePageUrl}" />
     `;
     
+    // Inject at the very beginning of the head tag
     template = template.replace(/<head>/i, `<head>\n${dynamicMetaTags}`);
     
     // Disable HTTP/CDN caching via response headers for correct dynamic previews
