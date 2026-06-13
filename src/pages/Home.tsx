@@ -438,38 +438,22 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 relative z-20 w-full">
-          <div className="max-w-2xl text-left -mt-1 md:mt-0">
+          <div className="max-w-3xl">
             <motion.h1 
               initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={isMobile ? { duration: 0 } : { delay: 0.1 }}
-              className="text-2xl sm:text-5xl md:text-6xl font-display text-white mb-6 leading-[1.15] tracking-widest font-extrabold uppercase text-left"
+              className="text-4xl sm:text-5xl md:text-7xl font-display text-white mb-8 leading-[1.05] tracking-tighter font-extrabold uppercase text-left"
             >
-              RENTALS.<br />
-              PROPERTIES.<br />
-              <span className="text-white/50">VERIFICATION.</span>
+              Your Future <br/>
+              <span className="text-[#C5A059]">Resides Here.</span>
             </motion.h1>
 
-            <motion.div 
-              initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={isMobile ? { duration: 0 } : { delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-start gap-4 w-full"
+            <motion.p
+               className="text-lg text-white/60 mb-10 max-w-lg font-light leading-relaxed"
             >
-              <Link
-                to="/agents/register"
-                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-black bg-[#C5A059] hover:bg-white transition-all rounded-2xl shadow-xl shadow-[#C5A059]/10 hover:-translate-y-0.5"
-              >
-                Become an Agent / Broker
-              </Link>
-
-              <Link
-                to="/list-property"
-                className="w-full sm:w-auto px-10 py-4 text-center text-sm font-bold text-white border border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 md:backdrop-blur-md transition-all rounded-2xl hover:-translate-y-0.5"
-              >
-                List your Property
-              </Link>
-            </motion.div>
+              Experience a premium, verified marketplace for real estate and luxury vehicles, built for trust in the Somali Region.
+            </motion.p>
           </div>
 
           <div className="w-full max-w-5xl mt-8 md:mt-12">
@@ -489,7 +473,7 @@ export default function Home() {
             
             <div className="flex items-center gap-4">
               <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
-                {totalMatchingCount} ACTIVE LISTINGS
+                {filterCity ? `${totalMatchingCount} properties found in ${filterCity}` : `${totalMatchingCount} ACTIVE LISTINGS`}
               </span>
             </div>
           </div>
@@ -534,13 +518,14 @@ export default function Home() {
               </div>
             ) : displayedProperties.length === 0 ? (
               <div className="text-center py-16 md:py-24 bg-white/[0.02] border border-white/5 rounded-[2rem] text-white/40 col-span-full animate-in fade-in duration-300">
-                <p className="font-display">No verified properties found.</p>
+                <p className="font-display text-lg mb-2 text-white">No properties found.</p>
+                <p className="text-white/60 mb-6 font-light">Try another location or browse all listings.</p>
                 {(filterCity || filterSubcategory || filterStatus) && (
                   <button
                     onClick={handleResetFilters}
                     className="mt-4 text-xs font-bold text-[#C5A059] hover:underline cursor-pointer"
                   >
-                    Reset Inventory filters
+                    Browse all listings
                   </button>
                 )}
               </div>

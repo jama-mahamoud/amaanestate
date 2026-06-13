@@ -47,6 +47,9 @@ export default function Footer() {
             <p className="text-white/60 text-base sm:text-lg leading-relaxed max-w-2xl font-light">
               The premier marketplace for verified real estate and vehicles in Somalia and Ethiopia. Built on trust, security, and professionalism.
             </p>
+            <p className="text-[#C5A059] text-xs font-semibold tracking-wide border-t border-white/10 pt-4 mt-4">
+              AmaanEstate is a verified marketplace connecting buyers with trusted agents and verified listings.
+            </p>
             
             <div className="flex flex-wrap justify-center gap-4">
               <Link 

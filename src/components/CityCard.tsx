@@ -32,7 +32,7 @@ export default function CityCard({ city, propertyCount, agentCount }: CityCardPr
           <div className="text-[10px] text-[#C5A059]/80 font-medium group-hover:underline flex items-center gap-2">
             <div className="flex items-center gap-1">
               <Layers className="w-3 h-3" />
-              <span>{propertyCount !== undefined ? `${propertyCount} ${propertyCount === 1 ? 'Property' : 'Properties'}` : '0 Properties'}</span>
+              <span>{propertyCount !== undefined && propertyCount > 0 ? `${propertyCount} ${propertyCount === 1 ? 'Property' : 'Properties'}` : 'Coming Soon'}</span>
             </div>
             {agentCount !== undefined && (
               <div className="flex items-center gap-1">

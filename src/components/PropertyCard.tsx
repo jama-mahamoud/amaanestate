@@ -166,100 +166,43 @@ const PropertyCard = memo(({ property, isHovered, onMouseEnter, onMouseLeave }: 
                 <span className="text-[10px] text-white/40 font-medium">{property.city}</span>
               </div>
               
-              <h3 className="text-lg md:text-xl font-display font-semibold text-white group-hover:text-emerald-400 transition-colors line-clamp-1 mb-2">
+              <h3 className="text-lg font-display font-semibold text-white group-hover:text-emerald-400 transition-colors line-clamp-1 mb-1">
                 {property.title}
               </h3>
 
-              <div className="flex items-center text-white/40 text-xs mb-6 font-sans">
-                <MapPin size={12} className="mr-1.5 text-white/30" />
+              <div className="flex items-center text-white/60 text-xs mb-4 font-sans">
+                <MapPin size={12} className="mr-1.5 text-white/40" />
                 <span className="line-clamp-1 truncate">{property.location}</span>
               </div>
 
               {/* Specifications Area */}
-              {isVehicle ? (
-                <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/10 mb-6">
-                  {(property.year || property.metadata?.year) && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full">
-                      <Calendar size={12} className="text-white/40" />
-                      <span className="text-[10px] font-bold text-white/60">{property.year || property.metadata?.year}</span>
-                    </div>
-                  )}
-                  {(property.mileage || property.metadata?.mileage) && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full">
-                      <Gauge size={12} className="text-white/40" />
-                      <span className="text-[10px] font-bold text-white/60">{property.mileage || property.metadata?.mileage} km</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/10 mb-6">
+              {!isVehicle && (
+                <div className="flex items-center gap-4 text-white/80 text-xs font-medium mb-4">
                   {bedsVal && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full">
-                      <BedDouble size={14} className="text-white/40" />
-                      <span className="text-[10px] font-bold text-white/60">{bedsVal} {Number(bedsVal) > 1 ? 'Beds' : 'Bed'}</span>
+                    <div className="flex items-center gap-1.5">
+                      <BedDouble size={14} className="text-[#C5A059]" />
+                      <span>{bedsVal} {Number(bedsVal) > 1 ? 'Beds' : 'Bed'}</span>
                     </div>
                   )}
                   {bathsVal && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full">
-                      <Bath size={14} className="text-white/40" />
-                      <span className="text-[10px] font-bold text-white/60">{bathsVal} {Number(bathsVal) > 1 ? 'Baths' : 'Bath'}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Bath size={14} className="text-[#C5A059]" />
+                      <span>{bathsVal} {Number(bathsVal) > 1 ? 'Baths' : 'Bath'}</span>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Listed By / Partner Agent Section */}
+              {/* Listed By Agent */}
               {!isVehicle && (
-                <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2.5">
-                  {broker ? (
-                    <>
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center overflow-hidden text-[9px] font-black text-emerald-400 shrink-0">
-                        {broker.profilePhotoUrl ? (
-                          <img src={broker.profilePhotoUrl} className="w-full h-full object-cover" alt={broker.fullName} referrerPolicy="no-referrer" />
-                        ) : (
-                          broker.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[8px] text-emerald-400 block leading-none font-black tracking-widest uppercase mb-0.5">Verified Partner Agent</span>
-                        <span className="text-xs text-white/90 group-hover:text-[#C5A059] transition-colors font-bold block truncate leading-none">
-                          {broker.fullName}
-                        </span>
-                      </div>
-                    </>
-                  ) : property.extAgentName ? (
-                    <>
-                      <div className="w-6 h-6 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center overflow-hidden text-[9px] font-black text-luxury-gold shrink-0">
-                        {property.extProfileImageUrl ? (
-                          <img src={property.extProfileImageUrl} className="w-full h-full object-cover" alt={property.extAgentName} referrerPolicy="no-referrer" />
-                        ) : (
-                          property.extAgentName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1 text-left">
-                        <span className="text-[8px] text-luxury-gold block leading-none font-black tracking-widest uppercase mb-0.5">
-                          {property.extAgencyName ? 'Marketed By' : 'Partner Agent'}
-                        </span>
-                        <span className="text-xs text-white/90 font-bold block truncate leading-none" title={`${property.extAgentName}${property.extAgencyName ? ` (${property.extAgencyName})` : ''}`}>
-                          {property.extAgentName} {property.extAgencyName ? `(${property.extAgencyName})` : ''}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-6 h-6 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 flex items-center justify-center text-[9px] font-black text-luxury-gold shrink-0">
-                        AE
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[8px] text-white/30 block leading-none font-bold tracking-widest uppercase mb-0.5">Listed By</span>
-                        <span className="text-xs text-white/70 font-bold block truncate leading-none">
-                          Amaan Premium Agent
-                        </span>
-                      </div>
-                    </>
-                  )}
+                <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                  <span className="text-[10px] text-white/40 font-bold uppercase">Agent:</span>
+                  <span className="text-xs text-white/80 font-semibold truncate">
+                    {broker?.fullName || property.extAgentName || 'Amaan Estate'}
+                  </span>
                 </div>
               )}
+
             </div>
             
             {/* Elegant footer */}
