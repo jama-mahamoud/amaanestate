@@ -42,6 +42,9 @@ const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
 
 // Careers and Jobs Module
 const JobsPage = lazy(() => import('./pages/jobs/JobsPage'));
+const JobDetailPage = lazy(() => import('./pages/jobs/JobDetailPage'));
+const CompanyDetailPage = lazy(() => import('./pages/jobs/CompanyDetailPage'));
+const EmployerDashboardPage = lazy(() => import('./pages/jobs/EmployerDashboardPage'));
 const NetworkPage = lazy(() => import('./pages/NetworkPage'));
 
 // Cities Directory Module
@@ -121,6 +124,9 @@ export default function App() {
 
                 {/* Other Services and Pages */}
                 <Route path="jobs" element={<JobsPage />} />
+                <Route path="job/:id" element={<JobDetailPage />} />
+                <Route path="company/:id" element={<CompanyDetailPage />} />
+                <Route path="employer/dashboard" element={<EmployerDashboardPage />} />
                 <Route path="network" element={<NetworkPage />} />
                 <Route path="news" element={<News />} />
                 <Route path="news/english" element={<News />} />

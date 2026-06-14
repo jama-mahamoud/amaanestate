@@ -357,6 +357,14 @@ export interface Job {
   featuredImage?: string;
   createdAt: any;
   updatedAt?: any;
+  applyType?: 'internal' | 'external' | 'email';
+  applyLink?: string;
+  email?: string;
+  experienceLevel?: string;
+  numberOfPositions?: number;
+  responsibilities?: string;
+  skills?: string;
+  isVerifiedCompany?: boolean;
 }
 
 export interface JobApplication {

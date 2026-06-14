@@ -938,8 +938,8 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       }
       
       // Append cache buster to the image URL so CDNs/scrapers don't cache stale images
-      const separator = imageUrl.includes('?') ? '&' : '?';
-      imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
+      // const separator = imageUrl.includes('?') ? '&' : '?';
+      // imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
     }
     const absolutePageUrl = `${protocol}://${host}${seoData.urlPath}`;
     
@@ -948,10 +948,10 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       .replace(/<title>[\s\S]*?<\/title>/gi, '')
       .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, '')
       .replace(/<meta[^>]*name=["']?description["']?[^>]*>/gi, '')
-      .replace(/<meta[^>]*property=["']?og:[^>]*>/gi, '')
-      .replace(/<meta[^>]*name=["']?og:[^>]*>/gi, '')
-      .replace(/<meta[^>]*name=["']?twitter:[^>]*>/gi, '')
-      .replace(/<meta[^>]*property=["']?twitter:[^>]*>/gi, '');
+      .replace(/<meta[^>]*property=["']?og:[^>]*=["']?[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']?og:[^>]*=["']?[^>]*>/gi, '')
+      .replace(/<meta[^>]*property=["']?twitter:[^>]*=["']?[^>]*>/gi, '')
+      .replace(/<meta[^>]*name=["']?twitter:[^>]*=["']?[^>]*>/gi, '');
 
     const imageTags = `
     <meta property="og:image" content="${imageUrl || `https://${host}/default-og-image.jpg`}" />
@@ -976,6 +976,8 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     
     // Inject at the very beginning of the head tag
     template = template.replace(/<head>/i, `<head>\n${dynamicMetaTags}`);
+    
+    console.log("[SEO SERVER] Template after injection:", template.substring(0, 1000));
     
     // Disable HTTP/CDN caching via response headers for correct dynamic previews
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');

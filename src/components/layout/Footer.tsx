@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Facebook, Instagram, MessageCircle, MapPin, Music2, Mail, Phone
 } from 'lucide-react';
@@ -8,6 +8,41 @@ import { useSettings } from '../../contexts/SettingsContext';
 export default function Footer() {
   const { t } = useSettings();
   const currentYear = 2026;
+  const location = useLocation();
+
+  const isJobPage = location.pathname.includes('/jobs') || 
+                    location.pathname.includes('/job/') || 
+                    location.pathname.includes('/company/') || 
+                    location.pathname.includes('/employer/');
+
+  if (isJobPage) {
+    return (
+      <footer className="bg-[#0b0b0c] text-white py-12 border-t border-white/5 font-sans mt-auto">
+        <div className="container mx-auto max-w-4xl px-4 text-center space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-6">
+            <div className="text-left">
+              <span className="text-sm font-extrabold tracking-wider text-white uppercase">AmaanJobs</span>
+              <p className="text-xs text-white/50 mt-1 max-w-sm">
+                Somalia's premier recruitment ecosystem connecting verified employers with high-caliber talent.
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+              <Link to="/news" className="text-white/60 hover:text-luxury-gold transition-colors">About / Insights</Link>
+              <a href="mailto:info@amaanestate.com" className="text-white/60 hover:text-luxury-gold transition-colors">Contact</a>
+              <Link to="/privacy" className="text-white/60 hover:text-luxury-gold transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="text-white/60 hover:text-luxury-gold transition-colors">Terms of Service</Link>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between text-[10px] text-white/30 tracking-widest uppercase gap-4">
+            <p>&copy; {currentYear} AmaanJobs &mdash; Recruiter & Candidate Hub.</p>
+            <p className="font-semibold text-luxury-gold/55">Verified Professional Network</p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   const propertiesPortfolio = [
     { name: t('properties.houses') || 'Houses', path: '/properties?subcategory=house' },
