@@ -9,10 +9,9 @@ interface JobDetailsViewProps {
   job: Job;
   onBack: () => void;
   onApplyClick: () => void;
-  onCompanyClick: (companyId: string) => void;
 }
 
-const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyClick, onCompanyClick }) => {
+const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyClick }) => {
   // Safe array formatting for bullets
   const parseBullets = (text?: string): string[] => {
     if (!text) return [];
@@ -79,8 +78,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex gap-6 items-start">
             <div 
-              onClick={() => job.companyId && onCompanyClick(job.companyId)}
-              className="w-18 h-18 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2 shrink-0 cursor-pointer hover:border-white/20 transition-colors"
+              className="w-18 h-18 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2 shrink-0 select-none"
             >
               {job.companyLogo ? (
                 <img referrerPolicy="no-referrer" src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain rounded-xl" />
@@ -94,8 +92,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span 
-                  onClick={() => job.companyId && onCompanyClick(job.companyId)}
-                  className="text-sm font-bold text-white/70 hover:text-luxury-gold cursor-pointer flex items-center gap-1 hover:underline"
+                  className="text-sm font-bold text-white/50"
                 >
                   {job.companyName}
                 </span>
@@ -121,6 +118,19 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
                     <span>${job.salaryMin.toLocaleString()} - ${job.salaryMax?.toLocaleString()} / mo</span>
                   </div>
                 )}
+              </div>
+
+              {/* Hiring Organization Display */}
+              <div className="mt-5 p-4 bg-white/[0.02] border border-white/5 rounded-xl max-w-sm">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                  <span>🏢 Hiring Organization</span>
+                </div>
+                <span className="text-base font-extrabold text-white block">
+                  {job.hiringOrganization || job.companyName}
+                </span>
+                <p className="text-[10px] text-white/40 mt-1">
+                  The actual employer or program administering the assignment.
+                </p>
               </div>
             </div>
           </div>
@@ -272,22 +282,15 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
                 </div>
               </div>
 
-              {/* Employer description sidebar */}
-              <div className="bg-white/[0.03] text-white border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
-                
-                <h4 className="text-[10px] uppercase font-bold tracking-widest text-luxury-gold mb-1.5 block">Employer Profile</h4>
-                <h3 className="font-extrabold text-white text-base leading-snug truncate mb-2">{job.companyName}</h3>
-                <p className="text-xs text-white/70 line-clamp-4 leading-relaxed mb-4 text-opacity-90">
-                  Join a verified recruiting brand mapped under AmaanJobs diaspora development platform.
+              {/* Employer description sidebar - Non-clickable with Green Accent */}
+              <div className="bg-white/[0.03] text-white border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 mb-2">
+                  <span>🏢 Hiring Organization</span>
+                </div>
+                <h3 className="font-extrabold text-white text-base leading-snug mb-2">{job.hiringOrganization || job.companyName}</h3>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Originally published vacancy under AmaanJobs verified career pipeline. This indicates the organization hosting or funding the vacancy.
                 </p>
-                
-                <button 
-                  onClick={() => job.companyId && onCompanyClick(job.companyId)}
-                  className="text-xs text-luxury-gold hover:text-luxury-gold/80 font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  View Company Profile & All Jobs &rarr;
-                </button>
               </div>
 
             </div>

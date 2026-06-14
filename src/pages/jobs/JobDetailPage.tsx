@@ -74,7 +74,6 @@ export default function JobDetailPage() {
           job={job}
           onBack={() => navigate('/jobs')}
           onApplyClick={() => setIsApplyModalOpen(true)}
-          onCompanyClick={(compId) => navigate(`/company/${compId}`)}
         />
       </div>
 

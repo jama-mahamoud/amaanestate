@@ -35,12 +35,12 @@ const JobCard: React.FC<JobCardProps> = ({ job, isBookmarked, onBookmarkToggle, 
 
   return (
     <div 
-      className="group relative bg-white/[0.02] border border-white/5 rounded-2xl p-6 hover:shadow-xl hover:border-luxury-gold/30 transition-all duration-300 cursor-pointer flex flex-col md:flex-row gap-5 justify-between items-start md:items-center shadow-lg hover:bg-white/[0.04]"
+      className="group relative bg-[#0d0d0e] border border-white/5 rounded-2xl p-6 hover:shadow-xl hover:border-luxury-gold/30 transition-all duration-300 cursor-pointer flex flex-col md:flex-row gap-5 justify-between items-start md:items-center shadow-lg hover:bg-white/[0.04]"
       onClick={onViewDetails}
     >
       <div className="flex gap-4 items-start flex-1 min-w-0">
         {/* Company Logo / Placeholder */}
-        <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1 flex-shrink-0 shadow-sm relative group-hover:scale-[1.03] transition-transform">
+        <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center p-1.5 flex-shrink-0 shadow-sm relative group-hover:scale-[1.03] transition-transform">
           {job.companyLogo ? (
             <img 
               referrerPolicy="no-referrer"
@@ -57,27 +57,32 @@ const JobCard: React.FC<JobCardProps> = ({ job, isBookmarked, onBookmarkToggle, 
 
         {/* Info Column */}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="text-xs text-white/60 font-semibold truncate hover:text-white transition-colors">
+          {/* Company section is the FIRST visual element */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <span className="text-xs text-white/60 font-semibold truncate">
               {job.companyName}
             </span>
             {(job.isVerifiedCompany || job.isFeatured) && (
-              <span className="inline-flex items-center text-luxury-gold" title="Verified Employer">
-                <CheckCircle2 size={13} className="fill-luxury-gold text-super-black" />
+              <span className="inline-flex items-center text-luxury-gold gap-1 text-[10px] font-bold uppercase tracking-wider" title="Verified Employer">
+                <CheckCircle2 size={13} className="fill-luxury-gold text-super-black shrink-0" />
+                <span>Verified</span>
               </span>
             )}
             {getUrgencyText()}
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-white/5 text-luxury-gold">
+          </div>
+
+          <h3 className="text-lg font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1 leading-snug">
+            {job.title}
+          </h3>
+
+          <div className="mt-1">
+            <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-white/5 text-luxury-gold inline-block">
               {job.category}
             </span>
           </div>
 
-          <h3 className="text-base font-bold text-white group-hover:text-luxury-gold transition-colors line-clamp-1">
-            {job.title}
-          </h3>
-
           {/* Metadata Grid */}
-          <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 mt-2.5 text-xs text-white/60">
+          <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 mt-3 text-xs text-white/60">
             <div className="flex items-center gap-1">
               <MapPin size={14} className="text-white/30" />
               <span className="capitalize">{job.location}</span>
@@ -89,7 +94,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, isBookmarked, onBookmarkToggle, 
             {job.experienceLevel && (
               <div className="flex items-center gap-1">
                 <Briefcase size={14} className="text-white/30" />
-                <span>Exp: {job.experienceLevel}</span>
+                <span>{job.experienceLevel}</span>
               </div>
             )}
             {job.deadline && (
@@ -98,6 +103,16 @@ const JobCard: React.FC<JobCardProps> = ({ job, isBookmarked, onBookmarkToggle, 
                 <span>Deadline: {formatDeadline(job.deadline)}</span>
               </div>
             )}
+          </div>
+
+          {/* Clean Hiring Organization Display (Non-clickable, Green Accent) */}
+          <div className="mt-4 pt-3 border-t border-white/5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
+              🏢 Hiring Organization
+            </span>
+            <span className="text-sm font-extrabold text-white block">
+              {job.hiringOrganization || job.companyName}
+            </span>
           </div>
         </div>
       </div>

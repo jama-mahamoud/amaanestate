@@ -377,6 +377,7 @@ export default function JobsPage() {
       const matchSearch = 
         job.title.toLowerCase().includes(search.toLowerCase()) ||
         job.companyName.toLowerCase().includes(search.toLowerCase()) ||
+        (job.hiringOrganization && job.hiringOrganization.toLowerCase().includes(search.toLowerCase())) ||
         job.description.toLowerCase().includes(search.toLowerCase());
 
       const matchCategory = category === 'All' || job.category === category;

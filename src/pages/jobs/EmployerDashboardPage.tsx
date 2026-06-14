@@ -47,6 +47,7 @@ export default function EmployerDashboardPage() {
   const [jobMethod, setJobMethod] = useState<'internal' | 'external' | 'email'>('internal');
   const [jobExtLink, setJobExtLink] = useState('');
   const [jobEmpEmail, setJobEmpEmail] = useState('');
+  const [jobHiringOrg, setJobHiringOrg] = useState('');
 
   // Tab selections inside Employer console
   const [activeEmployerTab, setActiveEmployerTab] = useState<'jobs' | 'post' | 'applications' | 'profile'>('jobs');
@@ -197,7 +198,8 @@ export default function EmployerDashboardPage() {
         isVerifiedCompany: employerCompany.isVerified || true,
         companyName: employerCompany.name,
         companyLogo: employerCompany.logo,
-        companyId: employerCompany.id
+        companyId: employerCompany.id,
+        hiringOrganization: jobHiringOrg
       } as any);
 
       toast.success('Bespoke vacancy launched successfully!', { id: 'post' });
@@ -212,6 +214,7 @@ export default function EmployerDashboardPage() {
       setJobEmpEmail('');
       setJobCity('');
       setJobCountry('Somalia');
+      setJobHiringOrg('');
 
       fetchEmployerData();
       setActiveEmployerTab('jobs');
@@ -767,6 +770,21 @@ export default function EmployerDashboardPage() {
                         onChange={e => setJobSkillsLabel(e.target.value)}
                         className="w-full border border-white/10 bg-white/[0.02] text-white rounded-xl p-3 focus:outline-none focus:border-luxury-gold font-medium"
                       />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-white/50 uppercase tracking-wider text-[10px] text-emerald-400">🏢 Hiring Organization (e.g. UNHCR, WFP, Save the Children)*</label>
+                      <input 
+                        type="text"
+                        required
+                        placeholder="Who is actually hiring? e.g. Lutheran World Federation (LWF)"
+                        value={jobHiringOrg}
+                        onChange={e => setJobHiringOrg(e.target.value)}
+                        className="w-full border border-white/10 bg-[#111112] text-white rounded-xl p-3 focus:outline-none focus:border-emerald-400 font-medium placeholder-white/20"
+                      />
+                      <p className="text-[10px] text-white/40 mt-1">
+                        Enter the specific organization or agency that is conducting the hire. This is distinct from the publishing agency.
+                      </p>
                     </div>
 
                     {/* Routing Options */}

@@ -58,6 +58,7 @@ export default function DashboardJobs() {
   const [formFeaturedImage, setFormFeaturedImage] = useState('');
   const [formIsUrgent, setFormIsUrgent] = useState(false);
   const [formIsFeatured, setFormIsFeatured] = useState(false);
+  const [formHiringOrg, setFormHiringOrg] = useState('');
 
   // Constants
   const CATEGORIES = ['Construction', 'Engineering', 'Architecture', 'Real Estate', 'Logistics', 'Administration', 'Sales & Marketing', 'Legal', 'IT Support'];
@@ -129,6 +130,7 @@ export default function DashboardJobs() {
     setFormFeaturedImage('');
     setFormIsUrgent(false);
     setFormIsFeatured(false);
+    setFormHiringOrg('');
   };
 
   // Submit Job creation/editing
@@ -157,6 +159,7 @@ export default function DashboardJobs() {
         companyId: companies[0]?.id || 'admin-workplace',
         companyName: companies[0]?.name || 'AmaanEstate Executive Dev Workspace',
         companyLogo: companies[0]?.logo || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=100&q=80',
+        hiringOrganization: formHiringOrg
       };
 
       if (editingJobId) {
@@ -251,6 +254,7 @@ export default function DashboardJobs() {
     setFormFeaturedImage(job.featuredImage || '');
     setFormIsUrgent(job.isUrgent || false);
     setFormIsFeatured(job.isFeatured || false);
+    setFormHiringOrg(job.hiringOrganization || '');
     setActiveTab('post');
   };
 
@@ -258,7 +262,8 @@ export default function DashboardJobs() {
   const filteredJobs = useMemo(() => {
     return allJobs.filter(job => {
       const matchSearch = String(job.title).toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          String(job.companyName).toLowerCase().includes(searchTerm.toLowerCase());
+                          String(job.companyName).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          String(job.hiringOrganization || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = categoryFilter === 'All' || job.category === categoryFilter;
       return matchSearch && matchCategory;
     });
@@ -616,7 +621,7 @@ export default function DashboardJobs() {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Featured Banner Graphic URL</label>
+                        <label className="text-[10px] text-[var(--font-sans)] text-zinc-500 font-bold uppercase block mb-1">Featured Banner Graphic URL</label>
                         <input 
                           type="url" 
                           placeholder="https://images.unsplash.com/photo-..." 
@@ -624,6 +629,19 @@ export default function DashboardJobs() {
                           onChange={(e) => setFormFeaturedImage(e.target.value)}
                           className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
                         />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="text-[10px] text-emerald-400 font-bold uppercase block mb-1">🏢 Hiring Organization (e.g. UNHCR, WFP, Save the Children)*</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="e.g. Lutheran World Federation (LWF)" 
+                          value={formHiringOrg}
+                          onChange={(e) => setFormHiringOrg(e.target.value)}
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 font-medium placeholder-white/20"
+                        />
+                        <p className="text-[9px] text-white/40 mt-1">Specify which agency/body originally published or is funding the assignment.</p>
                       </div>
 
                       <div className="md:col-span-2">
