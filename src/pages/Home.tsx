@@ -449,11 +449,6 @@ export default function Home() {
               <span className="text-[#C5A059]">Resides Here.</span>
             </motion.h1>
 
-            <motion.p
-               className="text-lg text-white/60 mb-10 max-w-lg font-light leading-relaxed"
-            >
-              Experience a premium, verified marketplace for real estate and luxury vehicles, built for trust in the Somali Region.
-            </motion.p>
           </div>
 
           <div className="w-full max-w-5xl mt-8 md:mt-12">
