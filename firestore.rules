@@ -427,10 +427,10 @@ service cloud.firestore {
 
     // Jobs Collection Security
     match /jobs/{jobId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() && incoming().ownerId == request.auth.uid;
-      allow update: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
-      allow delete: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     // Job Applications Collection Security

@@ -341,6 +341,8 @@ export interface Job {
   companyLogo?: string;
   category: string;
   location: string;
+  country?: string;
+  city?: string;
   description: string;
   requirements?: string;
   salaryMin?: number;

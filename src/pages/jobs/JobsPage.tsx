@@ -22,7 +22,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Hormuud Telecom',
     companyLogo: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=150&q=80',
     category: 'Information Technology',
-    location: 'mogadishu',
+    location: 'Mogadishu, Somalia',
+    country: 'Somalia',
+    city: 'Mogadishu',
     description: 'We are recruiting a Lead Network Development Architect to direct our fast-moving 5G core expansions and local fiber layout systems as part of Somalia next-gen internet provisioning. You will lead a team of 15 network core developers and work hand-in-hand with global telecommunication suppliers.',
     experienceLevel: 'Mid-Senior Level (5+ Years)',
     employmentType: 'full-time',
@@ -49,7 +51,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Premier Bank Somalia',
     companyLogo: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=150&q=80',
     category: 'Engineering',
-    location: 'mogadishu',
+    location: 'Mogadishu, Somalia',
+    country: 'Somalia',
+    city: 'Mogadishu',
     description: 'Premier Bank Somalia is on the hunt for an expert Javascript front-end engineer to build our brand new digital diaspora investment application using React and high fidelity chart wrappers. Join a high-speed agile hub.',
     experienceLevel: 'Senior Level (6+ Years)',
     employmentType: 'full-time',
@@ -76,7 +80,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Mogadishu Port Authority',
     companyLogo: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=150&q=80',
     category: 'Logistics',
-    location: 'mogadishu',
+    location: 'Mogadishu, Somalia',
+    country: 'Somalia',
+    city: 'Mogadishu',
     description: 'Manage harbor intake logistics and terminal scheduling profiles inside the booming Mogadishu seaport. Coordinate closely with international carrier shipping vessels.',
     experienceLevel: 'Mid Level (3+ Years)',
     employmentType: 'full-time',
@@ -104,7 +110,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Daallo Airlines',
     companyLogo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=150&q=80',
     category: 'Logistics',
-    location: 'hargeisa',
+    location: 'Hargeisa, Somalia',
+    country: 'Somalia',
+    city: 'Hargeisa',
     description: 'Uphold premium standards of global aviation safety across Daallo regional fleet in Somalia. Plan regular inspection maps and flight technical documentation checks.',
     experienceLevel: 'Senior Level (5+ Years)',
     employmentType: 'full-time',
@@ -131,7 +139,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Somali Red Crescent Society',
     companyLogo: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=150&q=80',
     category: 'Healthcare & Science',
-    location: 'garowe',
+    location: 'Garowe, Somalia',
+    country: 'Somalia',
+    city: 'Garowe',
     description: 'Strategize emergency relief distribution routes and regional first-response healthcare clinics for the Somali Red Crescent in Garowe. Supervise mobile nurse deployment lists.',
     experienceLevel: 'Mid Level (3+ Years)',
     employmentType: 'contract',
@@ -159,7 +169,9 @@ const MOCK_SOMALI_JOBS: Job[] = [
     companyName: 'Sombuilt Construction',
     companyLogo: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=150&q=80',
     category: 'Construction',
-    location: 'hargeisa',
+    location: 'Hargeisa, Somalia',
+    country: 'Somalia',
+    city: 'Hargeisa',
     description: 'Lead major architectural surveying and concrete runway structuring projects under Sombuilt Hargeisa expansion plans. Supervise soil telemetry and structural stress tests.',
     experienceLevel: 'Mid-Senior Level (5+ Years)',
     employmentType: 'full-time',
@@ -177,6 +189,65 @@ const MOCK_SOMALI_JOBS: Job[] = [
     numberOfPositions: 1,
     createdAt: '2026-06-14T03:40:00Z',
     responsibilities: '• Prepare comprehensive structural blueprint specifications utilizing CAD tools\n• Manage on-site contractor crews enforcing occupational health constraints\n• Calculate heavy concrete load limits and drainage pipe vectors'
+  },
+  {
+    id: 'mock-7',
+    title: 'Senior Full-Stack Developer',
+    companyId: 'company-ethiotech',
+    companyName: 'EthioTech Solutions',
+    companyLogo: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=150&q=80',
+    category: 'Information Technology',
+    location: 'Awbare, Ethiopia',
+    country: 'Ethiopia',
+    city: 'Awbare',
+    description: 'We are seeking an experienced full-stack engineer to lead development of local agricultural tech platforms connecting farming cooperatives in eastern Ethiopia.',
+    experienceLevel: 'Senior Level (6+ Years)',
+    employmentType: 'full-time',
+    workplaceType: 'hybrid',
+    salaryMin: 2400,
+    salaryMax: 3600,
+    currency: 'USD',
+    isUrgent: false,
+    isFeatured: true,
+    status: 'approved',
+    ownerId: 'owner-ethiotech',
+    deadline: '2026-08-30',
+    applyType: 'internal',
+    isVerifiedCompany: true,
+    numberOfPositions: 1,
+    createdAt: '2026-06-14T03:40:00Z',
+    responsibilities: '• Plan system back-end micro-frameworks and web layouts\n• Scale mobile text updates systems for cellular farming coordinates',
+    requirements: '• Proficiency in Django, Node.js or React\n• Familiarity with local agricultural data operations'
+  },
+  {
+    id: 'mock-8',
+    title: 'Regional Logistics Operations Lead',
+    companyId: 'company-kenyaairways',
+    companyName: 'Kenya Air Cargo Hub',
+    companyLogo: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=150&q=80',
+    category: 'Logistics',
+    location: 'Nairobi, Kenya',
+    country: 'Kenya',
+    city: 'Nairobi',
+    description: 'Coordinate cross-border cargo transport chains connecting East Africa markets with Somalia and Ethiopian regional hubs.',
+    experienceLevel: 'Mid Level (2-4 Years)',
+    employmentType: 'full-time',
+    workplaceType: 'on-site',
+    salaryMin: 2100,
+    salaryMax: 2950,
+    currency: 'USD',
+    isUrgent: true,
+    isFeatured: false,
+    status: 'approved',
+    ownerId: 'owner-kenyaair',
+    deadline: '2026-07-15',
+    applyType: 'email',
+    email: 'careers@kenyaairwayscargo.com',
+    isVerifiedCompany: true,
+    numberOfPositions: 2,
+    createdAt: '2026-06-14T03:40:00Z',
+    responsibilities: '• Manage express air transport tracking feeds and documentation\n• Inspect temperature-controlled cargo container arrays',
+    requirements: '• Solid logistics certification and 3+ years routing expertise\n• Deep familiarity with Eastern Africa trading safety guidelines'
   }
 ];
 
@@ -191,7 +262,8 @@ export default function JobsPage() {
   // Search & Filters states
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [location, setLocation] = useState('All');
+  const [selectedCountry, setSelectedCountry] = useState('All');
+  const [citySearch, setCitySearch] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('All');
   const [employmentType, setEmploymentType] = useState('All');
   const [isVerifiedOnly, setIsVerifiedOnly] = useState(false);
@@ -219,7 +291,6 @@ export default function JobsPage() {
     'Education & Travel'
   ];
   
-  const LOCATIONS = ['mogadishu', 'hargeisa', 'garowe', 'kismayo', 'bosaso', 'baidoa', 'beletweyne', 'remote', 'hybrid'];
   const EXPERIENCE_LEVELS = ['Entry Level', 'Mid Level (2-4 Years)', 'Mid-Senior Level (5+ Years)', 'Senior Level (6+ Years)', 'Executive / Director'];
   const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'remote', 'contract', 'freelance'];
 
@@ -255,7 +326,9 @@ export default function JobsPage() {
         await jobService.createJob({
           title: mJob.title,
           category: mJob.category,
-          location: mJob.location,
+          location: mJob.location || `${mJob.city || 'Mogadishu'}, ${mJob.country || 'Somalia'}`,
+          country: mJob.country || 'Somalia',
+          city: mJob.city || 'Mogadishu',
           employmentType: mJob.employmentType,
           workplaceType: mJob.workplaceType,
           description: mJob.description,
@@ -307,21 +380,52 @@ export default function JobsPage() {
         job.description.toLowerCase().includes(search.toLowerCase());
 
       const matchCategory = category === 'All' || job.category === category;
-      const matchLocation = location === 'All' || job.location?.toLowerCase() === location.toLowerCase();
+      
+      // Filter by Country (dropdown)
+      let matchCountry = true;
+      if (selectedCountry !== 'All') {
+        const lowerCountry = selectedCountry.toLowerCase();
+        if (job.country) {
+          matchCountry = job.country.toLowerCase() === lowerCountry;
+        } else {
+          // Legacy/fallback match
+          const locLower = (job.location || '').toLowerCase();
+          if (lowerCountry === 'somalia') {
+            matchCountry = locLower.includes('somalia') || locLower.includes('mogadishu') || locLower.includes('hargeisa') || locLower.includes('garowe') || locLower.includes('kismayo') || locLower.includes('bosaso') || locLower.includes('baidoa') || locLower.includes('beletweyne');
+          } else if (lowerCountry === 'ethiopia') {
+            matchCountry = locLower.includes('ethiopia') || locLower.includes('addis') || locLower.includes('awbare') || locLower.includes('jijiga') || locLower.includes('dire dawa');
+          } else if (lowerCountry === 'kenya') {
+            matchCountry = locLower.includes('kenya') || locLower.includes('nairobi') || locLower.includes('mombasa');
+          } else {
+            matchCountry = locLower.includes(lowerCountry);
+          }
+        }
+      }
+
+      // Filter by City (text-based search match)
+      let matchCity = true;
+      if (citySearch.trim() !== '') {
+        const lowerCitySearch = citySearch.toLowerCase().trim();
+        const jobCity = (job.city || '').toLowerCase();
+        const jobLoc = (job.location || '').toLowerCase();
+        matchCity = jobCity.includes(lowerCitySearch) || jobLoc.includes(lowerCitySearch);
+      }
+
       const matchExp = experienceLevel === 'All' || job.experienceLevel === experienceLevel;
       const matchType = employmentType === 'All' || job.employmentType === employmentType;
       const matchVerified = !isVerifiedOnly || job.isVerifiedCompany || job.isFeatured;
       const matchUrgent = !isUrgentOnly || job.isUrgent;
 
-      return matchSearch && matchCategory && matchLocation && matchExp && matchType && matchVerified && matchUrgent;
+      return matchSearch && matchCategory && matchCountry && matchCity && matchExp && matchType && matchVerified && matchUrgent;
     });
-  }, [activeJobs, search, category, location, experienceLevel, employmentType, isVerifiedOnly, isUrgentOnly]);
+  }, [activeJobs, search, category, selectedCountry, citySearch, experienceLevel, employmentType, isVerifiedOnly, isUrgentOnly]);
 
   // Reset Filters
   const handleResetFilters = () => {
     setSearch('');
     setCategory('All');
-    setLocation('All');
+    setSelectedCountry('All');
+    setCitySearch('');
     setExperienceLevel('All');
     setEmploymentType('All');
     setIsVerifiedOnly(false);
@@ -331,7 +435,8 @@ export default function JobsPage() {
 
   const getSubTitleText = () => {
     if (category !== 'All') return `In ${category}`;
-    return 'Across Somalia';
+    if (selectedCountry !== 'All') return `In ${selectedCountry}`;
+    return 'Across East Africa';
   };
 
   return (
@@ -379,46 +484,58 @@ export default function JobsPage() {
           {/* EthioJobs Style Consolidated Search Panel */}
           <div className="bg-[#0b0b0c] border border-white/5 rounded-2xl p-4 md:p-6 shadow-xl space-y-4">
             
-            {/* TOP ROW: Search input + Location dropdown + Category dropdown + More filters toggle */}
+            {/* TOP ROW: Search input + Country dropdown + City text + Category dropdown + More filters toggle */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               
-              {/* Job Title Search (md:col-span-5) */}
-              <div className="md:col-span-5 relative">
+              {/* Job Title Search (md:col-span-4) */}
+              <div className="md:col-span-4 relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
                 <input 
                   type="text" 
-                  placeholder="Search jobs, skill tags, or companies..." 
+                  placeholder="Titles, skills, or companies..." 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-luxury-gold font-medium transition-colors"
                 />
               </div>
 
-              {/* Location Dropdown (md:col-span-3) */}
+              {/* Country Dropdown (md:col-span-3) */}
               <div className="md:col-span-3 relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
                 <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
                   className="w-full bg-[#111112] border border-white/10 rounded-xl pl-9 pr-8 py-3 text-sm text-white outline-none focus:border-luxury-gold font-medium cursor-pointer appearance-none transition-colors"
                 >
-                  <option value="All">All Locations</option>
-                  {LOCATIONS.map((loc) => (
-                    <option key={loc} value={loc} className="capitalize bg-neutral-900 text-white">{loc}</option>
-                  ))}
+                  <option value="All">All Countries</option>
+                  <option value="Somalia">Somalia</option>
+                  <option value="Ethiopia">Ethiopia</option>
+                  <option value="Kenya">Kenya</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={16} />
               </div>
 
-              {/* Category Dropdown (md:col-span-3) */}
-              <div className="md:col-span-3 relative">
-                <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+              {/* City Free Text (md:col-span-2) */}
+              <div className="md:col-span-2 relative">
+                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" size={14} />
+                <input 
+                  type="text" 
+                  placeholder="City/Town..." 
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  className="w-full bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 rounded-xl pl-7.5 pr-2 py-3 text-xs text-white placeholder-white/30 focus:outline-none focus:border-luxury-gold font-medium transition-colors"
+                />
+              </div>
+
+              {/* Category Dropdown (md:col-span-2) */}
+              <div className="md:col-span-2 relative">
+                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={14} />
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-[#111112] border border-white/10 rounded-xl pl-9 pr-8 py-3 text-sm text-white outline-none focus:border-luxury-gold font-medium cursor-pointer appearance-none transition-colors"
+                  className="w-full bg-[#111112] border border-white/10 rounded-xl pl-8.5 pr-6 py-3 text-xs text-white outline-none focus:border-luxury-gold font-medium cursor-pointer appearance-none transition-colors"
                 >
-                  <option value="All">All Categories</option>
+                  <option value="All">All Sectors</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat} className="bg-neutral-900 text-white">{cat}</option>
                   ))}
@@ -497,7 +614,7 @@ export default function JobsPage() {
             )}
 
             {/* Active Filters / Reset constraints indicator */}
-            {(search || category !== 'All' || location !== 'All' || experienceLevel !== 'All' || employmentType !== 'All' || isVerifiedOnly || isUrgentOnly) && (
+            {(search || category !== 'All' || selectedCountry !== 'All' || citySearch !== '' || experienceLevel !== 'All' || employmentType !== 'All' || isVerifiedOnly || isUrgentOnly) && (
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[11px]">
                 <span className="text-white/40 font-medium">Search filters are currently applied</span>
                 <button

@@ -32,6 +32,8 @@ export default function EmployerDashboardPage() {
   const [jobTitle, setJobTitle] = useState('');
   const [jobCategory, setJobCategory] = useState('Information Technology');
   const [jobLoc, setJobLoc] = useState('mogadishu');
+  const [jobCountry, setJobCountry] = useState('Somalia');
+  const [jobCity, setJobCity] = useState('');
   const [jobType, setJobType] = useState<'full-time' | 'part-time' | 'remote' | 'contract' | 'freelance'>('full-time');
   const [jobWorkPlace, setJobWorkplace] = useState<'on-site' | 'hybrid' | 'remote'>('on-site');
   const [jobExp, setJobExp] = useState('Entry Level');
@@ -174,7 +176,9 @@ export default function EmployerDashboardPage() {
       await jobService.createJob({
         title: jobTitle,
         category: jobCategory,
-        location: jobLoc,
+        location: jobCity ? `${jobCity}, ${jobCountry}` : jobCountry,
+        country: jobCountry,
+        city: jobCity,
         employmentType: jobType,
         workplaceType: jobWorkPlace,
         description: jobDesc,
@@ -206,6 +210,8 @@ export default function EmployerDashboardPage() {
       setJobSkillsLabel('');
       setJobExtLink('');
       setJobEmpEmail('');
+      setJobCity('');
+      setJobCountry('Somalia');
 
       fetchEmployerData();
       setActiveEmployerTab('jobs');
@@ -618,19 +624,34 @@ export default function EmployerDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="font-bold text-white/50 uppercase tracking-wider text-[10px]">HQ Location Precise Precise*</label>
+                        <label className="font-bold text-white/50 uppercase tracking-wider text-[10px]">Country*</label>
                         <select 
-                          value={jobLoc}
-                          onChange={e => setJobLoc(e.target.value)}
-                          className="w-full border border-white/10 bg-neutral-900 text-white rounded-xl p-3 focus:outline-none capitalize focus:border-luxury-gold"
+                          value={jobCountry}
+                          onChange={e => setJobCountry(e.target.value)}
+                          className="w-full border border-white/10 bg-neutral-900 text-white rounded-xl p-3 focus:outline-none focus:border-luxury-gold"
+                          required
                         >
-                          {LOCATIONS.map(l => (
-                            <option key={l} value={l} className="bg-neutral-900 text-white">{l}</option>
-                          ))}
+                          <option value="Somalia">Somalia</option>
+                          <option value="Ethiopia">Ethiopia</option>
+                          <option value="Kenya">Kenya</option>
                         </select>
                       </div>
+                      <div className="space-y-1">
+                        <label className="font-bold text-white/50 uppercase tracking-wider text-[10px]">City / Town / Area*</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="e.g. Mogadishu, Hargeisa, Awbare, Nairobi"
+                          value={jobCity}
+                          onChange={e => setJobCity(e.target.value)}
+                          className="w-full border border-white/10 bg-[#111112] text-white rounded-xl p-3 focus:outline-none focus:border-luxury-gold placeholder-white/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="font-bold text-white/50 uppercase tracking-wider text-[10px]">Required Experience Level*</label>
                         <select 

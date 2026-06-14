@@ -59,6 +59,8 @@ export const jobService = {
     workplaceType?: string;
     employmentType?: string;
     location?: string;
+    country?: string;
+    city?: string;
     search?: string;
     isUrgent?: boolean;
     isFeatured?: boolean;
@@ -106,9 +108,43 @@ export const jobService = {
         results = results.filter(job => job.employmentType === filters.employmentType);
       }
 
-      // 6. Filter by location
+      // 6. Filter by country
+      if (filters.country && filters.country !== 'All') {
+        const lowerCountry = filters.country.toLowerCase();
+        results = results.filter(job => {
+          if (job.country) {
+            return job.country.toLowerCase() === lowerCountry;
+          }
+          // Legacy support: match from legacy location field
+          const locLower = (job.location || '').toLowerCase();
+          if (lowerCountry === 'somalia') {
+            return locLower.includes('somalia') || locLower.includes('mogadishu') || locLower.includes('hargeisa') || locLower.includes('garowe') || locLower.includes('kismayo') || locLower.includes('bosaso') || locLower.includes('baidoa') || locLower.includes('beletweyne');
+          } else if (lowerCountry === 'ethiopia') {
+            return locLower.includes('ethiopia') || locLower.includes('addis') || locLower.includes('awbare') || locLower.includes('jijiga') || locLower.includes('dire dawa');
+          } else if (lowerCountry === 'kenya') {
+            return locLower.includes('kenya') || locLower.includes('nairobi') || locLower.includes('mombasa');
+          }
+          return locLower.includes(lowerCountry);
+        });
+      }
+
+      // 6b. Filter by city (free text, partial match)
+      if (filters.city && filters.city.trim() !== '') {
+        const lowerCity = filters.city.toLowerCase().trim();
+        results = results.filter(job => {
+          const jobCity = (job.city || '').toLowerCase();
+          const jobLoc = (job.location || '').toLowerCase();
+          return jobCity.includes(lowerCity) || jobLoc.includes(lowerCity);
+        });
+      }
+
+      // 6c. Filter by location (legacy compatibility)
       if (filters.location && filters.location !== 'All') {
-        results = results.filter(job => job.location === filters.location);
+        const lowerLoc = filters.location.toLowerCase();
+        results = results.filter(job => {
+          const locLower = (job.location || '').toLowerCase();
+          return locLower === lowerLoc || (job.city || '').toLowerCase() === lowerLoc || (job.country || '').toLowerCase() === lowerLoc;
+        });
       }
 
       // 7. Filter by isUrgent
