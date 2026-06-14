@@ -443,7 +443,7 @@ export default function Home() {
               initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={isMobile ? { duration: 0 } : { delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-7xl font-display text-white mb-8 leading-[1.05] tracking-tighter font-extrabold uppercase text-left"
+              className="text-4xl sm:text-5xl md:text-7xl font-display text-white mt-12 sm:mb-8 leading-[1.05] tracking-tighter font-extrabold uppercase text-left"
             >
               Your Future <br/>
               <span className="text-[#C5A059]">Resides Here.</span>

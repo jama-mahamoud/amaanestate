@@ -253,27 +253,27 @@ export default function EmployerDashboardPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-super-black text-white antialiased flex flex-col justify-center items-center px-4 md:px-6 pt-20">
-        <div className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl max-w-lg w-full text-center shadow-lg relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-luxury-gold/[0.02] to-transparent z-0" />
+        <div className="p-8 bg-[#0d0d0e] border border-white/5 rounded-3xl max-w-lg w-full text-center shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-luxury-gold/[0.01] to-transparent z-0" />
           <div className="relative z-10">
-            <LogIn size={48} className="mx-auto text-luxury-gold mb-4" />
-            <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-luxury-gold block mb-1">Authenticated Access Restricted</span>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">Hiring Console Locked</h2>
-            <p className="text-sm text-white/60 leading-relaxed mt-2.5 max-w-md mx-auto">
-              Please sign in to your developer profile accounts using the website unified navigation header to manage company boards, post vacancies and tracking candidates.
+            <LogIn size={40} className="mx-auto text-emerald-400 mb-5" />
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-emerald-400 block mb-2">Recruitment Portal</span>
+            <h2 className="text-2xl font-extrabold text-white tracking-tight">Employer Access Required</h2>
+            <p className="text-sm text-white/60 leading-relaxed mt-3 max-w-sm mx-auto">
+              Create an employer account or sign in to publish job opportunities.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <button 
                 onClick={() => navigate('/login')}
                 className="px-6 py-2.5 bg-luxury-gold hover:bg-luxury-gold/90 text-super-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md inline-flex items-center justify-center gap-1.5"
               >
-                Sign In Developer Profile <ArrowUpRight size={14} />
+                Sign In
               </button>
               <button 
                 onClick={() => navigate('/jobs')}
-                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/90 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-white/10 inline-flex items-center justify-center"
+                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/90 font-bold text-xs rounded-xl transition-all cursor-pointer border border-white/10 inline-flex items-center justify-center"
               >
-                &larr; View Public Jobs Page
+                &larr; View Public Jobs
               </button>
             </div>
           </div>

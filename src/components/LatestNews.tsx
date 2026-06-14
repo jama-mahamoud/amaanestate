@@ -125,16 +125,6 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
               <span className={`flex items-center gap-1.5 uppercase tracking-widest text-white font-black text-[10px] px-2 py-0.5 rounded-sm ${getTypeColor(article.type || article.category)}`}>
                 {getTypeLabel(article.type || article.category)}
               </span>
-              <span className="text-slate-300">•</span>
-              <span className="flex items-center gap-1">
-                <Calendar size={12} className="text-slate-400" />
-                {formatDate(article.createdAt)}
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className="flex items-center gap-1">
-                <Clock size={12} className="text-slate-400" />
-                {readTime} min read
-              </span>
             </div>
 
             <h3 className="text-2xl lg:text-3xl font-display font-black text-slate-950 tracking-tight leading-tight group-hover:text-[#C5A059] transition-colors duration-300">
@@ -205,17 +195,6 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
 
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-3 text-slate-400 text-[11px] mb-3 font-mono">
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
-              {formatDate(article.createdAt)}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Clock size={12} />
-              {readTime} min read
-            </span>
-          </div>
 
           <h4 className="text-lg md:text-xl font-display font-bold text-slate-950 mb-3 line-clamp-2 leading-snug group-hover:text-[#C5A059] transition-colors duration-300 font-bold">
             <Link to={`/news/${article.slug || article.id}`}>

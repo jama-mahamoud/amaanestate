@@ -25,7 +25,7 @@ const NEWS_TRANSLATIONS = {
     createBtn: "Create Article",
     listPropertyBtn: "List Property",
     briefing: "Access Intel Briefing",
-    recentBriefing: "Access Briefing"
+    recentBriefing: "Read more"
   },
   so: {
     spotlight: "Aqoonta Hay'adaha",
@@ -153,12 +153,6 @@ const ArticleCard = ({ article, index, language }: { article: Article; index: nu
 
         <div className="p-6 flex-1 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-white/40 text-[10px] font-mono">
-              <span>{formatDate(article.createdAt)}</span>
-              <span>•</span>
-              <span>{readTime} min read</span>
-            </div>
-            
             <h4 className="text-xl font-display font-medium leading-snug tracking-tight text-white group-hover:text-[#C5A059] transition-colors duration-300 line-clamp-2">
               {article.title}
             </h4>

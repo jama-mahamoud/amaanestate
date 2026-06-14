@@ -79,14 +79,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-16 mb-16 border-b border-white/5">
           <div className="lg:col-span-12 space-y-8 flex flex-col items-center text-center">
             <BrandHeader size="lg" />
-            <p className="text-white/60 text-base sm:text-lg leading-relaxed max-w-2xl font-light">
-              The premier marketplace for verified real estate and vehicles in Somalia and Ethiopia. Built on trust, security, and professionalism.
-            </p>
-            <p className="text-[#C5A059] text-xs font-semibold tracking-wide border-t border-white/10 pt-4 mt-4">
-              AmaanEstate is a verified marketplace connecting buyers with trusted agents and verified listings.
-            </p>
             
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
               <Link 
                 to="/list-property"
                 className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white text-super-black hover:bg-[#C5A059] hover:text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-xl shadow-white/5"

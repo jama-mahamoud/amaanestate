@@ -202,17 +202,6 @@ export default function ArticleDetails() {
             </h1>
 
             {/* Responsive visual divider & metadata */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-white/40 text-[11px] font-medium uppercase tracking-widest pt-2">
-              <span className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-[#C5A059]" /> 
-                {formatDate(article.createdAt)}
-              </span>
-              <span className="w-1 h-1 bg-white/20 rounded-full" />
-              <span className="flex items-center gap-1.5">
-                <Clock size={13} className="text-[#C5A059]" /> 
-                {Math.ceil((article.content || '').length / 900) || 5} min read
-              </span>
-            </div>
           </motion.div>
         </div>
       </div>
