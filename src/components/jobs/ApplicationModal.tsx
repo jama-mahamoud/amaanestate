@@ -65,7 +65,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ job, isOpen, onClos
 
     setIsSubmitting(true);
     try {
-      const companyEmailAddress = job.email || 'careers@amaanestate.com';
+      const companyEmailAddress = job.applicationEmail || job.email || 'careers@amaanestate.com';
       
       // Log application in db too so employer retains records in dashboard
       await jobService.applyForJob({
@@ -285,7 +285,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ job, isOpen, onClos
                 <form onSubmit={handleEmailSubmit} className="space-y-4">
                   <div className="bg-sky-500/10 p-3 rounded-xl border border-sky-500/20 text-[11px] text-sky-450 mb-3 flex items-start gap-2">
                     <Mail size={14} className="shrink-0 mt-0.5 text-sky-400" />
-                    <span>This application will automatically launch your mail client pre-populated with your introduction details mapped directly to **{job.email || 'employer'}**.</span>
+                    <span>This application will automatically launch your mail client pre-populated with your introduction details mapped directly to **{job.applicationEmail || job.email || 'employer'}**.</span>
                   </div>
 
                   <div className="space-y-1">

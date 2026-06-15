@@ -239,7 +239,9 @@
         "status": { "type": "string", "enum": ["pending", "approved", "rejected", "expired"] },
         "ownerId": { "type": "string" },
         "deadline": { "type": "string", "format": "date-time" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "applicationEmail": { "type": "string" },
+        "howToApplyInstructions": { "type": "string" }
       },
       "required": ["title", "companyId", "companyName", "category", "location", "description", "employmentType", "workplaceType", "status", "ownerId", "createdAt"]
     },

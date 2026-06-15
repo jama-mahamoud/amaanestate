@@ -369,6 +369,8 @@ export interface Job {
   isVerifiedCompany?: boolean;
   sourceLink?: string;
   hiringOrganization?: string;
+  applicationEmail?: string;
+  howToApplyInstructions?: string;
 }
 
 export interface JobApplication {

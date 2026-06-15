@@ -47,6 +47,7 @@ export default function EmployerDashboardPage() {
   const [jobMethod, setJobMethod] = useState<'internal' | 'external' | 'email'>('internal');
   const [jobExtLink, setJobExtLink] = useState('');
   const [jobEmpEmail, setJobEmpEmail] = useState('');
+  const [jobApplyInstructions, setJobApplyInstructions] = useState('');
   const [jobHiringOrg, setJobHiringOrg] = useState('');
 
   // Tab selections inside Employer console
@@ -194,6 +195,8 @@ export default function EmployerDashboardPage() {
         applyType: jobMethod,
         applyLink: jobExtLink,
         email: jobEmpEmail,
+        applicationEmail: jobMethod === 'email' ? jobEmpEmail : '',
+        howToApplyInstructions: jobMethod === 'email' ? jobApplyInstructions : '',
         experienceLevel: jobExp,
         isVerifiedCompany: employerCompany.isVerified || true,
         companyName: employerCompany.name,
@@ -212,6 +215,7 @@ export default function EmployerDashboardPage() {
       setJobSkillsLabel('');
       setJobExtLink('');
       setJobEmpEmail('');
+      setJobApplyInstructions('');
       setJobCity('');
       setJobCountry('Somalia');
       setJobHiringOrg('');
@@ -864,16 +868,32 @@ export default function EmployerDashboardPage() {
                       )}
 
                       {jobMethod === 'email' && (
-                        <div className="space-y-1.5 animate-fade-in">
-                          <label className="font-bold text-luxury-gold uppercase tracking-wider text-[10px]">Provide Corporate Careers Inbox Email*</label>
-                          <input 
-                            type="email"
-                            required
-                            placeholder="careers@company.com"
-                            value={jobEmpEmail}
-                            onChange={e => setJobEmpEmail(e.target.value)}
-                            className="w-full border border-white/10 bg-white/[0.02] text-white rounded-xl p-3 focus:outline-none focus:border-luxury-gold"
-                          />
+                        <div className="space-y-4 animate-fade-in text-left">
+                          <div className="space-y-1.5">
+                            <label className="font-bold text-luxury-gold uppercase tracking-wider text-[10px] block">Corporate Email Address*</label>
+                            <input 
+                              type="email"
+                              required
+                              placeholder="hr@holland-dairy.com"
+                              value={jobEmpEmail}
+                              onChange={e => setJobEmpEmail(e.target.value)}
+                              className="w-full border border-white/10 bg-white/[0.02] text-white rounded-xl p-3 focus:outline-none focus:border-[#C5A059] text-sm"
+                            />
+                            <p className="text-[10px] text-white/40">Provide the direct email address for receiving candidate application submissions.</p>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="font-bold text-luxury-gold uppercase tracking-wider text-[10px] block">How To Apply Instructions*</label>
+                            <textarea
+                              required
+                              rows={5}
+                              placeholder="Interested and qualified candidates can send their updated CV and supporting documents to hr@company.com with the subject line 'Application for [Job Title]'. Only shortlisted candidates will be contacted."
+                              value={jobApplyInstructions}
+                              onChange={e => setJobApplyInstructions(e.target.value)}
+                              className="w-full border border-white/10 bg-white/[0.02] text-white rounded-xl p-3 focus:outline-none focus:border-[#C5A059] text-sm whitespace-pre-wrap leading-relaxed font-sans"
+                            />
+                            <p className="text-[10px] text-white/40">Provide simple, professional, recruiter-focused instructions for candidates on how to apply.</p>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -4,6 +4,7 @@ import {
   Share2, Send, Phone, UserCheck, MessageSquare, Linkedin, Globe, Mail, FileText
 } from 'lucide-react';
 import { Job } from '@/types';
+import { JobApplySection } from './JobApplySection';
 
 interface JobDetailsViewProps {
   job: Job;
@@ -12,6 +13,17 @@ interface JobDetailsViewProps {
 }
 
 const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyClick }) => {
+  const handleApplyClick = () => {
+    if (job.applyType === 'email') {
+      const applySection = document.getElementById('how-to-apply-section');
+      if (applySection) {
+        applySection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+    onApplyClick();
+  };
+
   // Safe array formatting for bullets
   const parseBullets = (text?: string): string[] => {
     if (!text) return [];
@@ -61,15 +73,17 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
             <ArrowLeft size={16} /> Back to Job List
           </button>
           
-          <div className="flex items-center gap-3">
-            <span className="hidden md:inline text-xs text-white/50 font-medium font-sans">Looking at this role?</span>
-            <button 
-              onClick={onApplyClick}
-              className="px-6 py-2.5 bg-luxury-gold hover:bg-luxury-gold/90 text-super-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              Apply now
-            </button>
-          </div>
+          {job.applyType !== 'email' && (
+            <div className="flex items-center gap-3">
+              <span className="hidden md:inline text-xs text-white/50 font-medium font-sans">Looking at this role?</span>
+              <button 
+                onClick={handleApplyClick}
+                className="px-6 py-2.5 bg-luxury-gold hover:bg-luxury-gold/90 text-super-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+              >
+                Apply now
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -223,6 +237,11 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
                 </div>
               </div>
             )}
+
+            {/* How To Apply Section */}
+            {job.applyType === 'email' && (
+              <JobApplySection job={job} />
+            )}
           </div>
 
           {/* Column B: Info Sidebar Column (Sticky) */}
@@ -269,17 +288,19 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <button 
-                    onClick={onApplyClick}
-                    className="w-full text-center py-3 px-4 bg-luxury-gold hover:bg-luxury-gold/90 active:bg-gold-600 text-super-black font-extrabold text-sm uppercase tracking-widest rounded-xl shadow-lg transition-all cursor-pointer"
-                  >
-                    Apply For Job
-                  </button>
-                  <p className="text-[10px] text-center text-white/40 mt-2.5 font-medium">
-                    This job utilizes {job.applyType || 'internal'} application routing.
-                  </p>
-                </div>
+                {job.applyType !== 'email' && (
+                  <div className="mt-6">
+                    <button 
+                      onClick={handleApplyClick}
+                      className="w-full text-center py-3 px-4 bg-luxury-gold hover:bg-luxury-gold/90 active:bg-gold-600 text-super-black font-extrabold text-sm uppercase tracking-widest rounded-xl shadow-lg transition-all cursor-pointer"
+                    >
+                      Apply For Job
+                    </button>
+                    <p className="text-[10px] text-center text-white/40 mt-2.5 font-medium">
+                      This job utilizes {job.applyType || 'internal'} application routing.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Employer description sidebar - Non-clickable with Green Accent */}
