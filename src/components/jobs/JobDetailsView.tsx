@@ -205,13 +205,13 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
             {/* Requirements list card */}
             {requirementsList.length > 0 && (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg">
-                <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3 mb-4">
-                  Job Requirements
+                <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3 mb-4 font-sans">
+                  About You
                 </h2>
                 <ul className="space-y-3.5">
                   {requirementsList.map((req, i) => (
-                    <li key={i} className="flex gap-3 text-white/80 text-sm md:text-base leading-relaxed animate-fade-in">
-                      <span className="w-1.5 h-1.5 rounded-full bg-luxury-gold shrink-0 mt-2.5" />
+                    <li key={i} className="flex gap-3 text-white/80 text-sm md:text-base leading-relaxed animate-fade-in font-sans text-left">
+                      <span className="w-1.5 h-1.5 rounded-full bg-luxury-gold shrink-0 mt-2.2" />
                       <span>{req}</span>
                     </li>
                   ))}
@@ -222,14 +222,14 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ job, onBack, onApplyCli
             {/* Skills chip list */}
             {skillsList.length > 0 && (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg">
-                <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3 mb-4">
-                  Key Skills & Core Tech Spec
+                <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3 mb-4 font-sans">
+                  Requirement Skill
                 </h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 justify-start">
                   {skillsList.map((skill, i) => (
                     <span 
                       key={i} 
-                      className="px-3.5 py-1.5 bg-white/5 border border-white/10 text-luxury-gold text-xs font-bold rounded-xl truncate"
+                      className="px-3.5 py-1.5 bg-white/5 border border-white/10 text-luxury-gold text-xs font-bold rounded-xl truncate font-sans"
                     >
                       {skill}
                     </span>
