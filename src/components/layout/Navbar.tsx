@@ -209,6 +209,7 @@ export default function Navbar() {
           ))}
           <Link to="/agents" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agents')}</Link>
           <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
+          <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agreements')}</Link>
           
           {/* News Interactive Dropdown */}
           <div 
@@ -432,6 +433,7 @@ export default function Navbar() {
 
                 <Link to="/agents" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agents')}</Link>
                 <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>
+                <Link to="/agreements" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agreements')}</Link>
 
                 {/* News Collapsible Accordion on Mobile */}
                 <div className="border-b border-white/5 py-4 w-full text-left">

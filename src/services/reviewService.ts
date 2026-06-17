@@ -1,3 +1,4 @@
+import { auth, db } from '@/lib/firebase';
 import { 
   collection, 
   doc, 
@@ -11,7 +12,53 @@ import {
   orderBy, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  // Keep the original console.warn for user visibility
+}
 
 export interface CTAButton {
   text: string;
@@ -115,8 +162,8 @@ export interface EditorialReview {
   ogImage?: string;
 
   // Moderation Status Workflow:
-  // 'draft' | 'pending' | 'approved' | 'rejected' | 'published' | 'unpublished'
-  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'published' | 'unpublished';
+  // 'draft' | 'pending' | 'approved' | 'rejected' | 'archived'
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
   
   // Future Affiliate Analytics Foundation Architecture
   views?: number;
@@ -129,7 +176,9 @@ export interface EditorialReview {
   updatedAt?: any;
 }
 
+
 const REVIEWS_COLLECTION = 'editorial_reviews';
+
 
 // Local storage backup key for seamless offline & reliable sandbox builds
 const LOCAL_STORAGE_KEY = 'amaan_editorial_reviews_v2';
@@ -187,14 +236,28 @@ export const reviewService = {
   async getAllReviews(publishedOnly: boolean = false): Promise<EditorialReview[]> {
     try {
       const snap = await getDocs(collection(db, REVIEWS_COLLECTION));
+      console.log('DEBUG: ALL REVIEW DOCS:', snap.docs.map(doc => ({ id: doc.id, title: doc.data().title })));
       let list = snap.docs.map(docSnap => {
         const data = docSnap.data();
-        return {
+        const review = {
           id: docSnap.id,
           ...data,
           createdAt: data.createdAt?.toMillis ? data.createdAt.toDate() : data.createdAt
         } as EditorialReview;
+        
+        console.log("Review Status:", review.title, review.status);
+        return review;
       });
+
+      console.log('DEBUG: Total reviews in DB:', list.length);
+      console.log('DEBUG: Approved reviews in DB:', list.filter(r => r.status === 'approved').length);
+      
+      list.forEach(r => {
+        if (r.status !== 'approved') {
+          console.log('DEBUG: Non-approved review found:', r.slug, r.status);
+        }
+      });
+
 
       // Sort by publishDate/createdAt descending
       list.sort((a, b) => {
@@ -208,18 +271,23 @@ export const reviewService = {
         this.saveToLocalBackup(list);
       }
 
+      console.log('DEBUG: STATUS CHECK ALL REVIEWS:');
+      list.forEach(r => console.log(`DEBUG: Review ${r.slug} status: ${r.status}`));
+
       if (publishedOnly) {
-        // Only approved and published reviews should appear publicly.
-        // We match status === 'published' (which denotes being approved & published)
-        return list.filter(r => r.status === 'published');
+        // Only approved content is visible to users
+        const filteredList = list.filter(r => r.status === 'approved');
+        console.log('DEBUG: Filtered list length:', filteredList.length);
+        return filteredList;
       }
 
       return list;
     } catch (error) {
+      handleFirestoreError(error, OperationType.GET, REVIEWS_COLLECTION);
       console.warn('Firebase connection unavailable, defaulting to LocalBackup registry:', error);
-      const list = this.getLocalBackup();
+      let list = this.getLocalBackup();
       if (publishedOnly) {
-        return list.filter(r => r.status === 'published');
+        return list.filter(r => r.status === 'approved');
       }
       return list;
     }

@@ -27,7 +27,6 @@ function PageFallback() {
 const Home = lazy(() => import('./pages/Home'));
 const Agreements = lazy(() => import('./pages/Agreements'));
 const AdminAgreements = lazy(() => import('./pages/admin/AdminAgreements'));
-const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
 const PublicVerification = lazy(() => import('./pages/verify/PublicVerification'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
@@ -106,8 +105,6 @@ export default function App() {
                 <Route path="properties/edit/:id" element={<PropertyListingFormPage />} />
                 <Route path="list-property" element={<PropertyListingFormPage />} />
                 <Route path="agreements" element={<Agreements />} />
-                <Route path="admin/agreements" element={<AdminAgreements />} />
-                <Route path="admin/reviews" element={<AdminReviews />} />
                 <Route path="verify/:id" element={<PublicVerification />} />
                 
                 {/* Vehicles Module */}
@@ -169,7 +166,7 @@ export default function App() {
                   <Route path="articles" element={<DashboardArticles />} />
                   <Route path="articles/create" element={<CreateArticle />} />
                   <Route path="articles/edit/:id" element={<EditArticle />} />
-                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="partner-review" element={<DashboardReviews />} />
                   <Route path="agreements" element={<AdminAgreements />} />
                   <Route path="trust" element={<TrustEngine />} />
                   <Route path="verification" element={<VerificationCenter />} />

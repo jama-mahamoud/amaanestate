@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -33,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function NetworkPage() {
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { profile, user } = useAuth();
   
   const [reviews, setReviews] = useState<EditorialReview[]>([]);
@@ -43,6 +44,28 @@ export default function NetworkPage() {
   // Advanced affiliate publisher components state
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [showSticky, setShowSticky] = useState(false);
+
+  // Sync category state when URL searchParams change
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory('all');
+    }
+  }, [searchParams]);
+
+  const handleCategoryChange = (catId: string) => {
+    if (catId === 'all') {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('category');
+      setSearchParams(newParams);
+    } else {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('category', catId);
+      setSearchParams(newParams);
+    }
+  };
 
   // Load reviews on mount
   useEffect(() => {
@@ -729,7 +752,7 @@ export default function NetworkPage() {
                           <div 
                             key={rev.id}
                             onClick={() => {
-                              navigate(`/network/${rev.slug}`);
+                              navigate(`/ecosystem/${rev.slug}`);
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             className="group cursor-pointer bg-white/[0.01] hover:bg-white/[0.02] border border-white/5 p-4 rounded-2xl flex flex-col h-full text-left transition-all"
@@ -869,7 +892,7 @@ export default function NetworkPage() {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => handleCategoryChange(cat.id)}
                   className={`py-2 px-4 rounded-xl text-xs font-medium transition-all flex items-center gap-2 border cursor-pointer whitespace-nowrap ${
                     selectedCategory === cat.id 
                       ? 'bg-[#C5A059]/10 border-[#C5A059] text-white' 
@@ -890,7 +913,27 @@ export default function NetworkPage() {
               <p className="text-xs text-neutral-500 font-mono">Syncing listing registry...</p>
             </div>
           ) : filteredReviews.length === 0 ? (
-            null
+            <div className="max-w-md mx-auto py-16 text-center px-4 bg-white/[0.01] border border-white/5 rounded-2xl">
+              <Building2 className="mx-auto h-8 w-8 text-[#C5A059] mb-3 opacity-60 animate-pulse" />
+              <h3 className="text-sm font-semibold text-white mb-1.5">No Ecosystem Recommendations Found</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed mb-6">
+                No matching verified publisher column was found for "{selectedCategory !== 'all' ? selectedCategory : 'all'}" category matching your search criteria.
+              </p>
+              {(searchQuery.trim() !== '' || selectedCategory !== 'all') && (
+                <Button 
+                  onClick={() => {
+                    setSearchQuery('');
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete('category');
+                    setSearchParams(newParams);
+                  }} 
+                  size="sm" 
+                  className="bg-[#C5A059] hover:bg-[#D4B26F] text-black font-semibold text-xs rounded-xl"
+                >
+                  Reset Active Filters
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredReviews.map((rev) => (
@@ -949,7 +992,7 @@ export default function NetworkPage() {
                     
                     {/* BUTTON LEADING TO SLUG (NOT DIRECT LINK) */}
                     <Link
-                      to={`/network/${rev.slug}`}
+                      to={`/ecosystem/${rev.slug}`}
                       className="mt-2 bg-white/[0.03] hover:bg-[#C5A059]/10 border border-white/5 hover:border-[#C5A059] text-white group-hover:text-white text-xs font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 px-4 text-center cursor-pointer"
                     >
                       Read Full Review <ArrowRight size={13} className="group-hover:translate-x-1.5 transition-transform" />

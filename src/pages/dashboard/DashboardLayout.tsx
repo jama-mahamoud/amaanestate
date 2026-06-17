@@ -21,14 +21,16 @@ import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 import { BrandHeader } from '@/components/brand/BrandHeader';
 
-function DashboardContent() {
+const DashboardContent = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, logout, loading } = useAuth();
+  const { t } = useSettings();
 
   const handleLogout = useCallback(async () => {
     try {
@@ -41,7 +43,7 @@ function DashboardContent() {
 
   const navItems = useMemo(() => {
     const items = [
-      { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+      { name: t('Overview', 'Overview'), path: '/dashboard', icon: <LayoutDashboard size={18} /> },
     ];
 
     const currentRole = profile?.role?.toString().trim().toLowerCase();
@@ -49,41 +51,47 @@ function DashboardContent() {
     const isAgency = currentRole === 'agency' || profile?.role === 'agency';
     const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
 
+    // Core Agreements Access
     if (isAdmin) {
-      items.push({ name: 'Content Review', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
-      items.push({ name: 'Agencies', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
-      items.push({ name: 'Contracts', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
-      items.push({ name: 'Partner Reviews', path: '/admin/reviews', icon: <Briefcase size={18} /> });
-      items.push({ name: 'Analytics', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
-      items.push({ name: 'Verification', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
-      items.push({ name: 'Activity', path: '/dashboard/risk', icon: <Menu size={18} /> }); 
-      items.push({ name: 'Jobs', path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
+      items.push({ name: t('agreementLedger', 'Agreement Ledger'), path: '/dashboard/agreements', icon: <FileText size={18} /> });
+    } else {
+      items.push({ name: t('smartAgreements', 'Smart Agreements'), path: '/agreements', icon: <FileSignature size={18} /> });
+    }
+
+    if (isAdmin) {
+      items.push({ name: t('Content Review'), path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
+      items.push({ name: t('Agencies'), path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
+      items.push({ name: t('Partner Reviews'), path: '/dashboard/partner-review', icon: <Briefcase size={18} /> });
+      items.push({ name: t('Analytics'), path: '/dashboard/trust', icon: <Sparkles size={18} /> });
+      items.push({ name: t('Verification'), path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
+      items.push({ name: t('Activity'), path: '/dashboard/risk', icon: <Menu size={18} /> }); 
+      items.push({ name: t('Jobs'), path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
     }
 
     if (isAgency) {
-      items.push({ name: 'Account', path: '/dashboard/profile', icon: <Briefcase size={18} /> });
-      items.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
+      items.push({ name: t('Account'), path: '/dashboard/profile', icon: <Briefcase size={18} /> });
+      items.push({ name: t('Properties'), path: '/dashboard/properties', icon: <Home size={18} /> });
     } else {
-      items.push({ name: 'Properties', path: '/dashboard/properties', icon: <Home size={18} /> });
-      items.push({ name: 'Vehicles', path: '/dashboard/vehicles', icon: <Car size={18} /> });
+      items.push({ name: t('Properties'), path: '/dashboard/properties', icon: <Home size={18} /> });
+      items.push({ name: t('Vehicles'), path: '/dashboard/vehicles', icon: <Car size={18} /> });
     }
     
-    items.push({ name: 'Saved', path: '/dashboard/favorites', icon: <Heart size={18} /> });
+    items.push({ name: t('Saved'), path: '/dashboard/favorites', icon: <Heart size={18} /> });
     if (!isAgency) {
-        items.push({ name: 'Account', path: '/dashboard/profile', icon: <UserIcon size={18} /> });
+        items.push({ name: t('Account'), path: '/dashboard/profile', icon: <UserIcon size={18} /> });
     }
 
     if (isEditor) {
-      items.push({ name: 'Articles', path: '/dashboard/articles', icon: <FileText size={18} /> });
+      items.push({ name: t('Articles'), path: '/dashboard/articles', icon: <FileText size={18} /> });
     }
 
     if (isAdmin) {
-      items.push({ name: 'Directory', path: '/dashboard/users', icon: <Users size={18} /> });
+      items.push({ name: t('Directory'), path: '/dashboard/users', icon: <Users size={18} /> });
     }
 
-    items.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={18} /> });
+    items.push({ name: t('Settings'), path: '/dashboard/settings', icon: <Settings size={18} /> });
     return items;
-  }, [profile?.role]);
+  }, [profile?.role, t]);
 
   if (loading) return null;
 

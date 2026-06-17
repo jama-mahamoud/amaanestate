@@ -1,449 +1,181 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Global Safety Net
+
+    // 0. Global Catch-all Deny
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 1. Core Functions & RBAC
+    // 1. Reusable Primitives
     function isSignedIn() { return request.auth != null; }
-    function isEmailVerified() { return isSignedIn(); }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-    
-    // Attempt to read the user's role from the users collection
-    // If the document doesn't exist yet (during registration), default to 'normal_user'
-    function getRole() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : 'normal_user';
-    }
-    
-    function hasRole(roleName) {
-      return isSignedIn() && getRole() == roleName;
-    }
-    
-    function isAdmin() {
-      return isSignedIn() && (
-        hasRole('admin') 
-        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
-    }
-    
-    function isEditor() {
-      return isAdmin() || hasRole('editor');
-    }
-
+    function isAdmin() { return isSignedIn() && (
+      exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
+      request.auth.token.email.lower() == 'towinnow0@gmail.com'
+    ); }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+    function docData(path) { return get(path).data; }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
 
-    // 2. Validation Blueprints
+    // -- VALIDATION HELPERS --
+    function isValidId(id) { return id is string && id.size() <= 128; }
+    
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt'])
-        && data.uid == request.auth.uid
-        && data.role in ['admin', 'editor', 'agent', 'verified_professional', 'normal_user', 'pending_broker']
-        && data.displayName is string && data.displayName.size() <= 100
-        && (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000))
-        && (!('isVerified' in data) || data.isVerified is bool);
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.uid is string && data.email is string && data.role is string;
     }
 
     function isValidListing(data) {
-      let allowedFields = ['title', 'description', 'category', 'price', 'currency', 'city', 'location', 
-                           'listingType', 'ownerId', 'status', 'createdAt', 'updatedAt', 'images', 'features', 
-                           'isFeatured', 'metadata', 'subcategory', 'year', 'mileage', 
-                           'fuelType', 'transmission', 'beds', 'baths', 'size',
-                           'createdBy', 'createdByRole',
-                           'region', 'district', 'landmark', 'latitude', 'longitude',
-                           'legalListingId', 'legalReferenceNumber', 'governmentRegistryNumber', 'associatedBrokerId',
-                           'legalOwnershipCertificateUrl', 'legalTitleDeedUrl', 'sellerNationalIdUrl',
-                           'isVerified', 'verificationStatus', 'legalChecked', 'ownershipVerified'];
-                           
-      return data.keys().hasAll(['title', 'category', 'price', 'city', 'listingType', 'ownerId', 'status', 'createdAt', 'images'])
-        && data.title is string && data.title.size() <= 200
-        && data.category in ['property', 'rental', 'land', 'vehicle']
-        && data.price is number && data.price >= 0
-        && data.city is string && data.city.size() <= 100
-        && data.listingType in ['sale', 'rent']
-        && data.ownerId == request.auth.uid
-        && data.status in ['pending', 'active', 'sold', 'rented', 'archived']
-        && data.images is list
-        && data.keys().hasOnly(allowedFields)
-        && (!('description' in data) || data.description is string)
-        && (!('year' in data) || data.year is number)
-        && (!('mileage' in data) || data.mileage is string)
-        && (!('beds' in data) || data.beds is number)
-        && (!('baths' in data) || data.baths is number)
-        && (!('isVerified' in data) || data.isVerified is bool)
-        && (!('verificationStatus' in data) || data.verificationStatus in ['pending', 'verified', 'rejected'])
-        && (!('legalChecked' in data) || data.legalChecked is bool)
-        && (!('ownershipVerified' in data) || data.ownershipVerified is bool);
-    }
-    
-    function isValidService(data) {
-      return data.keys().hasAll(['title', 'category', 'description', 'providerId', 'status', 'createdAt'])
-        && data.title is string && data.title.size() <= 200
-        && data.providerId == request.auth.uid
-        && data.status in ['active', 'pending', 'inactive'];
+      return data.keys().hasAll(['title', 'category', 'price', 'ownerId', 'status', 'createdAt']) &&
+             data.price is number && data.ownerId is string;
     }
 
-    function isValidInquiry(data) {
-      return data.keys().hasAll(['listingId', 'senderId', 'receiverId', 'message', 'createdAt'])
-        && data.senderId == request.auth.uid
-        && data.message is string && data.message.size() <= 2000;
+    function isValidEditorialReview(data) {
+      return data.keys().hasAll(['title', 'slug', 'status', 'category']) &&
+             data.title is string && data.slug is string &&
+             data.status in ['draft', 'pending', 'approved', 'rejected', 'archived'] &&
+             data.category in ['real-estate', 'finance', 'tech', 'learning', 'market'] &&
+             (data.get('rating', 0) is number || data.get('rating', 0) is int);
     }
 
-    function isValidApplication(data) {
-      return data.keys().hasAll(['type', 'userId', 'status', 'data', 'createdAt'])
-        && data.type in ['agent', 'professional']
-        && data.userId == request.auth.uid
-        && data.status in ['pending', 'pending_review'];
-    }
-    
-    function isValidProfessional(data) {
-      let allowedFields = ['name', 'title', 'category', 'city', 'image', 'isVerified', 'uid', 'bio', 'skills', 'experienceYears', 'whatsapp', 'phone', 'email', 'availability'];
+    // -- COLLECTIONS --
 
-      return data.keys().hasAll(['name', 'title', 'category', 'city', 'uid'])
-        && data.uid == request.auth.uid
-        && data.name is string && data.name.size() <= 100
-        && data.title is string && data.title.size() <= 100
-        && data.city is string && data.city.size() <= 100
-        && data.keys().hasOnly(allowedFields);
-    }
-
-    function isValidArticle(data) {
-      let allowedFields = [
-        'title', 'slug', 'summary', 'content', 'category', 'language', 'featuredImage', 
-        'gallery', 'tags', 'seoTitle', 'seoDescription', 'authorId', 'isFeatured', 
-        'published', 'views', 'createdAt', 'updatedAt',
-        'status', 'layoutType', 'sidebarPlacement', 'backgroundColor', 'cardStyle', 
-        'borderRadius', 'shadowIntensity', 'focusKeyword', 'seoScore', 'socialImage', 
-        'priority', 'homepageSection', 'showAuthor', 'publishSchedule'
-      ];
-      return data.keys().hasAll(['title', 'slug', 'content', 'category', 'language', 'authorId', 'published', 'createdAt'])
-        && data.title is string && data.title.size() <= 200
-        && data.slug is string && data.slug.size() <= 100
-        && data.content is string
-        && data.category is string
-        && data.language in ['en', 'so']
-        && data.authorId == request.auth.uid
-        && data.published is bool
-        && data.keys().hasOnly(allowedFields);
-    }
-
-    function isValidContactMessage(data) {
-      return data.keys().hasAll(['fullName', 'email', 'inquiryType', 'message', 'status', 'createdAt'])
-        && data.fullName is string
-        && data.email is string
-        && data.inquiryType is string
-        && data.message is string
-        && data.status in ['unread', 'read', 'archived']
-        && (!('userId' in data) || data.userId == null || data.userId == request.auth.uid);
-    }
-
-    function isValidBroker(data) {
-      let allowedFields = [
-        'id', 'userId', 'fullName', 'phone', 'whatsapp', 'email', 'region', 'city', 'officeAddress',
-        'governmentIdUrl', 'businessLicenseUrl', 'brokerCertificateUrl', 'profilePhotoUrl',
-        'yearsOfExperience', 'areasOfOperation', 'propertySpecialization', 'languagesSpoken',
-        'status', 'isVerified', 'createdAt', 'updatedAt'
-      ];
-      return data.keys().hasAll(['id', 'userId', 'fullName', 'phone', 'whatsapp', 'email', 'region', 'city', 'officeAddress', 'status', 'isVerified', 'createdAt'])
-        && data.id is string
-        && data.userId == request.auth.uid
-        && data.fullName is string && data.fullName.size() <= 200
-        && data.email is string && data.email.size() <= 300
-        && data.phone is string && data.phone.size() <= 50
-        && data.whatsapp is string && data.whatsapp.size() <= 50
-        && data.region is string && data.region.size() <= 100
-        && data.city is string && data.city.size() <= 100
-        && data.officeAddress is string && data.officeAddress.size() <= 300
-        && data.status in ['pending', 'approved', 'rejected', 'suspended']
-        && data.isVerified is bool
-        && data.keys().hasOnly(allowedFields);
-    }
-
-    function isValidNotification(data) {
-      return data.keys().hasAll(['id', 'userId', 'title', 'message', 'type', 'read', 'createdAt'])
-        && data.id is string
-        && data.userId is string
-        && data.title is string && data.title.size() <= 200
-        && data.message is string && data.message.size() <= 1000
-        && data.type in ['PROPERTY', 'PAYMENT', 'AGREEMENT', 'VERIFICATION', 'INQUIRY', 'SYSTEM']
-        && data.read is bool;
-    }
-
-    function isValidIdea(data) {
-      return data.keys().hasAll(['focusTitle', 'suggestion', 'category', 'userId', 'createdAt'])
-        && data.focusTitle is string && data.focusTitle.size() <= 200
-        && data.suggestion is string && data.suggestion.size() <= 5000
-        && data.category is string && data.category.size() <= 100
-        && data.userId == request.auth.uid;
-    }
-
-    function isValidContact(data) {
-      return data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
-        && data.name is string && data.name.size() <= 100
-        && data.email is string && data.email.size() <= 200
-        && data.message is string && data.message.size() <= 5000;
-    }
-
-    // 3. Collection Security Strategies
-
-    // Users Collection
+    // USER PROFILES
     match /users/{userId} {
-      // safe public fields reading where appropriate
-      allow get: if true; 
-      allow list: if isAdmin();
-      allow create: if isOwner(userId)
-        && isValidUser(incoming())
-        && incoming().role == 'normal_user'; // Enforce default role on creation
-      allow update: if (isOwner(userId) && (!('role' in incoming().diff(existing()).affectedKeys()) || (existing().role == 'normal_user' && incoming().role == 'pending_broker'))) || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && (
+        !incoming().diff(existing()).affectedKeys().hasAny(['role']) || isAdmin()
+      );
     }
 
-    // Professionals Directory
-    match /professionals/{profileId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() && isOwner(profileId) && isValidProfessional(incoming());
-      allow update: if (isEmailVerified() && isOwner(profileId) && !('isVerified' in incoming().diff(existing()).affectedKeys())) || isAdmin();
-      allow delete: if isAdmin();
+    // -- ADMINS --
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Listings System
+    // -- LISTINGS (Properties, Vehicles, etc) --
     match /listings/{listingId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() 
-        && isValidListing(incoming())
-        && incoming().status == 'pending'
-        && incoming().verificationStatus == 'pending'
-        && incoming().isVerified == false
-        && incoming().legalChecked == false
-        && incoming().ownershipVerified == false;
-      allow update: if (
-        isEmailVerified() && (isOwner(existing().ownerId) || existing().createdBy == request.auth.uid) && (
-          incoming().diff(existing()).affectedKeys().hasOnly([
-            'title', 'description', 'price', 'currency', 'city', 'location', 
-            'images', 'features', 'updatedAt', 'metadata', 'subcategory',
-            'year', 'mileage', 'fuelType', 'transmission', 'beds', 'baths', 'size', 'status',
-            'region', 'district', 'landmark', 'latitude', 'longitude',
-            'legalReferenceNumber', 'governmentRegistryNumber', 'associatedBrokerId',
-            'legalOwnershipCertificateUrl', 'legalTitleDeedUrl', 'sellerNationalIdUrl', 'legalListingId'
-          ]) // Owner/Creator cannot change 'isFeatured'
-        )
-      ) || isAdmin();
-      allow delete: if (
-        isEmailVerified() && (existing().ownerId == request.auth.uid || existing().createdBy == request.auth.uid)
-      ) || isAdmin();
+      allow read: if true; // Public marketplace
+      allow create: if isSignedIn() && isValidListing(incoming());
+      allow update, delete: if isAdmin() || existing().ownerId == request.auth.uid;
     }
 
-    // Services
-    match /professionalServices/{serviceId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() && isValidService(incoming());
-      allow update: if (isEmailVerified() && isOwner(existing().providerId)) || isAdmin();
+    // -- JOBS --
+    match /jobs/{jobId} {
+      allow read: if true; // Public board
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || existing().ownerId == request.auth.uid;
+    }
+
+    // -- COMPANIES --
+    match /companies/{companyId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || existing().ownerId == request.auth.uid;
+    }
+
+    // -- NOTIFICATIONS --
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (
+        existing().userId == request.auth.uid || 
+        (isAdmin() && existing().userId == 'admin')
+      );
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (
+        existing().userId == request.auth.uid || 
+        (isAdmin() && existing().userId == 'admin')
+      );
+    }
+
+    // -- AGREEMENTS --
+    match /agreements/{agreementId} {
+      allow read: if isAdmin() || (
+        isSignedIn() && (
+          existing().partyA.uid == request.auth.uid || 
+          existing().partyB.uid == request.auth.uid || 
+          existing().createdBy == request.auth.uid
+        )
+      );
+      allow list: if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    // Applications & Registry
-    match /applications/{appId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isSignedIn() && isValidApplication(incoming());
-      allow update, delete: if isAdmin();
+    // -- BROKERS --
+    match /brokers/{brokerId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || existing().userId == request.auth.uid;
     }
     
-    match /professionalApplications/{appId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isSignedIn() && isValidApplication(incoming());
-      allow update, delete: if isAdmin();
+    // -- BROKER APPLICATIONS --
+    match /brokerApplications/{applicationId} {
+      allow read: if isAdmin() || isOwner(existing().userId);
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
     }
 
-    // Inquiries System
-    match /inquiries/{inquiryId} {
-      allow read: if isOwner(resource.data.senderId) || isOwner(resource.data.receiverId) || isAdmin();
-      allow create: if isSignedIn() && isValidInquiry(incoming());
-      allow update, delete: if isAdmin();
+    // -- EDITORIAL REVIEWS --
+    match /editorial_reviews/{id} {
+      allow get: if isAdmin() || (existing().status == 'approved');
+      allow list: if isAdmin() || (resource.data.status == 'approved');
+      allow create: if isAdmin() && isValidEditorialReview(incoming());
+      allow update: if isAdmin() && (
+        isValidEditorialReview(incoming()) || 
+        // Allow public to increment views/clicks if we implement increment logic later
+        // For now, only admin can write to metrics via service
+        incoming().diff(existing()).affectedKeys().hasOnly(['views', 'clicks', 'ctr', 'bannerClicks', 'ctaButtons'])
+      );
+      allow delete: if isAdmin();
     }
 
-    // CMS & Articles System
-    match /articles/{articleId} {
-      allow read, write: if true;
-    }
-
-    // Editorial Reviews System
-    match /editorial_reviews/{reviewId} {
-      allow read, write: if true;
-    }
-
-    // Contact Messages
-    match /contactMessages/{messageId} {
+    // -- AUDIT LOGS --
+    match /auditLogs/{logId} {
       allow read: if isAdmin();
-      allow create: if isSignedIn() && isValidContactMessage(incoming()); 
-      allow update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    match /contacts/{contactId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn() && isValidContact(incoming());
-      allow update, delete: if isAdmin();
-    }
-
-    // Ideas & Innovation Hub
-    match /ideas/{ideaId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidIdea(incoming());
-      allow update, delete: if isAdmin();
-    }
-
-    // Global Stats & Analytics
+    // -- GLOBAL STATS --
     match /globalStats/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Legacy Admins Collection Check
-    match /admins/{adminId} {
-      allow read: if isAdmin();
-      allow write: if false; // Only populated via DB or root admin
-    }
-
-    // Verified Broker Registry & Applications
-    match /agencies/{agencyId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn()
-        && incoming().get('status', 'pending') == 'pending'
-        && incoming().get('isVerified', false) == false;
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && isOwner(existing().get('ownerId', ''))
-        && incoming().get('status', 'pending') == existing().get('status', 'pending')
-        && incoming().get('isVerified', false) == existing().get('isVerified', false)
-      );
-      allow delete: if isAdmin();
-    }
-
-    match /brokers/{brokerId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn()
-        && isValidBroker(incoming())
-        && incoming().get('status', 'pending') == 'pending'
-        && incoming().get('isVerified', false) == false;
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && isOwner(existing().get('userId', ''))
-        && isValidBroker(incoming())
-        && incoming().get('status', 'pending') == existing().get('status', 'pending')
-        && incoming().get('isVerified', false) == existing().get('isVerified', false)
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Broker Applications
-    match /brokerApplications/{applicationId} {
-      allow read: if (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) || isAdmin();
-      allow create: if isSignedIn() 
-        && incoming().get('userId', '') == request.auth.uid
-        && incoming().get('status', 'pending') == 'pending';
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && isOwner(existing().get('userId', ''))
-        && incoming().get('userId', '') == request.auth.uid
-        && incoming().get('status', 'pending') == existing().get('status', 'pending')
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Verified Broker Profiles
-    match /brokerProfiles/{profileId} {
-      allow get: if resource.data.get('isVerified', false) == true 
-        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
-        || isAdmin();
-      allow list: if resource.data.get('isVerified', false) == true 
-        || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid) 
-        || isAdmin();
-      allow create: if isSignedIn() 
-        && incoming().get('userId', '') == request.auth.uid
-        && incoming().get('isVerified', false) == false;
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && isOwner(existing().get('userId', ''))
-        && incoming().get('userId', '') == request.auth.uid
-        && incoming().get('isVerified', false) == existing().get('isVerified', false)
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Legal Audits
-    match /legalAudits/{auditId} {
-      allow read: if (isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('brokerId', '') == request.auth.uid)) || isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-    // Trust Audit Logs
-    match /trustAuditLogs/{logId} {
-      allow read: if isAdmin();
-      allow write: if false; // System only
-    }
-
-    // Agreements Ledger Collection Strategy
-    match /agreements/{agreementId} {
-      allow get: if true; // Public QR validation checks
-      allow list: if isSignedIn() && (resource.data.get('submittedBy', '') == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() 
-        && incoming().get('submittedBy', '') == request.auth.uid
-        && incoming().get('status', 'Pending Approval') == 'Pending Approval';
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && existing().get('submittedBy', '') == request.auth.uid
-        && incoming().get('submittedBy', '') == request.auth.uid
-        && existing().get('status', 'Pending Approval') == 'Pending Approval'
-        && incoming().get('status', 'Pending Approval') == 'Pending Approval'
-      );
-      allow delete: if isAdmin();
-    }
-
-    // Notifications Collection Security
-    match /notifications/{notificationId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == 'admin' && isAdmin());
-      allow create: if isSignedIn() && isValidNotification(incoming());
-      allow update: if isSignedIn() && (
-        (resource.data.userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read']))
-        || isAdmin()
-      );
-      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-
-    // Companies Collection Security
-    match /companies/{companyId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() && incoming().ownerId == request.auth.uid;
-      allow update: if (isEmailVerified() && existing().ownerId == request.auth.uid) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Candidate Profiles Collection Security
-    match /candidateProfiles/{candidateId} {
-      allow read: if isEmailVerified();
-      allow create: if isEmailVerified() && isOwner(candidateId);
-      allow update: if (isEmailVerified() && isOwner(candidateId)) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Jobs Collection Security
-    match /jobs/{jobId} {
+    // -- ARTICLES --
+    match /articles/{articleId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Job Applications Collection Security
+    // -- CONTACT MESSAGES --
+    match /contactMessages/{messageId} {
+      allow create: if true; // Public contact
+      allow read, write: if isAdmin();
+    }
+
+    // -- INQUIRIES --
+    match /inquiries/{inquiryId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || existing().senderId == request.auth.uid || existing().receiverId == request.auth.uid;
+      allow write: if isAdmin() || existing().senderId == request.auth.uid;
+    }
+
+    // -- CANDIDATE PROFILES --
+    match /candidateProfiles/{candidateId} {
+      allow read: if true; // Public for recruiters
+      allow write: if isAdmin() || isOwner(candidateId);
+    }
+
+    // -- JOB APPLICATIONS --
     match /jobApplications/{applicationId} {
-      allow read: if isEmailVerified() && (resource.data.candidateId == request.auth.uid || resource.data.get('employerId', '') == request.auth.uid || isAdmin());
-      allow create: if isEmailVerified() && incoming().candidateId == request.auth.uid;
-      allow update: if isEmailVerified() && (existing().candidateId == request.auth.uid || existing().get('employerId', '') == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || existing().candidateId == request.auth.uid || exists(/databases/$(database)/documents/companies/$(existing().companyId)) && get(/databases/$(database)/documents/companies/$(existing().companyId)).data.ownerId == request.auth.uid;
+      allow update: if isAdmin() || (exists(/databases/$(database)/documents/companies/$(existing().companyId)) && get(/databases/$(database)/documents/companies/$(existing().companyId)).data.ownerId == request.auth.uid);
     }
   }
 }

@@ -1,427 +1,50 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
-      "description": "User profile information",
+    "EditorialReview": {
+      "title": "Editorial Review",
+      "description": "A structured affiliate review or market insight column.",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "description": "Unique identifier for the user"
-        },
-        "displayName": {
-          "type": "string",
-          "description": "User's full name"
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "User's email address"
-        },
-        "role": {
-          "type": "string",
-          "enum": ["buyer", "seller", "agent", "admin"],
-          "description": "User's role in the system"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Time when the user account was created"
-        },
-        "photoURL": {
-          "type": "string",
-          "description": "URL to the user's profile picture"
-        },
-        "isVerified": {
-          "type": "boolean",
-          "description": "Whether the user's email or identity is verified"
-        }
-      },
-      "required": ["uid", "email", "role", "createdAt"]
-    },
-    "Listing": {
-      "title": "Listing",
-      "description": "Marketplace listing for property, vehicle, land, or rental",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string", "enum": ["property", "rental", "land", "vehicle"] },
-        "subcategory": { "type": "string" },
-        "price": { "type": "number" },
-        "currency": { "type": "string" },
-        "city": { "type": "string" },
-        "location": { "type": "string" },
-        "listingType": { "type": "string", "enum": ["sale", "rent"] },
-        "ownerId": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "active", "sold", "rented", "archived"] },
-        "isFeatured": { "type": "boolean" },
-        "isVerified": { "type": "boolean" },
-        "verificationStatus": { "type": "string", "enum": ["pending", "verified", "rejected"] },
-        "legalChecked": { "type": "boolean" },
-        "ownershipVerified": { "type": "boolean" },
-        "images": { "type": "array" },
-        "features": { "type": "object" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "category", "price", "city", "listingType", "ownerId", "status", "createdAt"]
-    },
-    "ProfessionalService": {
-      "title": "Professional Service",
-      "description": "Service offered by a professional",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "providerId": { "type": "string" },
-        "status": { "type": "string", "enum": ["active", "hidden"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "category", "providerId", "status", "createdAt"]
-    },
-    "Inquiry": {
-      "title": "Inquiry",
-      "description": "A lead or message sent to a listing owner",
-      "type": "object",
-      "properties": {
-        "listingId": { "type": "string" },
-        "senderId": { "type": "string" },
-        "receiverId": { "type": "string" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["listingId", "senderId", "receiverId", "message", "createdAt"]
-    },
-    "Article": {
-      "title": "Article",
-      "description": "Article/News/Report content",
-      "type": "object",
-      "properties": {
+        "id": { "type": "string", "description": "The unique slug for the review." },
         "title": { "type": "string" },
         "slug": { "type": "string" },
-        "summary": { "type": "string" },
-        "content": { "type": "string" },
-        "category": { "type": "string" },
-        "language": { "type": "string", "enum": ["en", "so"] },
+        "status": { 
+          "type": "string", 
+          "enum": ["draft", "pending", "approved", "rejected", "archived"] 
+        },
+        "category": { 
+          "type": "string",
+          "enum": ["real-estate", "finance", "tech", "learning", "market"]
+        },
         "featuredImage": { "type": "string" },
-        "authorId": { "type": "string" },
-        "isFeatured": { "type": "boolean" },
-        "published": { "type": "boolean" },
-        "views": { "type": "number" },
+        "excerpt": { "type": "string" },
+        "introduction": { "type": "string" },
+        "whatIsIt": { "type": "string" },
+        "keyFeatures": { "type": "array", "items": { "type": "string" } },
+        "pros": { "type": "array", "items": { "type": "string" } },
+        "cons": { "type": "array", "items": { "type": "string" } },
+        "bestFor": { "type": "string" },
+        "pricingOverview": { "type": "string" },
+        "finalVerdict": { "type": "string" },
+        "rating": { "type": "number" },
+        "readingTime": { "type": "string" },
+        "publishDate": { "type": "string" },
+        "brandName": { "type": "string" },
+        "brandLogoLetter": { "type": "string" },
+        "affiliateUrl": { "type": "string" },
+        "ctaSummary": { "type": "string" },
+        "seoTitle": { "type": "string" },
+        "metaDescription": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["title", "slug", "content", "category", "language", "authorId", "published", "createdAt"]
-    },
-    "Broker": {
-      "title": "Broker",
-      "description": "Legally verified property transaction broker application and profile",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "fullName": { "type": "string" },
-        "phone": { "type": "string" },
-        "whatsapp": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "region": { "type": "string" },
-        "city": { "type": "string" },
-        "officeAddress": { "type": "string" },
-        "governmentIdUrl": { "type": "string" },
-        "businessLicenseUrl": { "type": "string" },
-        "brokerCertificateUrl": { "type": "string" },
-        "profilePhotoUrl": { "type": "string" },
-        "yearsOfExperience": { "type": "number" },
-        "areasOfOperation": { "type": "array" },
-        "propertySpecialization": { "type": "array" },
-        "languagesSpoken": { "type": "array" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "suspended"] },
-        "isVerified": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "fullName", "phone", "whatsapp", "email", "region", "city", "officeAddress", "status", "isVerified", "createdAt"]
-    },
-    "Agreement": {
-      "title": "Agreement",
-      "description": "Legal agreement for property/vehicle transactions",
-      "type": "object",
-      "properties": {
-        "agreementId": { "type": "string" },
-        "date": { "type": "string", "format": "date-time" },
-        "type": { "type": "string", "enum": ["propertySale", "propertyRental", "vehicleSale", "vehicleRental", "commission"] },
-        "status": { "type": "string", "enum": ["active", "completed", "cancelled"] },
-        "partyA": { "type": "object" },
-        "partyB": { "type": "object" },
-        "assetInfo": { "type": "object" },
-        "terms": { "type": "string" },
-        "qrCode": { "type": "string" },
-        "pdfUrl": { "type": "string" },
-        "createdBy": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["agreementId", "date", "type", "status", "partyA", "partyB", "assetInfo", "terms", "createdAt"]
-    },
-    "Notification": {
-      "title": "Notification",
-      "description": "System-generated or transactional direct user and admin notifications",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "message": { "type": "string" },
-        "type": { "type": "string", "enum": ["PROPERTY", "PAYMENT", "AGREEMENT", "VERIFICATION", "INQUIRY", "SYSTEM"] },
-        "read": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "title", "message", "type", "read", "createdAt"]
-    },
-    "CompanyProfile": {
-      "title": "Company Profile",
-      "description": "Employer and company branding profile",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "logo": { "type": "string" },
-        "description": { "type": "string" },
-        "website": { "type": "string" },
-        "location": { "type": "string" },
-        "size": { "type": "string" },
-        "isVerified": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "ownerId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "logo", "description", "location", "isVerified", "status", "ownerId", "createdAt"]
-    },
-    "CandidateProfile": {
-      "title": "Candidate Career Profile",
-      "description": "Career and resume profile for job seekers",
-      "type": "object",
-      "properties": {
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "bio": { "type": "string" },
-        "skills": { "type": "array" },
-        "education": { "type": "array" },
-        "experience": { "type": "array" },
-        "languages": { "type": "array" },
-        "certifications": { "type": "array" },
-        "portfolioLinks": { "type": "array" },
-        "resumeUrl": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["displayName", "skills", "education", "experience", "createdAt"]
-    },
-    "Job": {
-      "title": "Job Posting",
-      "description": "Premium job vacancy listed on the platform",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "companyId": { "type": "string" },
-        "companyName": { "type": "string" },
-        "companyLogo": { "type": "string" },
-        "category": { "type": "string" },
-        "location": { "type": "string" },
-        "description": { "type": "string" },
-        "requirements": { "type": "string" },
-        "salaryMin": { "type": "number" },
-        "salaryMax": { "type": "number" },
-        "currency": { "type": "string" },
-        "employmentType": { "type": "string", "enum": ["full-time", "part-time", "remote", "contract", "freelance"] },
-        "workplaceType": { "type": "string", "enum": ["on-site", "hybrid", "remote"] },
-        "isUrgent": { "type": "boolean" },
-        "isFeatured": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "expired"] },
-        "ownerId": { "type": "string" },
-        "deadline": { "type": "string", "format": "date-time" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "applicationEmail": { "type": "string" },
-        "howToApplyInstructions": { "type": "string" }
-      },
-      "required": ["title", "companyId", "companyName", "category", "location", "description", "employmentType", "workplaceType", "status", "ownerId", "createdAt"]
-    },
-    "JobApplication": {
-      "title": "Job Application",
-      "description": "Submission of candidacy for an open listing",
-      "type": "object",
-      "properties": {
-        "jobId": { "type": "string" },
-        "jobTitle": { "type": "string" },
-        "companyId": { "type": "string" },
-        "companyName": { "type": "string" },
-        "candidateId": { "type": "string" },
-        "candidateName": { "type": "string" },
-        "candidateEmail": { "type": "string" },
-        "candidatePhone": { "type": "string" },
-        "resumeUrl": { "type": "string" },
-        "coverLetter": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "reviewed", "shortlisted", "rejected", "hired"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["jobId", "jobTitle", "companyId", "companyName", "candidateId", "candidateName", "candidateEmail", "resumeUrl", "status", "createdAt"]
-    },
-    "Contact": {
-      "title": "Contact",
-      "description": "Simple quick contact message submission",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "phone": { "type": "string" },
-        "subject": { "type": "string" },
-        "userId": { "type": "string" },
-        "emailSent": { "type": "boolean" }
-      },
-      "required": ["name", "email", "message", "createdAt"]
-    },
-    "Idea": {
-      "title": "Community Idea",
-      "description": "Suggestion, feedback, or innovation proposal submitted by the community",
-      "type": "object",
-      "properties": {
-        "focusTitle": { "type": "string" },
-        "category": { "type": "string" },
-        "suggestion": { "type": "string" },
-        "userId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "emailSent": { "type": "boolean" }
-      },
-      "required": ["focusTitle", "category", "suggestion", "createdAt"]
+      "required": ["title", "slug", "status", "category"]
     }
   },
   "firestore": {
-    "/contacts/{contactId}": {
-      "schema": "Contact",
-      "description": "Collection of simple easy-contact form submissions"
-    },
-    "/ideas/{ideaId}": {
-      "schema": "Idea",
-      "description": "Collection of community ideas and innovation hub submissions"
-    },
-    "/users/{userId}": {
-      "schema": "User",
-      "description": "Collection of user profile documents"
-    },
-    "/admins/{adminId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "role": { "type": "string", "enum": ["admin"] }
-        }
-      },
-      "description": "Special collection to identify platform administrators"
-    },
-    "/listings/{listingId}": {
-      "schema": "Listing",
-      "description": "Collection of marketplace listings"
-    },
-    "/professionalServices/{serviceId}": {
-      "schema": "ProfessionalService",
-      "description": "Collection of professional services"
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": "Inquiry",
-      "description": "Collection of inquiries"
-    },
-    "/articles/{articleId}": {
-      "schema": "Article",
-      "description": "Collection of articles, news, and reports"
-    },
-    "/trustAuditLogs/{logId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "listingId": { "type": "string" },
-          "adminId": { "type": "string" },
-          "action": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Audit log for trust and verification actions"
-    },
-    "/contactMessages/{messageId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "fullName": { "type": "string" },
-          "email": { "type": "string" },
-          "inquiryType": { "type": "string" },
-          "message": { "type": "string" },
-          "status": { "type": "string", "enum": ["unread", "read", "archived"] },
-          "userId": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Collection of contact form submissions"
-    },
-    "/brokers/{brokerId}": {
-      "schema": "Broker",
-      "description": "Collection of verified broker applications and registry records"
-    },
-    "/brokerApplications/{applicationId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "userId": { "type": "string" },
-          "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Collection of full broker registration applications"
-    },
-    "/brokerProfiles/{profileId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "userId": { "type": "string" },
-          "isVerified": { "type": "boolean" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Collection of public broker profiles for verified registries"
-    },
-    "/legalAudits/{auditId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "userId": { "type": "string" },
-          "brokerId": { "type": "string" },
-          "details": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Confidential and verified anti-fraud legal audit records per broker"
-    },
-    "/agreements/{agreementId}": {
-      "schema": "Agreement",
-      "description": "Collection of legal agreements"
-    },
-    "/notifications/{notificationId}": {
-      "schema": "Notification",
-      "description": "In-app system and direct user notifications"
-    },
-    "/companies/{companyId}": {
-      "schema": "CompanyProfile",
-      "description": "Employer and company profile descriptions"
-    },
-    "/candidateProfiles/{candidateId}": {
-      "schema": "CandidateProfile",
-      "description": "User career resumes and visual profiles"
-    },
-    "/jobs/{jobId}": {
-      "schema": "Job",
-      "description": "Collection of listed high-end job vacancies"
-    },
-    "/jobApplications/{applicationId}": {
-      "schema": "JobApplication",
-      "description": "Collection of active and historic candidate applications"
+    "/editorial_reviews/{id}": {
+      "schema": "EditorialReview",
+      "description": "Editorial partner reviews and market insights."
     }
   }
 }
