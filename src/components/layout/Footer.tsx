@@ -44,28 +44,21 @@ export default function Footer() {
     );
   }
 
-  const propertiesPortfolio = [
-    { name: t('properties.houses') || 'Houses', path: '/properties?subcategory=house' },
-    { name: t('properties.apartments') || 'Apartments', path: '/properties?subcategory=apartment' },
-    { name: t('properties.land') || 'Land & Plots', path: '/properties?subcategory=land' },
-    { name: t('properties.commercial') || 'Commercial Spaces', path: '/properties?subcategory=commercial' },
-    { name: t('properties.villas') || 'Villas & Estates', path: '/properties?subcategory=villa' },
-    { name: t('properties.luxuryHomes') || 'Luxury Homes', path: '/properties?subcategory=luxury' }
+  const marketplaceLinks = [
+    { name: t('Properties') || 'Properties', path: '/properties' },
+    { name: t('Vehicles') || 'Vehicles', path: '/vehicles' },
+    { name: t('Agents') || 'Agents', path: '/agents' }
   ];
 
-  const vehicleFleet = [
-    { name: t('vehicles.suvs') || 'SUVs', path: '/vehicles?subcategory=SUV' },
-    { name: t('vehicles.sedans') || 'Sedans', path: '/vehicles?subcategory=Sedan' },
-    { name: t('vehicles.trucks') || 'Trucks', path: '/vehicles?subcategory=Truck' },
-    { name: t('vehicles.luxury') || 'Luxury Vehicles', path: '/vehicles?subcategory=Lux' }
+  const companyLinks = [
+    { name: t('About') || 'About', path: '/about' },
+    { name: t('Contact') || 'Contact', path: '/contact' }
   ];
 
-  const corporateLinks = [
-    { name: t('Ecosystem') || 'Ecosystem', path: '/ecosystem' },
-    { name: t('About') || 'About Us', path: '/about' },
-    { name: t('Contact') || 'Contact', path: '/contact' },
+  const legalLinks = [
     { name: t('Privacy Policy') || 'Privacy Policy', path: '/privacy' },
-    { name: t('Terms of Service') || 'Terms of Service', path: '/terms' }
+    { name: t('Terms of Service') || 'Terms of Service', path: '/terms' },
+    { name: t('Disclaimer') || 'Disclaimer', path: '/disclaimer' }
   ];
 
   return (
@@ -100,33 +93,14 @@ export default function Footer() {
         </div>
 
         {/* Links Categories Grid - Perfectly Unified and Responsive */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 mb-16">
           {/* Marketplace Category */}
           <div>
             <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
               Marketplace
             </h3>
             <ul className="space-y-4">
-              {propertiesPortfolio.map((link, idx) => (
-                <li key={`${link.name}-${idx}`}>
-                  <Link 
-                    to={link.path} 
-                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Vehicles Category */}
-          <div>
-            <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Vehicles
-            </h3>
-            <ul className="space-y-4">
-              {vehicleFleet.map((link, idx) => (
+              {marketplaceLinks.map((link, idx) => (
                 <li key={`${link.name}-${idx}`}>
                   <Link 
                     to={link.path} 
@@ -142,10 +116,10 @@ export default function Footer() {
           {/* Company Category */}
           <div>
             <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Navigation & Ecosystem
+              Company
             </h3>
             <ul className="space-y-4">
-              {corporateLinks.map((link, idx) => (
+              {companyLinks.map((link, idx) => (
                 <li key={`${link.name}-${idx}`}>
                   <Link 
                     to={link.path} 
@@ -198,34 +172,25 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright on Left, Horizontal Legal Links in Center, Socials on Right */}
-        <div className="pt-8 border-t border-white/5 flex flex-col lg:flex-row items-center justify-between gap-6">
+        {/* Bottom Bar: Copyright on Left, Legal Row in Center, Socials on Right */}
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           
           {/* Left Area: Copyright */}
-          <p className="text-white/30 text-[10px] tracking-widest uppercase font-medium text-center lg:text-left">
+          <p className="text-white/30 text-[10px] tracking-widest uppercase font-medium text-center md:text-left">
             &copy; {currentYear} AmaanEstate &mdash; Verified Marketplace.
           </p>
 
-          {/* Center Area: Horizontal Clean Legal Bar */}
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 my-1 lg:my-0">
-            <Link 
-              to="/privacy" 
-              className="text-white/30 hover:text-[#C5A059] transition-colors text-[10px] tracking-widest uppercase font-semibold"
-            >
-              {t('Privacy Policy') || 'Privacy Policy'}
-            </Link>
-            <Link 
-              to="/terms" 
-              className="text-white/30 hover:text-[#C5A059] transition-colors text-[10px] tracking-widest uppercase font-semibold"
-            >
-              {t('Terms of Service') || 'Terms of Service'}
-            </Link>
-            <Link 
-              to="/disclaimer" 
-              className="text-white/30 hover:text-[#C5A059] transition-colors text-[10px] tracking-widest uppercase font-semibold"
-            >
-              {t('Disclaimer') || 'Disclaimer'}
-            </Link>
+          {/* Center Area: Side-by-Side Legal Links */}
+          <div className="flex flex-row flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-white/50">
+            {legalLinks.map((link, idx) => (
+              <Link 
+                key={`${link.name}-${idx}`}
+                to={link.path} 
+                className="hover:text-[#C5A059] transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
 
           {/* Right Area: Socials */}
