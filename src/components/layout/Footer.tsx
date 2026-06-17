@@ -61,9 +61,11 @@ export default function Footer() {
   ];
 
   const corporateLinks = [
-    { name: t('Corporate Portal') || 'Corporate Portal', path: '/' },
-    { name: t('Agreements') || 'Agreements', path: '/agreements' },
-    { name: t('Insights & Reports') || 'Insights & Reports', path: '/news' }
+    { name: t('Ecosystem') || 'Ecosystem', path: '/ecosystem' },
+    { name: t('About') || 'About Us', path: '/about' },
+    { name: t('Contact') || 'Contact', path: '/contact' },
+    { name: t('Privacy Policy') || 'Privacy Policy', path: '/privacy' },
+    { name: t('Terms of Service') || 'Terms of Service', path: '/terms' }
   ];
 
   return (
@@ -88,10 +90,10 @@ export default function Footer() {
                 List Your Property
               </Link>
               <Link 
-                to="/agreements"
+                to="/ecosystem"
                 className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 text-xs font-bold uppercase tracking-wider transition-all duration-300"
               >
-                Legal Agreements
+                Ecosystem Workspace
               </Link>
             </div>
           </div>
@@ -140,7 +142,7 @@ export default function Footer() {
           {/* Company Category */}
           <div>
             <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Company
+              Navigation & Ecosystem
             </h3>
             <ul className="space-y-4">
               {corporateLinks.map((link, idx) => (

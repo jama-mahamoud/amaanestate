@@ -269,6 +269,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Editorial Reviews System
+    match /editorial_reviews/{reviewId} {
+      allow read, write: if true;
+    }
+
     // Contact Messages
     match /contactMessages/{messageId} {
       allow read: if isAdmin();

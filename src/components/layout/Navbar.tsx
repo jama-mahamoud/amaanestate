@@ -62,11 +62,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [currDropdownOpen, setCurrDropdownOpen] = useState(false);
   const [newsDropdownOpen, setNewsDropdownOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const { user } = useAuth();
-  const { language, setLanguage, currency, setCurrency, t } = useSettings();
+  const { language, currency, setCurrency, t } = useSettings();
   
 
   useEffect(() => {
@@ -149,20 +149,9 @@ export default function Navbar() {
     { name: 'Contact', path: '/contact' },
   ], []);
 
-  const toggleLangDropdown = useCallback(() => {
-    setLangDropdownOpen(prev => !prev);
-    setCurrDropdownOpen(false);
-  }, []);
-
   const toggleCurrDropdown = useCallback(() => {
     setCurrDropdownOpen(prev => !prev);
-    setLangDropdownOpen(false);
   }, []);
-
-  const selectLanguage = useCallback((lang: string) => {
-    setLanguage(lang as any);
-    setLangDropdownOpen(false);
-  }, [setLanguage]);
 
   const selectCurrency = useCallback((curr: string) => {
     setCurrency(curr as any);
@@ -219,8 +208,7 @@ export default function Navbar() {
             <MegaMenu key={menu.title} title={t(menu.title)} sections={menu.sections} isDark={true} />
           ))}
           <Link to="/agents" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agents')}</Link>
-          <Link to="/network" className="text-xs font-bold tracking-tight text-[#C5A059] hover:text-white transition-colors whitespace-nowrap shrink-0">{t('Network')}</Link>
-          <Link to="/agreements" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Agreements')}</Link>
+          <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
           
           {/* News Interactive Dropdown */}
           <div 
@@ -274,48 +262,97 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          <Link to="/jobs" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Jobs')}</Link>
-          <Link to="/about" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('About')}</Link>
+          {/* About & Ecosystem Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setAboutDropdownOpen(true)}
+            onMouseLeave={() => setAboutDropdownOpen(false)}
+          >
+            <button 
+              onClick={() => setAboutDropdownOpen(prev => !prev)}
+              className={`text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap outline-none py-2 ${
+                aboutDropdownOpen ? 'text-[#C5A059]' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              <span>{t('About')}</span>
+              <ChevronDown 
+                size={12} 
+                className={`opacity-50 transition-transform duration-300 ${aboutDropdownOpen ? 'rotate-180 text-[#C5A059]' : ''}`} 
+              />
+            </button>
+            <AnimatePresence>
+              {aboutDropdownOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full mt-2 left-0 bg-luxury-charcoal border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[210px] py-1.5 z-50 backdrop-blur-3xl bg-opacity-95"
+                >
+                  <Link 
+                    to="/about"
+                    className="w-full text-left block px-5 py-2 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    {t('About AmaanEstate', 'About AmaanEstate')}
+                  </Link>
+                  <Link 
+                    to="/contact"
+                    className="w-full text-left block px-5 py-2 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059] border-b border-white/5 pb-2.5"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    {t('Contact Us', 'Contact Us')}
+                  </Link>
+                  <div className="px-5 pt-2.5 pb-1">
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#C5A059] block">
+                      {t('Ecosystem Layer', 'Ecosystem Layer')}
+                    </span>
+                  </div>
+                  <Link 
+                    to="/ecosystem"
+                    className="w-full text-left block px-5 py-1.5 hover:bg-white/5 transition-colors text-xs font-semibold text-[#C5A059] hover:text-[#C5A059]/80"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    {t('Ecosystem Explorer', 'Ecosystem Explorer')}
+                  </Link>
+                  <Link 
+                    to="/ecosystem?category=real-estate"
+                    className="w-full text-left block px-7 py-1 hover:bg-white/5 transition-colors text-[11px] text-neutral-400 hover:text-white"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    &bull; {t('Real Estate Partners', 'Real Estate Partners')}
+                  </Link>
+                  <Link 
+                    to="/ecosystem?category=finance"
+                    className="w-full text-left block px-7 py-1 hover:bg-white/5 transition-colors text-[11px] text-neutral-400 hover:text-white"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    &bull; {t('Finance Partners', 'Finance Partners')}
+                  </Link>
+                  <Link 
+                    to="/ecosystem?category=tech"
+                    className="w-full text-left block px-7 py-1 hover:bg-white/5 transition-colors text-[11px] text-neutral-400 hover:text-white"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    &bull; {t('Technology Partners', 'Technology Partners')}
+                  </Link>
+                  <Link 
+                    to="/ecosystem?category=market"
+                    className="w-full text-left block px-7 py-1 hover:bg-white/5 transition-colors text-[11px] text-neutral-400 hover:text-white pb-1.5"
+                    onClick={() => setAboutDropdownOpen(false)}
+                  >
+                    &bull; {t('Market Insights', 'Market Insights')}
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link to="/contact" className="text-xs font-bold tracking-tight hover:text-[#C5A059] transition-colors whitespace-nowrap shrink-0">{t('Contact')}</Link>
         </nav>
 
         {/* Desktop Actions - Right */}
         <div className="hidden lg:flex items-center gap-5 xl:gap-6 shrink-0 justify-end ml-4">
              {/* Language Dropdown Start */}
-             <div className="relative">
-              <div 
-                className="flex items-center gap-1 transition-colors cursor-pointer text-xs font-bold text-white/60 hover:text-white"
-                onClick={toggleLangDropdown}
-              >
-                <span>{language === 'en' ? 'EN' : 'SOM'}</span> <ChevronDown size={10} />
-              </div>
-              <AnimatePresence>
-                {langDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full mt-2 right-0 bg-luxury-charcoal border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[120px] py-2 z-50"
-                  >
-                    <button 
-                      onClick={() => selectLanguage('en')}
-                      className="w-full text-left px-5 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs font-medium text-white"
-                    >
-                      <span>English</span>
-                      {language === 'en' && <Check size={12} className="text-[#C5A059]" />}
-                    </button>
-                    <button 
-                      onClick={() => selectLanguage('so')}
-                      className="w-full text-left px-5 py-2 hover:bg-white/5 transition-colors flex items-center justify-between text-xs font-medium text-white"
-                    >
-                      <span>Soomaali</span>
-                      {language === 'so' && <Check size={12} className="text-[#C5A059]" />}
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            
             {user && <NotificationBell isDark={true} />}
             
             {user ? (
@@ -394,9 +431,8 @@ export default function Navbar() {
                 ))}
 
                 <Link to="/agents" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agents')}</Link>
-                <Link to="/network" onClick={closeMobileMenu} className="text-lg font-bold text-[#C5A059] hover:text-[#C5A059]/80 transition-all py-4 border-b border-white/5">{t('Network')}</Link>
-                <Link to="/agreements" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Agreements')}</Link>
-                
+                <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>
+
                 {/* News Collapsible Accordion on Mobile */}
                 <div className="border-b border-white/5 py-4 w-full text-left">
                   <button 
@@ -430,20 +466,60 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
 
-                <Link to="/jobs" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Jobs')}</Link>
-                <Link to="/about" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('About')}</Link>
+                {/* About & Ecosystem Collapsible Accordion on Mobile */}
+                <div className="border-b border-white/5 py-4 w-full text-left">
+                  <button 
+                    onClick={() => setActiveAccordion(activeAccordion === 'About' ? null : 'About')} 
+                    className="w-full flex justify-between items-center text-lg font-bold text-white hover:text-[#C5A059] transition-all"
+                  >
+                    <span>{t('About')}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${activeAccordion === 'About' ? 'rotate-180 text-[#C5A059]' : 'text-white/20'}`} />
+                  </button>
+                  <AnimatePresence>
+                    {activeAccordion === 'About' && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="py-4 pl-4 border-l border-white/5 flex flex-col gap-3">
+                          <Link to="/about" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1">
+                            {t('About AmaanEstate', 'About AmaanEstate')}
+                          </Link>
+                          <Link to="/contact" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1 border-b border-white/5 pb-2">
+                            {t('Contact Us', 'Contact Us')}
+                          </Link>
+                          
+                          <span className="text-[10px] font-mono tracking-wider text-[#C5A059] uppercase mt-1 block">
+                            {t('Ecosystem')}
+                          </span>
+                          <Link to="/ecosystem" onClick={closeMobileMenu} className="text-[#C5A059] hover:text-[#C5A059]/80 font-bold transition-colors text-sm py-0.5">
+                            {t('Ecosystem Explorer', 'Ecosystem Explorer')}
+                          </Link>
+                          <Link to="/ecosystem?category=real-estate" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                            &bull; {t('Real Estate Partners', 'Real Estate Partners')}
+                          </Link>
+                          <Link to="/ecosystem?category=finance" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                            &bull; {t('Finance Partners', 'Finance Partners')}
+                          </Link>
+                          <Link to="/ecosystem?category=tech" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                            &bull; {t('Technology Partners', 'Technology Partners')}
+                          </Link>
+                          <Link to="/ecosystem?category=market" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                            &bull; {t('Market Insights', 'Market Insights')}
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <Link to="/contact" onClick={closeMobileMenu} className="text-lg font-bold text-white hover:text-[#C5A059] transition-all py-4 border-b border-white/5">{t('Contact')}</Link>
               </nav>
               
               <div className="pt-4 pb-12 flex flex-col space-y-4">
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={() => selectLanguage(language === 'en' ? 'so' : 'en')}
-                    variant="outline" 
-                    className="flex-1 border-white/10 bg-white/5 text-white hover:bg-white hover:text-black transition-all h-12 rounded-xl font-bold uppercase tracking-widest text-[9px]"
-                  >
-                    🌐 {language === 'en' ? t('SOM') : t('EN')}
-                  </Button>
                   <Button 
                     onClick={() => selectCurrency(currency === 'ETB' ? 'USD' : 'ETB')}
                     variant="outline" 

@@ -601,7 +601,7 @@ app.post("/api/chat", async (req, res) => {
     genAIClient = getGeminiClient();
   } catch (err: any) {
     console.error("[PROD] Gemini client initialization error:", err.message);
-    return res.json({ text: "Waan ka xunnahay, adeegga Amaan AI hadda diyaar ma aha. Fadlan hubi in GEMINI_API_KEY la qabeeyay." });
+    return res.json({ text: "I'm sorry, the Amaan AI service is currently unavailable. Please check the GEMINI_API_KEY configuration." });
   }
 
   try {
@@ -795,7 +795,7 @@ ${contextData.articlesStr}
     const errMsg = error.message || "Unknown API issue";
     const cleanedMsg = errMsg.replace(/AIzaSy[A-Za-z0-9_\-]{33}/g, "[REDACTED_API_KEY]");
     console.error("[PROD] AI Assistant API error:", cleanedMsg);
-    res.json({ text: "Waan ka xunnahay, adeegga AI hadda wuu mashquulsan yahay. Fadlan dib iskugu day waxyar ka dib." });
+    res.json({ text: "I'm sorry, the AI service is currently busy. Please try again in a few moments." });
   }
 });
 
@@ -1265,7 +1265,19 @@ async function startServer() {
       }
 
       if (templatePath) {
-        res.sendFile(templatePath);
+        let htmlContents = fs.readFileSync(templatePath, 'utf8');
+        const firebaseRuntimeConfig = {
+          apiKey: process.env.VITE_FIREBASE_API_KEY || "",
+          authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "amaanestate-97f4f.firebaseapp.com",
+          projectId: process.env.VITE_FIREBASE_PROJECT_ID || "amaanestate-97f4f",
+          storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "amaanestate-97f4f.firebasestorage.app",
+          messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "978752259304",
+          appId: process.env.VITE_FIREBASE_APP_ID || "1:978752259304:web:ae1553196f9854566d7e55",
+          firestoreDatabaseId: process.env.VITE_FIREBASE_DATABASE_ID || "(default)"
+        };
+        const configScript = `<script>window.FIREBASE_CONFIG = ${JSON.stringify(firebaseRuntimeConfig)};</script>`;
+        htmlContents = htmlContents.replace('<head>', `<head>${configScript}`);
+        res.status(200).set({ 'Content-Type': 'text/html' }).send(htmlContents);
       } else {
         console.warn("[SEO SERVER] index.html not found in any common build directories at runtime. Rendering dynamic fallback shell.");
         res.status(200).set({ 'Content-Type': 'text/html' }).end(`<!doctype html>

@@ -102,11 +102,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             userDoc = await getDoc(userRef);
             
             if (!userDoc.exists()) {
+              const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
               const newProfile: UserProfile = {
                 uid: user.uid,
-                displayName: user.displayName || 'Anonymous User',
+                displayName: user.displayName || 'Authorized Admin',
                 email: user.email || '',
-                role: 'normal_user' as UserRole,
+                role: (isAdminEmail ? 'admin' : 'normal_user') as UserRole,
                 createdAt: serverTimestamp(),
                 photoURL: user.photoURL,
                 isVerified: user.emailVerified,
@@ -120,10 +121,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               // Check for minor background updates
               const existingData = userDoc.data() as UserProfile;
+              const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
               
-              const normalizedRole = existingData.role 
+              let normalizedRole = existingData.role 
                 ? (existingData.role.toString().toLowerCase().trim() as UserRole)
                 : 'normal_user';
+
+              if (isAdminEmail && normalizedRole !== 'admin') {
+                normalizedRole = 'admin';
+                try {
+                  await setDoc(userRef, { role: 'admin' }, { merge: true });
+                } catch (updateErr) {
+                  console.warn("Could not write upgraded admin role to Firestore:", updateErr);
+                }
+              }
 
               setProfile({
                 ...existingData,
@@ -146,12 +157,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (docErr) {
             console.warn("Failed to fetch user doc from active server (profile loaded from local session memory):", docErr);
+            const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
             // Fallback profile if offline/failed to fetch from server
             setProfile({
               uid: user.uid,
-              displayName: user.displayName || 'User',
+              displayName: user.displayName || 'Authorized Admin',
               email: user.email || '',
-              role: 'normal_user' as UserRole,
+              role: (isAdminEmail ? 'admin' : 'normal_user') as UserRole,
               photoURL: user.photoURL,
               isVerified: user.emailVerified,
               createdAt: serverTimestamp(),
@@ -164,7 +176,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profileUnsubscribe = onSnapshot(userRef, (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data() as UserProfile;
-              const normalizedRole = data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user';
+              const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
+              let normalizedRole = data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user';
+              if (isAdminEmail) {
+                normalizedRole = 'admin';
+              }
               setProfile({
                 ...data,
                 role: normalizedRole

@@ -20,7 +20,11 @@ import {
   XCircle,
   SlidersHorizontal,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Building,
+  Coins,
+  Cpu,
+  LineChart
 } from 'lucide-react';
 import { ListingFilter } from '@/services/listingService';
 import { Link } from 'react-router-dom';
@@ -453,6 +457,22 @@ export default function Home() {
 
           <div className="w-full max-w-5xl mt-8 md:mt-12">
             <HomeSearch onSearch={handleSearch} />
+            
+            {/* Action buttons under search bar */}
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <Link 
+                to="/agents/register" 
+                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#C5A059] bg-[#C5A059]/10 hover:bg-[#C5A059] hover:text-black border border-[#C5A059]/20 hover:border-[#C5A059] px-6 py-3.5 rounded-xl transition-all duration-300"
+              >
+                Become Agency
+              </Link>
+              <Link 
+                to="/list-property" 
+                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white bg-white/5 hover:bg-white/15 border border-white/10 px-6 py-3.5 rounded-xl transition-all duration-300"
+              >
+                List Your Property
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -623,6 +643,107 @@ export default function Home() {
             {vehicles.filter(v => v.status === 'ACTIVE' || v.status === 'VERIFIED' || (v as any).visibility === 'public').slice(0, 4).map(vehicle => (
               <VehicleCard key={vehicle.id} vehicle={vehicle as VehicleListing} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AmaanEstate Ecosystem Section */}
+      <section className="py-12 md:py-16 lg:py-24 bg-super-black border-t border-white/5 relative overflow-hidden">
+        {/* Subtle decorative glow */}
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#C5A059]/[0.02] rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#C5A059] uppercase tracking-[0.2em] bg-[#C5A059]/5 border border-[#C5A059]/20 px-3 py-1 rounded-full mb-4">
+                <Sparkles className="w-3 h-3" /> Synergistic Layer
+              </span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight mb-4">
+                AmaanEstate Ecosystem
+              </h2>
+              <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-xl font-light">
+                Secure maximum investment leverage. Uncover elite partner channels, banking channels, tech stacks, and predictive data feeds selected to support your growth.
+              </p>
+            </div>
+            
+            <div className="shrink-0">
+              <Link 
+                to="/ecosystem" 
+                className="inline-flex items-center gap-2 group text-xs font-bold text-black bg-[#C5A059] hover:bg-white px-6 py-3.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#C5A059]/10"
+              >
+                Explore All Partners <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {[
+              {
+                title: 'Real Estate Partners',
+                icon: Building,
+                tag: 'Vetted Developers & Legal',
+                desc: 'Premium developers, building advisors, and legal specialists ensuring secure titles and friction-free land acquisitions.',
+                category: 'real-estate'
+              },
+              {
+                title: 'Finance Partners',
+                icon: Coins,
+                tag: 'Liquidity & Private Financing',
+                desc: 'Institutional banks, micro-finance desks, and vetted diaspora transfer channels facilitating reliable capital injection.',
+                category: 'finance'
+              },
+              {
+                title: 'Technology Partners',
+                icon: Cpu,
+                tag: 'Realtech CRM & IoT Systems',
+                desc: 'State-of-the-art property management suites, engineering platforms, and intelligent automation systems.',
+                category: 'tech'
+              },
+              {
+                title: 'Market Insights',
+                icon: LineChart,
+                tag: 'Historical Growth & Reports',
+                desc: 'Comprehensive local market analytical reports, microeconomic trends, and infrastructure pipeline reviews.',
+                category: 'market'
+              }
+            ].map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="group relative bg-[#0d0d10] border border-white/5 rounded-2xl p-6 sm:p-8 hover:border-[#C5A059]/40 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between h-full"
+                >
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.02] group-hover:bg-[#C5A059]/10 border border-white/5 group-hover:border-[#C5A059]/20 flex items-center justify-center text-neutral-400 group-hover:text-[#C5A059] transition-all duration-300">
+                      <IconComponent size={20} />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-[#C5A059]/80 font-bold block">
+                        {item.tag}
+                      </span>
+                      <h3 className="text-lg font-serif text-white group-hover:text-[#C5A059] transition-colors leading-tight">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs text-neutral-500 font-light leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/ecosystem?category=${item.category}`}
+                    className="mt-6 inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C5A059] group-hover:text-white transition-colors"
+                  >
+                    Explore Resources <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>

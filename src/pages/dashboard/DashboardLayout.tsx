@@ -53,6 +53,7 @@ function DashboardContent() {
       items.push({ name: 'Content Review', path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
       items.push({ name: 'Agencies', path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
       items.push({ name: 'Contracts', path: '/dashboard/agreements', icon: <FileSignature size={18} /> });
+      items.push({ name: 'Partner Reviews', path: '/admin/reviews', icon: <Briefcase size={18} /> });
       items.push({ name: 'Analytics', path: '/dashboard/trust', icon: <Sparkles size={18} /> });
       items.push({ name: 'Verification', path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
       items.push({ name: 'Activity', path: '/dashboard/risk', icon: <Menu size={18} /> }); 

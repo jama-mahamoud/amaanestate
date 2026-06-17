@@ -27,6 +27,7 @@ function PageFallback() {
 const Home = lazy(() => import('./pages/Home'));
 const Agreements = lazy(() => import('./pages/Agreements'));
 const AdminAgreements = lazy(() => import('./pages/admin/AdminAgreements'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
 const PublicVerification = lazy(() => import('./pages/verify/PublicVerification'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
@@ -76,6 +77,7 @@ const DashboardSettings = lazy(() => import('./pages/dashboard/DashboardSettings
 const DashboardArticles = lazy(() => import('./pages/dashboard/DashboardArticles'));
 const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
 const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
+const DashboardReviews = lazy(() => import('./pages/dashboard/DashboardReviews'));
 
 // Additional Dashboard Sub-Modules
 const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
@@ -105,6 +107,7 @@ export default function App() {
                 <Route path="list-property" element={<PropertyListingFormPage />} />
                 <Route path="agreements" element={<Agreements />} />
                 <Route path="admin/agreements" element={<AdminAgreements />} />
+                <Route path="admin/reviews" element={<AdminReviews />} />
                 <Route path="verify/:id" element={<PublicVerification />} />
                 
                 {/* Vehicles Module */}
@@ -128,6 +131,9 @@ export default function App() {
                 <Route path="company/:id" element={<CompanyDetailPage />} />
                 <Route path="employer/dashboard" element={<EmployerDashboardPage />} />
                 <Route path="network" element={<NetworkPage />} />
+                <Route path="network/:slug" element={<NetworkPage />} />
+                <Route path="ecosystem" element={<NetworkPage />} />
+                <Route path="ecosystem/:slug" element={<NetworkPage />} />
                 <Route path="news" element={<News />} />
                 <Route path="news/english" element={<News />} />
                 <Route path="news/:id" element={<ArticleDetails />} />
@@ -163,6 +169,7 @@ export default function App() {
                   <Route path="articles" element={<DashboardArticles />} />
                   <Route path="articles/create" element={<CreateArticle />} />
                   <Route path="articles/edit/:id" element={<EditArticle />} />
+                  <Route path="reviews" element={<AdminReviews />} />
                   <Route path="agreements" element={<AdminAgreements />} />
                   <Route path="trust" element={<TrustEngine />} />
                   <Route path="verification" element={<VerificationCenter />} />
