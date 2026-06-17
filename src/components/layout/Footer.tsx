@@ -90,10 +90,10 @@ export default function Footer() {
                 List Your Property
               </Link>
               <Link 
-                to="/ecosystem"
+                to="/contact"
                 className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 text-xs font-bold uppercase tracking-wider transition-all duration-300"
               >
-                Ecosystem Workspace
+                Become Agency
               </Link>
             </div>
           </div>
