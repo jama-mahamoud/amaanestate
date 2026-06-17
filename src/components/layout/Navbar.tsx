@@ -263,7 +263,7 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* About & Ecosystem Dropdown */}
+          {/* About Dropdown */}
           <div 
             className="relative"
             onMouseEnter={() => setAboutDropdownOpen(true)}
@@ -291,19 +291,13 @@ export default function Navbar() {
                 >
                   <Link 
                     to="/about"
-                    className="w-full text-left block px-5 py-2 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
+                    className="w-full text-left block px-5 py-2.5 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059]"
                     onClick={() => setAboutDropdownOpen(false)}
                   >
                     {t('About AmaanEstate', 'About AmaanEstate')}
                   </Link>
-                  <Link 
-                    to="/contact"
-                    className="w-full text-left block px-5 py-2 hover:bg-white/5 transition-colors text-xs font-medium text-white hover:text-[#C5A059] border-b border-white/5 pb-2.5"
-                    onClick={() => setAboutDropdownOpen(false)}
-                  >
-                    {t('Contact Us', 'Contact Us')}
-                  </Link>
-                  <div className="px-5 pt-2.5 pb-1">
+
+                  <div className="px-5 pt-2.5 pb-1 border-t border-white/5 mt-1">
                     <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#C5A059] block">
                       {t('Ecosystem Layer', 'Ecosystem Layer')}
                     </span>
@@ -468,7 +462,7 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
 
-                {/* About & Ecosystem Collapsible Accordion on Mobile */}
+                {/* About Collapsible Accordion on Mobile */}
                 <div className="border-b border-white/5 py-4 w-full text-left">
                   <button 
                     onClick={() => setActiveAccordion(activeAccordion === 'About' ? null : 'About')} 
@@ -489,28 +483,29 @@ export default function Navbar() {
                           <Link to="/about" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1">
                             {t('About AmaanEstate', 'About AmaanEstate')}
                           </Link>
-                          <Link to="/contact" onClick={closeMobileMenu} className="text-white/60 hover:text-white transition-colors text-sm py-1 border-b border-white/5 pb-2">
-                            {t('Contact Us', 'Contact Us')}
-                          </Link>
-                          
-                          <span className="text-[10px] font-mono tracking-wider text-[#C5A059] uppercase mt-1 block">
-                            {t('Ecosystem')}
-                          </span>
-                          <Link to="/ecosystem" onClick={closeMobileMenu} className="text-[#C5A059] hover:text-[#C5A059]/80 font-bold transition-colors text-sm py-0.5">
-                            {t('Ecosystem Explorer', 'Ecosystem Explorer')}
-                          </Link>
-                          <Link to="/ecosystem?category=real-estate" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
-                            &bull; {t('Real Estate Partners', 'Real Estate Partners')}
-                          </Link>
-                          <Link to="/ecosystem?category=finance" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
-                            &bull; {t('Finance Partners', 'Finance Partners')}
-                          </Link>
-                          <Link to="/ecosystem?category=tech" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
-                            &bull; {t('Technology Partners', 'Technology Partners')}
-                          </Link>
-                          <Link to="/ecosystem?category=market" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
-                            &bull; {t('Market Insights', 'Market Insights')}
-                          </Link>
+
+                          <div className="pt-2">
+                            <span className="text-[10px] font-mono tracking-wider text-[#C5A059] uppercase mt-1 block">
+                              {t('Ecosystem')}
+                            </span>
+                            <div className="flex flex-col gap-2 mt-2">
+                              <Link to="/ecosystem" onClick={closeMobileMenu} className="text-[#C5A059] hover:text-[#C5A059]/80 font-bold transition-colors text-sm py-0.5">
+                                {t('Ecosystem Explorer', 'Ecosystem Explorer')}
+                              </Link>
+                              <Link to="/ecosystem?category=real-estate" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                                &bull; {t('Real Estate Partners', 'Real Estate Partners')}
+                              </Link>
+                              <Link to="/ecosystem?category=finance" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                                &bull; {t('Finance Partners', 'Finance Partners')}
+                              </Link>
+                              <Link to="/ecosystem?category=tech" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                                &bull; {t('Technology Partners', 'Technology Partners')}
+                              </Link>
+                              <Link to="/ecosystem?category=market" onClick={closeMobileMenu} className="text-white/55 hover:text-white transition-colors text-xs pl-2">
+                                &bull; {t('Market Insights', 'Market Insights')}
+                              </Link>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
