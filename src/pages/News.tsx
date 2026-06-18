@@ -139,7 +139,7 @@ const ArticleCard = ({ article, index, language }: { article: Article; index: nu
       >
         <div className="aspect-[16/10] overflow-hidden bg-white/5 relative">
           <img 
-            src={article.featuredImage || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} 
+            src={typeof article.featuredImage === 'string' ? article.featuredImage : (article.featuredImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800')} 
             className="w-full h-full object-cover transform group-hover:scale-103 transition-transform duration-500 ease-out" 
             alt={article.title} 
             loading="lazy"

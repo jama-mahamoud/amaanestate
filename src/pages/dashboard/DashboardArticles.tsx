@@ -74,7 +74,7 @@ const performEditorialAudit = (article: Article): ValidationReport => {
   }
 
   // Featured Image Check
-  if (!article.featuredImage || article.featuredImage.trim() === '') {
+  if (!article.featuredImage?.url || article.featuredImage.url.trim() === '') {
     issues.push({ field: 'Hero Media Asset', severity: 'warning', message: 'Featured image is unassigned. Visual content anchors are required.' });
     score -= 20;
   }

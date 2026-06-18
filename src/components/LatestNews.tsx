@@ -99,7 +99,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
         {/* Banner Image Container */}
         <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto min-h-[300px] lg:min-h-[480px] overflow-hidden">
           <img 
-            src={article.featuredImage || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200'} 
+            src={typeof article.featuredImage === 'string' ? article.featuredImage : (article.featuredImage?.url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200')} 
             alt={article.title}
             width={800}
             height={500}
@@ -179,7 +179,7 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <img 
-          src={article.featuredImage || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} 
+          src={typeof article.featuredImage === 'string' ? article.featuredImage : (article.featuredImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800')} 
           alt={article.title}
           width={400}
           height={250}

@@ -179,6 +179,12 @@ export interface UserProfile {
 export type ArticleStatus = 'draft' | 'pending' | 'approved' | 'published';
 export type ArticleType = 'update' | 'market_report' | 'announcement' | 'new_project' | 'short_insight';
 
+export interface GalleryImage {
+  url: string;
+  caption: string;
+  linkUrl?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -188,8 +194,8 @@ export interface Article {
   category: string;
   type: ArticleType;
   language: 'en' | 'so';
-  featuredImage?: string;
-  gallery?: string[];
+  featuredImage?: GalleryImage;
+  gallery: GalleryImage[];
   tags?: string[];
   
   // Layout Controls

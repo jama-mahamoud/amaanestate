@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { articleService } from '@/services/articleService';
 import { Article, ArticleStatus } from '@/types';
 import Editor from './Editor';
-import ImageUpload from './ImageUpload';
-import GalleryUpload from './GalleryUpload';
+import SimpleImage from './SimpleImage';
+import SimpleGallery from './SimpleGallery';
 import TagsInput from './TagsInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     category: initialData?.category || 'news',
     type: initialData?.type || 'update',
     language: initialData?.language || 'en',
-    featuredImage: initialData?.featuredImage || '',
+    featuredImage: initialData?.featuredImage || undefined,
     gallery: initialData?.gallery || [],
     tags: initialData?.tags || [],
     
@@ -182,7 +182,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     // Warn about other fields but do not block publishing
     const warnings: string[] = [];
     if (!formData.summary?.trim()) warnings.push('Summary');
-    if (!formData.featuredImage?.trim()) warnings.push('Featured Image');
+    if (!formData.featuredImage?.url?.trim()) warnings.push('Featured Image');
     if (totalWordCount < 40) warnings.push('Word count is low (under 40 words)');
     if (!formData.category?.trim()) warnings.push('Category');
     
@@ -245,9 +245,9 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
 
   const previewContent = (
     <div className={`transition-all duration-500 ease-in-out ${previewSize === 'mobile' ? 'max-w-[390px]' : previewSize === 'tablet' ? 'max-w-[768px]' : 'max-w-6xl'} mx-auto bg-[#070707] min-h-screen rounded-[1.5rem] overflow-hidden border border-white/5 shadow-2xl`}>
-      {formData.featuredImage && (
+      {formData.featuredImage?.url && (
         <div className="w-full aspect-[21/9] relative overflow-hidden">
-          <img src={formData.featuredImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={formData.title} />
+          <img src={formData.featuredImage.url} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={formData.featuredImage.caption || formData.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#070707] via-[#070707]/30 to-transparent" />
         </div>
       )}
@@ -378,17 +378,17 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
               
               <div className="bg-[#0f0f0f]/80 backdrop-blur-xl p-6 sm:p-8 rounded-[1.25rem] border border-white/5 space-y-6 shadow-xl">
                  <div className="p-1 rounded-xl bg-white/[0.01] border border-white/5">
-                   <ImageUpload 
+                   <SimpleImage 
                      label="Featured Image" 
-                     value={formData.featuredImage || ''} 
-                     onChange={(url) => setFormData({...formData, featuredImage: url})} 
+                     value={formData.featuredImage} 
+                     onChange={(image) => setFormData({...formData, featuredImage: image})} 
                    />
                  </div>
                 
                 <div className="pt-2">
-                   <GalleryUpload 
-                     value={formData.gallery || []} 
-                     onChange={(urls) => setFormData({...formData, gallery: urls})} 
+                   <SimpleGallery 
+                     images={formData.gallery || []} 
+                     onChange={(images) => setFormData({...formData, gallery: images})} 
                    />
                 </div>
               </div>
@@ -557,10 +557,10 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
                    </div>
 
                    <div className="space-y-4">
-                      <ImageUpload 
+                      <SimpleImage 
                         label="Social Image" 
-                        value={formData.socialImage || ''} 
-                        onChange={(url) => setFormData({...formData, socialImage: url})} 
+                        value={formData.socialImage ? { url: formData.socialImage, caption: '' } : undefined} 
+                        onChange={(image) => setFormData({...formData, socialImage: image?.url})} 
                       />
 
                       <div className="border border-white/5 bg-white/[0.01] rounded-2xl overflow-hidden shadow-inner">
@@ -607,8 +607,8 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
                             {seoPreviewTab === 'social' && (
                                <div className="w-full text-left max-w-xs bg-white/[0.01] rounded-lg border border-white/5 overflow-hidden font-sans">
                                   <div className="aspect-[1.91/1] w-full bg-white/5 relative flex items-center justify-center overflow-hidden">
-                                     {formData.socialImage || formData.featuredImage ? (
-                                        <img src={formData.socialImage || formData.featuredImage || ''} className="w-full h-full object-cover" alt="Social card" />
+                                     {formData.socialImage || formData.featuredImage?.url ? (
+                                        <img src={formData.socialImage || formData.featuredImage?.url || ''} className="w-full h-full object-cover" alt="Social card" />
                                      ) : (
                                         <div className="text-center p-2 text-[10px] text-white/20">Preview</div>
                                      )}

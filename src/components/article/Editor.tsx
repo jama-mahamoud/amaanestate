@@ -4,7 +4,6 @@ import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import { FloatingMenu } from '@tiptap/extension-floating-menu';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
@@ -15,7 +14,6 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
 import Placeholder from '@tiptap/extension-placeholder';
 import Youtube from '@tiptap/extension-youtube';
@@ -768,7 +766,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
         codeBlock: false,
         horizontalRule: false,
       }),
-      Underline,
+      // Underline,
       Typography,
       TextStyle,
       Color,
@@ -787,12 +785,12 @@ export default function Editor({ content, onChange }: { content: string, onChang
         types: ['heading', 'paragraph', 'callout'],
       }),
       ResizableImage,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-luxury-gold underline underline-offset-4 decoration-luxury-gold/50 hover:decoration-luxury-gold transition-colors',
-        },
-      }),
+      // Link.configure({
+      //   openOnClick: false,
+      //   HTMLAttributes: {
+      //     class: 'text-luxury-gold underline underline-offset-4 decoration-luxury-gold/50 hover:decoration-luxury-gold transition-colors',
+      //   },
+      // }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -1054,23 +1052,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
       <div className="relative flex-1 overflow-visible bg-transparent rounded-b-[3rem] focus-within:ring-2 ring-luxury-gold/5 transition-all">
         <EditorContent editor={editor} className="min-h-full" />
         
-        {/* Editorial Feed Stats */}
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none z-[60]">
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="flex items-center gap-10 text-[10px] uppercase tracking-[0.4em] font-black text-white/40 border border-white/5 bg-luxury-black/60 backdrop-blur-3xl px-12 py-5 rounded-full pointer-events-auto shadow-2xl"
-          >
-            <div className="flex items-center gap-3 border-r border-white/10 pr-10">
-               <Activity size={14} className="text-luxury-gold" />
-               <span className="text-white">{editor.storage.characterCount.words()} Analysis Units</span>
-            </div>
-            <div className="flex items-center gap-3">
-               <Timer size={14} className="text-luxury-gold" />
-               <span className="text-white">{Math.max(1, Math.ceil(editor.storage.characterCount.words() / 220))} Min Scan</span>
-            </div>
-          </motion.div>
-        </div>
+
       </div>
       
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />

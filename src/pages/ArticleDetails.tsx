@@ -24,7 +24,8 @@ export default function ArticleDetails() {
     
     let rawUrl = article.socialImage || article.featuredImage;
     if (!rawUrl && article.gallery && Array.isArray(article.gallery) && article.gallery.length > 0) {
-      rawUrl = article.gallery.find(g => typeof g === 'string' && g.trim() !== '');
+      const firstImage = article.gallery.find(g => g.url && g.url.trim() !== '');
+      rawUrl = firstImage?.url;
     }
     
     // No fallback images for article shares (only article-specific featured image / thumbnail)
@@ -170,11 +171,10 @@ export default function ArticleDetails() {
           <div className="absolute bottom-1/4 left-10 w-[300px] h-[300px] bg-white/5 rounded-full filter blur-[120px]" />
         </div>
 
-        {/* Faded Background Image */}
-        {article.featuredImage && (
+        {article.featuredImage?.url && (
           <div className="absolute inset-0 z-0 opacity-20 filter blur-sm">
             <img 
-              src={article.featuredImage} 
+              src={article.featuredImage.url} 
               className="w-full h-full object-cover select-none pointer-events-none" 
               alt=""
             />
@@ -232,12 +232,12 @@ export default function ArticleDetails() {
           className={getCardStyle()}
         >
           {/* Main Hero Image Inside the Card, nested beautifully */}
-          {article.featuredImage && (
+          {article.featuredImage?.url && (
             <div className="w-full aspect-[2/1] bg-white/5 min-h-[220px] max-h-[440px] overflow-hidden border-b border-white/5">
               <img 
-                src={article.featuredImage} 
+                src={article.featuredImage.url} 
                 className="w-full h-full object-cover" 
-                alt={article.title} 
+                alt={article.featuredImage.caption || article.title} 
               />
             </div>
           )}
@@ -278,16 +278,19 @@ export default function ArticleDetails() {
                   Visual Exhibit Panel
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {article.gallery.map((url, idx) => (
+                  {article.gallery.map((image, idx) => (
                     <div 
                       key={idx} 
                       className={`rounded-xl overflow-hidden border border-white/5 h-[220px] sm:h-[300px] ${idx === 0 && article.gallery.length > 1 ? 'md:col-span-2 h-[340px] sm:h-[400px]' : ''}`}
                     >
                       <img 
-                        src={url} 
-                        alt={`Gallery Exhibit ${idx + 1}`} 
+                        src={image.url} 
+                        alt={image.caption || `Gallery Exhibit ${idx + 1}`} 
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]" 
                       />
+                      {image.caption && (
+                         <p className="text-[10px] text-white/50 text-center mt-2 font-mono uppercase">{image.caption}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -310,7 +313,7 @@ export default function ArticleDetails() {
                       <div>
                         <div className="aspect-[16/10] w-full rounded-lg overflow-hidden mb-3 bg-white/5">
                           <img 
-                            src={rel.featuredImage || '/placeholder.jpg'} 
+                            src={typeof rel.featuredImage === 'string' ? rel.featuredImage : (rel.featuredImage?.url || '/placeholder.jpg')} 
                             alt={rel.title} 
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                             loading="lazy"

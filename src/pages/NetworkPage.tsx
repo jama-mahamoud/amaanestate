@@ -382,7 +382,44 @@ export default function NetworkPage() {
                   </div>
                 </div>
 
-              {/* Removed Score, Verified Partner Review, and Trust / Author section */}
+              {/*评分和属性 Bar */}
+                <div className="flex flex-wrap items-center gap-6 border-y border-white/5 py-4 mt-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-neutral-500 font-mono text-[11px]">Score:</span>
+                    <div className="flex items-center gap-1.5 bg-[#C5A059]/10 border border-[#C5A059]/25 py-1 px-3 rounded-lg text-xs font-bold text-[#C5A059]">
+                      <Star size={13} className="fill-[#C5A059]" />
+                      <span>{activeReview.rating} / 5.0</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-neutral-400 text-xs font-mono">
+                    <ShieldCheck size={13} className="text-emerald-500" />
+                    <span>Verified Partner Review</span>
+                  </div>
+                </div>
+
+                {/* TRUST / AUTHOR SECTION */}
+                <div className="flex flex-wrap items-center gap-4 bg-white/[0.01] border border-white/5 p-4 rounded-xl">
+                  {activeReview.reviewerAvatar ? (
+                    <img 
+                      src={activeReview.reviewerAvatar} 
+                      alt={activeReview.reviewerName || 'AmaanEstate Reviewer'} 
+                      className="w-10 h-10 rounded-full object-cover border border-white/10" 
+                      referrerPolicy="no-referrer" 
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#C5A059]/20 to-[#C5A059]/5 border border-[#C5A059]/30 flex items-center justify-center text-xs font-mono font-bold text-[#C5A059]">
+                      {activeReview.reviewerName?.charAt(0) || 'AE'}
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <div className="text-xs font-semibold text-neutral-200">Reviewed by {activeReview.reviewerName || 'AmaanEstate Editorial Board'}</div>
+                    <div className="text-[10px] font-mono text-emerald-500 mt-0.5 flex items-center gap-1.5">
+                      <ShieldCheck size={11} />
+                      <span>Regulatory Standards and Compliance Team Curation</span>
+                    </div>
+                  </div>
+                </div>
 
                 {activeReview.reviewMethodology && (
                   <div className="text-left bg-[#C5A059]/[0.02] border border-[#C5A059]/10 p-3.5 rounded-xl text-[11px] text-neutral-400 leading-relaxed font-light mt-2 flex gap-2">

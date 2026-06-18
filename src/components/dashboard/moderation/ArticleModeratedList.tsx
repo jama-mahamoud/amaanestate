@@ -69,7 +69,7 @@ const performEditorialAudit = (article: Article): ValidationReport => {
   }
 
   // Hero Image Audit
-  if (!article.featuredImage || article.featuredImage.trim() === '') {
+  if (!article.featuredImage?.url || article.featuredImage.url.trim() === '') {
     issues.push({ field: 'Featured Image', severity: 'warning', message: 'Primary vector hero image asset is missing. A visual anchor is required.' });
     score -= 20;
   }
@@ -302,7 +302,7 @@ export default function ArticleModeratedList() {
                   {/* Article Hero Media Column */}
                   <div className="w-full lg:w-60 aspect-[16/10] rounded-3xl overflow-hidden relative border border-white/10 shrink-0">
                     <img 
-                      src={article.featuredImage || '/placeholder-news.jpg'} 
+                      src={typeof article.featuredImage === 'string' ? article.featuredImage : (article.featuredImage?.url || '/placeholder-news.jpg')} 
                       alt={article.title} 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
