@@ -2542,10 +2542,6 @@ export default function DashboardReviews() {
                   {previewReview.title}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
-                  <ShieldCheck size={11} className="text-emerald-500" />
-                  <span>Verified Partner Review</span>
-                </div>
               </div>
             </div>
 
@@ -2712,10 +2708,6 @@ export default function DashboardReviews() {
 
                     <div className="space-y-1.5">
                       <h3 className="text-lg font-serif font-bold text-white tracking-tight">{previewReview.brandName}</h3>
-                      <div className="flex items-center justify-center gap-1.5 text-amber-500">
-                        <Star size={14} className="fill-amber-500" />
-                        <span className="text-sm font-bold font-mono">{previewReview.rating} / 5.0</span>
-                      </div>
                     </div>
 
                     <p className="text-neutral-400 text-xs font-light leading-relaxed">

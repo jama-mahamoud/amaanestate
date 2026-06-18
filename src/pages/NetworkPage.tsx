@@ -31,6 +31,8 @@ import { Button } from '@/components/ui/button';
 import { reviewService, EditorialReview } from '@/services/reviewService';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LIST, getCategoryLabel, normalizeCategory } from '@/data/categories';
+import NetworkProductCard from '@/components/NetworkProductCard';
+import ProductGallery from '@/components/ProductGallery';
 
 export default function NetworkPage() {
   const { slug, catId } = useParams<{ slug?: string; catId?: string }>();
@@ -380,44 +382,7 @@ export default function NetworkPage() {
                   </div>
                 </div>
 
-              {/*评分和属性 Bar */}
-                <div className="flex flex-wrap items-center gap-6 border-y border-white/5 py-4 mt-6">
-                  <div className="flex items-center gap-3">
-                    <span className="text-neutral-500 font-mono text-[11px]">Score:</span>
-                    <div className="flex items-center gap-1.5 bg-[#C5A059]/10 border border-[#C5A059]/25 py-1 px-3 rounded-lg text-xs font-bold text-[#C5A059]">
-                      <Star size={13} className="fill-[#C5A059]" />
-                      <span>{activeReview.rating} / 5.0</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-neutral-400 text-xs font-mono">
-                    <ShieldCheck size={13} className="text-emerald-500" />
-                    <span>Verified Partner Review</span>
-                  </div>
-                </div>
-
-                {/* TRUST / AUTHOR SECTION */}
-                <div className="flex flex-wrap items-center gap-4 bg-white/[0.01] border border-white/5 p-4 rounded-xl">
-                  {activeReview.reviewerAvatar ? (
-                    <img 
-                      src={activeReview.reviewerAvatar} 
-                      alt={activeReview.reviewerName || 'AmaanEstate Reviewer'} 
-                      className="w-10 h-10 rounded-full object-cover border border-white/10" 
-                      referrerPolicy="no-referrer" 
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#C5A059]/20 to-[#C5A059]/5 border border-[#C5A059]/30 flex items-center justify-center text-xs font-mono font-bold text-[#C5A059]">
-                      {activeReview.reviewerName?.charAt(0) || 'AE'}
-                    </div>
-                  )}
-                  <div className="text-left">
-                    <div className="text-xs font-semibold text-neutral-200">Reviewed by {activeReview.reviewerName || 'AmaanEstate Editorial Board'}</div>
-                    <div className="text-[10px] font-mono text-emerald-500 mt-0.5 flex items-center gap-1.5">
-                      <ShieldCheck size={11} />
-                      <span>Regulatory Standards and Compliance Team Curation</span>
-                    </div>
-                  </div>
-                </div>
+              {/* Removed Score, Verified Partner Review, and Trust / Author section */}
 
                 {activeReview.reviewMethodology && (
                   <div className="text-left bg-[#C5A059]/[0.02] border border-[#C5A059]/10 p-3.5 rounded-xl text-[11px] text-neutral-400 leading-relaxed font-light mt-2 flex gap-2">
@@ -485,7 +450,6 @@ export default function NetworkPage() {
 
                 {/* REVIEW GALLERY */}
                 {(() => {
-                  console.log("REVIEW GALLERY DATA:", activeReview.gallery);
                   const normalizedGallery = activeReview.gallery && Array.isArray(activeReview.gallery) 
                     ? activeReview.gallery.map((gItem: any) => {
                         if (!gItem) return null;
@@ -499,35 +463,12 @@ export default function NetworkPage() {
                       }).filter((img: any) => img && img.url)
                     : [];
 
-                  if (normalizedGallery.length === 0) return null;
-
                   return (
-                    <div>
-                      <h3 className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest font-bold mb-4">Product Images & Gallery</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {normalizedGallery.map((img: any, gIdx: number) => {
-                          const imageUrl = img.url;
-                          const captionText = img.title;
-                          return (
-                            <div key={gIdx} className="group overflow-hidden rounded-xl border border-white/5 bg-neutral-950/20">
-                              <div className="aspect-video overflow-hidden border-b border-white/[0.02]">
-                                <img 
-                                  src={imageUrl} 
-                                  alt={captionText || `Interface Screenshot ${gIdx + 1}`} 
-                                  referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              </div>
-                              {captionText && (
-                                <p className="p-3 text-[11px] text-neutral-400 font-light leading-snug">
-                                  {captionText}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <ProductGallery 
+                      images={normalizedGallery} 
+                      affiliateUrl={activeReview.affiliateUrl} 
+                      brandName={activeReview.brandName} 
+                    />
                   );
                 })()}
 
@@ -953,67 +894,7 @@ export default function NetworkPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredReviews.map((rev) => (
-                <motion.div
-                  key={rev.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -4 }}
-                  className="rounded-2xl bg-neutral-900/60 border border-white/5 overflow-hidden flex flex-col h-full hover:border-[#C5A059]/30 transition-all group"
-                >
-                  {/* IMAGE PREVIEW */}
-                  <div className="aspect-[16/9] overflow-hidden border-b border-white/5 relative">
-                    <img 
-                      src={rev.featuredImage} 
-                      alt={rev.brandName} 
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 left-3 bg-neutral-950/80 border border-white/10 px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-wider uppercase text-neutral-400">
-                      {getCategoryLabel(rev.category)}
-                    </div>
-                  </div>
-
-                  {/* DETAILS CARD BODY */}
-                  <div className="p-6 flex flex-col flex-grow space-y-4 text-left">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-center text-xs font-bold text-[#C5A059]">
-                          {rev.brandLogoLetter || rev.brandName.charAt(0)}
-                        </div>
-                        <h3 className="font-bold text-white text-xs tracking-tight">{rev.brandName}</h3>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-[#C5A059] font-mono font-bold text-[11px] bg-[#C5A059]/5 border border-[#C5A059]/15 px-2 py-0.5 rounded-lg">
-                        <Star size={11} className="fill-[#C5A059]" />
-                        <span>{rev.rating}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-serif font-semibold text-white tracking-tight group-hover:text-[#C5A059] transition-colors leading-snug line-clamp-1">
-                        {rev.title}
-                      </h4>
-                      <p className="text-neutral-400 text-xs font-light leading-relaxed line-clamp-2">
-                        {rev.excerpt}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-emerald-400 font-mono pt-4 border-t border-white/5 mt-auto">
-                      <div className="flex items-center gap-1">
-                        <ShieldCheck size={11} className="text-emerald-500" />
-                        <span>Verified Review Curation</span>
-                      </div>
-                    </div>
-                    
-                    {/* BUTTON LEADING TO SLUG (NOT DIRECT LINK) */}
-                    <Link
-                      to={`/ecosystem/${rev.slug}`}
-                      className="mt-2 bg-white/[0.03] hover:bg-[#C5A059]/10 border border-white/5 hover:border-[#C5A059] text-white group-hover:text-white text-xs font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 px-4 text-center cursor-pointer"
-                    >
-                      Read Full Review <ArrowRight size={13} className="group-hover:translate-x-1.5 transition-transform" />
-                    </Link>
-                  </div>
-                </motion.div>
+                <NetworkProductCard key={rev.id} rev={rev} />
               ))}
             </div>
           )}
