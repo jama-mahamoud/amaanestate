@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Search, 
@@ -48,6 +48,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/services/userService';
 import { auth } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { CATEGORY_LIST, normalizeCategory, getCategoryLabel } from '@/data/categories';
 
 export default function DashboardReviews() {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ export default function DashboardReviews() {
   // Form Fields State
   const [formTitle, setFormTitle] = useState('');
   const [formSlug, setFormSlug] = useState('');
-  const [formCategory, setFormCategory] = useState<'real-estate' | 'finance' | 'tech' | 'learning' | 'market'>('real-estate');
+  const [formCategory, setFormCategory] = useState<string>('real-estate');
   const [formFeaturedImage, setFormFeaturedImage] = useState('');
   const [formExcerpt, setFormExcerpt] = useState('');
   const [formIntroduction, setFormIntroduction] = useState('');
@@ -155,7 +156,11 @@ export default function DashboardReviews() {
     setLoading(true);
     try {
       const data = await reviewService.getAllReviews(false);
-      setReviews(data);
+      const normalizedData = data.map((r: any) => ({
+        ...r,
+        category: normalizeCategory(r.category)
+      }));
+      setReviews(normalizedData);
     } catch (err) {
       console.error(err);
       toast.error('Failed to retrieve editorial ledger');
@@ -333,7 +338,7 @@ export default function DashboardReviews() {
     setEditingReview(rev);
     setFormTitle(rev.title);
     setFormSlug(rev.slug);
-    setFormCategory(rev.category);
+    setFormCategory(normalizeCategory(rev.category));
     setFormFeaturedImage(rev.featuredImage || '');
     setFormExcerpt(rev.excerpt || '');
     setFormIntroduction(rev.introduction || '');
@@ -388,7 +393,24 @@ export default function DashboardReviews() {
     setFormBottomBannerAltText(rev.bottomBanner?.altText || '');
     setFormBottomBannerClicks(rev.bottomBanner?.clicks || 0);
 
-    setFormGallery(rev.gallery || []);
+    setFormGallery((rev.gallery || []).map((gItem: any) => {
+      if (typeof gItem === 'string') {
+        return {
+          id: Math.random().toString(36).substring(4),
+          url: gItem,
+          title: '',
+          imageUrl: gItem,
+          caption: ''
+        };
+      }
+      return {
+        id: gItem.id || Math.random().toString(36).substring(4),
+        url: gItem.url || gItem.imageUrl || '',
+        title: gItem.title || gItem.caption || '',
+        imageUrl: gItem.url || gItem.imageUrl || '',
+        caption: gItem.title || gItem.caption || ''
+      };
+    }));
     setFormFaqs(rev.faqs || []);
     
     setFormCompareEnabled(!!rev.comparisonTable?.enabled);
@@ -536,7 +558,10 @@ export default function DashboardReviews() {
         altText: formBottomBannerAltText.trim(),
         clicks: formBottomBannerClicks
       },
-      gallery: formGallery,
+      gallery: formGallery.map((g: any) => ({
+        url: (g.url || g.imageUrl || '').trim(),
+        title: (g.title || g.caption || '').trim()
+      })),
       faqs: formFaqs,
       comparisonTable: {
         enabled: formCompareEnabled,
@@ -765,11 +790,9 @@ export default function DashboardReviews() {
                   className="bg-black/60 border border-white/5 text-neutral-300 text-xs px-3 py-2 rounded-xl focus:border-[#C5A059] focus:outline-none"
                 >
                   <option value="all">All Specialties</option>
-                  <option value="real-estate">Real Estate Partners</option>
-                  <option value="finance">Finance Partners</option>
-                  <option value="tech">Technology Partners</option>
-                  <option value="market">Market Partners</option>
-                  <option value="learning">Executive Development (Legacy)</option>
+                  {CATEGORY_LIST.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -884,7 +907,7 @@ export default function DashboardReviews() {
 
                                 {/* Category */}
                                 <td className="py-4 px-4 font-mono text-[10px] uppercase text-neutral-400">
-                                  {rev.category.replace('-', ' ')}
+                                  {getCategoryLabel(rev.category)}
                                 </td>
 
                                 {/* Score Rating */}
@@ -1160,14 +1183,12 @@ export default function DashboardReviews() {
                   <label className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">Specialty Category *</label>
                   <select
                     value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value as any)}
+                    onChange={(e) => setFormCategory(e.target.value)}
                     className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-xl focus:border-[#C5A059] focus:outline-none focus:ring-0 text-sm transition-all"
                   >
-                    <option value="real-estate">Real Estate Partners</option>
-                    <option value="finance">Finance Partners</option>
-                    <option value="tech">Technology Partners</option>
-                    <option value="market">Market Partners</option>
-                    <option value="learning">Executive Development (Legacy)</option>
+                    {CATEGORY_LIST.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1827,11 +1848,11 @@ export default function DashboardReviews() {
                 <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4 text-left">
                   <div className="flex items-center justify-between border-b border-white/5 pb-3">
                     <div>
-                      <h4 className="text-xs font-mono uppercase tracking-wider text-[#C5A059] font-bold">Screenshot & Platform Interface Gallery</h4>
-                      <p className="text-[10px] text-neutral-400 mt-0.5">Add verified screenshots of the dashboard interface with editorial explanations for trust enhancement.</p>
+                      <h4 className="text-xs font-mono uppercase tracking-wider text-[#C5A059] font-bold">Product Gallery & Images</h4>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">Add relevant product screenshots, illustrations, or photos with clean captions.</p>
                     </div>
                     <span className="text-[10px] font-mono bg-neutral-900 border border-white/10 text-[#C5A059] px-2.5 py-1 rounded-md font-bold font-sans">
-                      {formGallery.length} Screens Configured
+                      {formGallery.length} Images Configured
                     </span>
                   </div>
 
@@ -1839,8 +1860,8 @@ export default function DashboardReviews() {
                     {formGallery.map((gItem, gIdx) => (
                       <div key={gItem.id || gIdx} className="bg-neutral-900/40 p-3.5 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center relative">
                         <div className="aspect-video w-32 bg-black border border-white/10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center text-[10px] text-neutral-500">
-                          {gItem.imageUrl ? (
-                            <img src={gItem.imageUrl} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          {gItem.url || gItem.imageUrl ? (
+                            <img src={gItem.url || gItem.imageUrl} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <span>No URL Target</span>
                           )}
@@ -1848,10 +1869,11 @@ export default function DashboardReviews() {
                         <div className="flex-grow grid grid-cols-1 gap-2 w-full">
                           <input
                             type="text"
-                            placeholder="Screenshot Image URL"
-                            value={gItem.imageUrl}
+                            placeholder="Image URL"
+                            value={gItem.url || gItem.imageUrl || ''}
                             onChange={(e) => {
                               const updated = [...formGallery];
+                              updated[gIdx].url = e.target.value;
                               updated[gIdx].imageUrl = e.target.value;
                               setFormGallery(updated);
                             }}
@@ -1859,10 +1881,11 @@ export default function DashboardReviews() {
                           />
                           <input
                             type="text"
-                            placeholder="Verification Caption Label..."
-                            value={gItem.caption || ''}
+                            placeholder="Image Caption Label..."
+                            value={gItem.title || gItem.caption || ''}
                             onChange={(e) => {
                               const updated = [...formGallery];
+                              updated[gIdx].title = e.target.value;
                               updated[gIdx].caption = e.target.value;
                               setFormGallery(updated);
                             }}
@@ -1921,15 +1944,17 @@ export default function DashboardReviews() {
                       onClick={() => {
                         const newScreenshot: GalleryItem = {
                           id: Math.random().toString(36).substring(4),
+                          url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop',
                           imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop',
-                          caption: 'Platform Operations Dashboard Overview - Real Time Activity Ledger'
+                          title: 'Product Overview & Practical Design Details',
+                          caption: 'Product Overview & Practical Design Details'
                         };
                         setFormGallery([...formGallery, newScreenshot]);
-                        toast.success('Screenshot container appended');
+                        toast.success('Product image container appended');
                       }}
                       className="px-4 py-2 bg-white/5 hover:bg-[#C5A059]/15 border border-white/10 rounded-xl text-xs font-mono text-neutral-300 transition-all flex items-center gap-1 cursor-pointer animate-fade-in"
                     >
-                      <Plus size={12} /> Append Screenshot Asset
+                      <Plus size={12} /> Append Product Image Asset
                     </button>
                   </div>
                 </div>
@@ -2244,18 +2269,7 @@ export default function DashboardReviews() {
                   />
                 </div>
 
-                {/* Last Updated Date text representation */}
-                <div className="space-y-1.5 font-sans">
-                  <label className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">Display Publish/Last Updated Date Text</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. October 12, 2026"
-                    value={formLastUpdatedDate}
-                    onChange={(e) => setFormLastUpdatedDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-xl focus:border-[#C5A059] focus:outline-none text-sm text-white font-mono"
-                  />
-                </div>
+
 
                 {/* Author Avatar Image URL */}
                 <div className="space-y-1.5 md:col-span-2 font-sans">
@@ -2321,7 +2335,7 @@ export default function DashboardReviews() {
                             />
                             <div>
                               <div className="text-[11px] font-bold leading-tight line-clamp-2">{rev.title}</div>
-                              <div className="text-[9px] font-mono text-neutral-500 uppercase tracking-wider mt-1">{rev.category}</div>
+                              <div className="text-[9px] font-mono text-neutral-500 uppercase tracking-wider mt-1">{getCategoryLabel(rev.category)}</div>
                             </div>
                           </label>
                         );
@@ -2522,19 +2536,15 @@ export default function DashboardReviews() {
               
               <div className="absolute bottom-6 left-6 md:left-10 md:bottom-10 right-6 space-y-3">
                 <span className="bg-[#C5A059] text-black text-[9px] font-mono tracking-widest font-black uppercase px-2.5 py-1 rounded-md">
-                  {previewReview.category.replace('-', ' ')}
+                  {getCategoryLabel(previewReview.category)}
                 </span>
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif font-black text-white tracking-wide leading-tight">
                   {previewReview.title}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-4 text-[10px] text-neutral-400 font-mono">
-                  <div className="flex items-center gap-1">
-                    <Clock size={11} />
-                    <span>{previewReview.readingTime}</span>
-                  </div>
-                  <span>•</span>
-                  <span>Published: {previewReview.publishDate}</span>
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
+                  <ShieldCheck size={11} className="text-emerald-500" />
+                  <span>Verified Partner Review</span>
                 </div>
               </div>
             </div>
@@ -2544,8 +2554,8 @@ export default function DashboardReviews() {
               {/* Affiliate Discosure banner */}
               {previewReview.sponsoredDisclosure !== false && (
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[10px] text-neutral-400 max-w-xl font-mono leading-normal">
-                  <span className="text-[#C5A059] font-bold uppercase tracking-wider block mb-1">Sponsored Partnership Disclosure</span>
-                  We maintain a dynamic business alliance with the provider described herein. When clicking referral gateways to establish a private capital account, our network desk manages corresponding fee arrangements.
+                  <span className="text-[#C5A059] font-bold uppercase tracking-wider block mb-1">Affiliate Disclosure</span>
+                  We may receive compensation from companies whose products we review. This helps support our independent review team in evaluating quality items for our audience.
                 </div>
               )}
 
@@ -2563,17 +2573,64 @@ export default function DashboardReviews() {
                     </p>
                   </div>
 
-                  {/* Deep dive platform analytics */}
+                  {/* Deep dive product overview */}
                   <div className="space-y-3">
-                    <h2 className="text-lg font-serif text-[#C5A059] font-bold tracking-tight">What Is This Platform?</h2>
+                    <h2 className="text-lg font-serif text-[#C5A059] font-bold tracking-tight">Product Overview</h2>
                     <p className="text-neutral-300 text-sm font-light leading-relaxed whitespace-pre-wrap">
                       {previewReview.whatIsIt}
                     </p>
                   </div>
 
+                  {/* Product Gallery Preview */}
+                  {(() => {
+                    const normalizedGallery = previewReview.gallery && Array.isArray(previewReview.gallery) 
+                      ? previewReview.gallery.map((gItem: any) => {
+                          if (!gItem) return null;
+                          if (typeof gItem === 'string') {
+                            return { url: gItem, title: '' };
+                          }
+                          return {
+                            url: gItem.url || gItem.imageUrl || '',
+                            title: gItem.title || gItem.caption || ''
+                          };
+                        }).filter((img: any) => img && img.url)
+                      : [];
+
+                    if (normalizedGallery.length === 0) return null;
+
+                    return (
+                      <div className="space-y-4">
+                        <h2 className="text-lg font-serif text-[#C5A059] font-bold tracking-tight">Product Gallery & Images</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                          {normalizedGallery.map((img: any, gIdx: number) => {
+                            const imageUrl = img.url;
+                            const captionText = img.title;
+                            return (
+                              <div key={gIdx} className="group overflow-hidden rounded-xl border border-white/5 bg-neutral-950/20">
+                                <div className="aspect-video overflow-hidden border-b border-white/[0.02]">
+                                  <img 
+                                    src={imageUrl} 
+                                    alt={captionText || `Interface Screenshot ${gIdx + 1}`} 
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                                {captionText && (
+                                  <p className="p-3 text-[11px] text-neutral-400 font-light leading-snug">
+                                    {captionText}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Key Features list */}
                   <div className="bg-[#111116] border border-white/5 p-6 rounded-2xl space-y-4">
-                    <h3 className="text-sm font-serif text-[#C5A059] uppercase tracking-wider font-bold">Comprehensive Capabilities</h3>
+                    <h3 className="text-sm font-serif text-[#C5A059] uppercase tracking-wider font-bold">Key Highlights & Features</h3>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {previewReview.keyFeatures?.map((feat, idx) => (
                         <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-400">
@@ -2588,7 +2645,7 @@ export default function DashboardReviews() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     
                     <div className="bg-emerald-950/10 border border-emerald-500/10 p-5 rounded-2xl space-y-3">
-                      <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#A3E635]">Strategic Merits</span>
+                      <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#A3E635]">What We Like</span>
                       <ul className="space-y-2 text-xs">
                         {previewReview.pros?.map((p, idx) => (
                           <li key={idx} className="flex items-start gap-1.5 text-neutral-300">
@@ -2600,7 +2657,7 @@ export default function DashboardReviews() {
                     </div>
 
                     <div className="bg-rose-950/10 border border-rose-500/10 p-5 rounded-2xl space-y-3">
-                      <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#F87171]">Noted Limits</span>
+                      <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#F87171]">Points to Consider</span>
                       <ul className="space-y-2 text-xs">
                         {previewReview.cons?.map((c, idx) => (
                           <li key={idx} className="flex items-start gap-1.5 text-neutral-300">

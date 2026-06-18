@@ -76,8 +76,10 @@ export interface Banner {
 }
 
 export interface GalleryItem {
-  id: string;
-  imageUrl: string;
+  id?: string;
+  url: string;
+  title: string;
+  imageUrl?: string;
   caption?: string;
 }
 
@@ -102,7 +104,7 @@ export interface EditorialReview {
   id: string; // doc ID (usually the slug)
   title: string;
   slug: string;
-  category: 'real-estate' | 'finance' | 'tech' | 'learning' | 'market';
+  category: string;
   featuredImage: string;
   excerpt: string;
   
@@ -118,8 +120,8 @@ export interface EditorialReview {
   
   // Custom Metadata
   rating: number; // 1.0 to 5.0
-  readingTime: string; // e.g., "5 min read"
-  publishDate: string; // e.g., "June 15, 2026"
+  readingTime?: string; // e.g., "5 min read"
+  publishDate?: string; // e.g., "June 15, 2026"
   brandName: string;
   brandLogoLetter: string; // Initials or design
   
@@ -235,7 +237,11 @@ export const reviewService = {
   // Get all reviews (with optional filtering by status)
   async getAllReviews(publishedOnly: boolean = false): Promise<EditorialReview[]> {
     try {
-      const snap = await getDocs(collection(db, REVIEWS_COLLECTION));
+      const q = publishedOnly
+        ? query(collection(db, REVIEWS_COLLECTION), where("status", "==", "approved"))
+        : collection(db, REVIEWS_COLLECTION);
+      const snap = await getDocs(q);
+      
       console.log('DEBUG: ALL REVIEW DOCS:', snap.docs.map(doc => ({ id: doc.id, title: doc.data().title })));
       let list = snap.docs.map(docSnap => {
         const data = docSnap.data();
@@ -249,15 +255,14 @@ export const reviewService = {
         return review;
       });
 
-      console.log('DEBUG: Total reviews in DB:', list.length);
-      console.log('DEBUG: Approved reviews in DB:', list.filter(r => r.status === 'approved').length);
+      console.log('DEBUG: Total reviews fetched from DB:', list.length);
+      console.log('DEBUG: Approved reviews fetched from DB:', list.filter(r => r.status === 'approved').length);
       
       list.forEach(r => {
         if (r.status !== 'approved') {
-          console.log('DEBUG: Non-approved review found:', r.slug, r.status);
+          console.log('DEBUG: Non-approved review found in fetch:', r.slug, r.status);
         }
       });
-
 
       // Sort by publishDate/createdAt descending
       list.sort((a, b) => {
@@ -266,30 +271,50 @@ export const reviewService = {
         return bTime - aTime;
       });
 
+      // Strip all timing fields before returning data to frontend
+      const cleanedList = list.map(r => {
+        const cleaned = { ...r };
+        delete cleaned.createdAt;
+        delete cleaned.updatedAt;
+        delete (cleaned as any).publishDate;
+        delete (cleaned as any).lastUpdatedDate;
+        delete (cleaned as any).readingTime;
+        return cleaned;
+      });
+
       // Update backup local storage so sync remains golden
-      if (list.length > 0) {
-        this.saveToLocalBackup(list);
+      if (cleanedList.length > 0) {
+        this.saveToLocalBackup(cleanedList);
       }
 
       console.log('DEBUG: STATUS CHECK ALL REVIEWS:');
-      list.forEach(r => console.log(`DEBUG: Review ${r.slug} status: ${r.status}`));
+      cleanedList.forEach(r => console.log(`DEBUG: Review ${r.slug} status: ${r.status}`));
 
       if (publishedOnly) {
-        // Only approved content is visible to users
-        const filteredList = list.filter(r => r.status === 'approved');
+        // Double-check/confirm: Only approved content is returned to public panels
+        const filteredList = cleanedList.filter(r => r.status === 'approved');
         console.log('DEBUG: Filtered list length:', filteredList.length);
         return filteredList;
       }
 
-      return list;
+      return cleanedList;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, REVIEWS_COLLECTION);
       console.warn('Firebase connection unavailable, defaulting to LocalBackup registry:', error);
       let list = this.getLocalBackup();
+      const cleanedList = list.map(r => {
+        const cleaned = { ...r };
+        delete cleaned.createdAt;
+        delete cleaned.updatedAt;
+        delete (cleaned as any).publishDate;
+        delete (cleaned as any).lastUpdatedDate;
+        delete (cleaned as any).readingTime;
+        return cleaned;
+      });
       if (publishedOnly) {
-        return list.filter(r => r.status === 'approved');
+        return cleanedList.filter(r => r.status === 'approved');
       }
-      return list;
+      return cleanedList;
     }
   },
 
@@ -309,10 +334,13 @@ export const reviewService = {
   // Create absolute new review profile
   async createReview(review: Omit<EditorialReview, 'createdAt' | 'updatedAt'>): Promise<string> {
     const id = review.slug; // Slug as unique identifier block
-    const newRev: EditorialReview = {
+    const newRev: any = {
       ...review,
       createdAt: new Date().toISOString()
     };
+    delete newRev.publishDate;
+    delete newRev.lastUpdatedDate;
+    delete newRev.readingTime;
 
     try {
       await setDoc(doc(db, REVIEWS_COLLECTION, id), newRev);
@@ -331,10 +359,13 @@ export const reviewService = {
 
   // Save/Overwrite existing review profile
   async updateReview(id: string, review: Partial<EditorialReview>): Promise<void> {
-    const updateData = {
+    const updateData: any = {
       ...review,
       updatedAt: new Date().toISOString()
     };
+    delete updateData.publishDate;
+    delete updateData.lastUpdatedDate;
+    delete updateData.readingTime;
 
     try {
       await setDoc(doc(db, REVIEWS_COLLECTION, id), updateData, { merge: true });

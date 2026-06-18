@@ -129,10 +129,13 @@ export default function App() {
                 <Route path="employer/dashboard" element={<EmployerDashboardPage />} />
                 <Route path="network" element={<NetworkPage />} />
                 <Route path="network/:slug" element={<NetworkPage />} />
+                <Route path="network/category/:catId" element={<NetworkPage />} />
                 <Route path="ecosystem" element={<NetworkPage />} />
                 <Route path="ecosystem/:slug" element={<NetworkPage />} />
+                <Route path="ecosystem/category/:catId" element={<NetworkPage />} />
                 <Route path="ecosystem-explorer" element={<NetworkPage />} />
                 <Route path="ecosystem-explorer/:slug" element={<NetworkPage />} />
+                <Route path="ecosystem-explorer/category/:catId" element={<NetworkPage />} />
                 <Route path="news" element={<News />} />
                 <Route path="news/english" element={<News />} />
                 <Route path="news/:id" element={<ArticleDetails />} />

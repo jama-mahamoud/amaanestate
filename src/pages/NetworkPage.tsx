@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
   Handshake, 
@@ -24,14 +24,16 @@ import {
   TrendingUp,
   SlidersHorizontal,
   LayoutGrid,
-  Search
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { reviewService, EditorialReview } from '@/services/reviewService';
 import { useAuth } from '@/contexts/AuthContext';
+import { CATEGORY_LIST, getCategoryLabel, normalizeCategory } from '@/data/categories';
 
 export default function NetworkPage() {
-  const { slug } = useParams<{ slug?: string }>();
+  const { slug, catId } = useParams<{ slug?: string; catId?: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile, user } = useAuth();
@@ -45,25 +47,23 @@ export default function NetworkPage() {
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
   const [showSticky, setShowSticky] = useState(false);
 
-  // Sync category state when URL searchParams change
+  // Sync category state when URL searchParams or catId parameter change
   useEffect(() => {
     const categoryParam = searchParams.get('category');
-    if (categoryParam) {
-      setSelectedCategory(categoryParam);
+    if (catId) {
+      setSelectedCategory(normalizeCategory(catId));
+    } else if (categoryParam) {
+      setSelectedCategory(normalizeCategory(categoryParam));
     } else {
       setSelectedCategory('all');
     }
-  }, [searchParams]);
+  }, [searchParams, catId]);
 
   const handleCategoryChange = (catId: string) => {
     if (catId === 'all') {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('category');
-      setSearchParams(newParams);
+      navigate('/ecosystem');
     } else {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set('category', catId);
-      setSearchParams(newParams);
+      navigate(`/ecosystem/category/${catId}`);
     }
   };
 
@@ -74,7 +74,11 @@ export default function NetworkPage() {
       try {
         // Onlyapproved and published reviews should appear publicly.
         const data = await reviewService.getAllReviews(true);
-        setReviews(data);
+        const normalized = data.map((r: any) => ({
+          ...r,
+          category: normalizeCategory(r.category)
+        }));
+        setReviews(normalized);
       } catch (err) {
         console.error('Failed to load public reviews archive:', err);
       } finally {
@@ -129,31 +133,26 @@ export default function NetworkPage() {
     }
   };
 
-  // Category tags mapping
-  const categories = [
-    { id: 'all', label: 'All Reviews', icon: <LayoutGrid size={14} /> },
-    { id: 'real-estate', label: 'Real Estate Partners', icon: <Building2 size={14} /> },
-    { id: 'finance', label: 'Finance Partners', icon: <Handshake size={14} /> },
-    { id: 'tech', label: 'Technology Partners', icon: <Cpu size={14} /> },
-    { id: 'market', label: 'Market Partners', icon: <TrendingUp size={14} /> },
-  ];
+  // Category tags mapping dynamically built from CATEGORY_LIST taxonomy config
+  const categories = useMemo(() => {
+    return [
+      { id: 'all', label: 'All Reviews', icon: <LayoutGrid size={14} /> },
+      ...CATEGORY_LIST.map(cat => {
+        const IconComponent = cat.icon;
+        return {
+          id: cat.id,
+          label: cat.label,
+          icon: <IconComponent size={14} />
+        };
+      })
+    ];
+  }, []);
 
-  function getCategoryLabel(cat: string) {
-    switch (cat) {
-      case 'real-estate': return 'Real Estate Partner';
-      case 'finance': return 'Finance Partner';
-      case 'tech': return 'Technology Partner';
-      case 'market': return 'Market Partner';
-      case 'learning': return 'Market Partner';
-      default: return cat.replace('-', ' ');
-    }
-  }
-
-  // Filter listings
+  // Filter listings where normalized category matches
   const filteredReviews = useMemo(() => {
     let list = reviews;
     if (selectedCategory !== 'all') {
-      list = list.filter(r => r.category === selectedCategory);
+      list = list.filter(r => normalizeCategory(r.category) === normalizeCategory(selectedCategory));
     }
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
@@ -188,7 +187,7 @@ export default function NetworkPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="max-w-4xl mx-auto px-4 sm:px-6 relative"
+              className="max-w-4xl mx-auto px-4 sm:px-6 relative pb-32"
             >
               {/* Dynamic Tag SEO and Structured Schema injection */}
               <Helmet>
@@ -318,19 +317,70 @@ export default function NetworkPage() {
 
               {/* HEADER CONTAINER */}
               <div className="space-y-6 text-left">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="px-3 py-1 bg-white/[0.04] border border-white/5 rounded-full text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                    {getCategoryLabel(activeReview.category)}
-                  </span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059]" />
-                  <span className="text-xs font-mono text-neutral-400">{activeReview.publishDate}</span>
+                <div className="relative border-b border-white/5 pb-6">
+                  
+                  <div className="pr-0 md:pr-72 space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="px-3 py-1 bg-white/[0.04] border border-white/5 rounded-full text-[10px] font-mono uppercase tracking-widest text-[#C5A059]">
+                        {getCategoryLabel(activeReview.category)}
+                      </span>
+                    </div>
+
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight leading-[1.12]">
+                      {activeReview.title}
+                    </h1>
+                  </div>
+
+                  {/* TOP-RIGHT DIRECT DIRECTORY ACCESS CTA BUTTONS */}
+                  <div className="md:absolute md:top-[16px] md:right-[16px] md:z-50 w-full md:w-auto mt-6 md:mt-0 flex flex-col gap-3">
+                    {activeReview.ctaButtons && activeReview.ctaButtons.length > 0 ? (
+                      activeReview.ctaButtons.map((btn, bidx) => (
+                        <a 
+                          key={bidx}
+                          href={btn.url}
+                          target={activeReview.externalLink !== false ? "_blank" : "_self"}
+                          rel={activeReview.externalLink !== false ? "nofollow sponsored noopener" : undefined}
+                          onClick={() => handleCtaClick(bidx)}
+                          className={`text-center text-xs font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border whitespace-nowrap md:min-w-[180px] ${
+                            btn.style === 'outline-gold'
+                              ? 'border-[#C5A059] text-[#C5A059] hover:bg-[#C5A059]/10 bg-transparent'
+                            : btn.style === 'minimal-border'
+                              ? 'border-white/10 text-neutral-300 hover:text-white hover:border-[#C5A059] bg-transparent'
+                            : btn.style === 'solid-emerald'
+                              ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-500 text-white shadow-lg'
+                            : btn.style === 'solid-blue'
+                              ? 'bg-blue-600 border-blue-600 hover:bg-blue-500 text-white shadow-lg'
+                            : 'bg-[#C5A059] border-[#C5A059] hover:bg-[#D4B26F] text-black font-bold shadow-lg shadow-[#C5A059]/10'
+                          }`}
+                        >
+                          <span>{btn.text}</span>
+                          <ExternalLink size={14} className="shrink-0" />
+                        </a>
+                      ))
+                    ) : (
+                      <a 
+                        href={activeReview.affiliateUrl}
+                        target={activeReview.externalLink !== false ? "_blank" : "_self"}
+                        rel={activeReview.externalLink !== false ? "nofollow sponsored noopener" : undefined}
+                        onClick={() => handleCtaClick()}
+                        className={`text-center text-xs font-semibold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border whitespace-nowrap md:min-w-[180px] ${
+                          activeReview.ctaButtonStyle === 'outline-gold'
+                            ? 'border-[#C5A059] text-[#C5A059] hover:bg-[#C5A059]/10 bg-transparent'
+                            : activeReview.ctaButtonStyle === 'minimal-border'
+                            ? 'border-white/10 text-neutral-300 hover:text-white hover:border-[#C5A059] bg-transparent'
+                            : activeReview.ctaButtonStyle === 'solid-emerald'
+                            ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-500 text-white'
+                            : 'bg-[#C5A059] border-[#C5A059] hover:bg-[#D4B26F] text-black font-bold shadow-lg shadow-[#C5A059]/10'
+                        }`}
+                      >
+                        <span>{activeReview.ctaButtonText || 'Visit Official Website'}</span>
+                        <ExternalLink size={14} className="shrink-0" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight leading-[1.12]">
-                  {activeReview.title}
-                </h1>
-
-                {/*评分和属性 Bar */}
+              {/*评分和属性 Bar */}
                 <div className="flex flex-wrap items-center gap-6 border-y border-white/5 py-4 mt-6">
                   <div className="flex items-center gap-3">
                     <span className="text-neutral-500 font-mono text-[11px]">Score:</span>
@@ -341,13 +391,8 @@ export default function NetworkPage() {
                   </div>
 
                   <div className="flex items-center gap-2 text-neutral-400 text-xs font-mono">
-                    <Clock size={13} className="text-[#C5A059]" />
-                    <span>{activeReview.readingTime}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-neutral-400 text-xs font-mono">
                     <ShieldCheck size={13} className="text-emerald-500" />
-                    <span>Independent Audit Verified</span>
+                    <span>Verified Partner Review</span>
                   </div>
                 </div>
 
@@ -367,19 +412,9 @@ export default function NetworkPage() {
                   )}
                   <div className="text-left">
                     <div className="text-xs font-semibold text-neutral-200">Reviewed by {activeReview.reviewerName || 'AmaanEstate Editorial Board'}</div>
-                    <div className="text-[10px] font-mono text-neutral-500 mt-0.5 flex items-center gap-3">
-                      <span>Published: {activeReview.publishDate}</span>
-                      {activeReview.lastUpdatedDate ? (
-                        <>
-                          <span className="h-1 w-1 rounded-full bg-neutral-600" />
-                          <span>Last Updated: {activeReview.lastUpdatedDate}</span>
-                        </>
-                      ) : activeReview.lastUpdatedTimestamp ? (
-                        <>
-                          <span className="h-1 w-1 rounded-full bg-neutral-600" />
-                          <span>Last Updated: {new Date(activeReview.lastUpdatedTimestamp).toLocaleDateString()}</span>
-                        </>
-                      ) : null}
+                    <div className="text-[10px] font-mono text-emerald-500 mt-0.5 flex items-center gap-1.5">
+                      <ShieldCheck size={11} />
+                      <span>Regulatory Standards and Compliance Team Curation</span>
                     </div>
                   </div>
                 </div>
@@ -449,35 +484,57 @@ export default function NetworkPage() {
                 )}
 
                 {/* REVIEW GALLERY */}
-                {activeReview.gallery && activeReview.gallery.length > 0 && (
-                  <div>
-                    <h3 className="text-neutral-505 font-mono text-[10px] uppercase tracking-widest font-bold mb-4">Platform Interface Gallery</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                      {activeReview.gallery.map((gItem, gIdx) => (
-                        <div key={gItem.id || gIdx} className="group overflow-hidden rounded-xl border border-white/5 bg-neutral-950/20">
-                          <div className="aspect-video overflow-hidden border-b border-white/[0.02]">
-                            <img 
-                              src={gItem.imageUrl} 
-                              alt={gItem.caption || `Interface Screenshot ${gIdx + 1}`} 
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                          {gItem.caption && (
-                            <p className="p-3 text-[11px] text-neutral-400 font-light leading-snug">
-                              {gItem.caption}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                {(() => {
+                  console.log("REVIEW GALLERY DATA:", activeReview.gallery);
+                  const normalizedGallery = activeReview.gallery && Array.isArray(activeReview.gallery) 
+                    ? activeReview.gallery.map((gItem: any) => {
+                        if (!gItem) return null;
+                        if (typeof gItem === 'string') {
+                          return { url: gItem, title: '' };
+                        }
+                        return {
+                          url: gItem.url || gItem.imageUrl || '',
+                          title: gItem.title || gItem.caption || ''
+                        };
+                      }).filter((img: any) => img && img.url)
+                    : [];
+
+                  if (normalizedGallery.length === 0) return null;
+
+                  return (
+                    <div>
+                      <h3 className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest font-bold mb-4">Product Images & Gallery</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {normalizedGallery.map((img: any, gIdx: number) => {
+                          const imageUrl = img.url;
+                          const captionText = img.title;
+                          return (
+                            <div key={gIdx} className="group overflow-hidden rounded-xl border border-white/5 bg-neutral-950/20">
+                              <div className="aspect-video overflow-hidden border-b border-white/[0.02]">
+                                <img 
+                                  src={imageUrl} 
+                                  alt={captionText || `Interface Screenshot ${gIdx + 1}`} 
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                              {captionText && (
+                                <p className="p-3 text-[11px] text-neutral-400 font-light leading-snug">
+                                  {captionText}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Key Features Bullet List */}
                 {activeReview.keyFeatures && activeReview.keyFeatures.length > 0 && (
                   <div className="bg-white/[0.01] border border-white/5 p-6 rounded-2xl">
-                    <h3 className="text-[#C5A059] font-mono text-[10px] uppercase tracking-widest font-bold mb-4">Core Structural Architecture</h3>
+                    <h3 className="text-[#C5A059] font-mono text-[10px] uppercase tracking-widest font-bold mb-4">Key Features & Highlights</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {activeReview.keyFeatures.map((feat, index) => (
                         <div key={index} className="flex items-start gap-2.5 text-xs text-neutral-300">
@@ -536,7 +593,7 @@ export default function NetworkPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-4">
                       <span className="p-1 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-lg text-[10px] font-mono uppercase font-bold">Pros</span>
-                      <span className="text-neutral-500 text-[10px] font-mono font-medium">Core advantages</span>
+                      <span className="text-neutral-500 text-[10px] font-mono font-medium">What we love</span>
                     </div>
                     <ul className="space-y-3">
                       {activeReview.pros && activeReview.pros.map((p, i) => (
@@ -552,7 +609,7 @@ export default function NetworkPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-4">
                       <span className="p-1 px-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-[10px] font-mono uppercase font-bold">Cons</span>
-                      <span className="text-neutral-500 text-[10px] font-mono font-medium">Identified limitations</span>
+                      <span className="text-neutral-500 text-[10px] font-mono font-medium">Points to consider</span>
                     </div>
                     <ul className="space-y-3">
                       {activeReview.cons && activeReview.cons.map((c, i) => (
@@ -777,52 +834,7 @@ export default function NetworkPage() {
 
               </div>
 
-              {/* FLOATING STICKY CTA */}
-              <AnimatePresence>
-                {showSticky && (activeReview.enableStickyCta !== false) && (
-                  <motion.div 
-                    initial={{ y: 80, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 80, opacity: 0 }}
-                    transition={{ ease: "easeInOut", duration: 0.25 }}
-                    className="fixed bottom-0 left-0 right-0 z-50 bg-[#060608]/95 border-t border-white/10 backdrop-blur-md py-4 px-6 shadow-2xl flex items-center justify-between"
-                  >
-                    <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-6 pb-safe">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#C5A059]/15 to-[#C5A059]/5 border border-[#C5A059]/25 flex items-center justify-center text-sm font-bold text-[#C5A059] shrink-0">
-                          {activeReview.brandLogoLetter || activeReview.brandName.charAt(0)}
-                        </div>
-                        <div className="text-left">
-                          <h4 className="text-xs font-bold text-white leading-tight">{activeReview.brandName}</h4>
-                          <div className="flex items-center gap-1.5 text-[10px] text-[#C5A059] mt-0.5">
-                            <Star size={10} className="fill-[#C5A059]" />
-                            <span>{activeReview.rating} / 5.0</span>
-                          </div>
-                        </div>
-                      </div>
 
-                      <a 
-                        href={(activeReview.ctaButtons && activeReview.ctaButtons[activeReview.stickyCtaButtonIndex || 0]) 
-                          ? activeReview.ctaButtons[activeReview.stickyCtaButtonIndex || 0].url 
-                          : activeReview.affiliateUrl
-                        }
-                        target={activeReview.externalLink !== false ? "_blank" : "_self"}
-                        rel={activeReview.externalLink !== false ? "nofollow sponsored noopener" : undefined}
-                        onClick={() => handleCtaClick(activeReview.stickyCtaButtonIndex || 0)}
-                        className="bg-[#C5A059] hover:bg-[#D4B26F] text-black font-semibold text-[11px] py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-lg shadow-[#C5A059]/15 whitespace-nowrap transition-colors"
-                      >
-                        <span>
-                          {(activeReview.ctaButtons && activeReview.ctaButtons[activeReview.stickyCtaButtonIndex || 0]) 
-                            ? activeReview.ctaButtons[activeReview.stickyCtaButtonIndex || 0].text
-                            : (activeReview.ctaButtonText || 'Visit Official Site')
-                          }
-                        </span>
-                        <ExternalLink size={11} />
-                      </a>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
             </motion.div>
           ) : (
@@ -865,44 +877,50 @@ export default function NetworkPage() {
             </p>
           </div>
 
-          {/* SEARCH BAR & CATEGORY TABS FILTERS */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-6">
-            <div className="relative w-full md:w-80">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500">
+          {/* SEARCH BAR & COMPACT CATEGORY DROPDOWN SELECT */}
+          <div className="flex flex-col md:flex-row items-center gap-4 justify-center max-w-3xl mx-auto w-full bg-[#0f0f12]/90 border border-white/5 p-3 rounded-2xl shadow-2xl relative z-10">
+            {/* Search Input field */}
+            <div className="relative flex-grow w-full">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">
                 <Search size={14} />
               </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search reviews..."
-                className="w-full bg-[#0f0f12] border border-white/5 focus:border-[#C5A059]/55 focus:ring-1 focus:ring-[#C5A059]/25 rounded-xl py-2 px-10 text-xs text-white placeholder-neutral-500 outline-none transition-all"
+                placeholder="Search resources, brands, or specialties..."
+                className="w-full bg-transparent border-0 rounded-xl py-2 px-11 text-xs text-white placeholder-neutral-500 outline-none focus:ring-0"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white text-xs cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-450 hover:text-white text-xs cursor-pointer"
                 >
                   <X size={12} />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={`py-2 px-4 rounded-xl text-xs font-medium transition-all flex items-center gap-2 border cursor-pointer whitespace-nowrap ${
-                    selectedCategory === cat.id 
-                      ? 'bg-[#C5A059]/10 border-[#C5A059] text-white' 
-                      : 'bg-[#0f0f12] border-white/5 text-neutral-400 hover:text-white hover:border-neutral-800'
-                  }`}
-                >
-                  {cat.icon}
-                  <span>{cat.label}</span>
-                </button>
-              ))}
+            {/* Visual separator line on desktop */}
+            <div className="hidden md:block h-6 w-px bg-white/10" />
+
+            {/* Compact Category Dropdown Filter */}
+            <div className="relative w-full md:w-60">
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full bg-neutral-950/40 border border-white/5 focus:border-[#C5A059]/40 focus:ring-1 focus:ring-[#C5A059]/10 text-xs text-neutral-300 font-medium py-2.5 px-3 pr-10 rounded-xl appearance-none cursor-pointer outline-none hover:text-white transition-colors"
+              >
+                <option value="all" className="bg-[#0f0f12] text-white">All Specialties</option>
+                {CATEGORY_LIST.map((cat) => (
+                  <option key={cat.id} value={cat.id} className="bg-[#0f0f12] text-white">
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+                <ChevronDown size={14} />
+              </span>
             </div>
           </div>
 
@@ -923,9 +941,7 @@ export default function NetworkPage() {
                 <Button 
                   onClick={() => {
                     setSearchQuery('');
-                    const newParams = new URLSearchParams(searchParams);
-                    newParams.delete('category');
-                    setSearchParams(newParams);
+                    navigate('/ecosystem');
                   }} 
                   size="sm" 
                   className="bg-[#C5A059] hover:bg-[#D4B26F] text-black font-semibold text-xs rounded-xl"
@@ -982,12 +998,11 @@ export default function NetworkPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-neutral-500 font-mono pt-4 border-t border-white/5 mt-auto">
+                    <div className="flex items-center justify-between text-[10px] text-emerald-400 font-mono pt-4 border-t border-white/5 mt-auto">
                       <div className="flex items-center gap-1">
-                        <Clock size={11} />
-                        <span>{rev.readingTime}</span>
+                        <ShieldCheck size={11} className="text-emerald-500" />
+                        <span>Verified Review Curation</span>
                       </div>
-                      <span>{rev.publishDate}</span>
                     </div>
                     
                     {/* BUTTON LEADING TO SLUG (NOT DIRECT LINK) */}
