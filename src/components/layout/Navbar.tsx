@@ -174,22 +174,21 @@ export default function Navbar() {
           : 'bg-luxury-black/95 backdrop-blur-md border-b border-white/5'
       }`}
     >
-      {/* Top Support Bar */}
+      {/* Top Support Bar / Earn Money CTA */}
       <div className="bg-black/40 border-b border-white/5 py-2">
         <div className="container mx-auto max-w-7xl px-4 md:px-6 flex justify-center md:justify-end">
-          <a 
-            href="https://wa.me/251910012794" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 group/wa outline-none"
+          <Link 
+            to="/ecosystem-explorer"
+            className="flex items-center gap-2 group/earn outline-none bg-gradient-to-r from-[#C5A059]/10 via-[#9E7A3E]/15 to-[#C5A059]/10 border border-[#C5A059]/30 hover:border-[#C5A059] px-3.5 py-1.5 rounded-xl text-[10px] uppercase font-bold tracking-widest text-[#C5A059] shadow-[0_0_12px_rgba(197,160,89,0.06)] hover:shadow-[0_0_18px_rgba(197,160,89,0.25)] transition-all duration-300 relative overflow-hidden"
           >
-            <div className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-white/5 text-emerald-400 group-hover/wa:bg-[#C5A059] group-hover/wa:text-black">
-              <MessageCircle size={12} className="fill-current/10" />
+            {/* Ambient gold glow highlight */}
+            <div className="absolute inset-0 bg-[#C5A059]/5 opacity-0 group-hover/earn:opacity-100 transition-opacity duration-300" />
+            
+            <div className="flex items-center gap-2 relative z-10 select-none">
+              <span className="text-xs select-none">💰</span>
+              <span className="text-[#C5A059] group-hover/earn:text-[#D4B26F] transition-colors">{t('Earn Money')}</span>
             </div>
-            <span className="text-[10px] font-bold tracking-widest text-white/70 group-hover/wa:text-white transition-colors">
-              +251 910 012 794
-            </span>
-          </a>
+          </Link>
         </div>
       </div>
 
