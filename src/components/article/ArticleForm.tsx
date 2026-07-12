@@ -84,26 +84,98 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     const desc = formData.seoDescription || formData.summary || '';
     const firstParagraph = formData.content ? formData.content.replace(/<[^>]*>/g, '').substring(0, 300) : '';
 
+    // Advanced analytical diagnostics
+    const plainText = formData.content ? formData.content.replace(/<[^>]*>/g, ' ').toLowerCase() : '';
+    const words = plainText.split(/\s+/).filter(Boolean);
+    
+    // 1. Keyword density
+    let keywordCount = 0;
+    if (hasFocus && words.length > 0) {
+      const escapedKeyword = focusKeywordLower.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'gi');
+      const matches = plainText.match(regex);
+      keywordCount = matches ? matches.length : 0;
+    }
+    const keywordDensity = words.length > 0 ? (keywordCount / words.length) * 100 : 0;
+    const densityPassed = hasFocus && keywordDensity >= 0.5 && keywordDensity <= 3.0;
+
+    // 2. Links scanning, alt scanning, hierarchy scanning
+    let internalLinks = 0;
+    let externalLinks = 0;
+    let imagesTotal = 0;
+    let imagesWithAlt = 0;
+    let headingOrderCorrect = true;
+
+    if (typeof document !== 'undefined' && formData.content) {
+      try {
+        const parserDiv = document.createElement('div');
+        parserDiv.innerHTML = formData.content;
+
+        // Links
+        const anchors = parserDiv.getElementsByTagName('a');
+        for (let i = 0; i < anchors.length; i++) {
+          const href = anchors[i].getAttribute('href') || '';
+          if (href.startsWith('/') || href.includes(window.location.host)) {
+            internalLinks++;
+          } else if (href.startsWith('http')) {
+            externalLinks++;
+          }
+        }
+
+        // Images alt scanner
+        const images = parserDiv.getElementsByTagName('img');
+        imagesTotal = images.length;
+        for (let i = 0; i < images.length; i++) {
+          if (images[i].getAttribute('alt')) {
+            imagesWithAlt++;
+          }
+        }
+
+        // Heading Structure Analyser
+        const headings = parserDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        let lastLevel = 0;
+        for (let i = 0; i < headings.length; i++) {
+          const level = parseInt(headings[i].tagName.substring(1));
+          if (lastLevel > 0 && level > lastLevel + 1) {
+            headingOrderCorrect = false;
+          }
+          lastLevel = level;
+        }
+      } catch (e) {
+        console.error('SEO parser error', e);
+      }
+    }
+
+    const linksPassed = internalLinks >= 1 || externalLinks >= 1;
+    const altPassed = imagesTotal === 0 || imagesWithAlt === imagesTotal;
+
     return [
       {
         id: 'title-presence',
         label: 'Focus Keyword in Article Title',
         description: 'Ensure the main target keyword appears early in your headline.',
         passed: hasFocus && title.toLowerCase().includes(focusKeywordLower),
-        impact: 20
+        impact: 10
       },
       {
         id: 'desc-presence',
         label: 'Focus Keyword in Meta Description',
         description: 'Focus keyword must be cleanly written inside the search summary.',
         passed: hasFocus && desc.toLowerCase().includes(focusKeywordLower),
-        impact: 15
+        impact: 10
       },
       {
         id: 'content-start',
         label: 'Focus Keyword in First Paragraph',
         description: 'Introduce your reader and search bots to your target keyword immediately.',
         passed: hasFocus && firstParagraph.toLowerCase().includes(focusKeywordLower),
+        impact: 10
+      },
+      {
+        id: 'keyword-density',
+        label: 'Keyword Density Analyzer',
+        description: `Maintain 0.5% - 3.0% density. Current: ${keywordDensity.toFixed(2)}% (${keywordCount} matches).`,
+        passed: densityPassed,
         impact: 15
       },
       {
@@ -113,7 +185,7 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
         passed: title.length >= 20 && title.length <= 80,
         current: `${title.length} chars`,
         recommended: '20 - 80 chars',
-        impact: 15
+        impact: 10
       },
       {
         id: 'desc-length',
@@ -122,26 +194,31 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
         passed: desc.length >= 60 && desc.length <= 160,
         current: `${desc.length} chars`,
         recommended: '60 - 160 chars',
+        impact: 10
+      },
+      {
+        id: 'link-structure',
+        label: 'Internal & External Link Counts',
+        description: `Provide outbound value. Current: ${internalLinks} internal, ${externalLinks} external links.`,
+        passed: linksPassed,
         impact: 15
       },
       {
-        id: 'word-count',
-        label: 'Sufficient Content Length',
-        description: 'Detailed writing provides stronger search engines indexing (>100 words).',
-        passed: totalWordCount >= 100,
-        current: `${totalWordCount} words`,
-        recommended: '>= 100 words',
+        id: 'alt-scanner',
+        label: 'Image Alt Accessibility Scanner',
+        description: `Alt attributes on images are vital. Passed: ${imagesWithAlt}/${imagesTotal} images.`,
+        passed: altPassed,
         impact: 10
       },
       {
-        id: 'featured-image',
-        label: 'Featured Cover Photo Configured',
-        description: 'Visual cues boost article click-through rates dramatically.',
-        passed: !!formData.featuredImage,
+        id: 'header-hierarchy',
+        label: 'Logical Header Hierarchy Order',
+        description: 'Verify heading levels (H2-H6) grow sequentially to preserve SEO accessibility indexing.',
+        passed: headingOrderCorrect,
         impact: 10
       }
     ];
-  }, [formData.focusKeyword, formData.title, formData.seoDescription, formData.summary, formData.content, formData.featuredImage, totalWordCount]);
+  }, [formData.focusKeyword, formData.title, formData.seoDescription, formData.summary, formData.content, totalWordCount]);
 
   // Dynamically calculate score
   const computedSeoScore = useMemo(() => {

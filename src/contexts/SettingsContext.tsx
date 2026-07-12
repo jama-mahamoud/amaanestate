@@ -519,7 +519,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   
   const [currency, setCurrency] = useState<Currency>(() => {
     try {
-      return (localStorage.getItem('amaan_currency') as Currency) || 'ETB';
+      return (localStorage.getItem('pd_currency') as Currency) || 'USD';
     } catch (e) {
       console.warn("Storage access failed:", e);
       return 'ETB';
@@ -528,7 +528,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('amaan_language', language);
+      localStorage.setItem('pd_language', language);
     } catch (e) {
       console.warn("Storage write failed:", e);
     }
@@ -536,7 +536,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('amaan_currency', currency);
+      localStorage.setItem('pd_currency', currency);
     } catch (e) {
       console.warn("Storage write failed:", e);
     }

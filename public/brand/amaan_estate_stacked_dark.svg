@@ -1,0 +1,36 @@
+<svg viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="amaan-grad-st-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <linearGradient id="amaan-glow-st-dark" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Centered Icon (x=100, y=40, scale=0.75) -->
+  <g transform="translate(62.5, 2.5) scale(0.75)">
+    <circle cx="50" cy="50" r="45" fill="url(#amaan-glow-st-dark)" />
+    <path d="M 50,14 L 81,32 L 81,68 L 50,86 L 19,68 L 19,32 Z" stroke="url(#amaan-grad-st-dark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.35" />
+    <circle cx="50" cy="14" r="3" fill="#06B6D4" />
+    <circle cx="81" cy="32" r="3" fill="#2563EB" />
+    <circle cx="81" cy="68" r="3" fill="#06B6D4" />
+    <circle cx="50" cy="86" r="3" fill="#2563EB" />
+    <circle cx="19" cy="68" r="3" fill="#06B6D4" />
+    <circle cx="19" cy="32" r="3" fill="#2563EB" />
+    <path d="M 33,68 L 46,30 C 47.2,26.5 52.8,26.5 54,30 L 67,68 L 59.5,68 L 50,40.5 L 40.5,68 Z" fill="url(#amaan-grad-st-dark)" />
+    <circle cx="50" cy="53" r="5.5" fill="#06B6D4" stroke="#0F172A" stroke-width="1.5" />
+    <path d="M 38,53 L 44.5,53 M 55.5,53 L 62,53" stroke="url(#amaan-grad-st-dark)" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <!-- Centered text groups -->
+  <g transform="translate(100, 104)">
+    <text fill="#FFFFFF" font-family="'Inter', system-ui, sans-serif" font-size="18" font-weight="800" letter-spacing="-0.02em" text-anchor="end" x="-3">Amaan</text>
+    <text fill="#06B6D4" font-family="'Inter', system-ui, sans-serif" font-size="18" font-weight="400" letter-spacing="-0.01em" text-anchor="start" x="3">Estate</text>
+  </g>
+
+  <!-- Sublabel -->
+  <text x="100" y="122" fill="rgba(255,255,255,0.4)" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="700" letter-spacing="0.18em" text-anchor="middle">TECH PUBLICATION</text>
+</svg>

@@ -1,102 +1,95 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, ShieldCheck, ArrowRight, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { EditorialReview } from '@/services/reviewService';
 import { getCategoryLabel } from '@/data/categories';
 
 interface NetworkProductCardProps {
   rev: EditorialReview;
+  basePath?: string;
 }
 
-export default function NetworkProductCard({ rev }: NetworkProductCardProps) {
+export default function NetworkProductCard({ rev, basePath = '/ecosystem' }: NetworkProductCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="rounded-2xl bg-neutral-900/60 border border-white/5 overflow-hidden flex flex-col h-full hover:border-[#C5A059]/30 hover:shadow-[0_20px_50px_rgba(197,160,89,0.06)] transition-all duration-350 group"
+      className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-[400px] hover:shadow-lg transition-all duration-300 group"
     >
-      {/* CLICKABLE IMAGE PREVIEW WITH AMAZON-STYLE SMOOTH HOVER ZOOM */}
-      <a 
-        href={rev.affiliateUrl || '#'} 
-        target="_blank" 
-        rel="nofollow sponsored noopener noreferrer"
-        className="aspect-[16/9] overflow-hidden border-b border-white/5 relative block cursor-pointer"
-        title={`Visit ${rev.brandName}`}
+      {/* PRODUCT IMAGE (65% height) */}
+      <Link 
+        to={`${basePath}/${rev.slug}`}
+        className="h-[60%] relative block bg-slate-50 border-b border-slate-100 p-4"
+        title={`View ${rev.title}`}
       >
         <img 
           src={rev.featuredImage} 
-          alt={rev.brandName} 
+          alt={rev.title} 
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover transform scale-100 group-hover:scale-108 transition-transform duration-700 ease-out"
+          className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
         />
-        {/* Subtle hover gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3 bg-neutral-950/80 border border-white/10 px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-wider uppercase text-neutral-400 backdrop-blur-sm z-10">
-          {getCategoryLabel(rev.category)}
-        </div>
-      </a>
-
-      {/* DETAILS CARD BODY */}
-      <div className="p-6 flex flex-col flex-grow space-y-4 text-left">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-center text-xs font-bold text-[#C5A059]">
-              {rev.brandLogoLetter || rev.brandName.charAt(0)}
-            </div>
-            <h3 className="font-bold text-white text-xs tracking-tight">{rev.brandName}</h3>
+        {/* Discount Badge */}
+        {rev.discountPrice && rev.price && (
+          <div className="absolute top-2 left-2 bg-[#e11d48] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
+            SAVE {Math.round((1 - parseFloat(rev.discountPrice.replace(/[^0-9.]/g, '')) / parseFloat(rev.price.replace(/[^0-9.]/g, ''))) * 100) || 0}%
           </div>
-          
-          <div className="flex items-center gap-1.5 text-[#C5A059] font-mono font-bold text-[11px] bg-[#C5A059]/5 border border-[#C5A059]/15 px-2 py-0.5 rounded-lg">
-            <Star size={11} className="fill-[#C5A059]" />
-            <span>{rev.rating}</span>
-          </div>
-        </div>
+        )}
+      </Link>
 
-        <div className="space-y-1">
-          <h4 className="text-sm font-serif font-semibold text-white tracking-tight group-hover:text-[#C5A059] transition-colors leading-snug line-clamp-1">
-            <a 
-              href={rev.affiliateUrl || '#'} 
-              target="_blank" 
-              rel="nofollow sponsored noopener noreferrer"
-              className="hover:underline"
-            >
-              {rev.title}
-            </a>
+      {/* CARD BODY */}
+      <div className="p-3 flex flex-col flex-grow bg-white">
+        
+        {/* Title: Max 2 lines */}
+        <Link to={`${basePath}/${rev.slug}`} className="hover:underline">
+          <h4 className="text-sm font-semibold text-slate-900 leading-tight line-clamp-2 h-10 mb-1" title={rev.title}>
+            {rev.title}
           </h4>
-          <p className="text-neutral-400 text-xs font-light leading-relaxed line-clamp-2">
-            {rev.excerpt}
-          </p>
+        </Link>
+        
+        {/* Brand & Category */}
+        <div className="flex items-center gap-2 mb-2 text-xs text-slate-500">
+          <span className="font-medium text-slate-700 truncate">{rev.brandName}</span>
+          <span className="text-slate-300">•</span>
+          <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] uppercase font-mono tracking-wide truncate">
+            {getCategoryLabel(rev.category)}
+          </span>
         </div>
 
-        <div className="flex items-center justify-between text-[10px] text-emerald-400 font-mono pt-4 border-t border-white/5 mt-auto">
-          <div className="flex items-center gap-1">
-            <ShieldCheck size={11} className="text-emerald-500" />
-            <span>Verified Review Curation</span>
+        {/* Price & Actions (Pushed to bottom) */}
+        <div className="mt-auto">
+          <div className="flex items-baseline gap-2 mb-3">
+            {rev.discountPrice ? (
+              <>
+                <span className="text-base font-bold text-slate-900">{rev.discountPrice}</span>
+                <span className="text-xs text-slate-400 line-through">{rev.price}</span>
+              </>
+            ) : (
+              <span className="text-base font-bold text-slate-900">{rev.price || 'Check Price'}</span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to={`${basePath}/${rev.slug}`}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold uppercase tracking-wider rounded-lg h-9 flex items-center justify-center transition-colors"
+            >
+              Details
+            </Link>
+            <a
+              href={rev.affiliateUrl || '#'}
+              target="_blank"
+              rel="nofollow sponsored noopener noreferrer"
+              className="bg-[#C5A059] hover:bg-[#b08d4a] text-white text-[11px] font-bold uppercase tracking-wider rounded-lg h-9 flex items-center justify-center gap-1 transition-colors"
+            >
+              Buy Now <ExternalLink size={12} />
+            </a>
           </div>
         </div>
         
-        {/* REUSABLE ACTION DUO (READ DETAILS AND DIRECT AFFILIATE BUY NOW LINK) */}
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          <Link
-            to={`/ecosystem/${rev.slug}`}
-            className="bg-white/[0.02] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 text-neutral-300 hover:text-white text-[11px] font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 px-2 text-center cursor-pointer"
-          >
-            Read Review 
-          </Link>
-          <a
-            href={rev.affiliateUrl || '#'}
-            target="_blank"
-            rel="nofollow sponsored noopener noreferrer"
-            className="bg-[#C5A059] hover:bg-[#D4B26F] text-black text-[11px] font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 px-2 text-center cursor-pointer shadow-lg shadow-[#C5A059]/10"
-          >
-            Buy Now <ExternalLink size={11} className="shrink-0" />
-          </a>
-        </div>
       </div>
     </motion.div>
   );

@@ -12,7 +12,7 @@ export interface SEOProps {
 export function useSEO({ title, description, image, url, type = 'website', structuredData }: SEOProps) {
   useEffect(() => {
     // 1. Update document title
-    const fullTitle = `${title} | AmaanEstate — Verify & Deal Locally`;
+    const fullTitle = `${title} | AmaanEstate — Tech & Software Publication`;
     document.title = fullTitle;
 
     // 2. Helper to set meta tags safely
@@ -58,11 +58,11 @@ export function useSEO({ title, description, image, url, type = 'website', struc
     }
 
     // 3. Structured Data JSON-LD Schema Injection
-    let scriptElement = document.querySelector('script[id="amaan-structured-data"]') as HTMLScriptElement;
+    let scriptElement = document.querySelector('script[id="amaanestate-structured-data"]') as HTMLScriptElement;
     if (structuredData) {
       if (!scriptElement) {
         scriptElement = document.createElement('script');
-        scriptElement.setAttribute('id', 'amaan-structured-data');
+        scriptElement.setAttribute('id', 'amaanestate-structured-data');
         scriptElement.setAttribute('type', 'application/ld+json');
         document.head.appendChild(scriptElement);
       }

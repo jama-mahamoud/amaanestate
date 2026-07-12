@@ -93,7 +93,7 @@ export default function Disclaimer() {
               Verification Badges & Partner Network Ratings
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              Ecosystem integrity markers (Verified Agency tags, Trust Index scores, and Broker Registry indices) constitute a performance rating derived from verified municipal compliance, licensing reports, and active user feedback history. These markers serve as structural trust transparency guides and do not represent a legal warranty regarding future conduct, reliability, or solvency of any partner.
+              Network integrity markers (Verified Agency tags, Trust Index scores, and Broker Registry indices) constitute a performance rating derived from verified municipal compliance, licensing reports, and active user feedback history. These markers serve as structural trust transparency guides and do not represent a legal warranty regarding future conduct, reliability, or solvency of any partner.
             </p>
           </section>
 
@@ -101,7 +101,7 @@ export default function Disclaimer() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-[#C5A059]">05.</span>
-              Ecosystem Connectivity & External Integrations
+              Network Connectivity & External Integrations
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
               The AmaanEstate digital marketplace provides directory pointers, real-time communication routes, and external map coordinates linking users to independent entities. Engagements, financial escrow deliveries, and documentation transactions executed offline via these external avenues represent direct, exclusive covenants operating outside the liability structures of AmaanEstate.

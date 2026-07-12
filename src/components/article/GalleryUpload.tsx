@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, Grid } from 'lucide-react';
+import { Upload, X, Grid, Link as LinkIcon } from 'lucide-react';
 import { uploadFile } from '@/services/uploadService';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,6 +14,7 @@ export default function GalleryUpload({ value = [], onChange, label = 'Gallery I
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
 
   const handleUpload = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -56,6 +57,14 @@ export default function GalleryUpload({ value = [], onChange, label = 'Gallery I
     onChange(value.filter((_, idx) => idx !== indexToRemove));
   };
 
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (urlInput.trim()) {
+      onChange([...value, urlInput.trim()]);
+      setUrlInput('');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -67,11 +76,11 @@ export default function GalleryUpload({ value = [], onChange, label = 'Gallery I
         <AnimatePresence>
           {value.map((url, idx) => (
             <motion.div
-              key={url}
+              key={url + idx}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 group"
+              className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 group bg-neutral-900"
             >
               <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -110,6 +119,28 @@ export default function GalleryUpload({ value = [], onChange, label = 'Gallery I
           )}
           <input type="file" className="hidden" accept="image/*" multiple onChange={onFileChange} disabled={isUploading} />
         </label>
+      </div>
+      
+      <div className="pt-2 border-t border-white/5">
+        <form onSubmit={handleUrlSubmit} className="flex gap-2">
+          <div className="relative flex-1">
+            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="Or add via URL (e.g. https://...)"
+              className="w-full bg-black/50 border border-white/10 text-white text-sm rounded-xl pl-9 pr-3 h-10 focus:outline-none focus:border-[#C5A059]/50"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!urlInput.trim()}
+            className="bg-white/5 hover:bg-white/10 text-white font-bold text-xs px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 whitespace-nowrap"
+          >
+            Add URL
+          </button>
+        </form>
       </div>
     </div>
   );

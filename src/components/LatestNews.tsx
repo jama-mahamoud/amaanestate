@@ -59,25 +59,25 @@ const getTypeColor = (type?: string) => {
   }
 };
 
-const getTypeLabel = (type?: string) => {
-  const val = (type || '').toLowerCase().trim();
-  switch (val) {
-    case 'news':
-    case 'update': return 'Warar';
-    case 'report':
-    case 'market_report': return 'Warbixin';
-    case 'opportunity': return 'Fursad';
-    case 'announcement': return 'Ogeysiis';
-    case 'new_project': return 'Mashruuc Cusub';
-    case 'short_insight': return 'Falanqeyn';
-    default: return 'Falanqeyn';
+// Clean Category Label filter for premium editorial aesthetic
+const getCleanCategoryLabel = (category?: string, type?: string) => {
+  const val = (category || type || '').toLowerCase().trim();
+  if (val.includes('software') || val.includes('tool')) {
+    return 'Software & Tools';
   }
+  if (val.includes('gear') || val.includes('hardware') || val.includes('tech')) {
+    return 'Tech Gear';
+  }
+  if (val.includes('review') || val.includes('assessment') || val.includes('editorial')) {
+    return 'Reviews';
+  }
+  return null;
 };
 
 // Sub-component for Featured Article Card
 const FeaturedArticleCard = ({ article }: { article: Article }) => {
-  const readTime = calculateReadTime(article.content || '');
   const summary = article.summary || cleanSummaryText(article.content || '', 240);
+  const cleanCategory = getCleanCategoryLabel(article.category, article.type);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
         {/* Banner Image Container */}
-        <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto min-h-[300px] lg:min-h-[480px] overflow-hidden">
+        <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto min-h-[280px] lg:min-h-[440px] overflow-hidden">
           <img 
             src={typeof article.featuredImage === 'string' ? article.featuredImage : (article.featuredImage?.url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200')} 
             alt={article.title}
@@ -106,29 +106,26 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent lg:hidden" />
-          <div className="absolute top-6 left-6 z-10">
-            <Badge className={`${getTypeColor(article.type || article.category)} text-white hover:opacity-90 uppercase tracking-widest text-[11px] font-black border-none px-4 py-1.5 shadow-sm`}>
-              {getTypeLabel(article.type || article.category)}
-            </Badge>
-          </div>
-          <div className="absolute bottom-6 left-6 right-6 lg:hidden z-10 text-white">
-            <span className="text-white/80 text-xs font-bold uppercase tracking-wider block mb-2">{article.category || 'Real Estate'}</span>
-            <h3 className="text-xl font-display font-bold leading-snug">{article.title}</h3>
-          </div>
+          {cleanCategory && (
+            <div className="absolute top-6 left-6 z-10">
+              <Badge className="bg-[#C5A059] text-white hover:opacity-90 uppercase tracking-widest text-[10px] font-bold border-none px-4 py-1.5 shadow-sm">
+                {cleanCategory}
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Info Container */}
         <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-between bg-white relative">
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3 text-slate-500 text-xs font-mono">
-              <span className={`flex items-center gap-1.5 uppercase tracking-widest text-white font-black text-[10px] px-2 py-0.5 rounded-sm ${getTypeColor(article.type || article.category)}`}>
-                {getTypeLabel(article.type || article.category)}
+          <div className="space-y-5">
+            {cleanCategory && (
+              <span className="text-[#C5A059] text-xs font-black tracking-[0.2em] uppercase block">
+                {cleanCategory}
               </span>
-            </div>
+            )}
 
             <h3 className="text-2xl lg:text-3xl font-display font-black text-slate-950 tracking-tight leading-tight group-hover:text-[#C5A059] transition-colors duration-300">
-              <Link to={`/news/${article.slug || article.id}`}>
+              <Link to={`/news/${article.slug || article.id}`} title={summary || article.title}>
                 {article.title}
               </Link>
             </h3>
@@ -138,17 +135,15 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
             </p>
           </div>
 
-          <div className="pt-8 mt-8 border-t border-slate-100 flex items-center justify-between">
+          <div className="pt-6 mt-8 border-t border-slate-100 flex items-center justify-between">
             <Link 
               to={`/news/${article.slug || article.id}`} 
-              className="inline-flex items-center font-bold tracking-tight text-slate-900 group-hover:text-[#C5A059] transition-colors text-base"
+              title={summary || article.title}
+              className="inline-flex items-center font-bold tracking-tight text-[#C5A059] hover:text-slate-950 transition-colors text-base"
             >
-              Analyze Report 
+              Read Article 
               <ArrowRight size={18} className="ml-2 transform group-hover:translate-x-1.5 transition-transform duration-300" />
             </Link>
-            <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-slate-400">
-              Amaan Archive
-            </span>
           </div>
         </div>
       </div>
@@ -158,8 +153,8 @@ const FeaturedArticleCard = ({ article }: { article: Article }) => {
 
 // Sub-component for regular Article Cards
 const ArticleCard = ({ article, index }: { article: Article; index: number }) => {
-  const readTime = calculateReadTime(article.content || '');
   const summary = article.summary || cleanSummaryText(article.content || '', 140);
+  const cleanCategory = getCleanCategoryLabel(article.category, article.type);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -186,33 +181,41 @@ const ArticleCard = ({ article, index }: { article: Article; index: number }) =>
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out"
           loading="lazy"
         />
-        <div className="absolute top-4 left-4">
-          <Badge className={`${getTypeColor(article.type || article.category)} text-white hover:opacity-90 uppercase tracking-wider text-[9px] font-bold border-none px-3 py-1`}>
-            {getTypeLabel(article.type || article.category)}
-          </Badge>
-        </div>
+        {cleanCategory && (
+          <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4">
+            <Badge className="bg-[#C5A059] text-white hover:opacity-90 uppercase tracking-wider text-[9px] font-bold border-none px-2.5 py-0.5 sm:px-3 sm:py-1">
+              {cleanCategory}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      <div className="p-6 flex-1 flex flex-col justify-between">
+      <div className="p-3.5 sm:p-6 flex-1 flex flex-col justify-between">
         <div>
+          {cleanCategory && (
+            <span className="text-[#C5A059] text-[9px] sm:text-[10px] font-black tracking-[0.15em] uppercase block mb-1 sm:mb-2">
+              {cleanCategory}
+            </span>
+          )}
 
-          <h4 className="text-lg md:text-xl font-display font-bold text-slate-950 mb-3 line-clamp-2 leading-snug group-hover:text-[#C5A059] transition-colors duration-300 font-bold">
-            <Link to={`/news/${article.slug || article.id}`}>
+          <h4 className="text-sm sm:text-lg md:text-xl font-display font-bold text-slate-950 mb-1.5 sm:mb-3 line-clamp-2 leading-snug group-hover:text-[#C5A059] transition-colors duration-300">
+            <Link to={`/news/${article.slug || article.id}`} title={summary || article.title}>
               {article.title}
             </Link>
           </h4>
 
-          <p className="text-slate-600 text-xs md:text-sm font-light leading-relaxed mb-6 line-clamp-3">
+          <p className="text-slate-600 text-[11px] sm:text-xs md:text-sm font-light leading-normal sm:leading-relaxed mb-3.5 sm:mb-6 line-clamp-2 sm:line-clamp-3">
             {summary}
           </p>
         </div>
 
-        <div className="pt-4 border-t border-slate-100 mt-auto flex items-center justify-between">
+        <div className="pt-2.5 sm:pt-4 border-t border-slate-100 mt-auto flex items-center justify-between">
           <Link 
             to={`/news/${article.slug || article.id}`}
-            className="inline-flex items-center text-xs md:text-sm font-bold text-slate-900 group-hover:text-[#C5A059] transition-colors"
+            title={summary || article.title}
+            className="inline-flex items-center text-xs md:text-sm font-bold text-[#C5A059] hover:text-slate-950 transition-colors"
           >
-            Read Intelligence 
+            Read Article 
             <ArrowRight size={14} className="ml-1.5 transform group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -226,7 +229,7 @@ const LatestNews = memo(() => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    articleService.getArticles(undefined, 'so', true)
+    articleService.getArticles(undefined, undefined, true)
       .then(data => {
         // Safe robust sorting & client cache format resilience
         const sorted = data.sort((a, b) => {
@@ -254,7 +257,7 @@ const LatestNews = memo(() => {
       <section className="py-24 bg-slate-50 text-slate-900 flex justify-center items-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-slate-500 text-sm font-light">Loading Market Intelligence...</p>
+          <p className="text-slate-500 text-sm font-light">Loading Tech Assessments...</p>
         </div>
       </section>
     );
@@ -283,17 +286,17 @@ const LatestNews = memo(() => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 lg:mb-12 gap-6">
           <div className="space-y-3">
             <span className="text-[#C5A059] text-xs font-black tracking-[0.3em] uppercase block">
-              Somali Region Focus
+              Tech Network Focus
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-black text-slate-950 mb-4 tracking-tight leading-tight">
               Latest News & <br className="hidden sm:inline" />
               <span className="text-[#C5A059] relative inline-block font-bold">
-                Market Intelligence
+                Software Insights
                 <span className="absolute bottom-1 left-0 w-full h-[3px] bg-[#C5A059]/20" />
               </span>
             </h2>
             <p className="text-slate-600 max-w-2xl text-base md:text-lg font-light leading-relaxed">
-              Stay ahead with institutional insights, major infrastructure updates, and localized development intelligence within our regions.
+              Stay ahead with institutional insights, major tech benchmarks, and localized software intelligence within our ecosystem.
             </p>
           </div>
           

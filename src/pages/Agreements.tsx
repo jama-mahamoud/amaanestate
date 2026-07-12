@@ -29,24 +29,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/contexts/SettingsContext';
 import { FormWizard } from '@/components/ui/FormWizard';
 
-const DEFAULT_LEGAL_CLAUSES_EN = `1. TITLE OWNERSHIP: Party A represents and guarantees they hold legitimate and unrestrained ownership rights of the designated asset, free of any prior security interest, encumbrance, or ongoing litigation.
+const DEFAULT_LEGAL_CLAUSES_EN = `1. LICENSE RIGHTS: Party A represents and guarantees they hold legitimate and unrestrained licensing rights of the designated digital asset or software, free of any prior security interest, encumbrance, or ongoing IP litigation.
 
-2. DISBURSEMENT SCHEDULE: Party B covenants to transfer the designated transaction valuation price upon endorsement hereof according to the scheduled payment terms detailed below.
+2. PAYMENT OBLIGATIONS: Party B covenants to transfer the designated transaction valuation price upon endorsement hereof according to the scheduled payment terms detailed below.
 
-3. BREACH & PENALITIES: Any material default on covenants by either Party A or Party B shall trigger immediate legal recourse on the regional land registry/commerce legal framework. Late payments or delivery failures bear a cumulative premium fee of 2.5% per week of delay.`;
+3. BREACH & PENALTIES: Any material default on covenants by either Party A or Party B shall trigger immediate legal recourse under tech governance/commercial legal frameworks. Late payments or delivery failures bear a cumulative premium fee of 2.5% per week of delay.`;
 
-const DEFAULT_LEGAL_CLAUSES_SO = `1. LAHAANSHAHA CINWAANKA: Dhinaca A wuxuu caddeynayaa oo uu dammaanad qaadayaa inay si sharci ah oo aan xannibaad lahayn u leeyihiin hantida la cayimay, iyadoo ka madax-bannaan wax kasta oo dammaanad ama dacwad socota ah.
+const DEFAULT_LEGAL_CLAUSES_SO = `1. XUQUUDA SHATIGA: Dhinaca A wuxuu caddeynayaa oo uu dammaanad qaadayaa inay si sharci ah u leeyihiin xuquuqda shatiga ee hantida dhijitaalka ah ama software-ka la cayimay, iyadoo ka madax-bannaan wax kasta oo dammaanad ama dacwad aqooneed ah.
 
-2. JADWALKA LACAG-BIXINTA: Dhinaca B wuxuu ballanqaadayaa inuu u wareejiyo qiimaha macaamilka ee loo qoondeeyay marka la saxeexo heshiiskan si waafaqsan shuruudaha lacag-bixinta ee hoos ku xusan.
+2. WAWAJIBKA LACAG-BIXINTA: Dhinaca B wuxuu ballanqaadayaa inuu u wareejiyo qiimaha macaamilka ee loo qoondeeyay marka la saxeexo heshiiskan si waafaqsan shuruudaha lacag-bixinta ee hoos ku xusan.
 
-3. JABINTA & CIQAABAHA: Wax kasta oo ka weecasho ah qodobbada heshiiska ee labada dhinac (A ama B) waxay kicin doonaan dacwad sharci oo degdeg ah oo waafaqsan sharciga iyo nidaamka diiwaangelinta dhulka ee gobolka. Daahitaanka lacag-bixinta ama fashilaadda alaab-keenista waxay keenaysaa ganaax dhan 2.5% toddobaad kasta oo dib-u-dhac ah.`;
+3. JABINTA & CIQAABAHA: Wax kasta oo ka weecasho ah qodobbada heshiiska ee labada dhinac (A ama B) waxay kicin doonaan dacwad sharci oo degdeg ah oo waafaqsan sharciga ganacsiga iyo tiknoolajiyada. Daahitaanka lacag-bixinta ama fashilaadda adeeg-keenista waxay keenaysaa ganaax dhan 2.5% toddobaad kasta oo dib-u-dhac ah.`;
 
 const AgreementTypes = [
-  { value: 'propertySale', label: 'Property Sale Agreement' },
-  { value: 'propertyRental', label: 'Property Rental Agreement' },
-  { value: 'vehicleSale', label: 'Vehicle Sale Agreement' },
-  { value: 'vehicleRental', label: 'Vehicle Rental Agreement' },
-  { value: 'brokerCommission', label: 'Broker Commission Agreement' },
+  { value: 'propertySale', label: 'Software Licensing Deal' },
+  { value: 'propertyRental', label: 'SaaS Subscription Plan' },
+  { value: 'vehicleSale', label: 'Tech Equipment Purchase' },
+  { value: 'vehicleRental', label: 'Hardware Leasing Term' },
+  { value: 'brokerCommission', label: 'Affiliate Partner Payout' },
 ];
 
 const SecureInput = ({
@@ -1050,23 +1050,23 @@ export default function Agreements() {
             <p className="text-sm text-emerald-400/80 font-mono">{t("Status: Pending Approval")}</p>
           </div>
 
-          <div className="bg-white/5 border border-white/5 p-6 rounded-2xl text-left space-y-4">
-            <p className="text-xs text-white/40 font-bold uppercase tracking-widest">{t("System Record Registered")}</p>
-            <div>
-              <span className="text-xs text-white/50 block">{t("Agreement Record ID")}</span>
-              <span className="text-sm font-mono text-luxury-gold select-all font-bold">{submittedId}</span>
-            </div>
-            <div>
-              <span className="text-xs text-white/50 block">{t("Audit Track Status")}</span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 mt-1">
-                ● {t("Pending Officer Review")}
-              </span>
-            </div>
-          </div>
+      <div className="bg-white/5 border border-white/5 p-6 rounded-2xl text-left space-y-4">
+        <p className="text-xs text-white/40 font-bold uppercase tracking-widest">{t("Transaction Record Registered")}</p>
+        <div>
+          <span className="text-xs text-white/50 block">{t("Agreement Record ID")}</span>
+          <span className="text-sm font-mono text-luxury-gold select-all font-bold">{submittedId}</span>
+        </div>
+        <div>
+          <span className="text-xs text-white/50 block">{t("Audit Track Status")}</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 mt-1">
+            ● {t("Pending Verification Review")}
+          </span>
+        </div>
+      </div>
 
-          <p className="text-sm text-white/60">
-            {t("Your legal agreement documents have been logged securely. You can direct the municipal administration division or real estate desk in charge of verification to sign off using the administrator console.")}
-          </p>
+      <p className="text-sm text-white/60">
+        {t("Your legal agreement documents have been logged securely. You can direct the PrimeDeals compliance division or tech oversight desk in charge of verification to sign off using the administrator console.")}
+      </p>
 
           <div className="flex flex-col gap-3">
             <Button onClick={() => navigate('/dashboard')} className="w-full bg-[#C5A059] hover:bg-[#B48F48] text-black h-12 rounded-xl font-bold uppercase tracking-wider text-xs">
@@ -1497,8 +1497,8 @@ export default function Agreements() {
                 <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500"></span>
               </span>
               <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">{t("Secure Registry Connection Active")}</p>
-                <p className="text-[10px] text-white/50 leading-relaxed font-sans">{t("Cryptographic handshake successfully initialized with Supreme Land Registry.")}</p>
+                <p className="text-xs font-bold text-white uppercase tracking-wider">{t("PrimeDeals Validation Network Active")}</p>
+                <p className="text-[10px] text-white/50 leading-relaxed font-sans">{t("Cryptographic handshake successfully initialized with PrimeDeals Global Node.")}</p>
               </div>
             </div>
             
@@ -1526,7 +1526,7 @@ export default function Agreements() {
                 label={t("Agreement Title")}
                 value={formData.agreementTitle}
                 onChange={val => setFormData({ ...formData, agreementTitle: val })}
-                placeholder={t("e.g. Real Estate Sales Deed")}
+                placeholder={t("e.g. Enterprise Software License")}
                 t={t}
               />
 
@@ -1557,7 +1557,7 @@ export default function Agreements() {
                 <span className="text-[10px] uppercase font-bold text-white/40">{t("Default Asset Price Type *")}</span>
                 <Input 
                   disabled
-                  value={formData.agreementType === 'brokerCommission' ? (language === 'so' ? 'Qiimaha Dillaalka ee hoos ku qoran' : 'Broker Rate Specified Below') : (language === 'so' ? 'Kala-guurka Qaybta D' : 'Dynamic from Section D')} 
+                  value={formData.agreementType === 'brokerCommission' ? (language === 'so' ? 'Qiimaha Dillaalka ee hoos ku qoran' : 'Affiliate Rate Specified Below') : (language === 'so' ? 'Kala-guurka Qaybta D' : 'Dynamic from Section D')} 
                   className="bg-white/5 border-white/5 h-11 rounded-lg text-white/50 cursor-not-allowed text-xs" 
                 />
               </div>

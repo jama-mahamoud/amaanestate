@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import { FloatingMenu } from '@tiptap/extension-floating-menu';
@@ -21,6 +22,21 @@ import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { Extension, Node as TiptapNode, mergeAttributes } from '@tiptap/core';
 import { common, createLowlight } from 'lowlight';
 import { motion, AnimatePresence } from 'framer-motion';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+import { 
+  ProductBoxNode, 
+  ProsConsNode, 
+  RatingBlockNode, 
+  ComparisonTableNode, 
+  CtaBlockNode, 
+  ReviewSummaryNode, 
+  FaqBlockNode, 
+  InfoBoxNode, 
+  PullQuoteNode, 
+  ImageGalleryNode, 
+  EmbeddedVideoNode 
+} from './CmsCustomBlocks';
 // ... (omitted) ...
 
 const Callout = TiptapNode.create({
@@ -730,6 +746,10 @@ export default function Editor({ content, onChange }: { content: string, onChang
   const [uploadProgress, setUploadProgress] = useState(0);
   const [activePicker, setActivePicker] = useState<'text' | 'highlight' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkHref, setLinkHref] = useState('');
+  const [linkIsAffiliate, setLinkIsAffiliate] = useState(false);
+  const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(true);
 
   const handleImageUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -766,7 +786,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
         codeBlock: false,
         horizontalRule: false,
       }),
-      // Underline,
+      Underline,
       Typography,
       TextStyle,
       Color,
@@ -775,6 +795,17 @@ export default function Editor({ content, onChange }: { content: string, onChang
       LineHeight,
       Callout,
       StatisticsBlock,
+      ProductBoxNode,
+      ProsConsNode,
+      RatingBlockNode,
+      ComparisonTableNode,
+      CtaBlockNode,
+      ReviewSummaryNode,
+      FaqBlockNode,
+      InfoBoxNode,
+      PullQuoteNode,
+      ImageGalleryNode,
+      EmbeddedVideoNode,
       HorizontalRule.configure({
         HTMLAttributes: {
           class: 'my-12 border-t border-white/10 h-0 w-full',
@@ -782,15 +813,15 @@ export default function Editor({ content, onChange }: { content: string, onChang
       }),
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({
-        types: ['heading', 'paragraph', 'callout'],
+        types: ['heading', 'paragraph', 'callout', 'pullQuote', 'infoBox', 'productBox', 'faqBlock', 'imageGallery'],
       }),
       ResizableImage,
-      // Link.configure({
-      //   openOnClick: false,
-      //   HTMLAttributes: {
-      //     class: 'text-luxury-gold underline underline-offset-4 decoration-luxury-gold/50 hover:decoration-luxury-gold transition-colors',
-      //   },
-      // }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-luxury-gold underline underline-offset-4 decoration-luxury-gold/50 hover:decoration-luxury-gold transition-colors',
+        },
+      }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -832,6 +863,26 @@ export default function Editor({ content, onChange }: { content: string, onChang
       attributes: {
         class: 'prose prose-invert prose-luxury max-w-none prose-p:text-white/70 prose-headings:text-white focus:outline-none min-h-[800px] p-12 md:p-20 prose-blockquote:border-l-luxury-gold prose-blockquote:bg-white/5 prose-blockquote:p-10 prose-blockquote:rounded-r-[2.5rem] prose-blockquote:italic prose-blockquote:text-2xl prose-blockquote:font-serif',
       },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            handleImageUpload(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event, slice) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files[0]) {
+          const file = event.clipboardData.files[0];
+          if (file.type.startsWith('image/')) {
+            handleImageUpload(file);
+            return true;
+          }
+        }
+        return false;
+      }
     },
   });
 
@@ -846,13 +897,38 @@ export default function Editor({ content, onChange }: { content: string, onChang
 
   const setLink = () => {
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('Link URL', previousUrl);
-    if (url === null) return;
-    if (url === '') {
+    const previousTarget = editor.getAttributes('link').target;
+    const previousRel = editor.getAttributes('link').rel;
+    
+    setLinkHref(previousUrl || '');
+    setLinkIsAffiliate(previousRel ? previousRel.includes('sponsored') : false);
+    setLinkOpenInNewTab(previousTarget === '_blank' || previousTarget === undefined);
+    setShowLinkDialog(true);
+  };
+
+  const saveLinkDetails = () => {
+    if (linkHref.trim() === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      setShowLinkDialog(false);
       return;
     }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    
+    const rel = linkIsAffiliate ? 'nofollow sponsored' : 'noopener noreferrer';
+    const target = linkOpenInNewTab ? '_blank' : '_self';
+    
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ 
+        href: linkHref,
+        target: target,
+        rel: rel
+      })
+      .run();
+    
+    setShowLinkDialog(false);
+    toast.success(linkIsAffiliate ? 'Affiliate link configured!' : 'Standard link configured!');
   };
 
   const addTable = () => {
@@ -1046,16 +1122,151 @@ export default function Editor({ content, onChange }: { content: string, onChang
           <MenuButton title="Video Stream" onClick={addYoutubeVideo} isActive={false} icon={YoutubeIcon} />
           <MenuButton title="Universal Link" onClick={setLink} isActive={editor.isActive('link')} icon={LinkIcon} />
         </div>
+
+        <div className="w-px h-8 bg-white/10 mx-1" />
+
+        {/* Advanced CMS Blocks Dropdown */}
+        <Select 
+          onValueChange={(blockType) => {
+            if (!editor) return;
+            if (blockType === 'productBox') {
+              (editor.chain().focus() as any).insertContent({ type: 'productBox' }).run();
+            } else if (blockType === 'prosCons') {
+              (editor.chain().focus() as any).insertContent({ type: 'prosCons' }).run();
+            } else if (blockType === 'ratingBlock') {
+              (editor.chain().focus() as any).insertContent({ type: 'ratingBlock' }).run();
+            } else if (blockType === 'comparisonTable') {
+              (editor.chain().focus() as any).insertContent({ type: 'comparisonTable' }).run();
+            } else if (blockType === 'callToAction') {
+              (editor.chain().focus() as any).insertContent({ type: 'callToAction' }).run();
+            } else if (blockType === 'reviewSummary') {
+              (editor.chain().focus() as any).insertContent({ type: 'reviewSummary' }).run();
+            } else if (blockType === 'faqBlock') {
+              (editor.chain().focus() as any).insertContent({ type: 'faqBlock' }).run();
+            } else if (blockType === 'infoBox') {
+              (editor.chain().focus() as any).insertContent({ type: 'infoBox' }).run();
+            } else if (blockType === 'pullQuote') {
+              (editor.chain().focus() as any).insertContent({ type: 'pullQuote' }).run();
+            } else if (blockType === 'imageGallery') {
+              (editor.chain().focus() as any).insertContent({ type: 'imageGallery' }).run();
+            } else if (blockType === 'embeddedVideo') {
+              (editor.chain().focus() as any).insertContent({ type: 'embeddedVideo' }).run();
+            }
+          }}
+        >
+          <SelectTrigger className="w-48 h-10 bg-white/5 border-white/10 text-[#C5A059] text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+            <SelectValue placeholder="✦ INSERT CUSTOM BLOCK" />
+          </SelectTrigger>
+          <SelectContent className="bg-neutral-950 border-white/10 text-white p-2 rounded-2xl shadow-2xl max-h-80 overflow-y-auto">
+            <SelectItem value="productBox" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Affiliate Product Box</SelectItem>
+            <SelectItem value="prosCons" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Pros & Cons Block</SelectItem>
+            <SelectItem value="ratingBlock" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Editorial Rating Block</SelectItem>
+            <SelectItem value="comparisonTable" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Comparison Table</SelectItem>
+            <SelectItem value="callToAction" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Call To Action Block</SelectItem>
+            <SelectItem value="reviewSummary" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Review Verdict Summary</SelectItem>
+            <SelectItem value="faqBlock" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Accordion FAQ Box</SelectItem>
+            <SelectItem value="infoBox" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Advisory Info Box</SelectItem>
+            <SelectItem value="pullQuote" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Typographic Pull Quote</SelectItem>
+            <SelectItem value="imageGallery" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Multi-Image Gallery</SelectItem>
+            <SelectItem value="embeddedVideo" className="rounded-xl py-2.5 font-bold uppercase text-[9px] cursor-pointer">✦ Embedded Video Player</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Editor Content Area */}
       <div className="relative flex-1 overflow-visible bg-transparent rounded-b-[3rem] focus-within:ring-2 ring-luxury-gold/5 transition-all">
         <EditorContent editor={editor} className="min-h-full" />
-        
-
       </div>
       
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+
+      {/* Premium Link Config Dialog */}
+      <AnimatePresence>
+        {showLinkDialog && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0c0c10] border border-[#C5A059]/30 rounded-[2rem] p-8 max-w-md w-full shadow-2xl shadow-[#C5A059]/10 text-white text-left space-y-6"
+            >
+              <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-mono tracking-[0.25em] text-[#C5A059]">SEO & LINK SYSTEM</span>
+                  <h4 className="text-lg font-black tracking-tight">Configure Universal Link</h4>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setShowLinkDialog(false)} 
+                  className="p-2 hover:bg-white/5 rounded-full text-white/50 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Destination URL (href)</label>
+                  <input 
+                    type="text" 
+                    value={linkHref} 
+                    onChange={(e) => setLinkHref(e.target.value)} 
+                    placeholder="https://example.com/ref-code" 
+                    className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-[#C5A059]/50" 
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-white/5 rounded-xl border border-white/5">
+                  <div className="space-y-0.5">
+                    <label className="text-xs font-bold text-white/95 block">Mark as Affiliate Link</label>
+                    <span className="text-[10px] text-[#C5A059] block">Appends rel="nofollow sponsored" for search engine safety</span>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={linkIsAffiliate} 
+                    onChange={(e) => setLinkIsAffiliate(e.target.checked)} 
+                    className="w-5 h-5 accent-[#C5A059] rounded cursor-pointer" 
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-white/5 rounded-xl border border-white/5">
+                  <div className="space-y-0.5">
+                    <label className="text-xs font-bold text-white/95 block">Open in New Tab</label>
+                    <span className="text-[10px] text-white/45 block">Adds target="_blank" window relationship</span>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={linkOpenInNewTab} 
+                    onChange={(e) => setLinkOpenInNewTab(e.target.checked)} 
+                    className="w-5 h-5 accent-[#C5A059] rounded cursor-pointer" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                    setShowLinkDialog(false);
+                    toast.success('Link completely unlinked.');
+                  }} 
+                  className="flex-1 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-xs uppercase font-black tracking-widest py-3.5 rounded-xl transition-all"
+                >
+                  Unlink
+                </button>
+                <button 
+                  type="button" 
+                  onClick={saveLinkDetails} 
+                  className="flex-1 bg-[#C5A059] text-black text-xs uppercase font-black tracking-widest py-3.5 rounded-xl transition-all hover:bg-white"
+                >
+                  Save Link
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

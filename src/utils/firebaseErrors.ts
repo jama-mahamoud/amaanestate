@@ -47,6 +47,9 @@ export const parseAuthError = (error: any): string => {
   if (searchTarget.includes("popup-closed-by-user")) {
     return "Sign-in popup was closed before completing.";
   }
+  if (searchTarget.includes("cancelled-popup-request")) {
+    return "The sign-in popup request was cancelled or blocked. Please avoid double-clicking the button or make sure popups are allowed (try opening in a new tab if you are inside an iframe).";
+  }
   if (searchTarget.includes("unauthorized-domain")) {
     return "This domain is not authorized for sign-in in Firebase Console.";
   }

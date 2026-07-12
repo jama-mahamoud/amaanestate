@@ -18,6 +18,29 @@ import { handleFirestoreError, OperationType } from '@/lib/utils';
 import { Article } from '@/types';
 
 const ARTICLES_COLLECTION = 'articles';
+
+const logAuthBeforeWrite = async (operation: string) => {
+  const currentUser = auth.currentUser;
+  
+  let isAdmin = false;
+  if (currentUser) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      isAdmin = userDoc.exists() && userDoc.data().role === 'admin';
+    } catch (e) {
+      console.warn("Could not fetch user doc for role check", e);
+    }
+  }
+
+  console.log(`[AUTH DEBUG] Before ${operation} on articles:`);
+  console.log(`- currentUser?.uid:`, currentUser?.uid);
+  console.log(`- currentUser?.email:`, currentUser?.email);
+  console.log(`- auth.currentUser fully populated:`, !!currentUser);
+  console.log(`- isAdmin result:`, isAdmin);
+  
+  if (!currentUser) throw new Error(`Authentication required for article ${operation}`);
+};
+
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface CacheEntry<T> {
@@ -180,9 +203,9 @@ export const articleService = {
   },
 
   async createArticle(data: Omit<Article, 'id' | 'authorId' | 'createdAt' | 'updatedAt' | 'views'>) {
-    if (!auth.currentUser) throw new Error('Authentication required');
     console.log("Creating new article:", data.title);
     try {
+      await logAuthBeforeWrite('create');
       clearCaches();
       // Ensure slug is auto-generated or validated
       let finalSlug = data.slug || '';
@@ -198,7 +221,7 @@ export const articleService = {
         ...data,
         slug: finalSlug,
         content: cleanContent,
-        authorId: auth.currentUser.uid,
+        authorId: auth.currentUser!.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         views: 0
@@ -217,6 +240,7 @@ export const articleService = {
 
   async updateArticle(id: string, data: Partial<Article>) {
     try {
+      await logAuthBeforeWrite('update');
       clearCaches();
       const docRef = doc(db, ARTICLES_COLLECTION, id);
       
@@ -247,6 +271,7 @@ export const articleService = {
 
   async deleteArticle(id: string) {
     try {
+      await logAuthBeforeWrite('delete');
       clearCaches();
       await deleteDoc(doc(db, ARTICLES_COLLECTION, id));
       return true;

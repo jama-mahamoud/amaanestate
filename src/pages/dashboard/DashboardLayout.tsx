@@ -14,8 +14,13 @@ import {
   ShieldCheck,
   Heart,
   FileSignature,
+  Laptop,
+  Cpu,
   User as UserIcon,
-  Sparkles
+  Sparkles,
+  Tag,
+  BookOpen,
+  TrendingUp
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -42,54 +47,44 @@ const DashboardContent = () => {
   }, [logout, navigate]);
 
   const navItems = useMemo(() => {
-    const items = [
-      { name: t('Overview', 'Overview'), path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-    ];
-
     const currentRole = profile?.role?.toString().trim().toLowerCase();
     const isAdmin = currentRole === 'admin' || profile?.role === 'admin';
-    const isAgency = currentRole === 'agency' || profile?.role === 'agency';
     const isEditor = isAdmin || currentRole === 'editor' || profile?.role === 'editor';
 
-    // Core Agreements Access
-    if (isAdmin) {
-      items.push({ name: t('agreementLedger', 'Agreement Ledger'), path: '/dashboard/agreements', icon: <FileText size={18} /> });
-    } else {
-      items.push({ name: t('smartAgreements', 'Smart Agreements'), path: '/agreements', icon: <FileSignature size={18} /> });
+    const items = [
+      { name: t('Dashboard', 'Dashboard'), path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    ];
+
+    if (isEditor || isAdmin) {
+      // Reviews module pointing to /dashboard/review-cms
+      items.push({ name: t('Reviews', 'Reviews'), path: '/dashboard/review-cms', icon: <Tag size={18} /> });
+      
+      // Software & Tools
+      items.push({ name: t('Software & Tools', 'Software & Tools'), path: '/dashboard/software', icon: <Laptop size={18} /> });
+      
+      // Tech Gear
+      items.push({ name: t('Tech Gear', 'Tech Gear'), path: '/dashboard/tech-gear', icon: <Cpu size={18} /> });
+      
+      // News - replaces Editorial Content
+      items.push({ name: t('News', 'News'), path: '/dashboard/articles', icon: <FileText size={18} /> });
     }
 
     if (isAdmin) {
-      items.push({ name: t('Content Review'), path: '/dashboard/moderation', icon: <ShieldCheck size={18} /> });
-      items.push({ name: t('Agencies'), path: '/dashboard/agencies-brokers', icon: <Briefcase size={18} /> });
-      items.push({ name: t('Partner Reviews'), path: '/dashboard/partner-review', icon: <Briefcase size={18} /> });
-      items.push({ name: t('Analytics'), path: '/dashboard/trust', icon: <Sparkles size={18} /> });
-      items.push({ name: t('Verification'), path: '/dashboard/verification', icon: <ShieldCheck size={18} /> });
-      items.push({ name: t('Activity'), path: '/dashboard/risk', icon: <Menu size={18} /> }); 
-      items.push({ name: t('Jobs'), path: '/dashboard/jobs', icon: <Briefcase size={18} /> });
+      // Site Management
+      items.push({ name: t('Site Management', 'Site Management'), path: '/dashboard/site-management', icon: <Settings size={18} /> });
+      
+      // Users
+      items.push({ name: t('Users', 'Users'), path: '/dashboard/users', icon: <Users size={18} /> });
     }
 
-    if (isAgency) {
-      items.push({ name: t('Account'), path: '/dashboard/profile', icon: <Briefcase size={18} /> });
-      items.push({ name: t('Properties'), path: '/dashboard/properties', icon: <Home size={18} /> });
-    } else {
-      items.push({ name: t('Properties'), path: '/dashboard/properties', icon: <Home size={18} /> });
-      items.push({ name: t('Vehicles'), path: '/dashboard/vehicles', icon: <Car size={18} /> });
-    }
-    
-    items.push({ name: t('Saved'), path: '/dashboard/favorites', icon: <Heart size={18} /> });
-    if (!isAgency) {
-        items.push({ name: t('Account'), path: '/dashboard/profile', icon: <UserIcon size={18} /> });
+    if (isEditor || isAdmin) {
+      // Analytics
+      items.push({ name: t('Analytics', 'Analytics'), path: '/dashboard/analytics', icon: <TrendingUp size={18} /> });
     }
 
-    if (isEditor) {
-      items.push({ name: t('Articles'), path: '/dashboard/articles', icon: <FileText size={18} /> });
-    }
+    // Settings
+    items.push({ name: t('Settings', 'Settings'), path: '/dashboard/settings', icon: <Settings size={18} /> });
 
-    if (isAdmin) {
-      items.push({ name: t('Directory'), path: '/dashboard/users', icon: <Users size={18} /> });
-    }
-
-    items.push({ name: t('Settings'), path: '/dashboard/settings', icon: <Settings size={18} /> });
     return items;
   }, [profile?.role, t]);
 

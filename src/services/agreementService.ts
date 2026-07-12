@@ -235,7 +235,7 @@ export const agreementService = {
     const docRef = doc(db, 'agreements', id);
     
     // Generate certificate number if approved
-    const certNumber = status === 'Approved' ? `AMN-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${new Date().getFullYear()}` : undefined;
+    const certNumber = status === 'Approved' ? `PRD-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${new Date().getFullYear()}` : undefined;
 
     const updatePayload: Partial<Agreement> = {
       status,

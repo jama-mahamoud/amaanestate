@@ -92,7 +92,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">05.</span>
-              Ecosystem Governance & System Misuse
+              Network Governance & System Misuse
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
               Any attempt to scrape structural database logs, bypass certified broker verification, or inject illegitimate real estate titles into the portal will lead to absolute platform revocation, immediate trust-index blacklisting, and professional reports forwarded directly to regional real-estate authorities.

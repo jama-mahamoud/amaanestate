@@ -1,4 +1,5 @@
 import { auth, db } from '@/lib/firebase';
+import { cacheStore } from './cacheStore';
 import { 
   collection, 
   doc, 
@@ -10,7 +11,8 @@ import {
   query, 
   where, 
   orderBy, 
-  serverTimestamp 
+  serverTimestamp,
+  limit
 } from 'firebase/firestore';
 
 enum OperationType {
@@ -75,12 +77,34 @@ export interface Banner {
   clicks?: number;
 }
 
+export interface GridProductItem {
+  id?: string;
+  imageUrl: string;
+  title: string;
+  price: string;
+  affiliateUrl: string;
+  discountBadge?: string;
+  reviewUrl?: string;
+}
+
+export interface AffiliateProductGrid {
+  enabled: boolean;
+  gridSize?: '2x2' | '3x3' | '4x4' | '5x5' | '6x6';
+  products: GridProductItem[];
+  sectionTitle?: string;
+}
+
 export interface GalleryItem {
   id?: string;
   url: string;
   title: string;
   imageUrl?: string;
   caption?: string;
+  price?: string;
+  discountPrice?: string;
+  productUrl?: string;
+  description?: string;
+  ctaButtonText?: string;
 }
 
 export interface FAQItem {
@@ -107,6 +131,7 @@ export interface EditorialReview {
   category: string;
   featuredImage: string;
   excerpt: string;
+  featured?: boolean;
   
   // Editorial Article Content fields to make a beautiful structured layout 
   introduction: string;
@@ -120,6 +145,8 @@ export interface EditorialReview {
   
   // Custom Metadata
   rating: number; // 1.0 to 5.0
+  price?: string;
+  discountPrice?: string;
   readingTime?: string; // e.g., "5 min read"
   publishDate?: string; // e.g., "June 15, 2026"
   brandName: string;
@@ -138,6 +165,7 @@ export interface EditorialReview {
   topBanner?: Banner;
   inlineBanner?: Banner;
   bottomBanner?: Banner;
+  affiliateProductGrid?: AffiliateProductGrid;
   gallery?: GalleryItem[];
   faqs?: FAQItem[];
   comparisonTable?: ComparisonTable;
@@ -164,8 +192,8 @@ export interface EditorialReview {
   ogImage?: string;
 
   // Moderation Status Workflow:
-  // 'draft' | 'pending' | 'approved' | 'rejected' | 'archived'
-  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
+  // 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | 'published'
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | 'published';
   
   // Future Affiliate Analytics Foundation Architecture
   views?: number;
@@ -184,6 +212,18 @@ const REVIEWS_COLLECTION = 'editorial_reviews';
 
 // Local storage backup key for seamless offline & reliable sandbox builds
 const LOCAL_STORAGE_KEY = 'amaan_editorial_reviews_v2';
+
+let cachedPublishedReviews: EditorialReview[] | null = null;
+let cachedAllReviews: EditorialReview[] | null = null;
+let lastReviewsFetchTime = 0;
+const REVIEWS_CACHE_TTL = 30000; // 30 seconds
+
+export function clearReviewsCache() {
+  cachedPublishedReviews = null;
+  cachedAllReviews = null;
+  lastReviewsFetchTime = 0;
+  cacheStore.delete('unified_products');
+}
 
 export const reviewService = {
   // Save backup to LocalStorage
@@ -235,11 +275,25 @@ export const reviewService = {
   },
 
   // Get all reviews (with optional filtering by status)
-  async getAllReviews(publishedOnly: boolean = false): Promise<EditorialReview[]> {
+  async getAllReviews(publishedOnly: boolean = false, limitCount?: number): Promise<EditorialReview[]> {
+    const now = Date.now();
+    if (!limitCount) {
+      if (publishedOnly && cachedPublishedReviews && (now - lastReviewsFetchTime < REVIEWS_CACHE_TTL)) {
+        return cachedPublishedReviews;
+      }
+      if (!publishedOnly && cachedAllReviews && (now - lastReviewsFetchTime < REVIEWS_CACHE_TTL)) {
+        return cachedAllReviews;
+      }
+    }
+
     try {
-      const q = publishedOnly
-        ? query(collection(db, REVIEWS_COLLECTION), where("status", "==", "approved"))
-        : collection(db, REVIEWS_COLLECTION);
+      let q = publishedOnly
+        ? query(collection(db, REVIEWS_COLLECTION), where("status", "in", ["approved", "published"]))
+        : query(collection(db, REVIEWS_COLLECTION));
+      
+      if (limitCount && limitCount > 0) {
+        q = query(q, limit(limitCount));
+      }
       const snap = await getDocs(q);
       
       console.log('DEBUG: ALL REVIEW DOCS:', snap.docs.map(doc => ({ id: doc.id, title: doc.data().title })));
@@ -256,10 +310,10 @@ export const reviewService = {
       });
 
       console.log('DEBUG: Total reviews fetched from DB:', list.length);
-      console.log('DEBUG: Approved reviews fetched from DB:', list.filter(r => r.status === 'approved').length);
+      console.log('DEBUG: Approved/Published reviews fetched from DB:', list.filter(r => r.status === 'approved' || r.status === 'published').length);
       
       list.forEach(r => {
-        if (r.status !== 'approved') {
+        if (r.status !== 'approved' && r.status !== 'published') {
           console.log('DEBUG: Non-approved review found in fetch:', r.slug, r.status);
         }
       });
@@ -271,50 +325,38 @@ export const reviewService = {
         return bTime - aTime;
       });
 
-      // Strip all timing fields before returning data to frontend
-      const cleanedList = list.map(r => {
-        const cleaned = { ...r };
-        delete cleaned.createdAt;
-        delete cleaned.updatedAt;
-        delete (cleaned as any).publishDate;
-        delete (cleaned as any).lastUpdatedDate;
-        delete (cleaned as any).readingTime;
-        return cleaned;
-      });
-
-      // Update backup local storage so sync remains golden
-      if (cleanedList.length > 0) {
-        this.saveToLocalBackup(cleanedList);
+      // Update backup local storage so sync remains golden, ONLY on full non-filtered load
+      if (!publishedOnly && list.length > 0 && !limitCount) {
+        this.saveToLocalBackup(list);
       }
 
       console.log('DEBUG: STATUS CHECK ALL REVIEWS:');
-      cleanedList.forEach(r => console.log(`DEBUG: Review ${r.slug} status: ${r.status}`));
+      list.forEach(r => console.log(`DEBUG: Review ${r.slug} status: ${r.status}`));
 
       if (publishedOnly) {
-        // Double-check/confirm: Only approved content is returned to public panels
-        const filteredList = cleanedList.filter(r => r.status === 'approved');
+        // Double-check/confirm: Only approved or published content is returned to public panels
+        const filteredList = list.filter(r => r.status === 'approved' || r.status === 'published');
         console.log('DEBUG: Filtered list length:', filteredList.length);
+        if (!limitCount) {
+          cachedPublishedReviews = filteredList;
+          lastReviewsFetchTime = now;
+        }
         return filteredList;
       }
 
-      return cleanedList;
+      if (!limitCount) {
+        cachedAllReviews = list;
+        lastReviewsFetchTime = now;
+      }
+      return list;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, REVIEWS_COLLECTION);
       console.warn('Firebase connection unavailable, defaulting to LocalBackup registry:', error);
       let list = this.getLocalBackup();
-      const cleanedList = list.map(r => {
-        const cleaned = { ...r };
-        delete cleaned.createdAt;
-        delete cleaned.updatedAt;
-        delete (cleaned as any).publishDate;
-        delete (cleaned as any).lastUpdatedDate;
-        delete (cleaned as any).readingTime;
-        return cleaned;
-      });
       if (publishedOnly) {
-        return cleanedList.filter(r => r.status === 'approved');
+        return list.filter(r => r.status === 'approved' || r.status === 'published');
       }
-      return cleanedList;
+      return list;
     }
   },
 
@@ -333,14 +375,12 @@ export const reviewService = {
 
   // Create absolute new review profile
   async createReview(review: Omit<EditorialReview, 'createdAt' | 'updatedAt'>): Promise<string> {
+    clearReviewsCache();
     const id = review.slug; // Slug as unique identifier block
     const newRev: any = {
       ...review,
       createdAt: new Date().toISOString()
     };
-    delete newRev.publishDate;
-    delete newRev.lastUpdatedDate;
-    delete newRev.readingTime;
 
     try {
       await setDoc(doc(db, REVIEWS_COLLECTION, id), newRev);
@@ -359,13 +399,11 @@ export const reviewService = {
 
   // Save/Overwrite existing review profile
   async updateReview(id: string, review: Partial<EditorialReview>): Promise<void> {
+    clearReviewsCache();
     const updateData: any = {
       ...review,
       updatedAt: new Date().toISOString()
     };
-    delete updateData.publishDate;
-    delete updateData.lastUpdatedDate;
-    delete updateData.readingTime;
 
     try {
       await setDoc(doc(db, REVIEWS_COLLECTION, id), updateData, { merge: true });
@@ -389,6 +427,7 @@ export const reviewService = {
 
   // Completely delete review
   async deleteReview(id: string): Promise<void> {
+    clearReviewsCache();
     try {
       await deleteDoc(doc(db, REVIEWS_COLLECTION, id));
       

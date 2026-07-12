@@ -236,20 +236,14 @@ async function generateSitemapXml() {
   try {
     const dynamicDate = new Date().toISOString().split('T')[0];
     const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
-      { loc: "https://www.amaanestate.com/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
-      { loc: "https://www.amaanestate.com/cities", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/properties", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-      { loc: "https://www.amaanestate.com/vehicles", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-      { loc: "https://www.amaanestate.com/agents", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/jobs", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/network", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/agreements", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.amaanestate.com/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-      { loc: "https://www.amaanestate.com/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-      { loc: "https://www.amaanestate.com/privacy", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
-      { loc: "https://www.amaanestate.com/terms", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
-      { loc: "https://www.amaanestate.com/disclaimer", lastmod: dynamicDate, changefreq: "monthly", priority: "0.3" },
+      { loc: "https://www.primedeals.app/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
+      { loc: "https://www.primedeals.app/software", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+      { loc: "https://www.primedeals.app/gear", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+      { loc: "https://www.primedeals.app/deals", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
+      { loc: "https://www.primedeals.app/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.primedeals.app/verification", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
+      { loc: "https://www.primedeals.app/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
+      { loc: "https://www.primedeals.app/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
     ];
 
     const citySlugs = [
@@ -261,7 +255,7 @@ async function generateSitemapXml() {
 
     citySlugs.forEach(slug => {
       urls.push({
-        loc: `https://www.amaanestate.com/cities/${slug}`,
+        loc: `https://www.primedeals.app/cities/${slug}`,
         lastmod: dynamicDate,
         changefreq: "daily",
         priority: "0.8"
@@ -285,84 +279,16 @@ async function generateSitemapXml() {
     // Directly use the established REST client for ALL data fetching to guarantee stability
     console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
     
-    const [listings, brokers, articles, jobs] = await Promise.all([
-      fetchCollectionRest("listings", prjId),
-      fetchCollectionRest("brokers", prjId),
-      fetchCollectionRest("articles", prjId),
-      fetchCollectionRest("jobs", prjId)
+    const [articles] = await Promise.all([
+      fetchCollectionRest("articles", prjId)
     ]);
     
     // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
     
     const slugify = (text: string) => {
-      if (!text) return 'property';
+      if (!text) return 'article';
       return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
     };
-
-    // A. Process Listings (properties & vehicles)
-    listings.forEach((data: any) => {
-      const isVettedAndActive = ['active', 'verified', 'approved'].includes((data.status || '').toLowerCase().trim()) ||
-                                data.isVerified === true ||
-                                ['verified', 'verified_listing'].includes((data.verificationStatus || '').toLowerCase().trim());
-                                
-      if (isVettedAndActive) {
-        const id = data.id;
-        const title = data.title || 'property';
-        const location = data.location || 'somalia';
-        const slug = slugify(`${title}-${location}-${id.substring(0, 5)}`);                
-        
-        let lastmod = dynamicDate;
-        try {
-          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
-            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
-          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
-            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
-          }
-        } catch (e) {
-          console.error(`[SITEMAP] Error calculating lastmod for ${id}:`, e);
-        }
-        
-        if (data.category === "vehicle") {
-          urls.push({
-            loc: `https://www.amaanestate.com/vehicles/${slug}`,
-            lastmod,
-            changefreq: "weekly",
-            priority: "0.7"
-          });
-        } else {
-          urls.push({
-            loc: `https://www.amaanestate.com/properties/${slug}`,
-            lastmod,
-            changefreq: "weekly",
-            priority: "0.7"
-          });
-        }
-      }
-    });
-
-    // B. Process Broker/Agent Profile Pages
-    brokers.forEach((data: any) => {
-      if (data.status === "approved" || data.status === "APPROVED") {
-        const id = data.id;
-        let lastmod = dynamicDate;
-        try {
-          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
-            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
-          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
-            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
-          }
-        } catch (e) {
-          console.error(`[SITEMAP] Error calculating lastmod for broker ${id}:`, e);
-        }
-        
-        urls.push({
-          loc: `https://www.amaanestate.com/agents/${id}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.6"
-        });
-      }
-    });
 
     // C. Process Blog/News Articles with Multi-Language Translations
     articles.forEach((data: any) => {
@@ -391,34 +317,10 @@ async function generateSitemapXml() {
 
         // Inject standard canonical route
         urls.push({
-          loc: `https://www.amaanestate.com/news/${slug}`,
+          loc: `https://www.primedeals.app/news/${slug}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.8"
-        });
-      }
-    });
-
-    // D. Process Active/Approved Jobs
-    jobs.forEach((data: any) => {
-      if (data.status === "approved" || data.status === "APPROVED") {
-        const id = data.id;
-        let lastmod = dynamicDate;
-        try {
-          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
-            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
-          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
-            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
-          }
-        } catch (e) {
-          console.error(`[SITEMAP] Error calculating lastmod for job ${id}:`, e);
-        }
-        
-        urls.push({
-          loc: `https://www.amaanestate.com/jobs?jobId=${id}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.6"
         });
       }
     });
@@ -445,7 +347,7 @@ async function generateSitemapXml() {
 }
 
 function generateRobotsTxt() {
-  return `User-agent: *\nAllow: /\n\nSitemap: https://www.amaanestate.com/sitemap.xml\n`;
+  return `User-agent: *\nAllow: /\n\nSitemap: https://www.primedeals.app/sitemap.xml\n`;
 }
 
 
@@ -484,77 +386,11 @@ async function fetchDatabaseContext() {
   if (!firestoreDb) {
     console.error("[PROD] Firestore Database connection failed - check firebase configuration.");
     return {
-      listingsStr: "No active listings database connection.",
-      prosStr: "No certified professional registry database connection.",
-      articlesStr: "No news intelligence database connection.",
-      brokersStr: "No active verified agents database connection."
+      articlesStr: "No news intelligence database connection."
     };
   }
 
-  let listingsStr = "No listings active.";
-  let prosStr = "No certified professionals active.";
   let articlesStr = "No news articles active.";
-  let brokersStr = "No verified agents active.";
-
-  try {
-    const listingsSnap = await firestoreDb.collection("listings")
-      .where("status", "==", "active")
-      .limit(50)
-      .get();
-    
-    if (!listingsSnap.empty) {
-      const items = listingsSnap.docs.map(docSnapshot => {
-        const d = docSnapshot.data();
-        let detail = `ID: ${docSnapshot.id} | Title: ${d.title} | Type: ${d.listingType} | Cat: ${d.category} | Price: ${d.price} ${d.currency || "USD"} | City: ${d.city} | Location: ${d.location}`;
-        if (d.category === "property") {
-          detail += ` | Beds: ${d.beds || "N/A"}, Baths: ${d.baths || "N/A"}, Size: ${d.size || "N/A"}`;
-        } else if (d.category === "vehicle") {
-          detail += ` | Year: ${d.year || "N/A"}, Mileage: ${d.mileage || "N/A"}, Fuel: ${d.fuelType || "N/A"}, Trans: ${d.transmission || "N/A"}`;
-        }
-        if (d.isVerified) detail += ` [VERIFIED TRUSTED]`;
-        if (d.isFeatured) detail += ` [FEATURED]`;
-        return `- ${detail}`;
-      });
-      listingsStr = items.join("\n");
-    }
-  } catch (err) {
-    console.error("[PROD] Error fetching listings context:", err);
-  }
-
-  try {
-    const brokerSnap = await firestoreDb.collection("brokers")
-      .where("status", "==", "approved")
-      .limit(30)
-      .get();
-    
-    if (!brokerSnap.empty) {
-      const items = brokerSnap.docs.map(docSnapshot => {
-        const d = docSnapshot.data();
-        const type = d.type === 'agency' ? 'Verified Agency' : 'Verified Agent';
-        return `- ID: ${docSnapshot.id} | Type: ${type} | Name: ${d.fullName} | City: ${d.city} | Specialization: ${d.propertySpecialization?.join(', ')}`;
-      });
-      brokersStr = items.join("\n");
-    }
-  } catch (err) {
-    console.error("[PROD] Error fetching brokers context:", err);
-  }
-
-  try {
-    const prosSnap = await firestoreDb.collection("professionalServices")
-      .where("status", "==", "active")
-      .limit(50)
-      .get();
-    
-    if (!prosSnap.empty) {
-      const items = prosSnap.docs.map(docSnapshot => {
-        const d = docSnapshot.data();
-        return `- ID/ProviderID: ${d.providerId || docSnapshot.id} (Category: ${d.category}) | Name: ${d.providerName || "Certified Specialist"} | Service Title: ${d.title} | City: ${d.city} | Details: ${d.description || ""}`;
-      });
-      prosStr = items.join("\n");
-    }
-  } catch (err) {
-    console.error("[PROD] Error fetching professionals context:", err);
-  }
 
   try {
     const articleSnap = await firestoreDb.collection("articles")
@@ -573,7 +409,7 @@ async function fetchDatabaseContext() {
     console.error("[PROD] Error fetching articles context:", err);
   }
 
-  return { listingsStr, prosStr, articlesStr, brokersStr };
+  return { articlesStr };
 }
 
 // API Routes
@@ -584,10 +420,7 @@ app.post("/api/chat", async (req, res) => {
   }
 
   let contextData = {
-    listingsStr: "No listings active.",
-    prosStr: "No certified professionals active.",
-    articlesStr: "No news articles active.",
-    brokersStr: "No verified agents active."
+    articlesStr: "No news articles active."
   };
 
   try {
@@ -601,174 +434,49 @@ app.post("/api/chat", async (req, res) => {
     genAIClient = getGeminiClient();
   } catch (err: any) {
     console.error("[PROD] Gemini client initialization error:", err.message);
-    return res.json({ text: "I'm sorry, the Amaan AI service is currently unavailable. Please check the GEMINI_API_KEY configuration." });
+    return res.json({ text: "I'm sorry, the PrimeDeals AI service is currently unavailable. Please check the GEMINI_API_KEY configuration." });
   }
 
   try {
-    const systemInstruction = `You are AmaanEstate AI Assistant, an intelligent real estate and city services assistant for AmaanEstate.
+    const systemInstruction = `You are PrimeDeals AI Assistant, an elite tech affiliate and software review specialist.
 
 Your job is to help users find:
-- Houses
-- Apartments
-- Rooms
-- Hotels
-- Commercial properties
-- Land
-- Offices
-- Local services
-- City information
+- Software & SaaS tools
+- Tech gear & Laptops
+- Productivity benchmarks
+- Strategic offers & deals
+- Professional tech reviews
+- Industry insights
 
-You must behave like a professional, friendly, and smart property assistant.
+You must behave like a tech-savvy, professional, and insightful assistant.
 
 ========================
 IMPORTANT RULES
 ========================
 
-1. ONLY use the listings and data provided to you.
-Do NOT invent fake properties, prices, locations, or contacts.
+1. ONLY use the verified listings and assessment data provided to you.
+Do NOT invent fake software prices or specs.
 
-2. DO NOT exaggerate numeric fields.
-- If a field looks unrealistic (e.g. floorsCount = 500), do NOT describe it literally in your conversational text (e.g., don't call it a "massive skyscraper" if it's a residential home). 
-- Still SHOW the exact value in your summary/list without reinterpreting or modifying it.
-- Never modify numbers. Always display exact values from the database.
-- Only present data as-is and clarify when unsure.
+2. DO NOT exaggerate technical specs.
 
-3. If no matching property exists:
-- politely explain that no exact result was found
+3. If no matching software or deal exists:
+- politely explain that no exact review was found
 - suggest similar alternatives if available
-- ALWAYS use this exact fallback message if nothing is found: "Currently I could not find an exact match, but new listings are added regularly."
+- ALWAYS use this exact fallback message if nothing is found: "Currently I could not find an exact match, but new reviews and deals are added regularly."
 
-4. Always answer clearly and shortly.
-Avoid long unnecessary explanations.
-
-5. Understand user intent naturally.
-Examples:
-- "cheap house"
-- "family apartment"
-- "near university"
-- "2 bedroom"
-- "villa"
-- "shop for rent"
-
-6. Understand Somali and English language naturally.
-
-7. Be friendly and professional.
-
-8. Never mention technical details like:
-- API
-- database
-- JSON
-- Firebase
-- Gemini
-
-9. If user asks unrelated questions outside AmaanEstate services,
-politely redirect them back to housing, hotels, or city services.
-
-========================
-AVAILABLE SERVICES
-========================
-
-You help users with:
-- Property search
-- Rental recommendations
-- Hotel recommendations
-- Area suggestions
-- Local business discovery
-- Real estate guidance
-
-========================
-PROPERTY RESPONSE STYLE
-========================
-
-When properties are found:
-- briefly summarize results
-- mention:
-  - property type
-  - city/location
-  - price
-  - important features
-- Use Markdown links for every listing found:
-  - Properties/Land/Rentals: /properties/[id]
-  - Vehicles: /vehicles/[id]
-  - Agents/Brokers: /brokers/[id]
-  - Professionals: /professionals/[id]
-  - News/Articles: /news/[id]
-
-Example:
-
-"I found 3 apartments in Jigjiga matching your request.
-These options include family-friendly apartments with 2 bedrooms and modern facilities."
-
-========================
-AREA GUIDANCE
-========================
-
-If user asks about locations or neighborhoods:
-- give short helpful guidance ONLY if information is available
-- do not delete or invent false details
-
-========================
-HOTEL RESPONSE STYLE
-========================
-
-When recommending hotels:
-- mention comfort level
-- family suitability
-- price range if available
-- nearby landmarks if available
-
-========================
-TONE
-========================
-
-Your tone must be:
-- modern
-- helpful
-- respectful
-- confident
-- concise
-
-========================
-LANGUAGE HANDLING
-========================
-
-If user speaks Somali:
-respond in Somali.
-
-If user speaks English:
-respond in English.
-
-If mixed:
-respond naturally in mixed language.
-
-========================
-FAILURE HANDLING
-========================
-
-If listings are missing or incomplete:
-say:
-"Currently I could not find an exact match, but new listings are added regularly."
+4. Handle Somali and English language naturally.
 
 ========================
 BRAND IDENTITY
 ========================
 
-You represent AmaanEstate.
+You represent PrimeDeals.
 
-AmaanEstate is a modern smart real estate and city services platform focused on helping people discover trusted housing, hotels, businesses, and opportunities.
+PrimeDeals is the premier tech affiliate and professional review platform. We specialize in software depth, hardware performance benchmarks, and exclusive strategic offers.
 
 Always maintain professionalism and trust.
 
 --- LIVE CONTEXT DATA (USE THIS DATA TO ANSWER QUERIES) ---
-DATABASE LIQUID ASSETS (PROPERTIES / LAND / RENTALS / VEHICLES):
-${contextData.listingsStr}
-
-CERTIFIED ACTIVE REGISTERED PROFESSIONALS (EXPERTS / SERVICES):
-${contextData.prosStr}
-
-VERIFIED ACTIVE AGENTS & AGENCIES (BROKERS):
-${contextData.brokersStr}
-
 LATEST PORTAL INTEL & ARTICLES:
 ${contextData.articlesStr}
 ----------------------------------`;
@@ -807,7 +515,7 @@ app.post("/api/contact", async (req, res) => {
   try {
     const rc = getResendClient();
     await rc.emails.send({
-      from: 'AmaanEstate <onboarding@resend.dev>', // Use verified domain later
+      from: 'PrimeDeals <onboarding@resend.dev>', // Use verified domain later
       to: 'jamamahamoud01@farrmuu',
       subject: `New Contact Form Submission: ${subject}`,
       html: `
@@ -823,6 +531,195 @@ app.post("/api/contact", async (req, res) => {
   } catch (error) {
     console.error("Resend error:", error);
     res.status(500).json({ error: "Failed to send email" });
+  }
+});
+
+// Helper functions to demarshal Firestore REST API payload
+function demarshalFirestoreValue(val: any): any {
+  if (!val || typeof val !== 'object') return val;
+  if ('stringValue' in val) return val.stringValue;
+  if ('integerValue' in val) return parseInt(val.integerValue, 10);
+  if ('doubleValue' in val) return Number(val.doubleValue);
+  if ('booleanValue' in val) return val.booleanValue;
+  if ('nullValue' in val) return null;
+  if ('timestampValue' in val) return val.timestampValue;
+  if ('arrayValue' in val) {
+    const list = val.arrayValue.values || [];
+    return list.map((item: any) => demarshalFirestoreValue(item));
+  }
+  if ('mapValue' in val) {
+    const fields = val.mapValue.fields || {};
+    const res: any = {};
+    for (const k of Object.keys(fields)) {
+      res[k] = demarshalFirestoreValue(fields[k]);
+    }
+    return res;
+  }
+  return val;
+}
+
+function demarshalFirestoreDoc(doc: any): any {
+  if (!doc || !doc.fields) return null;
+  const id = doc.name ? doc.name.substring(doc.name.lastIndexOf('/') + 1) : '';
+  const result: any = { id };
+  for (const k of Object.keys(doc.fields)) {
+    result[k] = demarshalFirestoreValue(doc.fields[k]);
+  }
+  return result;
+}
+
+// GET /api/deals - Unified endpoint for Deals & Offers
+app.get("/api/deals", async (req, res) => {
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    let projectId = "amaanestate-97f4f";
+    if (fs.existsSync(configPath)) {
+      try {
+        const cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+        if (cfg.projectId) {
+          projectId = cfg.projectId;
+        }
+      } catch (e) {
+        console.error("Failed to read firebase config in /api/deals:", e);
+      }
+    }
+
+    const { status } = req.query;
+    let dealsList: any[] = [];
+    let productsList: any[] = [];
+    let fetchedViaAdmin = false;
+
+    // Helper to serialize Admin SDK timestamps/objects cleanly to client format
+    const serializeAdminDoc = (doc: any) => {
+      if (!doc) return doc;
+      const result = { ...doc };
+      for (const key of Object.keys(result)) {
+        const val = result[key];
+        if (val && typeof val === "object" && typeof val.toDate === "function") {
+          result[key] = val.toDate().toISOString();
+        }
+      }
+      return result;
+    };
+
+    const adminDbInstance = getAdminDb();
+    if (adminDbInstance) {
+      try {
+        console.log("[API DEALS] Attempting to fetch deals & products via Firebase Admin SDK...");
+        const dealsSnap = await adminDbInstance.collection("deals_and_offers").get();
+        dealsList = dealsSnap.docs.map((doc: any) => serializeAdminDoc({ id: doc.id, ...doc.data() }));
+
+        const productsSnap = await adminDbInstance.collection("tech_gear_products").get();
+        productsList = productsSnap.docs.map((doc: any) => serializeAdminDoc({ id: doc.id, ...doc.data() }));
+
+        fetchedViaAdmin = true;
+        console.log(`[API DEALS] Successfully fetched ${dealsList.length} deals and ${productsList.length} products via Admin SDK.`);
+      } catch (adminErr) {
+        console.log("[API DEALS] Firebase Admin SDK fetch not authorized, falling back to REST API.");
+      }
+    }
+
+    if (!fetchedViaAdmin) {
+      let apiKey = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || "";
+      if (apiKey.includes("REPLACE_ME") || apiKey.includes("Placeholder") || apiKey === "undefined") {
+        apiKey = "";
+      }
+      const keyParam = apiKey ? `?key=${apiKey}` : "";
+
+      // Fetch master deals and offers from Firestore via secure REST API
+      const dealsUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/deals_and_offers${keyParam}`;
+      console.log(`[API DEALS] Fetching deals from REST URL: ${dealsUrl.replace(/key=[^&]+/, "key=REDACTED")}`);
+      const responseDeals = await fetch(dealsUrl);
+      if (!responseDeals.ok) {
+        const errText = await responseDeals.text();
+        throw new Error(`REST Firestore Deals request failed with status ${responseDeals.status}: ${errText}`);
+      }
+      const dealsData: any = await responseDeals.json();
+      dealsList = (dealsData.documents || []).map(demarshalFirestoreDoc).filter(Boolean);
+
+      // Fetch tech gear products from Firestore via secure REST API
+      const productsUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/tech_gear_products${keyParam}`;
+      console.log(`[API DEALS] Fetching products from REST URL: ${productsUrl.replace(/key=[^&]+/, "key=REDACTED")}`);
+      const responseProducts = await fetch(productsUrl);
+      if (!responseProducts.ok) {
+        const errText = await responseProducts.text();
+        throw new Error(`REST Firestore Products request failed with status ${responseProducts.status}: ${errText}`);
+      }
+      const productsData: any = await responseProducts.json();
+      productsList = (productsData.documents || []).map(demarshalFirestoreDoc).filter(Boolean);
+    }
+
+    // Flexible status filtering: if filtering for 'approved', we accept 'approved', 'active', and 'published'
+    if (status === 'approved') {
+      const allowedStatuses = ['approved', 'active', 'published'];
+      dealsList = dealsList.filter((deal: any) => allowedStatuses.includes(deal.status));
+    } else if (status) {
+      dealsList = dealsList.filter((deal: any) => deal.status === status);
+    }
+
+    const productsMap = new Map();
+    const allowedProductStatuses = ['approved', 'active', 'published'];
+    
+    for (const prod of productsList) {
+      if (allowedProductStatuses.includes(prod.status)) {
+        productsMap.set(prod.id, prod);
+      }
+    }
+
+    // Resolve product reference details, supporting multiple campaigns/deals on the same product, and falling back to self-contained fields
+    const resolved: any[] = [];
+
+    for (const deal of dealsList) {
+      const product = productsMap.get(deal.productId) || null;
+      if (product) {
+        resolved.push({
+          ...deal,
+          product
+        });
+      } else {
+        // Self-contained deal (allows standalone deals without a linked physical tech product)
+        const dealTitle = deal.dealTitle || deal.title || deal.productName || "Exclusive Deal";
+        const featuredImg = deal.featuredImage || deal.image || "/house_luxury_icon.png";
+        const cat = deal.category || "General";
+        const originalPriceVal = typeof deal.originalPrice === 'number' ? deal.originalPrice : typeof deal.dealPrice === 'number' ? deal.dealPrice : 0;
+
+        resolved.push({
+          ...deal,
+          product: {
+            id: deal.productId || deal.id,
+            title: dealTitle,
+            featuredImage: featuredImg,
+            brandName: deal.brandName || cat || "Premium Partner",
+            price: originalPriceVal,
+            status: "published",
+            category: cat,
+            description: deal.dealDescription || deal.description || ""
+          }
+        });
+      }
+    }
+
+    // Sort by: publishedAt DESC, falling back to createdAt DESC
+    resolved.sort((a, b) => {
+      const getVal = (x: any) => {
+        if (!x) return 0;
+        if (x.publishedAt) {
+          const parsed = new Date(x.publishedAt);
+          if (!isNaN(parsed.getTime())) return parsed.getTime();
+        }
+        if (x.createdAt) {
+          const parsed = new Date(x.createdAt);
+          if (!isNaN(parsed.getTime())) return parsed.getTime();
+        }
+        return 0;
+      };
+      return getVal(b) - getVal(a);
+    });
+
+    res.json(resolved);
+  } catch (err: any) {
+    console.error("Failed to fetch deals in /api/deals via REST:", err);
+    res.status(500).json({ error: err.message || "Failed to fetch deals" });
   }
 });
 
@@ -919,13 +816,13 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
       }
     }
     
-    const title = seoData.title + " | AmaanEstate";
+    const title = seoData.title + " | PrimeDeals";
     const desc = seoData.description.substring(0, 160);
     const ogType = seoData.type || "website";
     let imageUrl = seoData.imageUrl;
     
     // Force absolute domain and HTTPS
-    const host = 'www.amaanestate.com';
+    const host = 'www.primedeals.app';
     const protocol = 'https';
 
     if (imageUrl) {
@@ -961,7 +858,7 @@ async function servePageWithMetadata(req: express.Request, res: express.Response
     const dynamicMetaTags = `
     <title>${title}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta property="og:site_name" content="AmaanEstate" />
+    <meta property="og:site_name" content="PrimeDeals" />
     <meta property="og:type" content="${ogType}" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
@@ -1048,7 +945,7 @@ async function startServer() {
       }
 
       const title = meta.title || "Latest News Article";
-      const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest update on AmaanEstate.");
+      const description = meta.summary || (meta.content ? (meta.content.substring(0, 160) + "...") : "Read the latest tech update on PrimeDeals.");
       
       // Resolve dynamic image with prioritized fallbacks
       let imageUrl: string | undefined = undefined;
@@ -1091,7 +988,7 @@ async function startServer() {
       
       return servePageWithMetadata(req, res, next, {
         title: formattedTitle,
-        description: `Read dynamic updates, current listings, and premium real estate news about ${formattedTitle} on AmaanEstate.`,
+        description: `Read expert assessments, software reviews, and exclusive tech deals about ${formattedTitle} on PrimeDeals.`,
         imageUrl: '/house_luxury_icon.png',
         urlPath: `/news/${rawId}`,
         type: 'article'
@@ -1217,7 +1114,7 @@ async function startServer() {
         if (idOrSlug) {
           const meta = await getArticleMetadata(idOrSlug);
           const title = meta?.title || idOrSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-          const description = meta?.summary || (meta?.content ? (meta.content.substring(0, 160) + "...") : `Read dynamic updates, current listings, and premium real estate news about ${title} on AmaanEstate.`);
+          const description = meta?.summary || (meta?.content ? (meta.content.substring(0, 160) + "...") : `Read dynamic updates, tech reviews, and premium software news about ${title} on PrimeDeals.`);
           
           let imageUrl: string | undefined = undefined;
           if (meta) {
@@ -1342,23 +1239,20 @@ function getAdminDb() {
         firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
       } else {
         console.warn("[PROD] firebase-applet-config.json not found. Trying Env config.");
-        // Fallback or skip if not in AI Studio workspace
       }
       
+      const saKey = process.env.FIREBASE_SERVICE_ACCOUNT;
+      if (!saKey) {
+        console.log("[PROD] FIREBASE_SERVICE_ACCOUNT not found, running without Admin SDK privileged access.");
+        return null;
+      }
+
       if (getApps().length === 0) {
-        const saKey = process.env.FIREBASE_SERVICE_ACCOUNT;
-        if (saKey) {
-          console.log("[PROD] Initializing Firebase Admin with Service Account from ENV.");
-          initializeApp({
-            credential: cert(JSON.parse(saKey)),
-            projectId: firebaseConfig.projectId
-          });
-        } else {
-          console.log("[PROD] Initializing Firebase Admin with Project ID: " + firebaseConfig.projectId);
-          initializeApp({
-            projectId: firebaseConfig.projectId
-          });
-        }
+        console.log("[PROD] Initializing Firebase Admin with Service Account from ENV.");
+        initializeApp({
+          credential: cert(JSON.parse(saKey)),
+          projectId: firebaseConfig.projectId
+        });
       }
       
       const dbId = firebaseConfig.firestoreDatabaseId;

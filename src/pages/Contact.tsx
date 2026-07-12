@@ -19,7 +19,7 @@ export default function Contact() {
     name: '',
     email: '',
     phone: '',
-    subject: 'Property Portfolio Inquiry',
+    subject: 'Tech Gear Partnership Inquiry',
     message: ''
   });
 
@@ -56,12 +56,12 @@ export default function Contact() {
       }
       
       setSuccess(true);
-      toast.success('Mahadsanid! Fariintaada waa la helay.');
+      toast.success('Thank you! Your inquiry has been received.');
       setFormData({
         name: '',
         email: '',
         phone: '',
-        subject: 'Property Portfolio Inquiry',
+        subject: 'Tech Gear Partnership Inquiry',
         message: ''
       });
     } catch (error: any) {
@@ -86,7 +86,7 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             className="text-luxury-gold font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase text-[9px] md:text-[10px] mb-4 md:mb-6 underline underline-offset-8 decoration-luxury-gold/30"
           >
-             Concierge Relations
+             Partner Relations
           </motion.p>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -103,7 +103,7 @@ export default function Contact() {
             transition={{ delay: 0.2 }}
             className="text-white/40 text-lg md:text-xl font-light leading-relaxed max-w-2xl px-1"
           >
-            Whether acquiring a landmark estate or listing a high-performance vehicle, our executive team ensures absolute confidentiality and regional precision.
+            Whether acquiring software licenses or analyzing high-performance tech benchmarks, our executive team ensures absolute confidentiality and technical precision.
           </motion.p>
         </div>
 
@@ -252,10 +252,10 @@ export default function Contact() {
                             value={formData.subject}
                             onChange={(e) => setFormData({...formData, subject: e.target.value})}
                           >
-                            <option className="bg-luxury-black">Property Portfolio Inquiry</option>
-                            <option className="bg-luxury-black">Vehicle Assets Acquisition</option>
-                            <option className="bg-luxury-black">Professional Registry Inquiry</option>
-                            <option className="bg-luxury-black">Institutional Partnership</option>
+                            <option className="bg-luxury-black">Software Portfolio Inquiry</option>
+                            <option className="bg-luxury-black">Hardware Assets Acquisition</option>
+                            <option className="bg-luxury-black">Tech Registry Inquiry</option>
+                            <option className="bg-luxury-black">Strategic Partnership</option>
                             <option className="bg-luxury-black">General Support Request</option>
                           </select>
                           <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">

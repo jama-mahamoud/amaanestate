@@ -1,65 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { AmaanEstateLogo } from './AmaanEstateLogo';
 
 interface BrandHeaderProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'horizontal' | 'stacked' | 'icon';
+  theme?: 'light' | 'dark' | 'black' | 'white' | 'monochrome';
 }
 
-export const BrandHeader: React.FC<BrandHeaderProps> = ({ className = '', size = 'md' }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const sizeClasses = {
-    sm: 'text-base tracking-[0.12em]',
-    md: 'text-lg sm:text-xl tracking-[0.15em]',
-    lg: 'text-xl sm:text-2xl tracking-[0.2em]',
-    xl: 'text-2xl sm:text-3xl tracking-[0.25em]',
+export const BrandHeader: React.FC<BrandHeaderProps> = ({
+  className = '',
+  size = 'md',
+  variant = 'horizontal',
+  theme = 'dark',
+}) => {
+  // Height mapping to keep perfect proportions for responsive headers
+  const heights = {
+    sm: 32,
+    md: 40,
+    lg: 48,
+    xl: 56,
   };
 
-  const iconSizes = {
-    sm: 'h-6 w-6',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
-    xl: 'h-14 w-14',
-  };
-
-  const fallbackTextSizes = {
-    sm: 'text-[10px]',
-    md: 'text-xs',
-    lg: 'text-base',
-    xl: 'text-lg',
-  };
+  const finalHeight = heights[size];
 
   return (
-    <Link 
-      to="/" 
-      className={`inline-flex items-center gap-3 select-none group focus:outline-none ${className}`}
+    <Link
+      to="/"
+      className={`inline-flex items-center select-none group focus:outline-none transition-transform duration-300 active:scale-[0.98] ${className}`}
     >
-      {/* Brand Icon with subtle Gold ring */}
-      <div className={`relative flex-shrink-0 flex items-center justify-center rounded-full border border-[#C5A059]/30 group-hover:border-[#C5A059] bg-white text-[#C5A059] overflow-hidden transition-colors duration-300 ${iconSizes[size]}`}>
-        {imageError ? (
-          <span className={`font-sans font-black tracking-wider ${fallbackTextSizes[size]}`}>
-            A
-          </span>
-        ) : (
-          <img
-            src="https://www.amaanestate.com/logo.png"
-            alt="AmaanEstate Icon"
-            className="w-full h-full object-contain p-1"
-            onError={() => setImageError(true)}
-          />
-        )}
-      </div>
-
-      {/* Brand Text */}
-      <div className={`font-sans font-light uppercase transition-all duration-300 ${sizeClasses[size]}`}>
-        <span className="text-white group-hover:text-[#C5A059] transition-colors duration-300">
-          Amaan
-        </span>
-        <span className="text-[#C5A059] group-hover:text-white transition-colors duration-300 font-extrabold ml-1">
-          Estate
-        </span>
-      </div>
+      <AmaanEstateLogo
+        variant={variant}
+        theme={theme}
+        height={finalHeight}
+        width="auto"
+        className="transition-all duration-300 group-hover:brightness-110"
+      />
     </Link>
   );
 };

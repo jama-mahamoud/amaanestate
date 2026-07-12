@@ -9,12 +9,12 @@ import { BrandHeader } from '@/components/brand/BrandHeader';
 import { parseAuthError } from '@/utils/firebaseErrors';
 
 const BENEFITS = [
-  'Apply for jobs',
-  'Become an agent or broker',
-  'List properties and vehicles',
-  'Access agreements and verification services',
-  'Save favorites',
-  'Manage listings from dashboard'
+  'Exclusive tech deals and offers',
+  'Become a Prime Contributor',
+  'Submit product & software reviews',
+  'Access verification and gear insights',
+  'Save featured gear to your dashboard',
+  'Strategic affiliate mentorship'
 ];
 
 export default function AuthGateway() {
@@ -78,8 +78,8 @@ export default function AuthGateway() {
         <div className="hidden lg:block space-y-8">
             <BrandHeader size="xl" />
             <div className="space-y-4">
-                <h1 className="text-5xl font-display font-light tracking-tight">Join the AmaanEstate Network</h1>
-                <p className="text-white/60 text-lg">Create your account or sign in to access jobs, property management tools, agreements, agent services, and exclusive opportunities.</p>
+                <h1 className="text-5xl font-display font-light tracking-tight">Join the PrimeDeals Network</h1>
+                <p className="text-white/60 text-lg">Create your account or sign in to access exclusive tech deals, expert reviews, verification services, and contributor benefits.</p>
             </div>
             <ul className="space-y-4">
                 {BENEFITS.map(b => (

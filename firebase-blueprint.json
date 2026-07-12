@@ -10,11 +10,10 @@
         "slug": { "type": "string" },
         "status": { 
           "type": "string", 
-          "enum": ["draft", "pending", "approved", "rejected", "archived"] 
+          "enum": ["draft", "pending", "approved", "rejected", "archived", "published"] 
         },
         "category": { 
-          "type": "string",
-          "enum": ["real-estate", "finance", "tech", "learning", "market"]
+          "type": "string"
         },
         "featuredImage": { "type": "string" },
         "excerpt": { "type": "string" },
@@ -39,12 +38,47 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "slug", "status", "category"]
+    },
+    "StrategicTerm": {
+      "title": "Strategic Term",
+      "description": "A glossary term defining legal, technical, or financial real estate terminology.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique term ID or slug" },
+        "term": { "type": "string" },
+        "acronym": { "type": "string" },
+        "definition": { "type": "string" },
+        "category": { "type": "string" },
+        "relatedTerms": { "type": "array", "items": { "type": "string" } },
+        "contextualLinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "url": { "type": "string" }
+            },
+            "required": ["label", "url"]
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published"]
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["term", "definition", "category", "status"]
     }
   },
   "firestore": {
     "/editorial_reviews/{id}": {
       "schema": "EditorialReview",
       "description": "Editorial partner reviews and market insights."
+    },
+    "/strategic_terms/{id}": {
+      "schema": "StrategicTerm",
+      "description": "Strategic real estate and legal glossary definitions."
     }
   }
 }

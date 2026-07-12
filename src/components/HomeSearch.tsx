@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Search, MapPin, Building, Sparkles, Home, Key, BadgePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ListingFilter } from '@/services/listingService';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const cities = [
@@ -12,7 +11,7 @@ const cities = [
 ];
 
 interface HomeSearchProps {
-  onSearch: (filters: ListingFilter) => void;
+  onSearch: (filters: { category?: string; city?: string; listingType?: string; subcategory?: string }) => void;
 }
 
 type TabType = 'sale' | 'rent' | 'sell';
@@ -68,12 +67,12 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
                 <span className={`text-[8px] md:text-[9px] font-bold uppercase tracking-wider mb-1 leading-none truncate w-full ${
                   cityRequiredError ? 'text-red-400' : 'text-white/40'
                 }`}>
-                  {cityRequiredError ? 'Location (Required)' : 'Location'}
+                  {cityRequiredError ? 'Selection (Required)' : 'Editorial Hub'}
                 </span>
                 <div className={`text-[11px] md:text-sm font-semibold truncate w-full ${
                   cityRequiredError ? 'text-red-400' : 'text-white'
                 }`}>
-                  <SelectValue placeholder={cityRequiredError ? "Choose City!" : "Select City"} />
+                  <SelectValue placeholder={cityRequiredError ? "Choose Hub!" : "Select Market Hub"} />
                 </div>
               </div>
             </SelectTrigger>
@@ -96,13 +95,13 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
               </div>
             </SelectTrigger>
             <SelectContent className="bg-luxury-charcoal border-white/10 text-white rounded-2xl z-[9999]">
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="house">Houses</SelectItem>
-              <SelectItem value="villa">Villas</SelectItem>
-              <SelectItem value="apartment">Apartments</SelectItem>
-              <SelectItem value="land">Land</SelectItem>
-              <SelectItem value="commercial">Commercial</SelectItem>
-              <SelectItem value="vehicle">Vehicles</SelectItem>
+              <SelectItem value="all">All Channels</SelectItem>
+              <SelectItem value="house">Business Tools</SelectItem>
+              <SelectItem value="villa">Cloud AI</SelectItem>
+              <SelectItem value="apartment">Creative Tech</SelectItem>
+              <SelectItem value="land">DevOps</SelectItem>
+              <SelectItem value="commercial">Enterprise</SelectItem>
+              <SelectItem value="vehicle">Gear & Gadgets</SelectItem>
             </SelectContent>
           </Select>
           <div className="absolute right-0 top-1/2 -translate-y-1/2 h-6 md:h-8 w-[1px] bg-white/10" />
@@ -113,15 +112,15 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
           <Select value={listingType} onValueChange={setListingType}>
             <SelectTrigger className="bg-transparent border-0 h-14 md:h-16 rounded-2xl text-white hover:bg-white/5 transition-all px-2 md:px-6 ring-0 focus:ring-0 focus:outline-none [&>svg]:hidden md:[&>svg]:block">
               <div className="flex flex-col items-start text-left w-full overflow-hidden">
-                <span className="text-[8px] md:text-[9px] text-white/40 font-bold uppercase tracking-wider mb-1 leading-none truncate w-full">Purpose</span>
+                <span className="text-[8px] md:text-[9px] text-white/40 font-bold uppercase tracking-wider mb-1 leading-none truncate w-full">Business Model</span>
                 <div className="text-[11px] md:text-sm font-semibold truncate w-full text-white">
-                  <SelectValue placeholder="Listing" />
+                  <SelectValue placeholder="Model" />
                 </div>
               </div>
             </SelectTrigger>
             <SelectContent className="bg-luxury-charcoal border-white/10 text-white rounded-2xl z-[9999]">
-              <SelectItem value="sale">Sale</SelectItem>
-              <SelectItem value="rent">Rent</SelectItem>
+              <SelectItem value="sale">Lifetime Deal</SelectItem>
+              <SelectItem value="rent">Subscription</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -131,7 +130,7 @@ export default function HomeSearch({ onSearch }: HomeSearchProps) {
           <Button 
             onClick={handleSearch} 
             className="bg-[#C5A059] text-black hover:bg-white h-12 w-12 md:h-16 md:w-16 rounded-2xl md:rounded-3xl font-bold transition-all duration-300 flex items-center justify-center p-0 aspect-square group shadow-xl shadow-[#C5A059]/10"
-            title="Search Listings"
+            title="Search Insights"
           >
             <Search className="group-hover:scale-110 transition-transform text-black w-5 h-5 md:w-6 md:h-6" />
           </Button>

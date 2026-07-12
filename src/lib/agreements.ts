@@ -41,13 +41,13 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(30, 30, 30);
-    doc.text('AMAANESTATE', margin + 5, margin + 12);
+    doc.text('PRIMEDEALS', margin + 5, margin + 12);
 
     // Subheader
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
-    doc.text('SECURE LEASE & EXCHANGE NETWORK', margin + 5, margin + 17);
+    doc.text('SECURE TECH & SOFTWARE REVIEW NETWORK', margin + 5, margin + 17);
 
     // Document Name and ID Block right-aligned
     doc.setFont('Helvetica', 'bold');
@@ -82,7 +82,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(140, 140, 140);
-    doc.text('AmaanEstate Digital Registry Verification System. Ethically and legally protected.', margin + 5, pageHeight - margin - 4);
+    doc.text('PrimeDeals Digital Registry Verification System. Ethically and legally protected.', margin + 5, pageHeight - margin - 4);
     doc.text(`Page ${pageNum}`, pageWidth - margin - 5, pageHeight - margin - 4, { align: 'right' });
   };
 
@@ -261,7 +261,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
         doc.setTextColor(110, 110, 110);
         doc.text(`Approved system-side: ${agreement.approvedBy || 'Admin Official'}`, margin + 35, y + 10);
         doc.text(`Witnessed Timestamp: ${agreement.approvedAt ? new Date(agreement.approvedAt).toLocaleString() : new Date().toLocaleString()}`, margin + 35, y + 14);
-        doc.text('Scanning the visual QR guarantees cryptographic token verification on the AmaanEstate ledger.', margin + 35, y + 18);
+        doc.text('Scanning the visual QR guarantees cryptographic token verification on the PrimeDeals ledger.', margin + 35, y + 18);
       } else {
         doc.setTextColor(197, 160, 89); // Gold
         doc.text('PROVISIONAL REGISTRY DEED - PENDING APPROVAL', margin + 35, y + 5);
@@ -287,7 +287,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     doc.text('STATUS WARNING: PROVISIONAL DRAFT ONLY', margin + 10, y + 6);
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(7.5);
-    doc.text('This document does not constitute a legally verified deed on the AmaanEstate registry. Pending endorsement.', margin + 10, y + 11);
+    doc.text('This document does not constitute a legally verified deal on the PrimeDeals registry. Pending endorsement.', margin + 10, y + 11);
     
     y += 24;
   }
@@ -422,7 +422,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     const tiltRad = (stampTilt * Math.PI) / 180;
     
     // Top curved text
-    const text1 = "AMAANESTATE".split('');
+    const text1 = "PRIMEDEALS".split('');
     const radiusTop = 16.5;
     doc.setFontSize(6.5);
     text1.forEach((char, i) => {
@@ -435,7 +435,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     });
 
     // Bottom curved text
-    const text2 = "JIGJIGA * ETHIOPIA".split('');
+    const text2 = "TECH HUB * GLOBAL".split('');
     const radiusBot = 16.5;
     doc.setFontSize(5);
     text2.forEach((char, i) => {
@@ -459,7 +459,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
     drawRotatedText('VERIFIED', 1.5, 8.5);
     drawRotatedText('SEAL', 6.5, 6);
     
-    // Draw AmaanEstate Company Signature underlying the stamp
+    // Draw PrimeDeals Company Signature underlying the stamp
     try {
       const coSigX = sealX - 35;
       const coSigY = sealY - 15;
@@ -467,7 +467,7 @@ export const generateAgreementPDF = (agreement: Agreement): jsPDF => {
       doc.setFontSize(6);
       doc.setTextColor(20, 20, 20); // Black
       doc.setFont('Helvetica', 'bold');
-      doc.text('AUTHORIZED BY AMAANESTATE', coSigX + 20, coSigY + 45, { align: 'center' });
+      doc.text('AUTHORIZED BY PRIMEDEALS', coSigX + 20, coSigY + 45, { align: 'center' });
     } catch(err) {
       console.warn('Could not draw company signature:', err);
     }

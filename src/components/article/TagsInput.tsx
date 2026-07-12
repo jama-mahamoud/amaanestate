@@ -56,9 +56,9 @@ export default function TagsInput({ value = [], onChange, label = 'Tags', placeh
     <div className="space-y-3">
       <label className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</label>
       <div className="min-h-[56px] p-2 bg-white/5 rounded-xl border border-transparent focus-within:border-luxury-gold/50 flex flex-wrap gap-2 items-center transition-colors">
-        {value.map((tag) => (
+        {Array.from(new Set(value)).map((tag, idx) => (
           <span
-            key={tag}
+            key={`${tag}-${idx}`}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm font-medium"
           >
             {tag}

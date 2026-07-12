@@ -16,18 +16,18 @@ export default function About() {
           >
             <p className="text-luxury-gold font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase text-[9px] md:text-[10px] mb-4 md:mb-6 underline underline-offset-8 decoration-luxury-gold/30">The Amaan Legacy</p>
             <h1 className="text-4xl md:text-9xl font-display font-bold text-white mb-8 md:mb-10 tracking-tighter leading-[1.1] md:leading-[0.85]">
-              Integrity <br />
-              <span className="gold-text-gradient">Defined By Trust</span>
+              Insights <br />
+              <span className="gold-text-gradient">Defined By Truth</span>
             </h1>
             <div className="space-y-6 md:space-y-8 max-w-2xl">
               <p className="text-white/50 text-lg md:text-xl leading-relaxed font-light italic">
-                "Modernizing the landscape of Somali excellence while preserving the timeless value of regional integrity."
+                "Modernizing the landscape of Somali excellence while pioneering the frontier of tech and software reviews."
               </p>
               <p className="text-white/30 text-base md:text-lg leading-relaxed font-light">
-                Founded with a singular vision, AmaanEstate has evolved into the region's benchmark for high-value assets. We bridge the gap between traditional Somali values and global luxury standards.
+                Founded with a singular vision, AmaanEstate has evolved into the region's benchmark for high-value gear and software insights. We bridge the gap between traditional Somali integrity and global tech standards.
               </p>
               <p className="text-white/30 text-base md:text-lg leading-relaxed font-light">
-                In our culture, "Amaan" is more than a name—it's a social contract. Our platform architecturalizes this trust, ensuring every transaction within Ethiopia and its diaspora is secured by transparency and elite service.
+                In our culture, "Amaan" is about trust—it's a social contract. Our platform architecturalizes this trust into every review and deal, ensuring our community is secured by transparency and expert guidance.
               </p>
             </div>
           </motion.div>
@@ -55,9 +55,9 @@ export default function About() {
         {/* Values Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-24 md:mb-40">
           {[
-            { icon: <Shield size={28} />, title: 'Absolute Integrity', desc: 'Every participant undergoes a rigorous vetting sequence to preserve the ecosystem’s quality.' },
-            { icon: <Target size={28} />, title: 'Deep Localization', desc: 'We operate with an intimate understanding of the Somali Region’s unique legal and cultural landscape.' },
-            { icon: <Award size={28} />, title: 'Concierge Protocol', desc: 'Providing an institutional-grade experience for the regions most significant asset acquisitions.' },
+            { icon: <Shield size={28} />, title: 'Absolute Integrity', desc: 'Every product undergoes a rigorous testing sequence to preserve the ecosystem’s quality and trust.' },
+            { icon: <Target size={28} />, title: 'Deep Localization', desc: 'We operate with an intimate understanding of the Somali Region’s unique tech and market landscape.' },
+            { icon: <Award size={28} />, title: 'Expert Protocol', desc: 'Providing an institutional-grade experience for the region’s most significant gear acquisitions.' },
           ].map((val, i) => (
             <div key={i} className="glass-card p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] group hover:border-luxury-gold/20 transition-all duration-700">
                <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/5 flex items-center justify-center text-luxury-gold mb-8 md:mb-10 group-hover:bg-luxury-gold group-hover:text-luxury-black transition-all duration-500">

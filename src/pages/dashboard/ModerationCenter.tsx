@@ -28,17 +28,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 import ModerationStats from '@/components/dashboard/moderation/ModerationStats';
-import ListingModeratedList from '@/components/dashboard/moderation/ListingModeratedList';
-import ProfessionalModeratedList from '@/components/dashboard/moderation/ProfessionalModeratedList';
 import ArticleModeratedList from '@/components/dashboard/moderation/ArticleModeratedList';
 import InquiryModeratedList from '@/components/dashboard/moderation/InquiryModeratedList';
-import BrokerModeratedList from '@/components/dashboard/moderation/BrokerModeratedList';
 
-type TabType = 'listings' | 'professionals' | 'brokers' | 'articles' | 'inquiries';
+type TabType = 'articles' | 'inquiries';
 
 export default function ModerationCenter() {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('listings');
+  const [activeTab, setActiveTab] = useState<TabType>('articles');
   
   // Real-time statistical counts
   const [stats, setStats] = useState<IStats>({
@@ -141,9 +138,6 @@ export default function ModerationCenter() {
   }
 
   const tabs = [
-    { id: 'listings', label: 'Market Properties', icon: <LayoutList size={16} />, count: stats.pendingListings },
-    { id: 'professionals', label: 'Agent Vetting', icon: <Users size={16} />, count: stats.pendingProfessionals },
-    { id: 'brokers', label: 'Corporate Agencies', icon: <ShieldCheck size={16} />, count: 0 },
     { id: 'articles', label: 'Intelligence Feed', icon: <FileText size={16} />, count: 0 },
     { id: 'inquiries', label: 'Client Inquiries', icon: <MessageSquare size={16} />, count: stats.totalInquiries },
   ];
@@ -222,9 +216,6 @@ export default function ModerationCenter() {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.3 }}
               >
-                {activeTab === 'listings' && <ListingModeratedList />}
-                {activeTab === 'professionals' && <ProfessionalModeratedList />}
-                {activeTab === 'brokers' && <BrokerModeratedList />}
                 {activeTab === 'articles' && <ArticleModeratedList />}
                 {activeTab === 'inquiries' && <InquiryModeratedList />}
               </motion.div>

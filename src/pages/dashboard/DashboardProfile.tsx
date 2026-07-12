@@ -1,17 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Shield, BadgeCheck, Bell, Save, Mail, Map, Calendar, Loader2, Building2, Eye, EyeOff, FileText, Check } from 'lucide-react';
+import { User, BadgeCheck, Save, Mail, Map, FileText, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion } from 'framer-motion';
-import { brokerService } from '@/services/brokerService';
 import { userService } from '@/services/userService';
-import { storage, db } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc } from 'firebase/firestore';
-import { Agency } from '@/types';
-import ImageUpload from '@/components/listing/ImageUpload';
-import { calculateAgencyTrustScore } from '@/utils/trustScore';
 
 export default function DashboardProfile() {
   const { user, profile } = useAuth();
@@ -24,119 +16,10 @@ export default function DashboardProfile() {
   const [userCity, setUserCity] = useState(profile?.city || '');
   const [userBio, setUserBio] = useState(profile?.bio || '');
 
-  // Agency Specific State
-  const [agency, setAgency] = useState<Agency | null>(null);
-  const [agencyName, setAgencyName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [license, setLicense] = useState('');
-  const [logo, setLogo] = useState('');
-  const [visibility, setVisibility] = useState(true);
-  const [logoFiles, setLogoFiles] = useState<File[]>([]);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-
-  useEffect(() => {
-    if (logoFiles.length > 0) {
-      const uploadLogo = async () => {
-        setUploadingLogo(true);
-        try {
-          const file = logoFiles[0];
-          // Validate file size (approx 2MB limit)
-          if (file.size > 2 * 1024 * 1024) {
-             alert("File too large. Max size 2MB.");
-             return;
-          }
-          const storageRef = ref(storage, `agency-logos/${user?.uid}/${Date.now()}_${file.name}`);
-          const snapshot = await uploadBytes(storageRef, file);
-          const downloadUrl = await getDownloadURL(snapshot.ref);
-          setLogo(downloadUrl);
-        } catch (error) {
-          console.error("Logo upload failed", error);
-          alert("Failed to upload logo.");
-        } finally {
-          setUploadingLogo(false);
-        }
-      };
-      uploadLogo();
-    }
-  }, [logoFiles, user?.uid]);
-
-  const isAgencyRole = profile?.role === 'agency';
-
-  useEffect(() => {
-    let active = true;
-    const fetchAgencyData = async () => {
-      if (isAgencyRole && user?.uid) {
-        setLoading(true);
-        try {
-          const allAgencies = await brokerService.getAllAgencies();
-          const found = allAgencies.find(a => a.ownerId === user.uid);
-          if (found && active) {
-            // Recalculate dynamic trust score
-            const { score } = calculateAgencyTrustScore(found);
-            
-            // If outdated, update Firestore and local state immediately
-            if (score !== found.trustScore) {
-              const agencyRef = doc(db, 'agencies', found.id);
-              await updateDoc(agencyRef, { trustScore: score });
-              found.trustScore = score; // Sync local object
-            }
-
-            setAgency(found);
-            setAgencyName(found.agencyName);
-            setEmail(found.email);
-            setPhone(found.phone);
-            setLicense(found.license);
-            setLogo(found.logo);
-            setVisibility(found.visibility !== false);
-          }
-        } catch (error) {
-          console.error("Error loading agency details", error);
-        } finally {
-          if (active) setLoading(false);
-        }
-      }
-    };
-    fetchAgencyData();
-    return () => { active = false; };
-  }, [isAgencyRole, user?.uid]);
-
   const handleUpdate = useCallback(async () => {
     setLoading(true);
     try {
-      if (isAgencyRole && agency) {
-        // Save Agency credentials directly to Firestore agencies record
-        const agencyRef = doc(db, 'agencies', agency.id);
-        const logoUrlToSave = logo;
-        
-        await updateDoc(agencyRef, {
-          agencyName,
-          email,
-          phone,
-          license,
-          logo: logoUrlToSave,
-          visibility,
-          updatedAt: new Date().toISOString()
-        });
-        
-        setAgency(prev => prev ? {
-          ...prev,
-          agencyName,
-          email,
-          phone,
-          license,
-          logo: logoUrlToSave,
-          visibility
-        } : null);
-        
-        // Save update to auth user too
-        if (user?.uid) {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            displayName: agencyName
-          });
-        }
-      } else if (user?.uid) {
+      if (user?.uid) {
         await userService.updateUser(user.uid, {
           displayName: userDisplayName,
           phone: userPhone,
@@ -152,12 +35,7 @@ export default function DashboardProfile() {
     } finally {
       setLoading(false);
     }
-  }, [agency, agencyName, email, isAgencyRole, license, logo, phone, user?.uid, visibility, userDisplayName, userCity, userBio, userPhone]);
-
-  // Utility for logo fallback
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  };
+  }, [userDisplayName, userCity, userBio, userPhone, user?.uid]);
 
   return (
     <div className="space-y-12">
@@ -165,10 +43,10 @@ export default function DashboardProfile() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 border-b border-white/5 pb-8">
         <div>
           <h1 className="text-4xl font-display font-bold tracking-tight">
-            {isAgencyRole ? 'Agency Profile & Dashboard 🏢' : 'Operator Credentials'}
+            Operator Credentials
           </h1>
           <p className="text-white/40 text-xs font-bold uppercase tracking-[0.3em] mt-1">
-            {isAgencyRole ? 'Corporate Identity, Licensing & Brand Management' : 'Review user roles, badges and profile settings'}
+            Review user roles, badges and profile settings
           </p>
         </div>
         <Button 
@@ -193,250 +71,88 @@ export default function DashboardProfile() {
         </Button>
       </div>
 
-      {isAgencyRole && !agency ? (
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-12 text-center text-white/60">
-          <Loader2 className="animate-spin text-[#C5A059] mx-auto mb-4" size={32} />
-          <p className="text-sm">Fetching verified agency corporate metadata...</p>
-        </div>
-      ) : isAgencyRole && agency ? (
-        /* AGENCY SPECIALIZED COMPREHENSIVE CONFIGURATION VIEW */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 space-y-10">
-            <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-              <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
-                  <Shield size={20} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-display font-medium text-white tracking-tight">Trust & Verification</h3>
-                  <p className="text-white/40 text-[9px] uppercase tracking-wider font-extrabold">Dynamic score based on complete corporate documentation</p>
-                </div>
+      {/* STANDARD PROFILE VIEW FOR ORDINARY USER TIERS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-8 space-y-10">
+          <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
+            <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
+              <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
+                <User size={20} />
               </div>
-              
-              {/* Trust Score Breakdown */}
-                <div className="space-y-6">
-                  {(() => {
-                    const { score, breakdown } = calculateAgencyTrustScore(agency);
-                    return (
-                      <>
-                        <div className="flex items-end gap-4">
-                          <div className="text-6xl font-display font-bold text-white">{score}%</div>
-                          <div className="text-white/40 mb-2 font-medium">Trust Score</div>
-                        </div>
-                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                          <div className="bg-luxury-gold h-full transition-all duration-500" style={{ width: `${score}%` }} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-[10px] uppercase tracking-wider text-white/50">
-                          <div>Basic Info: {breakdown.basicInfo}/30</div>
-                          <div>Location: {breakdown.locationInfo}/30</div>
-                          <div>Verification: {breakdown.verification}/30</div>
-                          <div>Extras: {breakdown.profileExtras}/10</div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-            </section>
+              <div>
+                <h3 className="text-2xl font-display font-medium text-white tracking-tight">Operator Information</h3>
+                <p className="text-white/40 text-[9px] uppercase tracking-wider font-extrabold font-sans">Public profile identities checked against legal database</p>
+              </div>
+            </div>
 
-            <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-              <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-display font-medium text-white tracking-tight">Corporate Branding</h3>
-                  <p className="text-white/40 text-[9px] uppercase tracking-wider font-extrabold">Public directories fetch this branding instantly</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2.5">
+                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Display Name</label>
+                <div className="relative">
+                  <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
+                  <Input value={userDisplayName} onChange={e => setUserDisplayName(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-2">Agency Corporate Name</label>
-                  <Input 
-                    value={agencyName} 
-                    onChange={e => setAgencyName(e.target.value)}
-                    className="bg-white/5 border-0 h-16 px-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
+              <div className="space-y-2.5">
+                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Email Endpoint</label>
+                <div className="relative border border-white/5 bg-white/[0.01] rounded-2xl h-16 flex items-center px-6">
+                  <Mail size={16} className="text-white/20 mr-3" />
+                  <span className="text-white/60 font-mono text-sm">{user?.email || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Regional Hub Assigned</label>
+                <div className="relative">
+                  <Map size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
+                  <Input value={userCity} onChange={e => setUserCity(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-[#C5A059]/30 font-medium" />
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Phone Number</label>
+                <div className="relative">
+                  <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
+                  <Input value={userPhone} onChange={e => setUserPhone(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
+                </div>
+              </div>
+
+              <div className="space-y-2.5 md:col-span-2">
+                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Bio / About Me</label>
+                <div className="relative">
+                  <FileText size={16} className="absolute left-5 top-6 text-white/20" />
+                  <textarea 
+                    value={userBio} 
+                    onChange={e => setUserBio(e.target.value)}
+                    className="w-full bg-white/5 border-0 min-h-[120px] pl-12 pr-6 pt-5 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium text-left" 
+                    placeholder="Tell us about yourself..."
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-2">Registry Licensing ID</label>
-                    <Input 
-                      value={license} 
-                      onChange={e => setLicense(e.target.value)}
-                      className="bg-white/5 border-0 h-16 px-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-2">Corporate Office Phone</label>
-                    <Input 
-                      value={phone} 
-                      onChange={e => setPhone(e.target.value)}
-                      className="bg-white/5 border-0 h-16 px-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-2">Official Communications Email</label>
-                  <Input 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)}
-                    className="bg-white/5 border-0 h-16 px-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
-                  />
-                </div>
-
-                {/* Logo Editor Section */}
-                <div className="pt-4 border-t border-white/5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2 mb-3">
-                    {uploadingLogo ? 'Uploading...' : 'Update Corporate Logo'}
-                  </label>
-                  <div className="flex items-center gap-6 bg-white/[0.01] border border-white/5 p-6 rounded-2xl">
-                    <div className="relative">
-                      {uploadingLogo && (
-                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
-                            <Loader2 className="animate-spin text-luxury-gold" size={24} />
-                         </div>
-                      )}
-                      {logo ? (
-                        <img src={logo} alt="Logo Preview" className="w-16 h-16 rounded-xl object-cover bg-white/10 border border-white/10 shrink-0" />
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#C5A059]/20 text-[#C5A059] font-bold text-xl border border-[#C5A059]/30 shrink-0">
-                          {getInitials(agencyName || 'Agency')}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <ImageUpload onImagesChange={setLogoFiles} maxFiles={1} />
-                    </div>
-                  </div>
-                </div>
               </div>
-            </section>
-          </div>
-
-          <div className="lg:col-span-4 space-y-10">
-            {/* Visibility Settings Panel */}
-            <section className="p-8 border border-white/5 bg-white/[0.01] rounded-[2.5rem] space-y-6">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-widest font-black text-white/80">Directory Visibility</p>
-                {visibility ? (
-                  <span className="text-emerald-400 text-[10px] font-bold uppercase">Publicly Listed Online</span>
-                ) : (
-                  <span className="text-red-400 text-[10px] font-bold uppercase">Hidden / Offline</span>
-                )}
-              </div>
-              
-              <button
-                type="button"
-                onClick={() => setVisibility(!visibility)}
-                className={`w-full p-6 border rounded-2xl flex items-center justify-between gap-4 transition-all ${
-                  visibility 
-                    ? 'bg-[#C5A059]/10 border-[#C5A059]/30 text-white' 
-                    : 'bg-red-500/5 border-red-500/20 text-white/50 hover:bg-red-500/10'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {visibility ? <Eye size={18} className="text-[#C5A059]" /> : <EyeOff size={18} className="text-red-400" />}
-                  <span className="text-xs font-bold uppercase tracking-wider block">
-                    {visibility ? 'Disseminate Publicly' : 'Suspend Visibility'}
-                  </span>
-                </div>
-                <div className={`w-10 h-6 rounded-full relative p-0.5 transition-colors ${visibility ? 'bg-[#C5A059]' : 'bg-white/10'}`}>
-                  <div className={`w-5 h-5 bg-black rounded-full shadow transition-all ${visibility ? 'translate-x-4' : 'translate-x-0'}`} />
-                </div>
-              </button>
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
-      ) : (
-        /* STANDARD PROFILE VIEW FOR ORDINARY USER TIERS */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 space-y-10">
-            <section className="glass-card p-12 rounded-[3.5rem] relative overflow-hidden bg-white/[0.01]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-              <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#C5A059]/10 flex items-center justify-center text-luxury-gold">
-                  <User size={20} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-display font-medium text-white tracking-tight">Operator Information</h3>
-                  <p className="text-white/40 text-[9px] uppercase tracking-wider font-extrabold font-sans">Public profile identities checked against legal database</p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2.5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Display Name</label>
-                  <div className="relative">
-                    <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
-                    <Input value={userDisplayName} onChange={e => setUserDisplayName(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
-                  </div>
-                </div>
+        <div className="lg:col-span-4 space-y-10">
+          <section className="p-8 border border-white/5 bg-white/[0.01] rounded-[2.5rem] text-center space-y-6 relative overflow-hidden group hover:border-[#C5A059]/40 transition-all duration-700">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
+            <div className="w-20 h-20 bg-luxury-gold/10 border border-luxury-gold/20 rounded-full flex items-center justify-center mx-auto text-luxury-gold group-hover:scale-105 transition-transform duration-500">
+              <BadgeCheck size={36} />
+            </div>
 
-                <div className="space-y-2.5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Email Endpoint</label>
-                  <div className="relative border border-white/5 bg-white/[0.01] rounded-2xl h-16 flex items-center px-6">
-                    <Mail size={16} className="text-white/20 mr-3" />
-                    <span className="text-white/60 font-mono text-sm">{user?.email || 'N/A'}</span>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <h4 className="text-lg font-display font-medium text-white group-hover:text-luxury-gold transition-colors">Verified Partner Badge</h4>
+              <p className="text-[10px] text-[#C5A059] uppercase font-black tracking-widest">Rank: {profile?.role?.replace('_', ' ')?.toUpperCase() || 'REGISTERED'}</p>
+            </div>
 
-                <div className="space-y-2.5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30Presentation block ml-2 animate-none">Regional Hub Assigned</label>
-                  <div className="relative">
-                    <Map size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
-                    <Input value={userCity} onChange={e => setUserCity(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-[#C5A059]/30 font-medium" />
-                  </div>
-                </div>
-
-                <div className="space-y-2.5">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Phone Number</label>
-                  <div className="relative">
-                    <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
-                    <Input value={userPhone} onChange={e => setUserPhone(e.target.value)} className="bg-white/5 border-0 h-16 pl-12 pr-6 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" />
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 md:col-span-2">
-                  <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 block ml-2">Bio / About Me</label>
-                  <div className="relative">
-                    <FileText size={16} className="absolute left-5 top-6 text-white/20" />
-                    <textarea 
-                      value={userBio} 
-                      onChange={e => setUserBio(e.target.value)}
-                      className="w-full bg-white/5 border-0 min-h-[120px] pl-12 pr-6 pt-5 rounded-2xl text-white text-md focus-visible:ring-luxury-gold/30 font-medium" 
-                      placeholder="Tell us about yourself..."
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <div className="lg:col-span-4 space-y-10">
-            <section className="p-8 border border-white/5 bg-white/[0.01] rounded-[2.5rem] text-center space-y-6 relative overflow-hidden group hover:border-[#C5A059]/40 transition-all duration-700">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-luxury-gold/5 blur-3xl rounded-full" />
-              <div className="w-20 h-20 bg-luxury-gold/10 border border-luxury-gold/20 rounded-full flex items-center justify-center mx-auto text-luxury-gold group-hover:scale-105 transition-transform duration-500">
-                <BadgeCheck size={36} />
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-lg font-display font-medium text-white group-hover:text-luxury-gold transition-colors">Verified Partner Badge</h4>
-                <p className="text-[10px] text-[#C5A059] uppercase font-black tracking-widest">Rank: {profile?.role?.replace('_', ' ')?.toUpperCase() || 'REGISTERED'}</p>
-              </div>
-
-              <p className="text-white/50 text-[11px] leading-relaxed px-4 font-light">
-                Your profile is verified by Amaan Regional Regulators according to title registries and transaction volume thresholds.
-              </p>
-            </section>
-          </div>
+            <p className="text-white/50 text-[11px] leading-relaxed px-4 font-light">
+              Your profile is verified by Amaan Regional Regulators according to title registries and transaction volume thresholds.
+            </p>
+          </section>
         </div>
-      )}
+      </div>
     </div>
   );
 }
