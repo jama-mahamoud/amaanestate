@@ -217,6 +217,35 @@ function parseRestDocument(restDoc: any, docId: string) {
 // Low-overhead REST client for Firestore public queries
 async function fetchCollectionRest(collectionId: string, projectId: string): Promise<any[]> {
   try {
+    // If it's editorial_reviews, use runQuery to avoid 403 Forbidden on unfiltered list
+    if (collectionId === "editorial_reviews") {
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+      console.log(`[SITEMAP REST] Fetching 'editorial_reviews' via runQuery REST API: ${url}`);
+      const query = {
+        structuredQuery: {
+          from: [{ collectionId: "editorial_reviews" }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: "status" },
+              op: "EQUAL",
+              value: { stringValue: "published" }
+            }
+          }
+        }
+      };
+      const res = await axios.post(url, query, { timeout: 12000 });
+      const results = res.data || [];
+      const docs: any[] = [];
+      results.forEach((item: any) => {
+        if (item.document) {
+          const parts = item.document.name.split('/');
+          const docId = parts[parts.length - 1];
+          docs.push(parseRestDocument(item.document, docId));
+        }
+      });
+      return docs;
+    }
+
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionId}?pageSize=300`;
     console.log(`[SITEMAP REST] Fetching collection '${collectionId}' from REST API URL: ${url}`);
     const res = await axios.get(url, { timeout: 12000 });
@@ -233,35 +262,24 @@ async function fetchCollectionRest(collectionId: string, projectId: string): Pro
 }
 
 async function generateSitemapXml() {
+  const metrics = {
+    totalPublishedArticlesFound: 0,
+    totalUrlsIncluded: 0,
+    totalUrlsExcluded: 0,
+    exclusionReasons: {
+      legacyRealEstate: 0,
+      invalidSlug: 0,
+      notPublished: 0,
+      notPublic: 0,
+      notIndexable: 0,
+      citiesRoute: 0
+    }
+  };
+
   try {
     const dynamicDate = new Date().toISOString().split('T')[0];
-    const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [
-      { loc: "https://www.primedeals.app/", lastmod: dynamicDate, changefreq: "daily", priority: "1.0" },
-      { loc: "https://www.primedeals.app/software", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-      { loc: "https://www.primedeals.app/gear", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-      { loc: "https://www.primedeals.app/deals", lastmod: dynamicDate, changefreq: "daily", priority: "0.9" },
-      { loc: "https://www.primedeals.app/news", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.primedeals.app/verification", lastmod: dynamicDate, changefreq: "daily", priority: "0.8" },
-      { loc: "https://www.primedeals.app/about", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-      { loc: "https://www.primedeals.app/contact", lastmod: dynamicDate, changefreq: "monthly", priority: "0.7" },
-    ];
-
-    const citySlugs = [
-      'mogadishu', 'hargeisa', 'garowe', 'bosaso', 'jigjiga', 'dire-dawa',
-      'addis-ababa', 'kismayo', 'baidoa', 'beledweyne', 'galkayo', 'burao',
-      'berbera', 'las-anod', 'jowhar', 'afgooye', 'godey', 'mekelle',
-      'hawassa', 'adama', 'bahir-dar', 'merca'
-    ];
-
-    citySlugs.forEach(slug => {
-      urls.push({
-        loc: `https://www.primedeals.app/cities/${slug}`,
-        lastmod: dynamicDate,
-        changefreq: "daily",
-        priority: "0.8"
-      });
-    });
-
+    let latestUpdateDate = '2026-07-14'; // Baseline date
+    
     // Retrieve projectId from local config
     const configPath = path.join(process.cwd(), "firebase-applet-config.json");
     let prjId = "amaanestate-97f4f";
@@ -279,53 +297,316 @@ async function generateSitemapXml() {
     // Directly use the established REST client for ALL data fetching to guarantee stability
     console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
     
-    const [articles] = await Promise.all([
-      fetchCollectionRest("articles", prjId)
+    const [articles, editorialReviews, softwareTools, techGearProducts] = await Promise.all([
+      fetchCollectionRest("articles", prjId),
+      fetchCollectionRest("editorial_reviews", prjId),
+      fetchCollectionRest("software_tools", prjId),
+      fetchCollectionRest("tech_gear_products", prjId)
     ]);
     
-    // Phase 3: Build Canonical and Dynamic Routes with strict filtering checks
-    
-    const slugify = (text: string) => {
-      if (!text) return 'article';
-      return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
+    const dynamicUrls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
+
+    const isLegacyRealEstate = (slug: string, title: string): boolean => {
+      const s = (slug || '').toLowerCase();
+      const t = (title || '').toLowerCase();
+      
+      const keywords = [
+        'estate', 'property', 'house', 'rent', 'land', 'city', 'cities', 'jigjiga', 'jijiga',
+        'dire-dawa', 'dire dawa', 'somali', 'soomaali', 'guri', 'dhul', 'kire', 'kira', 'hanti',
+        'iib', 'maalgashi', 'africa', 'ethiopia', 'maanestate'
+      ];
+      
+      return keywords.some(k => s.includes(k) || t.includes(k));
     };
 
-    // C. Process Blog/News Articles with Multi-Language Translations
-    articles.forEach((data: any) => {
-      const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
-      const isPublic = data.visibility === 'public' || data.visibility === undefined || data.visibility === 'PUBLIC';
+    const isValidSlug = (slug: any): boolean => {
+      if (!slug || typeof slug !== 'string') return false;
+      const s = slug.toLowerCase().trim();
       
-      if (isPublished && isPublic) {
-        let lastmod = dynamicDate;
-        try {
-          if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
-            lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
-          } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
-            lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
-          }
-        } catch (e) {
-          console.error(`[SITEMAP] Error calculating lastmod for article ${data.id || data.slug}:`, e);
-        }
-        
-        let slug = data.slug;
-        if (!slug && data.title) {
-          slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
-        }
-        if (!slug) {
-          slug = data.id;
-        }
+      const excludedKeywords = [
+        'preview', 'draft', 'temp', 'test', 'editor', 'amaan-editorial-studio', 
+        'editorial-studio', 'new-article', 'placeholder', 'undefined', 'null'
+      ];
+      if (excludedKeywords.some(k => s.includes(k))) {
+        return false;
+      }
+      
+      if (s.includes('[') || s.includes(']') || s.includes('{') || s.includes('}') || s.includes('<') || s.includes('>') || s.includes(' ') || s.includes('(') || s.includes(')')) {
+        return false;
+      }
+      
+      return true;
+    };
 
-        // Inject standard canonical route
-        urls.push({
-          loc: `https://www.primedeals.app/news/${slug}`,
+    const calculateLastmod = (data: any): string => {
+      let lastmod = dynamicDate;
+      try {
+        if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+          lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+        } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+          lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.error(`[SITEMAP] Error calculating lastmod:`, e);
+      }
+      return lastmod;
+    };
+
+    // 1. Process Blog/News Articles
+    articles.forEach((data: any) => {
+      let slug = data.slug;
+      if (!slug && data.title) {
+        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (!slug) {
+        slug = data.id;
+      }
+      const title = data.title || '';
+
+      const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
+      
+      if (isPublished) {
+        metrics.totalPublishedArticlesFound++;
+      } else {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      const isLegacy = isLegacyRealEstate(slug, title);
+      if (isLegacy) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.legacyRealEstate++;
+        return;
+      }
+
+      const isTech = true; // Since it's not legacy, it's a tech article!
+      const isPublic = data.visibility === 'public' || (data.visibility === undefined && isTech);
+      if (!isPublic) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
+      const isIndexable = data.indexable === true || (data.indexable === undefined && isTech);
+      if (!isIndexable) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notIndexable++;
+        return;
+      }
+
+      if (slug && (slug.includes('cities/') || slug.includes('/cities'))) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.citiesRoute++;
+        return;
+      }
+
+      if (!isValidSlug(slug)) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.invalidSlug++;
+        return;
+      }
+
+      const lastmod = calculateLastmod(data);
+      if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
+      
+      dynamicUrls.push({
+        loc: `https://www.amaanestate.com/news/${slug}`,
+        lastmod,
+        changefreq: "weekly",
+        priority: "0.8"
+      });
+    });
+
+    // 2. Process Editorial Reviews
+    editorialReviews.forEach((data: any) => {
+      let slug = data.slug;
+      if (!slug && data.title) {
+        slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      const title = data.title || '';
+
+      const isPublished = data.status === 'approved' || data.status === 'published' || data.status === 'PUBLISHED' || data.published === true;
+      if (!isPublished) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      const isLegacy = isLegacyRealEstate(slug || '', title);
+      if (isLegacy) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.legacyRealEstate++;
+        return;
+      }
+
+      const isPublic = data.visibility === 'public' || data.visibility === undefined;
+      if (!isPublic) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
+      const isIndexable = data.indexable === true || data.indexable === undefined;
+      if (!isIndexable) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notIndexable++;
+        return;
+      }
+
+      const lastmod = calculateLastmod(data);
+      if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
+
+      if (slug && isValidSlug(slug)) {
+        dynamicUrls.push({
+          loc: `https://www.amaanestate.com/reviews/${slug}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.8"
         });
+      } else if (data.id && isValidSlug(data.id)) {
+        dynamicUrls.push({
+          loc: `https://www.amaanestate.com/product/rev-${data.id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.8"
+        });
+      } else {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.invalidSlug++;
       }
     });
 
-    // Build XML
+    // 3. Process Software Tools
+    softwareTools.forEach((data: any) => {
+      let slug = data.slug;
+      if (!slug) {
+        slug = data.id;
+      }
+
+      const isPublished = data.status === 'published' || data.status === 'approved' || data.published === true;
+      if (!isPublished) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      const isPublic = data.visibility === 'public' || data.visibility === undefined;
+      if (!isPublic) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
+      const isIndexable = data.indexable === true || data.indexable === undefined;
+      if (!isIndexable) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notIndexable++;
+        return;
+      }
+
+      const lastmod = calculateLastmod(data);
+      if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
+
+      if (slug && isValidSlug(slug)) {
+        dynamicUrls.push({
+          loc: `https://www.amaanestate.com/product/${slug}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.8"
+        });
+      } else if (data.id && isValidSlug(data.id)) {
+        dynamicUrls.push({
+          loc: `https://www.amaanestate.com/product/sw-${data.id}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.8"
+        });
+      } else {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.invalidSlug++;
+      }
+    });
+
+    // 4. Process Tech Gear Products
+    techGearProducts.forEach((data: any) => {
+      const isPublished = data.status === 'approved' || data.status === 'published' || data.published === true;
+      if (!isPublished) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      const isPublic = data.visibility === 'public' || data.visibility === undefined;
+      if (!isPublic) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
+      const isIndexable = data.indexable === true || data.indexable === undefined;
+      if (!isIndexable) {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notIndexable++;
+        return;
+      }
+
+      const lastmod = calculateLastmod(data);
+      if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
+
+      if (data.id && isValidSlug(data.id)) {
+        const productSlug = data.id.startsWith('tg-') ? data.id : `tg-${data.id}`;
+        dynamicUrls.push({
+          loc: `https://www.amaanestate.com/product/${productSlug}`,
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.8"
+        });
+      } else {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.invalidSlug++;
+      }
+    });
+
+    // Ensure latestUpdateDate doesn't overshoot today's date
+    if (latestUpdateDate > dynamicDate) {
+      latestUpdateDate = dynamicDate;
+    }
+
+    // Static Base Routes - Fully indexable matching the Software & Technology Review Platform
+    urls.push({ loc: "https://www.amaanestate.com/", lastmod: latestUpdateDate, changefreq: "daily", priority: "1.0" });
+    urls.push({ loc: "https://www.amaanestate.com/software", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
+    urls.push({ loc: "https://www.amaanestate.com/tech-gear", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
+    urls.push({ loc: "https://www.amaanestate.com/deals", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
+    urls.push({ loc: "https://www.amaanestate.com/news", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.8" });
+    urls.push({ loc: "https://www.amaanestate.com/about", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
+    urls.push({ loc: "https://www.amaanestate.com/contact", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
+    urls.push({ loc: "https://www.amaanestate.com/agreements", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
+    urls.push({ loc: "https://www.amaanestate.com/privacy", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
+    urls.push({ loc: "https://www.amaanestate.com/terms", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
+    urls.push({ loc: "https://www.amaanestate.com/disclaimer", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
+
+    // Append dynamic URLs
+    urls.push(...dynamicUrls);
+    metrics.totalUrlsIncluded = urls.length;
+
+    console.log("\n============================================");
+    console.log("       SITEMAP GENERATION METRICS REPORT     ");
+    console.log("============================================");
+    console.log(`Total Published Articles Found: ${metrics.totalPublishedArticlesFound}`);
+    console.log(`Total URLs Included in Sitemap: ${metrics.totalUrlsIncluded}`);
+    console.log(`Total URLs Excluded from Sitemap: ${metrics.totalUrlsExcluded}`);
+    console.log("Exclusion Breakdown:");
+    console.log(` - Legacy Real Estate content: ${metrics.exclusionReasons.legacyRealEstate}`);
+    console.log(` - Invalid / temporary slug: ${metrics.exclusionReasons.invalidSlug}`);
+    console.log(` - Not marked as Published: ${metrics.exclusionReasons.notPublished}`);
+    console.log(` - Not marked as Public: ${metrics.exclusionReasons.notPublic}`);
+    console.log(` - Not marked as Indexable: ${metrics.exclusionReasons.notIndexable}`);
+    console.log(` - Cities route / cities slug: ${metrics.exclusionReasons.citiesRoute}`);
+    console.log("============================================\n");
+
+    // Build XML sitemap complying with Google's XML sitemap protocols
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     
@@ -339,7 +620,7 @@ async function generateSitemapXml() {
     });
     
     xml += `</urlset>`;
-    return { xml, count: urls.length };
+    return { xml, count: urls.length, metrics };
   } catch (err: any) {
     console.error("[SITEMAP] CRITICAL ERROR in generation:", err.message);
     throw err;
@@ -347,7 +628,7 @@ async function generateSitemapXml() {
 }
 
 function generateRobotsTxt() {
-  return `User-agent: *\nAllow: /\n\nSitemap: https://www.primedeals.app/sitemap.xml\n`;
+  return `User-agent: *\nAllow: /\n\nSitemap: https://www.amaanestate.com/sitemap.xml\n`;
 }
 
 
@@ -915,6 +1196,17 @@ async function startServer() {
     } catch (err: any) {
       console.error("[SEO SERVER] Sitemap generation error:", err.message);
       res.status(500).send("Internal Server Error: " + err.message);
+    }
+  });
+
+  // Sitemap Metrics Endpoint
+  app.get("/api/sitemap-metrics", async (req, res) => {
+    try {
+      const { metrics } = await generateSitemapXml();
+      res.json(metrics);
+    } catch (err: any) {
+      console.error("[SEO SERVER] Metrics fetch error:", err.message);
+      res.status(500).json({ error: err.message });
     }
   });
 

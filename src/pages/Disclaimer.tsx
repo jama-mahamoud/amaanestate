@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShieldAlert, Scale, ArrowLeft, Clock } from 'lucide-react';
 
 export default function Disclaimer() {
-  const lastUpdated = "June 16, 2026";
+  const lastUpdated = "July 12, 2026";
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-36 pb-24 relative overflow-hidden font-sans">
@@ -45,7 +45,7 @@ export default function Disclaimer() {
             </div>
             <div className="flex items-center gap-1.5">
               <Scale size={12} className="text-[#C5A059]/60" />
-              <span>Institutional Risk Management Standards</span>
+              <span>Global Technology Media Disclosure Standard</span>
             </div>
           </div>
         </div>
@@ -57,10 +57,10 @@ export default function Disclaimer() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-[#C5A059]">01.</span>
-              Nature of Platform Information & Listings Data
+              Editorial and Testing Opinions Disclaimer
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              All coordinates, structural specifications, architectural indices, pricing formulas, and accessibility updates listed on the AmaanEstate portal are generated for generalized informational references. While we enforce rigid title validation guidelines and verification checks across our premium partner networks, AmaanEstate does not serve as an absolute guarantor representing the immediate dynamic availability, ownership titles, or structural status values of listed real estate or automotive assets.
+              All software reviews, performance benchmarks, AI tool ratings, hardware comparisons, and SaaS evaluations published on AmaanEstate represent the editorial opinions of our writers and technical testers. While we make every effort to test products extensively and provide objective feedback, technology products change rapidly. Features, pricing models, limits, and compatibility are subject to sudden change. AmaanEstate makes no warranties regarding the accuracy, currency, or compatibility of software featured on this platform.
             </p>
           </section>
 
@@ -68,10 +68,10 @@ export default function Disclaimer() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-[#C5A059]">02.</span>
-              Institutional Digital Drafts & Contract Generators
+              Affiliate and Referral Disclosure
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              The customized transaction structures, automated lease agreements, land transfer blueprints, and automotive sales deeds generated through the platform's digital wizards serve strictly as technological toolkits tailored for initial draft preparation and operational speed. It does not constitute binding judicial, tax, or legal advice, nor does it substitute official municipal registries, institutional notary verifications, or legislative property transfer filings.
+              AmaanEstate utilizes affiliate marketing and sponsored links to monetize our in-depth content. This means that if you click on a product link (such as an AI tool, software product, SaaS subscription, or hardware device) and complete a transaction on the merchant's site, we may receive a commission. We only recommend products we believe add value, but our affiliate partnerships do not alter our commitment to honest, critical evaluations. We disclaim any liability for billing disputes, customer support issues, or service delivery failures from our affiliate partners.
             </p>
           </section>
 
@@ -79,10 +79,10 @@ export default function Disclaimer() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-[#C5A059]">03.</span>
-              Independent Capital & Investment Risk Disclosure
+              System Configuration and Tech Deployments
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              High-value capital acquisitions, real-estate trades, long-term rentals, and premium mobility agreements involve substantial financial and physical exposure. Users carry absolute, standalone responsibility for executing rigorous due diligence checks, physical title verifications, and secure escrow arrangements. AmaanEstate refuses all liability for capital losses, dynamic depreciation, or commercial disputes arising from independent offline contracts or transactions.
+              Our technology guides, configuration snippets, deployment scripts, and architectural patterns are provided strictly as general guidelines. It is your responsibility to test software setups, APIs, configurations, and systems in sandboxed or staging environments. Deploying recommended SaaS platforms, code, or systems on your production servers is done at your own risk. AmaanEstate refuses all liability for system downtime, security breaches, data loss, or server failure resulting from our technology reviews or tutorials.
             </p>
           </section>
 
@@ -90,32 +90,21 @@ export default function Disclaimer() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-[#C5A059]">04.</span>
-              Verification Badges & Partner Network Ratings
+              External Links and Third-Party Sites
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              Network integrity markers (Verified Agency tags, Trust Index scores, and Broker Registry indices) constitute a performance rating derived from verified municipal compliance, licensing reports, and active user feedback history. These markers serve as structural trust transparency guides and do not represent a legal warranty regarding future conduct, reliability, or solvency of any partner.
-            </p>
-          </section>
-
-          {/* Section 5 */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
-              <span className="text-xs font-mono text-[#C5A059]">05.</span>
-              Network Connectivity & External Integrations
-            </h2>
-            <p className="pl-6 border-l border-[#C5A059]/20">
-              The AmaanEstate digital marketplace provides directory pointers, real-time communication routes, and external map coordinates linking users to independent entities. Engagements, financial escrow deliveries, and documentation transactions executed offline via these external avenues represent direct, exclusive covenants operating outside the liability structures of AmaanEstate.
+              AmaanEstate contains dynamic links to third-party software marketplaces, SaaS portals, and technology retailers that are not owned or controlled by our company. We hold no authority over, and assume no responsibility for, the content, security, data handling procedures, cookie practices, or business operations of external sites. Visiting outside websites is governed entirely by their respective terms and conditions.
             </p>
           </section>
 
           {/* Support Info Box */}
           <section className="space-y-4 pt-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
-              <span className="text-xs font-mono text-[#C5A059]">06.</span>
+              <span className="text-xs font-mono text-[#C5A059]">05.</span>
               Judicial Inquiries & Compliance Channel
             </h2>
             <p className="pl-6 border-l border-[#C5A059]/20">
-              For absolute structural legal auditing checks, formal regulatory compliance submissions, or judicial clarification concerning platform indices, please contact our legal and risk advisory division directly at:
+              For editorial corrections, affiliate reporting questions, or general compliance inquiries, please contact our legal and risk advisory division directly at:
             </p>
             
             <div className="mt-6 ml-6 p-6 bg-white/[0.01] border border-white/5 rounded-2xl space-y-3 max-w-sm">

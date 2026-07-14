@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Shield, FileText, ArrowLeft, Clock } from 'lucide-react';
 
 export default function TermsOfService() {
-  const lastUpdated = "May 24, 2026";
+  const lastUpdated = "July 12, 2026";
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-36 pb-24 relative overflow-hidden font-sans">
@@ -41,7 +41,7 @@ export default function TermsOfService() {
             </div>
             <div className="flex items-center gap-1.5">
               <Shield size={12} className="text-luxury-gold/60" />
-              <span>Institutional Grade Compliance</span>
+              <span>Global Technology Compliance Standards</span>
             </div>
           </div>
         </div>
@@ -52,50 +52,50 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">01.</span>
-              Acceptance of Institutional Terms
+              Acceptance of Terms
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              By accessing the digital interfaces, brokerage catalogs, property registries, and agreement structures provided by AmaanEstate, you express unreserved agreement with the definitions, standards, and legal protocols detailed within this document. High-value property and mobility unit listings require verified verification markers prior to platform deployment.
+              By accessing, browsing, or utilizing the website, digital guides, reviews, and tool ratings provided by AmaanEstate, you express unreserved agreement with the terms, standards, and legal protocols detailed within this document. If you do not agree to these terms, you must immediately discontinue using our services.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">02.</span>
-              User Registrations & Verification Protocols
+              Scope of Services & Editorial Content
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              Users seeking to utilize the platform for brokerage inquiries, verified digital contracts, or listing generation must undergo multi-tiered safety reviews. Credentials, licensing information, and structural integrity reports submitted with listed assets must represent genuine verifiable facts. Misrepresentation of property layout, location, or ownership results in absolute suspension.
+              AmaanEstate is an elite technology media publication, AI software review catalog, and SaaS assessment hub. All content provided—including, but not limited to, reviews, test benchmarks, hardware ratings, configurations, software evaluations, and licensing analyses—is for informational and educational purposes. Our ratings represent the independent editorial opinions and testing frameworks of our experts and do not constitute binding commercial or engineering advice.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">03.</span>
-              Transaction & Registry Operations
+              Affiliate Relationships & Product Purchases
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              AmaanEstate facilitates transparent real-estate and luxury asset matching. Digital land agreements, structural integrity validations, and broker ratings are designed for informational clarity and certified matching. Final ownership transfers and legally executing land transactions remain under local legislative mandates.
+              Our service features affiliate and referral links to external software, SaaS, and hardware merchants. Transactions, agreements, and subscriptions initiated via these links are executed exclusively between you and the third-party provider. AmaanEstate is not a party to, nor is it responsible or liable for, any warranty, support, billing, or delivery issues that may arise from purchases made on external merchant networks.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">04.</span>
-              Listing Accuracy & Liability Limits
+              Limitation of Liability & External Links
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              While we enforce meticulous structural status reports and certified verification procedures, users acknowledge that real-estate catalog items are subject to dynamic physical conditions. We maintain maximum platform reliability standards but disclaim absolute liability for offline transaction negotiations executed outside established certification badges.
+              AmaanEstate and its affiliates, contributors, and licensing partners disclaim all liability for any direct, indirect, or consequential damages resulting from your use of software products, SaaS solutions, or tech gear recommended on this platform. We do not guarantee that third-party software products are free of bugs, performance anomalies, or security vulnerabilities. You carry absolute responsibility for performing due diligence, system backups, and cost assessments before deploying any third-party solution.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-display text-white font-medium flex items-center gap-2.5">
               <span className="text-xs font-mono text-luxury-gold">05.</span>
-              Network Governance & System Misuse
+              System Integrity & Network Governance
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              Any attempt to scrape structural database logs, bypass certified broker verification, or inject illegitimate real estate titles into the portal will lead to absolute platform revocation, immediate trust-index blacklisting, and professional reports forwarded directly to regional real-estate authorities.
+              Any attempt to scrape our technology catalogs, reverse-engineer proprietary benchmarking logic, bypass security protocols, or submit illegitimate review scores and spam titles to our CMS will lead to absolute platform revocation, immediate IP blocking, and professional reporting to regulatory authorities.
             </p>
           </section>
 
@@ -105,7 +105,7 @@ export default function TermsOfService() {
               Inquiries and Support Channels
             </h2>
             <p className="pl-6 border-l border-luxury-gold/20">
-              For comprehensive structural audits, dispute processing, or clarification regarding compliance pathways, contact our legal desk directly via:
+              For comprehensive licensing questions, commercial partnership discussions, or compliance pathway clarifications, contact our legal desk directly via:
             </p>
             <div className="mt-4 ml-6 p-6 bg-white/[0.01] border border-white/5 rounded-2xl space-y-3 max-w-sm">
               <div className="text-xs flex justify-between">
