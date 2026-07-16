@@ -16,7 +16,7 @@ export const ProductCard = React.memo<ProductCardProps>(({ p }) => {
       {/* Image viewport */}
       <div 
         className="aspect-[16/10] sm:aspect-[4/3] relative bg-slate-50 border-b border-slate-100 block flex-shrink-0 cursor-pointer overflow-hidden" 
-        onClick={() => navigate(`/product/${p.id}`)}
+        onClick={() => navigate(`/product/${p.slug || p.id}`)}
       >
         <img
           src={p.featuredImage}
@@ -39,7 +39,7 @@ export const ProductCard = React.memo<ProductCardProps>(({ p }) => {
         {/* Title */}
         <h3 
           className="text-[11px] sm:text-sm font-semibold text-slate-900 leading-tight line-clamp-2 h-7 sm:h-10 mb-1 cursor-pointer hover:underline"
-          onClick={() => navigate(`/product/${p.id}`)}
+          onClick={() => navigate(`/product/${p.slug || p.id}`)}
           title={p.title}
         >
           {p.title}
@@ -84,7 +84,7 @@ export const ProductCard = React.memo<ProductCardProps>(({ p }) => {
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
-              onClick={() => navigate(`/product/${p.id}`)}
+              onClick={() => navigate(`/product/${p.slug || p.id}`)}
               className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg sm:rounded-xl h-8 sm:h-11 flex items-center justify-center transition-colors p-0"
             >
               Details

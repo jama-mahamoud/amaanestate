@@ -199,7 +199,7 @@ export const productService = {
           pros: sw.pros && sw.pros.length > 0 ? sw.pros : ['Easy onboarding', 'Comprehensive reporting suite', 'Low memory usage'],
           cons: sw.cons && sw.cons.length > 0 ? sw.cons : ['Advanced filters require subscription tier'],
           affiliateUrl: sw.affiliateUrl || '#',
-          slug: sw.slug,
+          slug: sw.slug || (sw.name ? sw.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '') : undefined),
           faqs: [
             { question: `Is training required to use this ${displayCategory}?`, answer: `No, this ${displayCategory} features an intuitive visual wizard interface built for self-guided onboarding.` },
             { question: 'Are secure data backups supported?', answer: 'Yes, full compliance encryption and secure routine backups are managed cloud-side.' }

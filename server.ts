@@ -325,10 +325,15 @@ async function generateSitemapXml() {
       const s = slug.toLowerCase().trim();
       
       const excludedKeywords = [
-        'preview', 'draft', 'temp', 'test', 'editor', 'amaan-editorial-studio', 
+        'preview', 'draft', 'temp', 'test', 'amaan-editorial-studio', 
         'editorial-studio', 'new-article', 'placeholder', 'undefined', 'null'
       ];
       if (excludedKeywords.some(k => s.includes(k))) {
+        return false;
+      }
+
+      // Block standalone editor paths to avoid matching 'video-editor'
+      if (s === 'editor' || s.startsWith('editor/') || s.endsWith('/editor')) {
         return false;
       }
       
@@ -355,6 +360,25 @@ async function generateSitemapXml() {
 
     // 1. Process Blog/News Articles
     articles.forEach((data: any) => {
+      // Exclude deleted content
+      if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
+        metrics.totalUrlsExcluded++;
+        return;
+      }
+
+      // Exclude drafts / hidden content / unpublished items explicitly
+      if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
       let slug = data.slug;
       if (!slug && data.title) {
         slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
@@ -421,6 +445,25 @@ async function generateSitemapXml() {
 
     // 2. Process Editorial Reviews
     editorialReviews.forEach((data: any) => {
+      // Exclude deleted content
+      if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
+        metrics.totalUrlsExcluded++;
+        return;
+      }
+
+      // Exclude drafts / hidden content / unpublished items explicitly
+      if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
       let slug = data.slug;
       if (!slug && data.title) {
         slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
@@ -480,7 +523,29 @@ async function generateSitemapXml() {
 
     // 3. Process Software Tools
     softwareTools.forEach((data: any) => {
+      // Exclude deleted content
+      if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
+        metrics.totalUrlsExcluded++;
+        return;
+      }
+
+      // Exclude drafts / hidden content / unpublished items explicitly
+      if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
       let slug = data.slug;
+      if (!slug && data.name) {
+        slug = data.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+      }
       if (!slug) {
         slug = data.id;
       }
@@ -531,6 +596,25 @@ async function generateSitemapXml() {
 
     // 4. Process Tech Gear Products
     techGearProducts.forEach((data: any) => {
+      // Exclude deleted content
+      if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
+        metrics.totalUrlsExcluded++;
+        return;
+      }
+
+      // Exclude drafts / hidden content / unpublished items explicitly
+      if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublished++;
+        return;
+      }
+
+      if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
+        metrics.totalUrlsExcluded++;
+        metrics.exclusionReasons.notPublic++;
+        return;
+      }
+
       const isPublished = data.status === 'approved' || data.status === 'published' || data.published === true;
       if (!isPublished) {
         metrics.totalUrlsExcluded++;

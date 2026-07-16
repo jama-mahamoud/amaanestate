@@ -67,7 +67,7 @@ function mapSoftwareToolToUnifiedProduct(sw: SoftwareTool): UnifiedProduct {
     pros: sw.pros || ['Easy onboarding', 'Comprehensive reporting suite', 'Low memory usage'],
     cons: sw.cons || ['Advanced filters require subscription tier'],
     affiliateUrl: sw.affiliateUrl || '#',
-    slug: sw.slug,
+    slug: sw.slug || (sw.name ? sw.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '') : undefined),
     faqs: [
       { question: 'Is training required to use this software?', answer: 'No, it has an intuitive visual wizard interface built for self-guided onboarding.' },
       { question: 'Are secure data backups supported?', answer: 'Yes, full compliance encryption and secure routine backups are managed cloud-side.' }
@@ -341,7 +341,7 @@ export default function SoftwareToolsPage() {
                            </div>
                         </div>
                         <Link 
-                          to={`/product/sw-${product.id}`}
+                          to={`/product/${product.slug || `sw-${product.id}`}`}
                           className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 border border-white/5 hover:border-[#C5A059]/30 hover:bg-[#C5A059]/10 text-white/40 hover:text-[#C5A059] transition-all"
                         >
                           <Info size={18} />
