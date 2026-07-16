@@ -80,7 +80,8 @@ const performEditorialAudit = (article: Article): ValidationReport => {
   }
 
   // Classification Category Check
-  if (!article.category || article.category.trim() === '') {
+  const catArray = Array.isArray(article.category) ? article.category : [article.category];
+  if (!catArray || catArray.length === 0 || !catArray[0]) {
     issues.push({ field: 'Subject Category', severity: 'warning', message: 'No target category selected for standard grid index mapping.' });
     score -= 10;
   }
@@ -239,9 +240,12 @@ export default function DashboardArticles() {
       const matchesSearch = 
         article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.category?.toLowerCase().includes(searchQuery.toLowerCase());
+        (Array.isArray(article.category) 
+          ? article.category.join(' ').toLowerCase().includes(searchQuery.toLowerCase()) 
+          : typeof article.category === 'string' && article.category.toLowerCase().includes(searchQuery.toLowerCase()));
         
-      const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || 
+        (Array.isArray(article.category) ? article.category.includes(selectedCategory) : article.category === selectedCategory);
       
       const matchesStatus = 
         selectedStatus === 'all' || 
@@ -255,7 +259,12 @@ export default function DashboardArticles() {
   }, [articles, searchQuery, selectedCategory, selectedStatus]);
 
   const allCategories = useMemo(() => {
-    const cats = new Set(articles.map(a => a.category).filter(Boolean));
+    const cats = new Set<string>();
+    articles.forEach(a => {
+      if (!a.category) return;
+      if (Array.isArray(a.category)) a.category.forEach(c => cats.add(c));
+      else cats.add(a.category);
+    });
     return ['all', ...Array.from(cats)];
   }, [articles]);
 
@@ -487,7 +496,7 @@ export default function DashboardArticles() {
 
                       {/* Categorization Column */}
                       <td className="p-6 capitalize italic font-display text-sm font-semibold text-white/60">
-                        {article.category || 'news'}
+                        {Array.isArray(article.category) ? article.category.join(', ') : (article.category || 'news')}
                       </td>
 
                       {/* Editorial Verification Room & Quick Actions (Exclusive to Admin & Editors) */}

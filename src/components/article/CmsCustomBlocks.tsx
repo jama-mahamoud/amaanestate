@@ -318,29 +318,29 @@ export const ProsConsNode = TiptapNode.create({
 
     const htmlString = `
       <div class="not-prose grid grid-cols-1 md:grid-cols-2 gap-6 my-10 text-white text-left font-sans">
-        <div class="bg-emerald-500/5 border border-emerald-500/10 p-6 rounded-2xl" style="border-radius: 16px;">
-          <h4 class="text-emerald-400 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
-            <span class="inline-flex items-center justify-center w-5 h-5 bg-emerald-500/10 rounded-full text-xs">✔</span>
+        <div class="bg-gradient-to-br from-[#0b0b0b] to-[#141414] border border-[#D4AF37]/20 shadow-[0_8px_25px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 p-6 rounded-2xl hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300" style="border-radius: 16px;">
+          <h4 class="text-[#D4AF37] font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2" style="color: #D4AF37 !important; font-weight: bold;">
+            <span class="inline-flex items-center justify-center w-5 h-5 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-full text-xs text-[#D4AF37]">✔</span>
             Pros / Advantages
           </h4>
           <ul class="space-y-2.5">
             ${pros.map(p => `
-              <li class="text-xs text-white/85 flex items-start gap-2">
-                <span class="text-emerald-500 shrink-0 mt-0.5">✔</span>
+              <li class="text-xs text-slate-300 flex items-start gap-2" style="color: #cbd5e1 !important;">
+                <span class="text-[#D4AF37] font-bold shrink-0 mt-0.5" style="color: #D4AF37 !important;">✔</span>
                 <span>${p}</span>
               </li>
             `).join('')}
           </ul>
         </div>
         
-        <div class="bg-rose-500/5 border border-rose-500/10 p-6 rounded-2xl" style="border-radius: 16px;">
-          <h4 class="text-rose-400 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
-            <span class="inline-flex items-center justify-center w-5 h-5 bg-rose-500/10 rounded-full text-xs">✖</span>
+        <div class="bg-gradient-to-br from-[#0b0b0b] to-[#141414] border border-white/5 shadow-[0_8px_25px_rgba(0,0,0,0.8)] p-6 rounded-2xl hover:translate-y-[-2px] hover:border-white/10 transition-all duration-300" style="border-radius: 16px;">
+          <h4 class="text-slate-400 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2" style="color: #94a3b8 !important; font-weight: bold;">
+            <span class="inline-flex items-center justify-center w-5 h-5 bg-white/5 border border-white/10 rounded-full text-xs text-slate-400">✖</span>
             Cons / Disadvantages
           </h4>
           <ul class="space-y-2.5">
             ${cons.map(c => `
-              <li class="text-xs text-white/85 flex items-start gap-2">
+              <li class="text-xs text-slate-400 flex items-start gap-2" style="color: #94a3b8 !important;">
                 <span class="text-rose-500 shrink-0 mt-0.5">✖</span>
                 <span>${c}</span>
               </li>
@@ -450,15 +450,15 @@ export const RatingBlockNode = TiptapNode.create({
     const starsHTML = renderStarsHTML(parseFloat(attrs.overall) || 5);
 
     const htmlString = `
-      <div class="not-prose bg-black border border-white/5 rounded-3xl p-6 sm:p-8 my-10 text-white shadow-2xl text-left" style="border-radius: 24px;">
+      <div class="not-prose bg-gradient-to-br from-[#0b0b0b] to-[#141414] border border-[#D4AF37]/25 rounded-3xl p-6 sm:p-8 my-10 text-white shadow-[0_12px_35px_rgba(0,0,0,0.9)] text-left hover:border-[#D4AF37]/45 transition-all duration-300" style="border-radius: 24px;">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/5 mb-6">
           <div>
-            <h4 class="text-lg font-black tracking-tight text-white uppercase">${attrs.title}</h4>
+            <h4 class="text-lg font-black tracking-tight text-[#D4AF37] uppercase" style="color: #D4AF37 !important; font-weight: 900;">${attrs.title}</h4>
             <div class="mt-1">${starsHTML}</div>
           </div>
-          <div class="flex items-center gap-3 bg-white/5 border border-white/5 p-4 rounded-2xl shrink-0" style="border-radius: 16px;">
-            <span class="text-xs font-bold text-white/50 uppercase tracking-widest leading-none">Overall Score</span>
-            <span class="text-3xl font-mono font-black text-[#C5A059] leading-none">${attrs.overall}</span>
+          <div class="flex items-center gap-3 bg-white/5 border border-[#D4AF37]/20 p-4 rounded-2xl shrink-0 shadow-lg" style="border-radius: 16px;">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none" style="color: #94a3b8 !important;">Overall Score</span>
+            <span class="text-3xl font-mono font-black text-[#D4AF37] leading-none" style="color: #D4AF37 !important; font-weight: 950;">${attrs.overall}</span>
           </div>
         </div>
         
@@ -468,11 +468,11 @@ export const RatingBlockNode = TiptapNode.create({
             return `
               <div class="space-y-1.5">
                 <div class="flex justify-between items-center text-xs">
-                  <span class="font-bold text-white/80">${item.name}</span>
-                  <span class="font-mono font-bold text-[#C5A059]">${item.val} / 5.0</span>
+                  <span class="font-bold text-slate-300" style="color: #cbd5e1 !important;">${item.name}</span>
+                  <span class="font-mono font-bold text-[#D4AF37]" style="color: #D4AF37 !important; font-weight: bold;">${item.val} / 5.0</span>
                 </div>
                 <div class="w-full bg-white/5 border border-white/5 h-2.5 rounded-full overflow-hidden">
-                  <div class="bg-gradient-to-r from-[#C5A059]/40 to-[#C5A059] h-full rounded-full" style="width: ${pct}%"></div>
+                  <div class="bg-gradient-to-r from-[#D4AF37]/40 to-[#D4AF37] h-full rounded-full" style="width: ${pct}%"></div>
                 </div>
               </div>
             `;

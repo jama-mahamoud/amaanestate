@@ -30,8 +30,8 @@ export interface Article {
   slug: string;
   summary: string;
   content: string;
-  category: string;
-  type: ArticleType;
+  category: string | string[];
+  type: string | string[];
   language: 'en' | 'so';
   featuredImage?: GalleryImage;
   gallery: GalleryImage[];

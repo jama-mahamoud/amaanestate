@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import { articleService } from '@/services/articleService';
 import { Article, ArticleStatus } from '@/types';
 import Editor from './Editor';
@@ -34,8 +35,12 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     slug: initialData?.slug || '',
     summary: initialData?.summary || '',
     content: initialData?.content || '',
-    category: initialData?.category || 'news',
-    type: initialData?.type || 'update',
+    category: Array.isArray(initialData?.category) 
+      ? initialData.category 
+      : (initialData?.category ? initialData.category.split(',').map(c => c.trim()) : ['News']),
+    type: Array.isArray(initialData?.type)
+      ? initialData.type
+      : (initialData?.type ? initialData.type.split(',').map(c => c.trim()) : ['News Update']),
     language: initialData?.language || 'en',
     featuredImage: initialData?.featuredImage || undefined,
     gallery: initialData?.gallery || [],
@@ -261,7 +266,8 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
     if (!formData.summary?.trim()) warnings.push('Summary');
     if (!formData.featuredImage?.url?.trim()) warnings.push('Featured Image');
     if (totalWordCount < 40) warnings.push('Word count is low (under 40 words)');
-    if (!formData.category?.trim()) warnings.push('Category');
+    const catArray = Array.isArray(formData.category) ? formData.category : [formData.category];
+    if (catArray.length === 0 || !catArray[0]) warnings.push('Category');
     
     if (warnings.length > 0) {
       toast.warning(`Editorial Notice: Publishing with warnings (${warnings.join(', ')}).`);
@@ -329,8 +335,12 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
         </div>
       )}
       <div className="p-6 md:p-12 space-y-6">
-        <div className="flex gap-2">
-          <span className="bg-[#C5A059]/10 text-[#C5A059] px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-md border border-[#C5A059]/25">{formData.category}</span>
+        <div className="flex gap-2 flex-wrap">
+          {Array.isArray(formData.category) ? formData.category.map((c, i) => (
+            <span key={i} className="bg-[#C5A059]/10 text-[#C5A059] px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-md border border-[#C5A059]/25">{c}</span>
+          )) : (
+            <span className="bg-[#C5A059]/10 text-[#C5A059] px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-md border border-[#C5A059]/25">{formData.category || 'CATEGORY'}</span>
+          )}
         </div>
         <h1 className="text-2xl md:text-5xl font-display font-light text-white tracking-tight leading-[1.1]">{formData.title || 'Headline Required'}</h1>
         <div className="text-base text-white/50 leading-relaxed italic border-l-2 border-[#C5A059] pl-4">
@@ -755,35 +765,34 @@ export default function ArticleForm({ initialData }: { initialData?: Article }) 
                          />
                        </div>
                        
-                       <div className="space-y-1.5">
-                         <label className="text-white/50 text-[11px] font-medium">Category</label>
-                         <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
-                             <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
-                             <SelectItem value="news" className="rounded-lg text-xs py-2">News</SelectItem>
-                             <SelectItem value="report" className="rounded-lg text-xs py-2">Reports</SelectItem>
-                             <SelectItem value="opportunity" className="rounded-lg text-xs py-2">Opportunities</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
+                       <MultiSelect 
+                         label="Category"
+                         options={[
+                           'News', 'Updates', 'Reviews', 'Software & Tools', 'Tech Gear', 
+                           'AI Tools', 'Deals & Offers', 'Market Reports', 'Industry Insights', 
+                           'Opportunities', 'Guides & Tutorials', 'Comparisons', 'Research', 
+                           'Case Studies', 'Announcements', 'Business Technology', 
+                           'Developer Tools', 'Startups & Innovation', 'Security & Privacy'
+                         ]}
+                         selected={Array.isArray(formData.category) ? formData.category : formData.category ? [formData.category] : []}
+                         onChange={(selected) => setFormData({...formData, category: selected})}
+                         placeholder="Select categories..."
+                       />
 
-                       <div className="space-y-1.5">
-                         <label className="text-white/50 text-[11px] font-medium">Article Type (Workflow Tag)</label>
-                         <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val as any})}>
-                           <SelectTrigger className="bg-white/5 border border-white/5 text-white h-11 rounded-lg text-xs px-3">
-                             <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent className="bg-[#0f0f0f] border border-white/10 text-white p-1 rounded-xl">
-                             <SelectItem value="update" className="rounded-lg text-xs py-2">Update</SelectItem>
-                             <SelectItem value="market_report" className="rounded-lg text-xs py-2">Market Report</SelectItem>
-                             <SelectItem value="announcement" className="rounded-lg text-xs py-2">Announcement</SelectItem>
-                             <SelectItem value="new_project" className="rounded-lg text-xs py-2">New Project</SelectItem>
-                             <SelectItem value="short_insight" className="rounded-lg text-xs py-2">Short Insight</SelectItem>
-                           </SelectContent>
-                         </Select>
-                       </div>
+                       <MultiSelect 
+                         label="Article Type (Workflow Tag)"
+                         options={[
+                           'News Update', 'Product Review', 'Affiliate Review', 'Market Report', 
+                           'Industry Analysis', 'Buying Guide', 'Comparison Article', 
+                           'How-To Guide', 'Tutorial', 'Expert Opinion', 'Research Report', 
+                           'Trend Analysis', 'Product Launch', 'Software Update', 
+                           'Company Announcement', 'AI Report', 'Case Study', 'Tool Directory', 
+                           'Best List Article', 'Interview', 'Editorial Feature', 'Opportunity Report'
+                         ]}
+                         selected={Array.isArray(formData.type) ? formData.type : formData.type ? [formData.type] : []}
+                         onChange={(selected) => setFormData({...formData, type: selected})}
+                         placeholder="Select article types..."
+                       />
 
                        <div className="space-y-1.5">
                          <label className="text-white/50 text-[11px] font-medium">Language Setting</label>

@@ -38,8 +38,15 @@ const formatDate = (dateValue: any) => {
 };
 
 // Clean Category Label filter for premium editorial aesthetic
-const getCleanCategoryLabel = (category?: string, type?: string) => {
-  const val = (category || type || '').toLowerCase().trim();
+const getCleanCategoryLabel = (category?: string | string[], type?: string | string[]) => {
+  const catStr = Array.isArray(category) 
+    ? category.filter(c => typeof c === 'string').join(' ') 
+    : (typeof category === 'string' ? category : '');
+  const typeStr = Array.isArray(type) 
+    ? type.filter(t => typeof t === 'string').join(' ') 
+    : (typeof type === 'string' ? type : '');
+  const val = (catStr + ' ' + typeStr).toLowerCase().trim();
+  if (!val) return 'News';
   if (val.includes('software') || val.includes('tool')) {
     return 'Software & Tools';
   }
@@ -59,9 +66,20 @@ export default function News() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const newsCategoryOptions = useMemo(() => {
-    const uniqueCategories = Array.from(
-      new Set(articles.map((a) => a.category).filter(Boolean))
-    );
+    const cats = new Set<string>();
+    articles.forEach(a => {
+      if (!a.category) return;
+      if (Array.isArray(a.category)) {
+        a.category.forEach(c => {
+          if (typeof c === 'string' && c.trim()) {
+            cats.add(c.trim());
+          }
+        });
+      } else if (typeof a.category === 'string' && a.category.trim()) {
+        cats.add(a.category.trim());
+      }
+    });
+    const uniqueCategories = Array.from(cats);
     return [
       { id: 'all', label: 'All Categories' },
       ...uniqueCategories.map((cat) => ({
@@ -74,7 +92,8 @@ export default function News() {
   const filteredArticles = useMemo(() => {
     return articles.filter((item) => {
       const categoryMatch =
-        selectedCategory === 'all' || item.category === selectedCategory;
+        selectedCategory === 'all' || 
+        (Array.isArray(item.category) ? item.category.includes(selectedCategory) : item.category === selectedCategory);
       const searchMatch =
         searchQuery.trim() === '' ||
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

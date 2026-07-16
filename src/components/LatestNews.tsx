@@ -60,8 +60,15 @@ const getTypeColor = (type?: string) => {
 };
 
 // Clean Category Label filter for premium editorial aesthetic
-const getCleanCategoryLabel = (category?: string, type?: string) => {
-  const val = (category || type || '').toLowerCase().trim();
+const getCleanCategoryLabel = (category?: string | string[], type?: string | string[]) => {
+  const catStr = Array.isArray(category) 
+    ? category.filter(c => typeof c === 'string').join(' ') 
+    : (typeof category === 'string' ? category : '');
+  const typeStr = Array.isArray(type) 
+    ? type.filter(t => typeof t === 'string').join(' ') 
+    : (typeof type === 'string' ? type : '');
+  const val = (catStr + ' ' + typeStr).toLowerCase().trim();
+  if (!val) return 'News';
   if (val.includes('software') || val.includes('tool')) {
     return 'Software & Tools';
   }

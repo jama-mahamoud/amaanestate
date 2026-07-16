@@ -180,12 +180,217 @@ export default function ArticleDetails() {
     if (!article || !article.content) return '';
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = article.content;
+    
+    // 1. Heading IDs
     const headingElements = tempDiv.querySelectorAll('h2, h3');
     headingElements.forEach((el, idx) => {
       el.setAttribute('id', `heading-${idx}`);
       // Add a slight scroll margin and transition-all
       el.setAttribute('style', 'scroll-margin-top: 100px;');
     });
+
+    // 2. Transform callout boxes (Our Testing Commitment, Best For, etc.)
+    const calloutBoxes = tempDiv.querySelectorAll('.callout-box');
+    calloutBoxes.forEach((box) => {
+      const text = box.textContent || '';
+      
+      if (text.includes('Our Testing Commitment')) {
+        // Find the description
+        const pTags = box.querySelectorAll('p');
+        let descText = '';
+        pTags.forEach(p => {
+          const t = p.textContent || '';
+          if (!t.includes('Our Testing Commitment')) {
+            descText = t;
+          }
+        });
+        if (!descText) {
+          descText = text.replace('Our Testing Commitment', '').trim();
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'premium-editorial-card my-8 p-6 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#181818] border border-[#D4AF37]/35 shadow-[0_10px_30px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/50 hover:shadow-[#D4AF37]/15 transition-all duration-300';
+        card.innerHTML = `
+          <h4 class="text-base font-bold text-[#D4AF37] mb-3 tracking-wide uppercase flex items-center gap-2" style="color: #D4AF37 !important; font-weight: bold;">
+            <span class="text-xs">✦</span> Our Testing Commitment:
+          </h4>
+          <p class="text-slate-300 text-sm leading-relaxed mb-0" style="color: #cbd5e1 !important;">
+            ${descText || 'Every tool featured in this guide was subjected to real-world performance benchmarks. We evaluated latency, emotion modeling, API throughput, custom voice cloning accuracy, and developer-friendliness to provide a completely objective review.'}
+          </p>
+        `;
+        box.replaceWith(card);
+      } else if (text.includes('Best For:') || text.startsWith('Best For:')) {
+        let descText = text;
+        const pTags = box.querySelectorAll('p');
+        if (pTags.length > 0) {
+          descText = pTags[0].textContent || text;
+        }
+        descText = descText.replace(/Best For:\s*/i, '').trim();
+        
+        const card = document.createElement('div');
+        card.className = 'premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#161616] border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300';
+        card.innerHTML = `
+          <p class="text-sm leading-relaxed mb-0 text-slate-300" style="color: #cbd5e1 !important;">
+            <span class="text-[#D4AF37] font-bold tracking-wide uppercase mr-2" style="color: #D4AF37 !important; font-weight: bold;"><span class="text-xs">✦</span> Best For:</span>
+            ${descText}
+          </p>
+        `;
+        box.replaceWith(card);
+      } else {
+        // Any other callout boxes get styled as luxury charcoal cards
+        const card = document.createElement('div');
+        card.className = 'premium-editorial-card my-6 p-6 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#181818] border border-white/5 shadow-[0_8px_25px_rgba(0,0,0,0.7)] hover:translate-y-[-2px] hover:border-white/10 transition-all duration-300';
+        card.innerHTML = box.innerHTML;
+        box.replaceWith(card);
+      }
+    });
+
+    // 3. Transform CTA boxes
+    const ctaBoxes = tempDiv.querySelectorAll('.cta-box');
+    ctaBoxes.forEach((box) => {
+      const heading = box.querySelector('h4')?.textContent || 'Want to experience the most realistic AI voices?';
+      const desc = box.querySelector('p')?.textContent || '';
+      const btn = box.querySelector('a');
+      const btnHref = btn?.getAttribute('href') || '#';
+      const btnText = btn?.textContent || 'Get Started Now';
+      
+      const luxuryCta = document.createElement('div');
+      luxuryCta.className = 'premium-editorial-card my-8 p-8 rounded-2xl text-center bg-gradient-to-br from-[#080808] to-[#121212] border border-[#D4AF37]/35 shadow-[0_15px_40px_rgba(0,0,0,0.9)] shadow-[#D4AF37]/5 hover:shadow-[#D4AF37]/15 hover:border-[#D4AF37]/50 transition-all duration-300 relative overflow-hidden';
+      luxuryCta.innerHTML = `
+        <div class="absolute -top-12 -left-12 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -right-12 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-xl pointer-events-none"></div>
+
+        <h4 class="text-lg sm:text-xl font-bold text-[#D4AF37] mb-2.5 tracking-wide" style="color: #D4AF37 !important; font-weight: bold;">
+          ${heading}
+        </h4>
+        ${desc ? `<p class="text-slate-400 text-xs sm:text-sm max-w-lg mx-auto mb-5 leading-relaxed" style="color: #94a3b8 !important;">${desc}</p>` : ''}
+        <div class="pt-1">
+          <a href="${btnHref}" target="_blank" rel="noopener noreferrer" class="inline-block bg-[#D4AF37] hover:bg-[#e5c04f] text-black font-extrabold py-2.5 px-6 rounded-lg transition-all duration-300 text-xs tracking-wider uppercase shadow-[0_4px_15px_rgba(212,175,55,0.2)] hover:shadow-[0_4px_25px_rgba(212,175,55,0.4)] hover:scale-105 active:scale-95" style="background-color: #D4AF37 !important; color: black !important; font-weight: 800; padding: 10px 24px; border-radius: 8px;">
+            ${btnText}
+          </a>
+        </div>
+      `;
+      box.replaceWith(luxuryCta);
+    });
+
+    // 4. Transform tables (Pros & Cons, Comparisons)
+    const tables = tempDiv.querySelectorAll('table');
+    tables.forEach((table) => {
+      const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent?.trim().toLowerCase());
+      const hasProsAndCons = headers.includes('pros') && headers.includes('cons');
+      
+      if (hasProsAndCons) {
+        // Collect Pros and Cons
+        const pros: string[] = [];
+        const cons: string[] = [];
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 2) {
+            const proText = cells[0].textContent?.trim() || '';
+            const conText = cells[1].textContent?.trim() || '';
+            const cleanPro = proText.replace(/^[✓✔\s+]+/, '').trim();
+            const cleanCon = conText.replace(/^[✗✖\s-]+/, '').trim();
+            if (cleanPro) pros.push(cleanPro);
+            if (cleanCon) cons.push(cleanCon);
+          }
+        });
+        
+        const prosConsCard = document.createElement('div');
+        prosConsCard.className = 'premium-editorial-card my-8 rounded-2xl overflow-hidden bg-gradient-to-b from-[#0b0b0b] to-[#141414] border border-[#D4AF37]/20 shadow-[0_12px_35px_rgba(0,0,0,0.9)] hover:border-[#D4AF37]/35 transition-all duration-300';
+        prosConsCard.innerHTML = `
+          <div class="grid grid-cols-2 border-b border-white/5 bg-white/[0.02]">
+            <div class="p-3 text-center border-r border-white/5 text-xs font-bold uppercase tracking-wider text-[#D4AF37]" style="color: #D4AF37 !important; font-weight: bold;">Pros</div>
+            <div class="p-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400" style="color: #94a3b8 !important; font-weight: bold;">Cons</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/5">
+            <div class="p-5 space-y-3">
+              ${pros.map(pro => `
+                <div class="flex items-start gap-2 text-xs text-slate-300" style="color: #cbd5e1 !important;">
+                  <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>${pro}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="p-5 space-y-3 bg-white/[0.005]">
+              ${cons.map(con => `
+                <div class="flex items-start gap-2 text-xs text-slate-400" style="color: #94a3b8 !important;">
+                  <span class="text-rose-500 font-bold shrink-0">✗</span>
+                  <span>${con}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        table.replaceWith(prosConsCard);
+      } else {
+        // It's a comparison table! Make it look ultra-premium!
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'not-prose overflow-x-auto border border-[#D4AF37]/20 rounded-2xl my-8 bg-[#0b0b0b] shadow-[0_12px_30px_rgba(0,0,0,0.9)] hover:border-[#D4AF37]/40 transition-all duration-300';
+        tableContainer.setAttribute('style', 'border-radius: 16px;');
+        
+        table.classList.add('w-full', 'text-left', 'border-collapse', 'text-white', 'text-xs', 'font-sans');
+        table.setAttribute('style', 'width: 100%; border-collapse: collapse; color: white;');
+        
+        const ths = table.querySelectorAll('th');
+        ths.forEach(th => {
+          th.className = 'p-3 border-b border-white/10 font-bold uppercase tracking-wider text-[10px] text-[#D4AF37] bg-white/[0.02] border-r border-white/5 last:border-0';
+          th.setAttribute('style', 'color: #D4AF37 !important; font-weight: bold; background: rgba(255,255,255,0.02); padding: 12px;');
+        });
+        
+        const trs = table.querySelectorAll('tbody tr');
+        trs.forEach((tr, rIdx) => {
+          tr.className = `border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors ${rIdx % 2 === 0 ? 'bg-white/[0.01]' : ''}`;
+          const tds = tr.querySelectorAll('td');
+          tds.forEach(td => {
+            td.className = 'p-3 border-r border-white/5 last:border-0 font-medium text-slate-300';
+            td.setAttribute('style', 'color: #cbd5e1 !important; padding: 12px;');
+            if (td.textContent?.trim().includes('★')) {
+              td.className += ' text-[#D4AF37]';
+              td.setAttribute('style', 'color: #D4AF37 !important; padding: 12px;');
+            }
+          });
+        });
+        
+        const clone = table.cloneNode(true);
+        tableContainer.appendChild(clone);
+        table.replaceWith(tableContainer);
+      }
+    });
+
+    // 5. Transform Final Rating & Expert Verdict paragraphs
+    const paragraphs = tempDiv.querySelectorAll('p');
+    paragraphs.forEach((p) => {
+      const text = p.textContent || '';
+      if (text.includes('Final Rating:')) {
+        const parts = text.split('Final Rating:');
+        const ratingVal = parts[1]?.trim() || '';
+        
+        const ratingCard = document.createElement('div');
+        ratingCard.className = 'premium-editorial-card my-6 py-4 px-5 rounded-xl bg-gradient-to-r from-[#0b0b0b] to-[#181818] border border-[#D4AF37]/30 shadow-[0_5px_20px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:border-[#D4AF37]/50 transition-all duration-300 flex items-center justify-between';
+        ratingCard.innerHTML = `
+          <span class="text-xs font-bold uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5" style="color: #D4AF37 !important; font-weight: bold;">
+            <span class="text-[10px]">✦</span> Final Rating
+          </span>
+          <span class="text-base font-black text-[#D4AF37] bg-[#D4AF37]/10 py-1 px-3 rounded-lg border border-[#D4AF37]/20 font-mono" style="color: #D4AF37 !important; font-weight: 950; font-family: monospace;">
+            ${ratingVal}
+          </span>
+        `;
+        p.replaceWith(ratingCard);
+      } else if (text.includes('Expert Verdict:') || text.startsWith('Expert Verdict:')) {
+        const verdictVal = text.replace('Expert Verdict:', '').trim();
+        const verdictCard = document.createElement('div');
+        verdictCard.className = 'premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#161616] border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300';
+        verdictCard.innerHTML = `
+          <p class="text-sm leading-relaxed mb-0 text-slate-300" style="color: #cbd5e1 !important;">
+            <span class="text-[#D4AF37] font-bold tracking-wide uppercase mr-2" style="color: #D4AF37 !important; font-weight: bold;"><span class="text-xs">✦</span> Expert Verdict:</span>
+            ${verdictVal}
+          </p>
+        `;
+        p.replaceWith(verdictCard);
+      }
+    });
+
     return tempDiv.innerHTML;
   }, [article]);
 
@@ -404,8 +609,8 @@ export default function ArticleDetails() {
           >
             {/* Category badge */}
             <div>
-              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${article.type === 'market_report' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' : 'bg-[#C5A059]/10 border-[#C5A059]/20 text-[#C5A059]'}`}>
-                {article.type || article.category || 'MARKET ANALYSIS'}
+              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${(Array.isArray(article.type) ? article.type.includes('Market Report') : article.type === 'market_report') ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' : 'bg-[#C5A059]/10 border-[#C5A059]/20 text-[#C5A059]'}`}>
+                {(Array.isArray(article.category) && article.category.length > 0 ? article.category[0] : article.category) || (Array.isArray(article.type) && article.type.length > 0 ? article.type[0] : article.type) || 'MARKET ANALYSIS'}
               </span>
             </div>
 
