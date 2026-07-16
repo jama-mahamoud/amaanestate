@@ -181,6 +181,12 @@ export default function ArticleDetails() {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = article.content;
     
+    const isSoftwareCategory = article && (
+      Array.isArray(article.category) 
+        ? article.category.some(c => c.toLowerCase().includes('software') || c.toLowerCase().includes('tool'))
+        : (typeof article.category === 'string' && (article.category.toLowerCase().includes('software') || article.category.toLowerCase().includes('tool')))
+    );
+    
     // 1. Heading IDs
     const headingElements = tempDiv.querySelectorAll('h2, h3');
     headingElements.forEach((el, idx) => {
@@ -209,7 +215,8 @@ export default function ArticleDetails() {
         }
         
         const card = document.createElement('div');
-        card.className = 'premium-editorial-card my-8 p-6 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#181818] border border-[#D4AF37]/35 shadow-[0_10px_30px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/50 hover:shadow-[#D4AF37]/15 transition-all duration-300';
+        const bgGrad = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0b0b0b] to-[#181818]';
+        card.className = `premium-editorial-card my-8 p-6 rounded-2xl bg-gradient-to-br ${bgGrad} border border-[#D4AF37]/35 shadow-[0_10px_30px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/50 hover:shadow-[#D4AF37]/15 transition-all duration-300`;
         card.innerHTML = `
           <h4 class="text-base font-bold text-[#D4AF37] mb-3 tracking-wide uppercase flex items-center gap-2" style="color: #D4AF37 !important; font-weight: bold;">
             <span class="text-xs">✦</span> Our Testing Commitment:
@@ -228,7 +235,8 @@ export default function ArticleDetails() {
         descText = descText.replace(/Best For:\s*/i, '').trim();
         
         const card = document.createElement('div');
-        card.className = 'premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#161616] border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300';
+        const bgGrad = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0a0a0a] to-[#161616]';
+        card.className = `premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br ${bgGrad} border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300`;
         card.innerHTML = `
           <p class="text-sm leading-relaxed mb-0 text-slate-300" style="color: #cbd5e1 !important;">
             <span class="text-[#D4AF37] font-bold tracking-wide uppercase mr-2" style="color: #D4AF37 !important; font-weight: bold;"><span class="text-xs">✦</span> Best For:</span>
@@ -239,7 +247,8 @@ export default function ArticleDetails() {
       } else {
         // Any other callout boxes get styled as luxury charcoal cards
         const card = document.createElement('div');
-        card.className = 'premium-editorial-card my-6 p-6 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#181818] border border-white/5 shadow-[0_8px_25px_rgba(0,0,0,0.7)] hover:translate-y-[-2px] hover:border-white/10 transition-all duration-300';
+        const bgGrad = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0b0b0b] to-[#181818]';
+        card.className = `premium-editorial-card my-6 p-6 rounded-2xl bg-gradient-to-br ${bgGrad} border border-white/5 shadow-[0_8px_25px_rgba(0,0,0,0.7)] hover:translate-y-[-2px] hover:border-white/10 transition-all duration-300`;
         card.innerHTML = box.innerHTML;
         box.replaceWith(card);
       }
@@ -255,7 +264,8 @@ export default function ArticleDetails() {
       const btnText = btn?.textContent || 'Get Started Now';
       
       const luxuryCta = document.createElement('div');
-      luxuryCta.className = 'premium-editorial-card my-8 p-8 rounded-2xl text-center bg-gradient-to-br from-[#080808] to-[#121212] border border-[#D4AF37]/35 shadow-[0_15px_40px_rgba(0,0,0,0.9)] shadow-[#D4AF37]/5 hover:shadow-[#D4AF37]/15 hover:border-[#D4AF37]/50 transition-all duration-300 relative overflow-hidden';
+      const bgGradCta = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#080808] to-[#121212]';
+      luxuryCta.className = `premium-editorial-card my-8 p-8 rounded-2xl text-center bg-gradient-to-br ${bgGradCta} border border-[#D4AF37]/35 shadow-[0_15px_40px_rgba(0,0,0,0.9)] shadow-[#D4AF37]/5 hover:shadow-[#D4AF37]/15 hover:border-[#D4AF37]/50 transition-all duration-300 relative overflow-hidden`;
       luxuryCta.innerHTML = `
         <div class="absolute -top-12 -left-12 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-xl pointer-events-none"></div>
         <div class="absolute -bottom-12 -right-12 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-xl pointer-events-none"></div>
@@ -297,7 +307,8 @@ export default function ArticleDetails() {
         });
         
         const prosConsCard = document.createElement('div');
-        prosConsCard.className = 'premium-editorial-card my-8 rounded-2xl overflow-hidden bg-gradient-to-b from-[#0b0b0b] to-[#141414] border border-[#D4AF37]/20 shadow-[0_12px_35px_rgba(0,0,0,0.9)] hover:border-[#D4AF37]/35 transition-all duration-300';
+        const bgGradProsCons = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0b0b0b] to-[#141414]';
+        prosConsCard.className = `premium-editorial-card my-8 rounded-2xl overflow-hidden bg-gradient-to-b ${bgGradProsCons} border border-[#D4AF37]/20 shadow-[0_12px_35px_rgba(0,0,0,0.9)] hover:border-[#D4AF37]/35 transition-all duration-300`;
         prosConsCard.innerHTML = `
           <div class="grid grid-cols-2 border-b border-white/5 bg-white/[0.02]">
             <div class="p-3 text-center border-r border-white/5 text-xs font-bold uppercase tracking-wider text-[#D4AF37]" style="color: #D4AF37 !important; font-weight: bold;">Pros</div>
@@ -367,7 +378,8 @@ export default function ArticleDetails() {
         const ratingVal = parts[1]?.trim() || '';
         
         const ratingCard = document.createElement('div');
-        ratingCard.className = 'premium-editorial-card my-6 py-4 px-5 rounded-xl bg-gradient-to-r from-[#0b0b0b] to-[#181818] border border-[#D4AF37]/30 shadow-[0_5px_20px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:border-[#D4AF37]/50 transition-all duration-300 flex items-center justify-between';
+        const bgGradRating = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0b0b0b] to-[#181818]';
+        ratingCard.className = `premium-editorial-card my-6 py-4 px-5 rounded-xl bg-gradient-to-r ${bgGradRating} border border-[#D4AF37]/30 shadow-[0_5px_20px_rgba(0,0,0,0.8)] shadow-[#D4AF37]/5 hover:border-[#D4AF37]/50 transition-all duration-300 flex items-center justify-between`;
         ratingCard.innerHTML = `
           <span class="text-xs font-bold uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5" style="color: #D4AF37 !important; font-weight: bold;">
             <span class="text-[10px]">✦</span> Final Rating
@@ -380,7 +392,8 @@ export default function ArticleDetails() {
       } else if (text.includes('Expert Verdict:') || text.startsWith('Expert Verdict:')) {
         const verdictVal = text.replace('Expert Verdict:', '').trim();
         const verdictCard = document.createElement('div');
-        verdictCard.className = 'premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br from-[#0b0b0b] to-[#161616] border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300';
+        const bgGradVerdict = isSoftwareCategory ? 'from-[#041f11] to-[#080808]' : 'from-[#0b0b0b] to-[#161616]';
+        verdictCard.className = `premium-editorial-card my-6 p-5 rounded-2xl bg-gradient-to-br ${bgGradVerdict} border border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(0,0,0,0.7)] shadow-[#D4AF37]/5 hover:translate-y-[-2px] hover:border-[#D4AF37]/45 transition-all duration-300`;
         verdictCard.innerHTML = `
           <p class="text-sm leading-relaxed mb-0 text-slate-300" style="color: #cbd5e1 !important;">
             <span class="text-[#D4AF37] font-bold tracking-wide uppercase mr-2" style="color: #D4AF37 !important; font-weight: bold;"><span class="text-xs">✦</span> Expert Verdict:</span>

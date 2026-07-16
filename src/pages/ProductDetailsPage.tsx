@@ -20,7 +20,9 @@ import {
   HelpCircle,
   ThumbsUp,
   FileText,
-  Globe
+  Globe,
+  Scale,
+  Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { productService, UnifiedProduct } from '@/services/productService';
@@ -42,6 +44,7 @@ export default function ProductDetailsPage() {
   const [expandedSpecs, setExpandedSpecs] = useState(false);
   const [touchStartX, setTouchStartX] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<UnifiedProduct[]>([]);
+  const [comparedProducts, setComparedProducts] = useState<UnifiedProduct[]>([]);
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   // Zoom feature coordinates
@@ -76,6 +79,18 @@ export default function ProductDetailsPage() {
           } else {
             // Fallback: any product of same type
             setRelatedProducts(sameTypeProducts.slice(0, 4));
+          }
+
+          // Fetch compare products
+          if (prod.compareWithIds && prod.compareWithIds.length > 0) {
+            const comps = all.filter(p => p.type === 'tech-gear' && (
+              prod.compareWithIds.includes(p.sourceId || '') || 
+              prod.compareWithIds.includes(p.id) ||
+              prod.compareWithIds.includes(p.id.replace('tg-', ''))
+            ));
+            setComparedProducts(comps);
+          } else {
+            setComparedProducts([]);
           }
         }
       } catch (err) {
@@ -524,14 +539,45 @@ export default function ProductDetailsPage() {
 
             {/* Pricing CTAs stack */}
             <div className="space-y-3 pt-6 border-t border-white/5">
-              <a
-                href={product.affiliateUrl}
-                target="_blank"
-                rel="nofollow sponsored noopener noreferrer"
-                className="w-full bg-gradient-to-r from-[#C5A059] to-[#D4B26F] hover:from-[#D4B26F] hover:to-[#E3C380] text-black font-extrabold uppercase tracking-wider text-xs py-4 px-6 rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg hover:shadow-[#C5A059]/10 active:scale-[0.98] duration-300 cursor-pointer text-center"
-              >
-                Buy Now at Official Retailer <ExternalLink size={13} />
-              </a>
+              {product.type === 'tech-gear' && product.retailOffers && product.retailOffers.length > 0 ? (
+                <div className="space-y-2.5">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block font-bold">Compare Retail Deals</span>
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+                    {product.retailOffers.map((offer: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 hover:border-white/10 rounded-xl transition-all gap-4">
+                        <div className="space-y-0.5 min-w-0">
+                          <span className="font-bold text-xs text-white block truncate">{offer.retailerName}</span>
+                          {offer.discount ? (
+                            <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.2 rounded font-mono font-semibold">{offer.discount}</span>
+                          ) : (
+                            <span className="text-[9px] font-mono text-emerald-400">{offer.availability || 'In Stock'}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-bold font-mono text-[#C5A059]">{offer.price}</span>
+                          <a 
+                            href={offer.affiliateUrl} 
+                            target="_blank" 
+                            rel="nofollow sponsored noopener noreferrer"
+                            className="bg-[#C5A059]/10 hover:bg-[#C5A059] text-[#C5A059] hover:text-black font-extrabold text-[9px] uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            {offer.ctaText || 'Buy'} <ExternalLink size={10} />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <a
+                  href={product.affiliateUrl}
+                  target="_blank"
+                  rel="nofollow sponsored noopener noreferrer"
+                  className="w-full bg-gradient-to-r from-[#C5A059] to-[#D4B26F] hover:from-[#D4B26F] hover:to-[#E3C380] text-black font-extrabold uppercase tracking-wider text-xs py-4 px-6 rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg hover:shadow-[#C5A059]/10 active:scale-[0.98] duration-300 cursor-pointer text-center"
+                >
+                  Buy Now at Official Retailer <ExternalLink size={13} />
+                </a>
+              )}
 
               {product.officialWebsite && (
                 <a
@@ -590,6 +636,263 @@ export default function ProductDetailsPage() {
 
         {/* BELOW: COLLAPSED SPECS, PROS & CONS AND DETAIL DRAWER LAYOUT */}
         <div className="mt-16 pt-10 border-t border-white/5 space-y-12">
+          
+          {/* Tech Gear Premium Benchmark Scores */}
+          {product.type === 'tech-gear' && (
+            <div className="bg-[#0a0a0f] border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-[#C5A059]/[0.02] rounded-full blur-[100px] pointer-events-none" />
+              
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 pb-4 gap-4">
+                <div>
+                  <h3 className="text-lg font-serif text-white tracking-tight flex items-center gap-2">
+                    <ShieldCheck size={18} className="text-[#C5A059]" />
+                    Amaan Editorial Benchmark Ratings
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Tested and rated inside our physical hardware lab based on strict performance and durability criteria.
+                  </p>
+                </div>
+                {product.reviewStatus && (
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-[#C5A059] bg-[#C5A059]/10 border border-[#C5A059]/20 px-3 py-1 rounded-full font-bold self-start md:self-auto">
+                    Status: {product.reviewStatus}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                {/* Master overall verdict score */}
+                <div className="md:col-span-4 flex flex-col items-center justify-center bg-white/[0.01] border border-white/5 p-6 rounded-2xl relative text-center">
+                  <span className="text-[9px] font-mono uppercase text-neutral-400 tracking-widest block mb-4 font-bold">Overall Verdict Score</span>
+                  
+                  {/* Circular progress bar SVG */}
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90">
+                      <circle cx="64" cy="64" r="54" fill="transparent" stroke="rgba(255,255,255,0.02)" strokeWidth="8" />
+                      <circle 
+                        cx="64" 
+                        cy="64" 
+                        r="54" 
+                        fill="transparent" 
+                        stroke="#C5A059" 
+                        strokeWidth="8" 
+                        strokeDasharray={339.29}
+                        strokeDashoffset={339.29 - (339.29 * (product.overallScore || 85)) / 100}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center">
+                      <span className="text-3xl font-extrabold text-white tracking-tight leading-none">{product.overallScore || 85}</span>
+                      <span className="text-[10px] font-mono text-neutral-500 mt-1 uppercase font-bold">/ 100</span>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-serif text-[#C5A059] italic mt-4 block">
+                    {product.overallScore && product.overallScore >= 90 ? 'Outstanding Class Leader' : product.overallScore && product.overallScore >= 80 ? 'Highly Recommended' : 'Excellent Utility'}
+                  </span>
+                </div>
+
+                {/* Sub-metric sliders */}
+                <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {[
+                    { key: 'performanceScore', label: 'Processing & Performance' },
+                    { key: 'designScore', label: 'Design & Ergonomics' },
+                    { key: 'batteryScore', label: 'Power & Battery Lifespan' },
+                    { key: 'cameraScore', label: 'Optics & Camera Fidelity' },
+                    { key: 'valueScore', label: 'Value & Price Proposition' }
+                  ].map(scoreItem => {
+                    const val = (product as any)[scoreItem.key] || 85;
+                    return (
+                      <div key={scoreItem.key} className="space-y-1.5 bg-black/20 p-3 rounded-xl border border-white/5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-neutral-300 font-medium">{scoreItem.label}</span>
+                          <span className="font-mono text-[#C5A059] font-bold">{val}%</span>
+                        </div>
+                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-gradient-to-r from-[#C5A059]/70 to-[#C5A059] h-full rounded-full transition-all duration-1000" 
+                            style={{ width: `${val}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Review Embed Stage */}
+          {product.type === 'tech-gear' && product.videoReviewUrl && (
+            <div className="space-y-4">
+              <div className="border-b border-white/5 pb-4">
+                <h3 className="text-xl sm:text-2xl font-serif text-white tracking-tight flex items-center gap-2">
+                  <Play size={18} className="text-[#C5A059]" />
+                  Amaan Labs Video Assessment
+                </h3>
+                <p className="text-xs text-neutral-400 mt-1">Watch our comprehensive unboxing, durability benchmarks, and real-world usage demo.</p>
+              </div>
+              <div className="aspect-video w-full rounded-2xl border border-white/10 overflow-hidden bg-[#0a0a0f] relative shadow-2xl">
+                <iframe 
+                  src={product.videoReviewUrl} 
+                  title={`${product.title} Video Review`}
+                  className="w-full h-full border-none"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Active Competitor Comparison System */}
+          {product.type === 'tech-gear' && comparedProducts && comparedProducts.length > 0 && (
+            <div className="space-y-6 pt-6 border-t border-white/5">
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-serif text-white tracking-tight flex items-center gap-2">
+                  <Scale size={18} className="text-[#C5A059]" />
+                  Head-to-Head Competitor Comparison
+                </h3>
+                <p className="text-xs text-neutral-400">See how the {product.title} matches up against major benchmark alternatives in the market.</p>
+              </div>
+
+              <div className="border border-white/5 rounded-2xl overflow-x-auto bg-[#0a0a0f] scrollbar-thin">
+                <table className="w-full text-left text-xs border-collapse min-w-[600px]">
+                  <thead>
+                    <tr className="border-b border-white/5 bg-white/[0.02]">
+                      <th className="p-4 text-[10px] text-white/40 uppercase font-mono tracking-wider w-1/4">Specification / Score</th>
+                      <th className="p-4 text-xs font-serif font-bold text-[#C5A059] bg-[#C5A059]/5 border-x border-white/5 w-1/4 text-center">
+                        <span className="block text-[8px] font-mono uppercase text-neutral-500 font-bold">{product.brandName}</span>
+                        {product.title}
+                      </th>
+                      {comparedProducts.map(comp => (
+                        <th key={comp.id} className="p-4 text-xs font-serif font-bold text-white w-1/4 text-center">
+                          <span className="block text-[8px] font-mono uppercase text-neutral-500 font-bold">{comp.brandName}</span>
+                          {comp.title}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Overall score row */}
+                    <tr className="border-b border-white/5 bg-white/[0.01]">
+                      <td className="p-4 font-bold text-white">Overall Rating</td>
+                      <td className="p-4 text-center font-mono font-extrabold text-[#C5A059] bg-[#C5A059]/5 border-x border-white/5">
+                        <span className="text-sm">{product.overallScore || 85}</span> <span className="text-[10px] text-neutral-500 font-normal">/ 100</span>
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center font-mono font-extrabold text-white">
+                          <span className="text-sm">{comp.overallScore || 85}</span> <span className="text-[10px] text-neutral-500 font-normal">/ 100</span>
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Price row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Launch MSRP</td>
+                      <td className="p-4 text-center font-mono text-white bg-[#C5A059]/5 border-x border-white/5 font-semibold">
+                        {product.price}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center font-mono text-white/85">
+                          {comp.price}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Display row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Display Spec</td>
+                      <td className="p-4 text-center text-white bg-[#C5A059]/5 border-x border-white/5">
+                        {product.specDisplay || product.specs.find(s => s.name.toLowerCase() === 'display')?.value || 'N/A'}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center text-white/70">
+                          {comp.specDisplay || comp.specs.find(s => s.name.toLowerCase() === 'display')?.value || 'N/A'}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Processor row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Processor / SoC</td>
+                      <td className="p-4 text-center text-white bg-[#C5A059]/5 border-x border-white/5">
+                        {product.specProcessor || product.specs.find(s => s.name.toLowerCase() === 'processor')?.value || 'N/A'}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center text-white/70">
+                          {comp.specProcessor || comp.specs.find(s => s.name.toLowerCase() === 'processor')?.value || 'N/A'}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Storage config row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Storage / Configuration</td>
+                      <td className="p-4 text-center text-white bg-[#C5A059]/5 border-x border-white/5">
+                        {product.specStorage || product.specs.find(s => s.name.toLowerCase() === 'storage')?.value || 'N/A'}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center text-white/70">
+                          {comp.specStorage || comp.specs.find(s => s.name.toLowerCase() === 'storage')?.value || 'N/A'}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Camera row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Primary Camera</td>
+                      <td className="p-4 text-center text-white bg-[#C5A059]/5 border-x border-white/5">
+                        {product.specCamera || product.specs.find(s => s.name.toLowerCase() === 'camera')?.value || 'N/A'}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center text-white/70">
+                          {comp.specCamera || comp.specs.find(s => s.name.toLowerCase() === 'camera')?.value || 'N/A'}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Battery row */}
+                    <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Battery capacity</td>
+                      <td className="p-4 text-center text-white bg-[#C5A059]/5 border-x border-white/5">
+                        {product.specBattery || product.specs.find(s => s.name.toLowerCase() === 'battery')?.value || 'N/A'}
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center text-white/70">
+                          {comp.specBattery || comp.specs.find(s => s.name.toLowerCase() === 'battery')?.value || 'N/A'}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Quick Link row */}
+                    <tr>
+                      <td className="p-4 font-mono text-[10px] uppercase text-neutral-400">Direct Actions</td>
+                      <td className="p-4 text-center bg-[#C5A059]/5 border-x border-white/5">
+                        <a 
+                          href={product.affiliateUrl} 
+                          target="_blank" 
+                          rel="nofollow sponsored noopener noreferrer"
+                          className="bg-[#C5A059] text-black font-extrabold text-[9px] uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          Official Deals <ExternalLink size={9} />
+                        </a>
+                      </td>
+                      {comparedProducts.map(comp => (
+                        <td key={comp.id} className="p-4 text-center">
+                          <Link 
+                            to={`/product/${comp.id}`} 
+                            className="bg-white/5 border border-white/10 hover:border-[#C5A059] text-white hover:text-[#C5A059] font-extrabold text-[9px] uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            Read Review <ChevronRight size={9} />
+                          </Link>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
           
           {/* Specifications Accordion for Mobile / Clean layout for desktop */}
           <div className="space-y-4">

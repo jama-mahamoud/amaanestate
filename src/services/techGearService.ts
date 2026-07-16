@@ -45,6 +45,71 @@ export interface TechGearProduct {
   featured?: boolean;
   createdAt?: any;
   updatedAt?: any;
+
+  // --- UPGRADED TECH GEAR REVIEW & AFFILIATE FIELDS ---
+  // 1. Hardware Identification Upgrades
+  productType?: 'Smartphone' | 'Laptop' | 'Headphones' | 'Camera' | 'Wearable' | 'Gaming Gear' | 'Home Office' | 'Smart Home' | 'Accessories' | string;
+  subCategory?: string;
+  releaseYear?: string | number;
+  officialProductUrl?: string;
+
+  // 2. Editorial Review System
+  reviewStatus?: 'Draft' | 'Testing' | 'Published' | 'Updated' | string;
+  editorRating?: number; // 1-5
+  reviewSummary?: string;
+  bestFor?: string; // Creators, Professionals, etc.
+  fullReviewUrl?: string;
+  featuredReview?: boolean;
+
+  // 3. Performance Evaluation
+  overallScore?: number;
+  performanceScore?: number;
+  designScore?: number;
+  batteryScore?: number;
+  cameraScore?: number;
+  valueScore?: number;
+
+  // 4. Technical Specifications Upgrade (Dynamic specs mapped in UI and custom ones)
+  specDisplay?: string;
+  specProcessor?: string;
+  specRam?: string;
+  specStorage?: string;
+  specCamera?: string;
+  specBattery?: string;
+  specOs?: string;
+  specConnectivity?: string;
+  specAiFeatures?: string;
+  specWeight?: string;
+  specDimensions?: string;
+  specWarranty?: string;
+
+  // 5. Pros & Cons Section
+  pros?: string[];
+  cons?: string[];
+
+  // 6. Affiliate Retail Integration
+  retailOffers?: {
+    retailerName: string;
+    affiliateUrl: string;
+    price: string;
+    discount?: string;
+    availability?: string;
+    ctaText?: 'Check Price' | 'View Deal' | 'Buy Now' | 'Official Store' | string;
+  }[];
+
+  // 7. Alternatives & Comparison System
+  compareWithIds?: string[];
+
+  // 8. Media Upgrade
+  productImages?: string[];
+  lifestyleImages?: string[];
+  videoReviewUrl?: string;
+  product360ViewUrl?: string;
+
+  // 9. SEO Management
+  focusKeyword?: string;
+  slug?: string;
+  schemaType?: 'Product Review' | string;
 }
 
 const TECH_GEAR_COLLECTION = 'tech_gear_products';

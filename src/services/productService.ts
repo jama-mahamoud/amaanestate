@@ -40,6 +40,50 @@ export interface UnifiedProduct {
   bestFor?: string;
   alternativeProducts?: string[];
   officialWebsite?: string;
+
+  // New Upgraded Tech Gear Specific Fields
+  productType?: string;
+  subCategory?: string;
+  releaseYear?: string | number;
+  officialProductUrl?: string;
+  reviewStatus?: string;
+  editorRating?: number;
+  reviewSummary?: string;
+  fullReviewUrl?: string;
+  featuredReview?: boolean;
+  overallScore?: number;
+  performanceScore?: number;
+  designScore?: number;
+  batteryScore?: number;
+  cameraScore?: number;
+  valueScore?: number;
+  specDisplay?: string;
+  specProcessor?: string;
+  specRam?: string;
+  specStorage?: string;
+  specCamera?: string;
+  specBattery?: string;
+  specOs?: string;
+  specConnectivity?: string;
+  specAiFeatures?: string;
+  specWeight?: string;
+  specDimensions?: string;
+  specWarranty?: string;
+  retailOffers?: {
+    retailerName: string;
+    affiliateUrl: string;
+    price: string;
+    discount?: string;
+    availability?: string;
+    ctaText?: string;
+  }[];
+  compareWithIds?: string[];
+  productImages?: string[];
+  lifestyleImages?: string[];
+  videoReviewUrl?: string;
+  product360ViewUrl?: string;
+  focusKeyword?: string;
+  schemaType?: string;
 }
 
 // Helpers to format prices
@@ -121,6 +165,38 @@ export const productService = {
 
       // Map Tech Gear Products
       techGear.forEach(tg => {
+        // Build specs list dynamically combining specific spec fields and custom spec list
+        const specsList: { name: string; value: string }[] = [];
+        if (tg.model) specsList.push({ name: 'Model', value: tg.model });
+        if (tg.specDisplay) specsList.push({ name: 'Display', value: tg.specDisplay });
+        if (tg.specProcessor) specsList.push({ name: 'Processor', value: tg.specProcessor });
+        if (tg.specRam) specsList.push({ name: 'RAM', value: tg.specRam });
+        if (tg.specStorage) specsList.push({ name: 'Storage', value: tg.specStorage });
+        if (tg.specCamera) specsList.push({ name: 'Camera', value: tg.specCamera });
+        if (tg.specBattery || tg.battery) specsList.push({ name: 'Battery', value: tg.specBattery || tg.battery || '' });
+        if (tg.specOs) specsList.push({ name: 'Operating System', value: tg.specOs });
+        if (tg.specConnectivity) specsList.push({ name: 'Connectivity', value: tg.specConnectivity });
+        if (tg.specAiFeatures) specsList.push({ name: 'AI Features', value: tg.specAiFeatures });
+        if (tg.specWeight || tg.weight) specsList.push({ name: 'Weight', value: tg.specWeight || tg.weight || '' });
+        if (tg.specDimensions || tg.dimensions) specsList.push({ name: 'Dimensions', value: tg.specDimensions || tg.dimensions || '' });
+        if (tg.specWarranty || tg.warranty) specsList.push({ name: 'Warranty', value: tg.specWarranty || tg.warranty || '' });
+
+        if (tg.specs && tg.specs.length > 0) {
+          tg.specs.forEach(s => {
+            if (!specsList.some(item => item.name.toLowerCase() === s.name.toLowerCase())) {
+              specsList.push(s);
+            }
+          });
+        }
+
+        if (specsList.length === 0) {
+          specsList.push(
+            { name: 'Model', value: tg.model || 'Standard' },
+            { name: 'Warranty', value: tg.warranty || '1-Year Limited' },
+            { name: 'Weight', value: tg.weight || 'N/A' }
+          );
+        }
+
         unified.push({
           id: `tg-${tg.id}`,
           sourceId: tg.id,
@@ -133,32 +209,67 @@ export const productService = {
             ? [tg.featuredImage, ...tg.galleryImages]
             : [tg.featuredImage],
           price: `$${tg.price}`,
-          originalPrice: tg.price > 0 ? `$${Math.round(tg.price * 1.15)}` : undefined, // Simulate discount for deals page
+          originalPrice: tg.price > 0 ? `$${Math.round(tg.price * 1.15)}` : undefined,
           discountPrice: `$${tg.price}`,
-          discountPercent: 13, // Standard mockup discount for premium look
-          rating: 4.8, // Premium default rating for tech gear
+          discountPercent: 13,
+          rating: tg.editorRating || 4.8,
           category: tg.category || 'Hardware',
-          specs: tg.specs || [
-            { name: 'Model', value: tg.model || 'Standard' },
-            { name: 'Warranty', value: tg.warranty || '1-Year Limited' },
-            { name: 'Weight', value: tg.weight || 'N/A' }
-          ],
+          specs: specsList,
           keyFeatures: [
             'Premium tactile quality build',
             'Engineered for long-lasting heavy workloads',
             'Sleek modern minimalist aesthetics'
           ],
-          pros: ['Durable housing frame', 'High rating standards', 'Industry-proven design'],
-          cons: ['Premium price', 'Requires minor workspace adjustment'],
+          pros: tg.pros && tg.pros.length > 0 ? tg.pros : ['Durable housing frame', 'High rating standards', 'Industry-proven design'],
+          cons: tg.cons && tg.cons.length > 0 ? tg.cons : ['Premium price', 'Requires minor workspace adjustment'],
           affiliateUrl: tg.affiliateUrl || '#',
+          slug: tg.slug || tg.id,
           faqs: [
             { question: 'Is this item compatible with standard workflows?', answer: 'Yes, it works out of the box with standard desktop and modern environments.' },
             { question: 'Does it come with a manufacture warranty?', answer: 'Yes, it includes a comprehensive 1-year parts and labor warranty.' }
           ],
-          buyingAdvice: 'The build quality and ergonomics make this a prime addition for professional workflows. Highly recommended.',
-          editorialRecommendation: 'A certified technical asset providing excellent daily ergonomics and long-term utility.',
+          buyingAdvice: tg.reviewSummary || 'The build quality and ergonomics make this a prime addition for professional workflows. Highly recommended.',
+          editorialRecommendation: tg.reviewSummary || 'A certified technical asset providing excellent daily ergonomics and long-term utility.',
           compatibility: ['Standard Desktop PCs', 'VESA Mounting Sockets', 'USB-C Interfaces'],
-          availability: 'In Stock'
+          availability: tg.status === 'approved' ? 'In Stock' : 'Testing Mode',
+          bestFor: tg.bestFor || 'Creators & Professionals',
+
+          // Upgraded mapping values
+          productType: tg.productType,
+          subCategory: tg.subCategory,
+          releaseYear: tg.releaseYear,
+          officialProductUrl: tg.officialProductUrl,
+          reviewStatus: tg.reviewStatus,
+          editorRating: tg.editorRating,
+          reviewSummary: tg.reviewSummary,
+          fullReviewUrl: tg.fullReviewUrl,
+          featuredReview: tg.featuredReview,
+          overallScore: tg.overallScore,
+          performanceScore: tg.performanceScore,
+          designScore: tg.designScore,
+          batteryScore: tg.batteryScore,
+          cameraScore: tg.cameraScore,
+          valueScore: tg.valueScore,
+          specDisplay: tg.specDisplay,
+          specProcessor: tg.specProcessor,
+          specRam: tg.specRam,
+          specStorage: tg.specStorage,
+          specCamera: tg.specCamera,
+          specBattery: tg.specBattery,
+          specOs: tg.specOs,
+          specConnectivity: tg.specConnectivity,
+          specAiFeatures: tg.specAiFeatures,
+          specWeight: tg.specWeight,
+          specDimensions: tg.specDimensions,
+          specWarranty: tg.specWarranty,
+          retailOffers: tg.retailOffers,
+          compareWithIds: tg.compareWithIds,
+          productImages: tg.productImages,
+          lifestyleImages: tg.lifestyleImages,
+          videoReviewUrl: tg.videoReviewUrl,
+          product360ViewUrl: tg.product360ViewUrl,
+          focusKeyword: tg.focusKeyword,
+          schemaType: tg.schemaType,
         });
       });
 
