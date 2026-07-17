@@ -1,208 +1,145 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Facebook, Instagram, MessageCircle, MapPin, Music2, Mail, Phone, Network
+  Facebook, Instagram, MessageCircle, Music2
 } from 'lucide-react';
 import { BrandHeader } from '../brand/BrandHeader';
-import { useSettings } from '../../contexts/SettingsContext';
 
 export default function Footer() {
-  const { t } = useSettings();
   const currentYear = 2026;
-  const location = useLocation();
-
-  const isExpertPage = location.pathname.includes('/experts');
-
-  if (isExpertPage) {
-    return (
-      <footer className="bg-[#0b0b0c] text-white py-12 border-t border-white/5 font-sans mt-auto">
-        <div className="container mx-auto max-w-4xl px-4 text-center space-y-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-6">
-            <div className="text-left">
-              <span className="text-sm font-extrabold tracking-wider text-white uppercase">AmaanEstate</span>
-              <p className="text-xs text-white/50 mt-1 max-w-sm">
-              Verified software reviews, AI tool insights, and exclusive tech gear analysis.
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
-              <Link to="/news" className="text-white/60 hover:text-luxury-gold transition-colors">Insights</Link>
-              <a href="mailto:info@amaanestate.com" className="text-white/60 hover:text-luxury-gold transition-colors">Contact</a>
-              <Link to="/privacy" className="text-white/60 hover:text-luxury-gold transition-colors">Privacy Policy</Link>
-              <Link to="/terms" className="text-white/60 hover:text-luxury-gold transition-colors">Terms of Service</Link>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between text-[10px] text-white/30 tracking-widest uppercase gap-4">
-            <p>&copy; {currentYear} AmaanEstate &mdash; Product & Gear Authority.</p>
-            <p className="font-semibold text-luxury-gold/55">Expert Review Network</p>
-          </div>
-        </div>
-      </footer>
-    );
-  }
-
-  const marketplaceLinks = [
-    { name: t('Software & Tools'), path: '/properties' },
-    { name: t('Tech Gear'), path: '/vehicles' },
-    { name: t('Reviews'), path: '/deals' }
-  ];
-
-  const companyLinks = [
-    { name: t('About') || 'About', path: '/about' },
-    { name: t('Contact') || 'Contact', path: '/contact' }
-  ];
-
-  const legalLinks = [
-    { name: t('Privacy Policy') || 'Privacy Policy', path: '/privacy' },
-    { name: t('Terms of Service') || 'Terms of Service', path: '/terms' },
-    { name: t('Disclaimer') || 'Disclaimer', path: '/disclaimer' }
-  ];
 
   return (
-    <footer className="bg-super-black text-white pt-24 pb-12 relative overflow-hidden font-sans border-t border-white/5">
-      {/* Visual Ambience Background Light */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[300px] pointer-events-none opacity-20 select-none">
-        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-[#C5A059]/10 rounded-full filter blur-[100px] -translate-y-1/2" />
+    <footer className="bg-[#050507] text-white pt-16 pb-12 relative overflow-hidden font-sans border-t border-white/5">
+      {/* Subtle Visual Ambience Background Light */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[200px] pointer-events-none opacity-10 select-none">
+        <div className="absolute top-0 left-1/4 w-[300px] h-[300px] bg-[#C5A059]/10 rounded-full filter blur-[80px] -translate-y-1/2" />
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
         
-        {/* Brand Banner Block */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-16 mb-16 border-b border-white/5">
-          <div className="lg:col-span-12 space-y-8 flex flex-col items-center text-center">
-            <BrandHeader size="lg" />
-            
-            <p className="text-white/40 text-sm max-w-lg">
-              Verified software reviews and exclusive tech gear deals for the modern professional.
+        {/* Affiliate Disclosure Section (Subtle, Small, Professional) */}
+        <div className="pb-10 mb-10 border-b border-white/5">
+          <div className="max-w-4xl">
+            <h4 className="text-[10px] uppercase tracking-wider text-[#C5A059] font-bold mb-2">Affiliate Disclosure</h4>
+            <p className="text-[11px] text-white/40 leading-relaxed">
+              Some links on this website are affiliate links. If you purchase through them, we may earn a commission at no additional cost to you. Our editorial opinions remain independent and unbiased.{' '}
+              <Link to="/disclaimer" className="text-[#C5A059] hover:underline hover:text-white transition-colors font-medium">
+                Learn More
+              </Link>
             </p>
-
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
-              <Link 
-                to="/contact"
-                className="px-8 py-4 rounded-2xl bg-white text-super-black hover:bg-[#C5A059] hover:text-black text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-xl shadow-white/5"
-              >
-                Become Contributor
-              </Link>
-            </div>
           </div>
         </div>
 
-        {/* Links Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 mb-16">
-          {/* Content Segments */}
-          <div>
-            <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Content Segments
-            </h3>
-            <ul className="space-y-4">
-              {marketplaceLinks.map((link, idx) => (
-                <li key={`${link.name}-${idx}`}>
-                  <Link 
-                    to={link.path} 
-                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link to="/news" className="text-white/50 hover:text-white transition-colors text-xs font-medium">{t('Insights')}</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Platform */}
-          <div>
-            <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Platform
-            </h3>
-            <ul className="space-y-4">
-              {companyLinks.map((link, idx) => (
-                <li key={`${link.name}-${idx}`}>
-                  <Link 
-                    to={link.path} 
-                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link to="/agreements" className="text-white/50 hover:text-white transition-colors text-xs font-medium">{t('Verification Model')}</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact & Support Section */}
-          <div>
-            <h3 className="font-display font-bold text-[#C5A059] tracking-widest uppercase text-[10px] mb-6 opacity-80">
-              Contact & Support
-            </h3>
-            <div className="space-y-6">
-              <a 
-                href="mailto:info@amaanestate.com"
-                className="flex items-center gap-3 group outline-none"
-              >
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#C5A059] transition-colors">
-                  <Mail size={14} className="text-white/60 group-hover:text-black transition-colors" />
-                </div>
-                <span className="text-xs text-white/50 group-hover:text-white transition-colors font-medium">
-                  info@amaanestate.com
-                </span>
-              </a>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                  <Network size={14} className="text-white/60" />
-                </div>
-                <span className="text-xs text-white/50 font-medium">
-                  Global Operations
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Bar: Copyright on Left, Legal Row in Center, Socials on Right */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* 4 Responsive Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
           
-          {/* Left Area: Copyright */}
-          <p className="text-white/30 text-[10px] tracking-widest uppercase font-medium text-center md:text-left">
-            &copy; {currentYear} AmaanEstate &mdash; Gear & Software Authority.
+          {/* Column 1: Brand Info */}
+          <div className="space-y-6">
+            <BrandHeader size="md" />
+            <p className="text-white/40 text-xs leading-relaxed max-w-sm">
+              Amaan Reviews delivers trusted software reviews, AI tool analysis, technology insights, and expert buying guides.
+            </p>
+            {/* Social Icons */}
+            <div className="flex gap-3 pt-2">
+              {[
+                { Icon: Facebook, url: 'https://web.facebook.com/profile.php?id=61560833697279' },
+                { Icon: Instagram, url: 'https://instagram.com/primedeals' },
+                { Icon: Music2, url: 'https://www.tiktok.com/@momentumforsuccesstv' },
+                { Icon: MessageCircle, url: 'https://wa.me/251910012794' }
+              ].map(({ Icon, url }, i) => (
+                <a 
+                  key={i} 
+                  href={url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:border-white/20 hover:bg-white/5 transition-all duration-300 outline-none"
+                >
+                  <Icon size={14} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 2: Categories */}
+          <div>
+            <h3 className="font-display font-bold text-white tracking-widest uppercase text-[10px] mb-6">
+              Categories
+            </h3>
+            <ul className="space-y-3.5">
+              {[
+                { name: 'Software & Tools', path: '/software' },
+                { name: 'Tech Gear', path: '/tech-gear' },
+                { name: 'Reviews', path: '/reviews' },
+                { name: 'News', path: '/news' }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link 
+                    to={link.path} 
+                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Company */}
+          <div>
+            <h3 className="font-display font-bold text-white tracking-widest uppercase text-[10px] mb-6">
+              Company
+            </h3>
+            <ul className="space-y-3.5">
+              {[
+                { name: 'About', path: '/about' },
+                { name: 'Contact', path: '/contact' },
+                { name: 'Become Contributor', path: '/contact' }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link 
+                    to={link.path} 
+                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 4: Legal */}
+          <div>
+            <h3 className="font-display font-bold text-white tracking-widest uppercase text-[10px] mb-6">
+              Legal
+            </h3>
+            <ul className="space-y-3.5">
+              {[
+                { name: 'Privacy Policy', path: '/privacy' },
+                { name: 'Terms of Service', path: '/terms' },
+                { name: 'Disclaimer', path: '/disclaimer' },
+                { name: 'Affiliate Disclosure', path: '/disclaimer' }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link 
+                    to={link.path} 
+                    className="text-white/50 hover:text-white transition-colors text-xs font-medium"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Footer */}
+        <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/30 tracking-wider">
+          <p>
+            &copy; {currentYear} Amaan Reviews. All Rights Reserved.
           </p>
-
-          {/* Center Area: Side-by-Side Legal Links */}
-          <div className="flex flex-row flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-white/50">
-            {legalLinks.map((link, idx) => (
-              <Link 
-                key={`${link.name}-${idx}`}
-                to={link.path} 
-                className="hover:text-[#C5A059] transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right Area: Socials */}
-          <div className="flex gap-4">
-            {[
-              { Icon: Facebook, url: 'https://web.facebook.com/profile.php?id=61560833697279' },
-              { Icon: Instagram, url: 'https://instagram.com/primedeals' },
-              { Icon: Music2, url: 'https://www.tiktok.com/@momentumforsuccesstv' },
-              { Icon: MessageCircle, url: 'https://wa.me/251910012794' }
-            ].map(({ Icon, url }, i) => (
-              <a 
-                key={i} 
-                href={url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/60 hover:text-black hover:bg-white hover:border-transparent transition-all duration-300 outline-none"
-              >
-                <Icon size={16} />
-              </a>
-            ))}
-          </div>
-
+          <p className="font-medium text-white/40">
+            Made with professionalism and transparency.
+          </p>
         </div>
 
       </div>
