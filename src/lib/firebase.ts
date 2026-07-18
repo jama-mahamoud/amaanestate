@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -38,20 +38,11 @@ const finalDbId = (dbId && dbId !== '(default)' && dbId !== 'default') ? dbId : 
 let initializedDb;
 try {
   initializedDb = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
+    experimentalForceLongPolling: true
   }, finalDbId);
 } catch (error) {
-  console.warn("initializeFirestore failed to resolve with multi-tab persistence, using standard fallback:", error);
-  try {
-    initializedDb = initializeFirestore(app, {
-      experimentalForceLongPolling: true
-    }, finalDbId);
-  } catch (innerErr) {
-    initializedDb = getFirestore(app);
-  }
+  console.warn("initializeFirestore failed, using standard fallback:", error);
+  initializedDb = getFirestore(app);
 }
 
 export const db = initializedDb;
