@@ -58,17 +58,32 @@ export default function ImageUpload({ value, onChange, label = 'Featured Image',
       <label className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</label>
       
       {value ? (
-        <div className="relative rounded-2xl overflow-hidden aspect-[16/9] border border-white/10 group bg-neutral-900">
-          <img src={value} alt="Uploaded" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <button
-              type="button"
-              onClick={() => onChange('')}
-              className="bg-red-500/80 text-white p-3 rounded-xl hover:bg-red-500 transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
+        <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#09090d] group transition-all duration-300 flex items-center justify-center p-3 min-h-[220px] md:min-h-[280px]">
+          {/* Subtle Ambient Blurred Background to prevent raw empty margins and look highly premium */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 scale-110 pointer-events-none select-none"
+            style={{ backgroundImage: `url(${value})` }}
+          />
+          {/* Overlay to elevate card elegance */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none select-none" />
+          
+          {/* Full Composition Image */}
+          <img 
+            src={value} 
+            alt="Uploaded Cover Preview" 
+            className="relative z-10 max-h-[240px] md:max-h-[300px] w-auto max-w-full object-contain rounded-lg shadow-2xl mx-auto transition-transform duration-500 group-hover:scale-[1.015]"
+            referrerPolicy="no-referrer"
+          />
+
+          {/* Premium Floating Corner Delete Action */}
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="absolute top-3 right-3 z-20 bg-black/75 hover:bg-red-500 border border-white/10 text-white p-2.5 rounded-xl transition-all duration-300 md:opacity-0 group-hover:opacity-100 hover:scale-105 shadow-lg flex items-center justify-center"
+            title="Remove Image"
+          >
+            <X size={15} />
+          </button>
         </div>
       ) : (
         <div className="space-y-3">

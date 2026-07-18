@@ -9,6 +9,10 @@ import { Resend } from 'resend';
 // Load environment variables immediately
 dotenv.config();
 
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 let resendClient: Resend | null = null;
 function getResendClient() {
   if (!resendClient) {
