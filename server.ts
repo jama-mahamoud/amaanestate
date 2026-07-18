@@ -10,8 +10,36 @@ import { Resend } from 'resend';
 dotenv.config();
 
 import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+let activeFilename = "";
+let activeDirname = "";
+
+try {
+  // @ts-ignore
+  if (typeof __filename !== "undefined") {
+    // @ts-ignore
+    activeFilename = __filename;
+  }
+} catch (e) {}
+
+try {
+  // @ts-ignore
+  if (typeof __dirname !== "undefined") {
+    // @ts-ignore
+    activeDirname = __dirname;
+  }
+} catch (e) {}
+
+if (!activeFilename && typeof import.meta !== "undefined" && import.meta.url) {
+  activeFilename = fileURLToPath(import.meta.url);
+}
+
+if (!activeDirname) {
+  activeDirname = activeFilename ? path.dirname(activeFilename) : process.cwd();
+}
+
+const __filename = activeFilename;
+const __dirname = activeDirname;
 
 let resendClient: Resend | null = null;
 function getResendClient() {
@@ -902,6 +930,8 @@ app.post("/api/contact", async (req, res) => {
     res.status(500).json({ error: "Failed to send email" });
   }
 });
+
+
 
 // Helper functions to demarshal Firestore REST API payload
 function demarshalFirestoreValue(val: any): any {

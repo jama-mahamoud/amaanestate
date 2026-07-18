@@ -170,9 +170,6 @@ export default function Footer() {
           <p>
             &copy; {currentYear} Amaan Reviews. All Rights Reserved.
           </p>
-          <p className="font-medium text-white/40">
-            Made with professionalism and transparency.
-          </p>
         </div>
 
       </div>
