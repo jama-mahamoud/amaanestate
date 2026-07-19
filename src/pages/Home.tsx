@@ -57,18 +57,71 @@ const getCleanCategoryLabel = (category?: string | string[], type?: string | str
   return null;
 };
 
+// Skeleton loader for an elegant, non-shifting First Contentful Paint
+function HomeSkeleton() {
+  return (
+    <div className="space-y-16 animate-pulse">
+      {[1, 2, 3].map((sectionIndex) => (
+        <section key={sectionIndex}>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="h-6 w-48 bg-white/5 rounded-md mb-2" />
+              <div className="h-4 w-64 bg-white/5 rounded-md" />
+            </div>
+            <div className="h-4 w-16 bg-white/5 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((cardIndex) => (
+              <div key={cardIndex} className="bg-[#0c0c11]/80 border border-white/5 rounded-xl overflow-hidden h-[340px] flex flex-col p-4 space-y-4">
+                <div className="aspect-[16/10] bg-white/5 rounded-lg w-full" />
+                <div className="h-4 w-3/4 bg-white/5 rounded" />
+                <div className="h-3 w-1/2 bg-white/5 rounded" />
+                <div className="space-y-2 pt-2 mt-auto">
+                  <div className="h-3 w-full bg-white/5 rounded" />
+                  <div className="h-3 w-5/6 bg-white/5 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
 
-  // Dynamic Data States
-  const [products, setProducts] = useState<UnifiedProduct[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Dynamic Data States with Instant localStorage fallback to reduce LCP to < 1s
+  const [products, setProducts] = useState<UnifiedProduct[]>(() => {
+    try {
+      const cached = localStorage.getItem('cache_home_products');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [articles, setArticles] = useState<Article[]>(() => {
+    try {
+      const cached = localStorage.getItem('cache_home_articles');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cachedP = localStorage.getItem('cache_home_products');
+      const cachedA = localStorage.getItem('cache_home_articles');
+      return !(cachedP && cachedA);
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
     let active = true;
     const fetchHomeData = async () => {
-      setLoading(true);
       try {
         const [productsData, articlesData] = await Promise.all([
           productService.getUnifiedProducts(),
@@ -91,6 +144,14 @@ export default function Home() {
             return getTime(b.createdAt) - getTime(a.createdAt);
           });
           setArticles(sortedArticles);
+
+          // Update background cache
+          try {
+            localStorage.setItem('cache_home_products', JSON.stringify(productsData));
+            localStorage.setItem('cache_home_articles', JSON.stringify(sortedArticles));
+          } catch (cacheErr) {
+            console.warn("Failed caching home feed data locally:", cacheErr);
+          }
         }
       } catch (err) {
         console.error('Error orchestrating Home page dynamic catalog load:', err);
@@ -108,6 +169,17 @@ export default function Home() {
   const featuredReviews = useMemo(() => {
     return products.filter(p => p.type === 'editorial-review').slice(0, 4);
   }, [products]);
+
+  // Dynamically compute LCP image to preload it early
+  const lcpImageToPreload = useMemo(() => {
+    if (featuredReviews && featuredReviews.length > 0) {
+      return featuredReviews[0].featuredImage;
+    }
+    if (products && products.length > 0) {
+      return products[0].featuredImage;
+    }
+    return null;
+  }, [featuredReviews, products]);
 
   // Section 2: Software & Tools (only software)
   const softwareProducts = useMemo(() => {
@@ -129,15 +201,15 @@ export default function Home() {
       <Helmet>
         <title>PrimeDeals - Premium Tech & Software Reviews</title>
         <meta name="description" content="Discover our verified premium software tools and high-end technical equipment reviews." />
+        {lcpImageToPreload && (
+          <link rel="preload" as="image" href={lcpImageToPreload} />
+        )}
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="h-10 w-10 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-xs text-neutral-500 font-mono">Loading catalog...</p>
-          </div>
+          <HomeSkeleton />
         ) : (
           <>
             {/* Section 1: Featured Reviews */}

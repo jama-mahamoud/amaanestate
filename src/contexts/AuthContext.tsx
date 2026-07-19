@@ -76,138 +76,194 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Force persistence to ensure session sticks
-    const initAuth = async () => {
+    const isAuthRoute = window.location.pathname.startsWith('/dashboard') || 
+                        window.location.pathname.startsWith('/admin') || 
+                        window.location.pathname.startsWith('/login') || 
+                        window.location.pathname.startsWith('/register') || 
+                        window.location.pathname.startsWith('/auth');
+
+    let unsubscribe: (() => void) | null = null;
+    let profileUnsubscribe: (() => void) | null = null;
+    let isInitialized = false;
+
+    const startAuth = async () => {
+      if (isInitialized) return;
+      isInitialized = true;
+
       try {
         await setPersistence(auth, browserLocalPersistence);
       } catch (error) {
         console.error('Persistence error:', error);
       }
-    };
 
-    initAuth();
-
-    let profileUnsubscribe: (() => void) | null = null;
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        setUser(user);
-        setEmailVerified(user ? user.emailVerified : false);
-        if (user) {
-          // Ensure profile exists first
-          const userRef = doc(db, 'users', user.uid);
-          let userDoc;
-          
-          try {
-            userDoc = await getDoc(userRef);
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        try {
+          setUser(user);
+          setEmailVerified(user ? user.emailVerified : false);
+          if (user) {
+            // Ensure profile exists first
+            const userRef = doc(db, 'users', user.uid);
+            let userDoc;
             
-            if (!userDoc.exists()) {
+            try {
+              userDoc = await getDoc(userRef);
+              
+              if (!userDoc.exists()) {
+                const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
+                const newProfile: UserProfile = {
+                  uid: user.uid,
+                  displayName: user.displayName || 'Authorized Admin',
+                  email: user.email || '',
+                  role: (isAdminEmail ? 'admin' : 'normal_user') as UserRole,
+                  createdAt: serverTimestamp(),
+                  photoURL: user.photoURL,
+                  isVerified: user.emailVerified,
+                };
+                try {
+                  await setDoc(userRef, newProfile);
+                } catch (setErr) {
+                  console.warn("Failed to write user profile (operating in offline fallback):", setErr);
+                }
+                setProfile(newProfile);
+              } else {
+                // Check for minor background updates
+                const existingData = userDoc.data() as UserProfile;
+                const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
+                
+                let normalizedRole = existingData.role 
+                  ? (existingData.role.toString().toLowerCase().trim() as UserRole)
+                  : 'normal_user';
+
+                if (isAdminEmail && normalizedRole !== 'admin') {
+                  normalizedRole = 'admin';
+                  try {
+                    await setDoc(userRef, { role: 'admin' }, { merge: true });
+                  } catch (updateErr) {
+                    console.warn("Could not write upgraded admin role to Firestore:", updateErr);
+                  }
+                }
+
+                setProfile({
+                  ...existingData,
+                  role: normalizedRole
+                });
+
+                if (
+                  existingData.displayName !== user.displayName || 
+                  existingData.photoURL !== user.photoURL
+                ) {
+                  try {
+                    await setDoc(userRef, {
+                      displayName: user.displayName || existingData.displayName,
+                      photoURL: user.photoURL || existingData.photoURL
+                    }, { merge: true });
+                  } catch (setErr) {
+                    console.warn("Failed to update user profile (operating in offline fallback):", setErr);
+                  }
+                }
+              }
+            } catch (docErr) {
+              console.warn("Failed to fetch user doc from active server (profile loaded from local session memory):", docErr);
               const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
-              const newProfile: UserProfile = {
+              // Fallback profile if offline/failed to fetch from server
+              setProfile({
                 uid: user.uid,
                 displayName: user.displayName || 'Authorized Admin',
                 email: user.email || '',
                 role: (isAdminEmail ? 'admin' : 'normal_user') as UserRole,
-                createdAt: serverTimestamp(),
                 photoURL: user.photoURL,
                 isVerified: user.emailVerified,
-              };
-              try {
-                await setDoc(userRef, newProfile);
-              } catch (setErr) {
-                console.warn("Failed to write user profile (operating in offline fallback):", setErr);
-              }
-              setProfile(newProfile);
-            } else {
-              // Check for minor background updates
-              const existingData = userDoc.data() as UserProfile;
-              const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
-              
-              let normalizedRole = existingData.role 
-                ? (existingData.role.toString().toLowerCase().trim() as UserRole)
-                : 'normal_user';
-
-              if (isAdminEmail && normalizedRole !== 'admin') {
-                normalizedRole = 'admin';
-                try {
-                  await setDoc(userRef, { role: 'admin' }, { merge: true });
-                } catch (updateErr) {
-                  console.warn("Could not write upgraded admin role to Firestore:", updateErr);
-                }
-              }
-
-              setProfile({
-                ...existingData,
-                role: normalizedRole
+                createdAt: serverTimestamp(),
               });
-
-              if (
-                existingData.displayName !== user.displayName || 
-                existingData.photoURL !== user.photoURL
-              ) {
-                try {
-                  await setDoc(userRef, {
-                    displayName: user.displayName || existingData.displayName,
-                    photoURL: user.photoURL || existingData.photoURL
-                  }, { merge: true });
-                } catch (setErr) {
-                  console.warn("Failed to update user profile (operating in offline fallback):", setErr);
-                }
-              }
             }
-          } catch (docErr) {
-            console.warn("Failed to fetch user doc from active server (profile loaded from local session memory):", docErr);
-            const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
-            // Fallback profile if offline/failed to fetch from server
-            setProfile({
-              uid: user.uid,
-              displayName: user.displayName || 'Authorized Admin',
-              email: user.email || '',
-              role: (isAdminEmail ? 'admin' : 'normal_user') as UserRole,
-              photoURL: user.photoURL,
-              isVerified: user.emailVerified,
-              createdAt: serverTimestamp(),
+
+            // Set up real-time listener for the user profile
+            if (profileUnsubscribe) profileUnsubscribe();
+            
+            profileUnsubscribe = onSnapshot(userRef, (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.data() as UserProfile;
+                const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
+                let normalizedRole = data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user';
+                if (isAdminEmail) {
+                  normalizedRole = 'admin';
+                }
+                setProfile({
+                  ...data,
+                  role: normalizedRole
+                });
+              } else {
+                setProfile(null);
+              }
+            }, (error) => {
+              console.warn("Profile snapshot listener encountered an error (operating offline/restricted environment):", error);
             });
-          }
-
-          // Set up real-time listener for the user profile
-          if (profileUnsubscribe) profileUnsubscribe();
-          
-          profileUnsubscribe = onSnapshot(userRef, (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.data() as UserProfile;
-              const isAdminEmail = user.email?.toLowerCase().trim() === 'towinnow0@gmail.com';
-              let normalizedRole = data.role ? (data.role.toString().toLowerCase().trim() as UserRole) : 'normal_user';
-              if (isAdminEmail) {
-                normalizedRole = 'admin';
-              }
-              setProfile({
-                ...data,
-                role: normalizedRole
-              });
-            } else {
-              setProfile(null);
+            
+          } else {
+            setProfile(null);
+            if (profileUnsubscribe) {
+              profileUnsubscribe();
+              profileUnsubscribe = null;
             }
-          }, (error) => {
-            console.warn("Profile snapshot listener encountered an error (operating offline/restricted environment):", error);
-          });
-          
-        } else {
-          setProfile(null);
-          if (profileUnsubscribe) {
-            profileUnsubscribe();
-            profileUnsubscribe = null;
+          }
+        } catch (error) {
+          console.error('Auth state change error:', error);
+        } finally {
+          setLoading(false);
+        }
+      });
+    };
+
+    if (isAuthRoute) {
+      startAuth();
+    } else {
+      let hasSavedSession = false;
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('firebase:authUser') || key.startsWith('firebase:simple_login_session'))) {
+            hasSavedSession = true;
+            break;
           }
         }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-      } finally {
-        setLoading(false);
+      } catch (e) {}
+
+      if (hasSavedSession) {
+        startAuth();
+      } else {
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        const cleanupEvents = () => {
+          events.forEach(event => window.removeEventListener(event, handleInteraction));
+        };
+        const handleInteraction = () => {
+          startAuth();
+          cleanupEvents();
+        };
+
+        events.forEach(event => window.addEventListener(event, handleInteraction, { passive: true }));
+        
+        const timeoutId = setTimeout(() => {
+          startAuth();
+          cleanupEvents();
+        }, 2000);
+
+        // Fast fallback to stop blocking page rendering
+        const fallbackId = setTimeout(() => {
+          setLoading(false);
+        }, 400);
+
+        return () => {
+          cleanupEvents();
+          clearTimeout(timeoutId);
+          clearTimeout(fallbackId);
+          if (unsubscribe) unsubscribe();
+          if (profileUnsubscribe) profileUnsubscribe();
+        };
       }
-    });
+    }
 
     return () => {
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
       if (profileUnsubscribe) profileUnsubscribe();
     };
   }, []);

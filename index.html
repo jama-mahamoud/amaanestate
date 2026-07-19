@@ -20,9 +20,39 @@
     <!-- Impact.com Verification -->
     <meta name='impact-site-verification' value='567d6111-d094-481f-ba51-0aa4e73d9cf2'>
     
-    <!-- Google AdSense Verification -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7610767464764502"
-      crossorigin="anonymous"></script>
+    <!-- Google AdSense (Lazy & Interactive-only Load) -->
+    <script>
+      (function() {
+        var adsenseLoaded = false;
+        function loadAdSense() {
+          if (adsenseLoaded) return;
+          adsenseLoaded = true;
+          var script = document.createElement('script');
+          script.async = true;
+          script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7610767464764502";
+          script.crossOrigin = "anonymous";
+          document.body.appendChild(script);
+          cleanup();
+        }
+        function cleanup() {
+          events.forEach(function(e) {
+            window.removeEventListener(e, loadAdSense);
+          });
+        }
+        var events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(function(e) {
+          window.addEventListener(e, loadAdSense, { passive: true });
+        });
+        // Non-blocking idle timer fallback
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(function() {
+            setTimeout(loadAdSense, 3000);
+          });
+        } else {
+          setTimeout(loadAdSense, 4000);
+        }
+      })();
+    </script>
 
     <!-- Theme & Security Configuration -->
     <meta name="theme-color" content="#050505" />
