@@ -127,6 +127,8 @@ app.use((req, res, next) => {
       adaptedUrl = `/agents/${id}`;
     } else if (p === 'sitemap.xml') {
       adaptedUrl = `/sitemap.xml`;
+    } else if (p && p.startsWith('sitemap-') && p.endsWith('.xml')) {
+      adaptedUrl = `/${p}`;
     } else if (p === 'robots.txt') {
       adaptedUrl = `/robots.txt`;
     }
@@ -293,6 +295,291 @@ async function fetchCollectionRest(collectionId: string, projectId: string): Pro
   }
 }
 
+const isLegacyRealEstate = (slug: string, title: string): boolean => {
+  const s = (slug || '').toLowerCase();
+  const t = (title || '').toLowerCase();
+  
+  const keywords = [
+    'estate', 'property', 'house', 'rent', 'land', 'city', 'cities', 'jigjiga', 'jijiga',
+    'dire-dawa', 'dire dawa', 'somali', 'soomaali', 'guri', 'dhul', 'kire', 'kira', 'hanti',
+    'iib', 'maalgashi', 'africa', 'ethiopia', 'maanestate'
+  ];
+  
+  return keywords.some(k => s.includes(k) || t.includes(k));
+};
+
+const isValidSlug = (slug: any): boolean => {
+  if (!slug || typeof slug !== 'string') return false;
+  const s = slug.toLowerCase().trim();
+  
+  const excludedKeywords = [
+    'preview', 'draft', 'temp', 'test', 'amaan-editorial-studio', 
+    'editorial-studio', 'new-article', 'placeholder', 'undefined', 'null'
+  ];
+  if (excludedKeywords.some(k => s.includes(k))) {
+    return false;
+  }
+
+  // Block standalone editor paths to avoid matching 'video-editor'
+  if (s === 'editor' || s.startsWith('editor/') || s.endsWith('/editor')) {
+    return false;
+  }
+  
+  if (s.includes('[') || s.includes(']') || s.includes('{') || s.includes('}') || s.includes('<') || s.includes('>') || s.includes(' ') || s.includes('(') || s.includes(')')) {
+    return false;
+  }
+  
+  return true;
+};
+
+const calculateLastmod = (data: any, defaultDate: string): string => {
+  let lastmod = defaultDate;
+  try {
+    if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
+      lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
+    } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
+      lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
+    }
+  } catch (e) {
+    console.error(`[SITEMAP] Error calculating lastmod:`, e);
+  }
+  return lastmod;
+};
+
+function getFirebaseProjectId(): string {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  let prjId = "amaanestate-97f4f";
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      if (config.projectId) {
+        prjId = config.projectId;
+      }
+    } catch (e) {
+      console.error("[SITEMAP] Failed to parse firebase-applet-config.json:", e);
+    }
+  }
+  return prjId;
+}
+
+async function generatePagesSitemap(): Promise<string> {
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+  const pages = [
+    { loc: "https://www.amaanestate.com/", changefreq: "daily", priority: "1.0" },
+    { loc: "https://www.amaanestate.com/reviews", changefreq: "daily", priority: "0.9" },
+    { loc: "https://www.amaanestate.com/software", changefreq: "daily", priority: "0.9" },
+    { loc: "https://www.amaanestate.com/tech-gear", changefreq: "daily", priority: "0.9" },
+    { loc: "https://www.amaanestate.com/news", changefreq: "daily", priority: "0.8" },
+    { loc: "https://www.amaanestate.com/about", changefreq: "monthly", priority: "0.7" },
+    { loc: "https://www.amaanestate.com/contact", changefreq: "monthly", priority: "0.7" },
+    { loc: "https://www.amaanestate.com/privacy", changefreq: "monthly", priority: "0.5" },
+    { loc: "https://www.amaanestate.com/terms", changefreq: "monthly", priority: "0.5" },
+    { loc: "https://www.amaanestate.com/disclaimer", changefreq: "monthly", priority: "0.5" }
+  ];
+
+  pages.forEach(p => {
+    xml += `  <url>\n`;
+    xml += `    <loc>${p.loc}</loc>\n`;
+    xml += `    <lastmod>${dynamicDate}</lastmod>\n`;
+    xml += `    <changefreq>${p.changefreq}</changefreq>\n`;
+    xml += `    <priority>${p.priority}</priority>\n`;
+    xml += `  </url>\n`;
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
+async function generateReviewsSitemap(): Promise<string> {
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  const prjId = getFirebaseProjectId();
+  const rawReviews = await fetchCollectionRest("editorial_reviews", prjId);
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+  rawReviews.forEach((data: any) => {
+    if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') return;
+    if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') return;
+    if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') return;
+
+    let slug = data.slug;
+    if (!slug && data.title) {
+      slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    const title = data.title || '';
+
+    const isPublished = data.status === 'approved' || data.status === 'published' || data.status === 'PUBLISHED' || data.published === true;
+    if (!isPublished) return;
+
+    const isLegacy = isLegacyRealEstate(slug || '', title);
+    if (isLegacy) return;
+
+    const isPublic = data.visibility === 'public' || data.visibility === undefined;
+    if (!isPublic) return;
+
+    const isIndexable = data.indexable === true || data.indexable === undefined;
+    if (!isIndexable) return;
+
+    const lastmod = calculateLastmod(data, dynamicDate);
+    const locSlug = (slug && isValidSlug(slug)) ? slug : (data.id && isValidSlug(data.id) ? `rev-${data.id}` : null);
+
+    if (locSlug) {
+      xml += `  <url>\n`;
+      xml += `    <loc>https://www.amaanestate.com/reviews/${locSlug}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += `    <changefreq>weekly</changefreq>\n`;
+      xml += `    <priority>0.8</priority>\n`;
+      xml += `  </url>\n`;
+    }
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
+async function generateSoftwareSitemap(): Promise<string> {
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  const prjId = getFirebaseProjectId();
+  const rawSoftware = await fetchCollectionRest("software_tools", prjId);
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+  rawSoftware.forEach((data: any) => {
+    if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') return;
+    if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') return;
+    if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') return;
+
+    let slug = data.slug;
+    if (!slug && data.name) {
+      slug = data.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    if (!slug) {
+      slug = data.id;
+    }
+
+    const isPublished = data.status === 'published' || data.status === 'approved' || data.published === true;
+    if (!isPublished) return;
+
+    const isPublic = data.visibility === 'public' || data.visibility === undefined;
+    if (!isPublic) return;
+
+    const isIndexable = data.indexable === true || data.indexable === undefined;
+    if (!isIndexable) return;
+
+    const lastmod = calculateLastmod(data, dynamicDate);
+    const locSlug = (slug && isValidSlug(slug)) ? slug : (data.id && isValidSlug(data.id) ? `sw-${data.id}` : null);
+
+    if (locSlug) {
+      xml += `  <url>\n`;
+      xml += `    <loc>https://www.amaanestate.com/software/${locSlug}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += `    <changefreq>weekly</changefreq>\n`;
+      xml += `    <priority>0.8</priority>\n`;
+      xml += `  </url>\n`;
+    }
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
+async function generateTechGearSitemap(): Promise<string> {
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  const prjId = getFirebaseProjectId();
+  const rawTechGear = await fetchCollectionRest("tech_gear_products", prjId);
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+  rawTechGear.forEach((data: any) => {
+    if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') return;
+    if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') return;
+    if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') return;
+
+    const isPublished = data.status === 'approved' || data.status === 'published' || data.published === true;
+    if (!isPublished) return;
+
+    const isPublic = data.visibility === 'public' || data.visibility === undefined;
+    if (!isPublic) return;
+
+    const isIndexable = data.indexable === true || data.indexable === undefined;
+    if (!isIndexable) return;
+
+    const lastmod = calculateLastmod(data, dynamicDate);
+    
+    let slug = data.slug || data.id;
+    if (slug && isValidSlug(slug)) {
+      const productSlug = slug.startsWith('tg-') ? slug : `tg-${slug}`;
+      xml += `  <url>\n`;
+      xml += `    <loc>https://www.amaanestate.com/tech-gear/${productSlug}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += `    <changefreq>weekly</changefreq>\n`;
+      xml += `    <priority>0.8</priority>\n`;
+      xml += `  </url>\n`;
+    }
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
+async function generateNewsSitemap(): Promise<string> {
+  const dynamicDate = new Date().toISOString().split('T')[0];
+  const prjId = getFirebaseProjectId();
+  const rawArticles = await fetchCollectionRest("articles", prjId);
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+  rawArticles.forEach((data: any) => {
+    if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') return;
+    if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') return;
+    if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') return;
+
+    let slug = data.slug;
+    if (!slug && data.title) {
+      slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    if (!slug) {
+      slug = data.id;
+    }
+    const title = data.title || '';
+
+    const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
+    if (!isPublished) return;
+
+    const isLegacy = isLegacyRealEstate(slug || '', title);
+    if (isLegacy) return;
+
+    const isPublic = data.visibility === 'public' || data.visibility === undefined;
+    if (!isPublic) return;
+
+    const isIndexable = data.indexable === true || data.indexable === undefined;
+    if (!isIndexable) return;
+
+    if (slug && (slug.includes('cities/') || slug.includes('/cities'))) return;
+
+    const lastmod = calculateLastmod(data, dynamicDate);
+
+    if (slug && isValidSlug(slug)) {
+      xml += `  <url>\n`;
+      xml += `    <loc>https://www.amaanestate.com/news/${slug}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += `    <changefreq>weekly</changefreq>\n`;
+      xml += `    <priority>0.8</priority>\n`;
+      xml += `  </url>\n`;
+    }
+  });
+
+  xml += `</urlset>`;
+  return xml;
+}
+
 async function generateSitemapXml() {
   const metrics = {
     totalPublishedArticlesFound: 0,
@@ -311,24 +598,8 @@ async function generateSitemapXml() {
   try {
     const dynamicDate = new Date().toISOString().split('T')[0];
     let latestUpdateDate = '2026-07-14'; // Baseline date
-    
-    // Retrieve projectId from local config
-    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-    let prjId = "amaanestate-97f4f";
-    if (fs.existsSync(configPath)) {
-      try {
-        const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-        if (config.projectId) {
-          prjId = config.projectId;
-        }
-      } catch (e) {
-        console.error("[SITEMAP] Failed to parse firebase-applet-config.json:", e);
-      }
-    }
+    const prjId = getFirebaseProjectId();
 
-    // Directly use the established REST client for ALL data fetching to guarantee stability
-    console.log("[SITEMAP] Starting dynamic REST-based Firestore queries for sitemap...");
-    
     const [articles, editorialReviews, softwareTools, techGearProducts] = await Promise.all([
       fetchCollectionRest("articles", prjId),
       fetchCollectionRest("editorial_reviews", prjId),
@@ -339,87 +610,28 @@ async function generateSitemapXml() {
     const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
     const dynamicUrls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
 
-    const isLegacyRealEstate = (slug: string, title: string): boolean => {
-      const s = (slug || '').toLowerCase();
-      const t = (title || '').toLowerCase();
-      
-      const keywords = [
-        'estate', 'property', 'house', 'rent', 'land', 'city', 'cities', 'jigjiga', 'jijiga',
-        'dire-dawa', 'dire dawa', 'somali', 'soomaali', 'guri', 'dhul', 'kire', 'kira', 'hanti',
-        'iib', 'maalgashi', 'africa', 'ethiopia', 'maanestate'
-      ];
-      
-      return keywords.some(k => s.includes(k) || t.includes(k));
-    };
-
-    const isValidSlug = (slug: any): boolean => {
-      if (!slug || typeof slug !== 'string') return false;
-      const s = slug.toLowerCase().trim();
-      
-      const excludedKeywords = [
-        'preview', 'draft', 'temp', 'test', 'amaan-editorial-studio', 
-        'editorial-studio', 'new-article', 'placeholder', 'undefined', 'null'
-      ];
-      if (excludedKeywords.some(k => s.includes(k))) {
-        return false;
-      }
-
-      // Block standalone editor paths to avoid matching 'video-editor'
-      if (s === 'editor' || s.startsWith('editor/') || s.endsWith('/editor')) {
-        return false;
-      }
-      
-      if (s.includes('[') || s.includes(']') || s.includes('{') || s.includes('}') || s.includes('<') || s.includes('>') || s.includes(' ') || s.includes('(') || s.includes(')')) {
-        return false;
-      }
-      
-      return true;
-    };
-
-    const calculateLastmod = (data: any): string => {
-      let lastmod = dynamicDate;
-      try {
-        if (data.updatedAt && typeof data.updatedAt.seconds === 'number') {
-          lastmod = new Date(data.updatedAt.seconds * 1000).toISOString().split('T')[0];
-        } else if (data.createdAt && typeof data.createdAt.seconds === 'number') {
-          lastmod = new Date(data.createdAt.seconds * 1000).toISOString().split('T')[0];
-        }
-      } catch (e) {
-        console.error(`[SITEMAP] Error calculating lastmod:`, e);
-      }
-      return lastmod;
-    };
-
-    // 1. Process Blog/News Articles
+    // Process News Articles
     articles.forEach((data: any) => {
-      // Exclude deleted content
       if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
         metrics.totalUrlsExcluded++;
         return;
       }
-
-      // Exclude drafts / hidden content / unpublished items explicitly
       if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       let slug = data.slug;
       if (!slug && data.title) {
         slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
       }
-      if (!slug) {
-        slug = data.id;
-      }
+      if (!slug) slug = data.id;
       const title = data.title || '';
-
       const isPublished = data.status === 'published' || data.published === true || data.status === 'PUBLISHED';
       
       if (isPublished) {
@@ -429,42 +641,34 @@ async function generateSitemapXml() {
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
-      const isLegacy = isLegacyRealEstate(slug, title);
-      if (isLegacy) {
+      if (isLegacyRealEstate(slug || '', title)) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.legacyRealEstate++;
         return;
       }
-
-      const isTech = true; // Since it's not legacy, it's a tech article!
-      const isPublic = data.visibility === 'public' || (data.visibility === undefined && isTech);
+      const isPublic = data.visibility === 'public' || data.visibility === undefined;
       if (!isPublic) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
-      const isIndexable = data.indexable === true || (data.indexable === undefined && isTech);
+      const isIndexable = data.indexable === true || data.indexable === undefined;
       if (!isIndexable) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notIndexable++;
         return;
       }
-
       if (slug && (slug.includes('cities/') || slug.includes('/cities'))) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.citiesRoute++;
         return;
       }
-
       if (!isValidSlug(slug)) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.invalidSlug++;
         return;
       }
-
-      const lastmod = calculateLastmod(data);
+      const lastmod = calculateLastmod(data, dynamicDate);
       if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
       
       dynamicUrls.push({
@@ -475,74 +679,57 @@ async function generateSitemapXml() {
       });
     });
 
-    // 2. Process Editorial Reviews
+    // Process Editorial Reviews
     editorialReviews.forEach((data: any) => {
-      // Exclude deleted content
       if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
         metrics.totalUrlsExcluded++;
         return;
       }
-
-      // Exclude drafts / hidden content / unpublished items explicitly
       if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       let slug = data.slug;
       if (!slug && data.title) {
         slug = data.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
       }
       const title = data.title || '';
-
       const isPublished = data.status === 'approved' || data.status === 'published' || data.status === 'PUBLISHED' || data.published === true;
       if (!isPublished) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
-      const isLegacy = isLegacyRealEstate(slug || '', title);
-      if (isLegacy) {
+      if (isLegacyRealEstate(slug || '', title)) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.legacyRealEstate++;
         return;
       }
-
       const isPublic = data.visibility === 'public' || data.visibility === undefined;
       if (!isPublic) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       const isIndexable = data.indexable === true || data.indexable === undefined;
       if (!isIndexable) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notIndexable++;
         return;
       }
-
-      const lastmod = calculateLastmod(data);
+      const lastmod = calculateLastmod(data, dynamicDate);
       if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
 
-      if (slug && isValidSlug(slug)) {
+      const locSlug = (slug && isValidSlug(slug)) ? slug : (data.id && isValidSlug(data.id) ? `rev-${data.id}` : null);
+      if (locSlug) {
         dynamicUrls.push({
-          loc: `https://www.amaanestate.com/reviews/${slug}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.8"
-        });
-      } else if (data.id && isValidSlug(data.id)) {
-        dynamicUrls.push({
-          loc: `https://www.amaanestate.com/product/rev-${data.id}`,
+          loc: `https://www.amaanestate.com/reviews/${locSlug}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.8"
@@ -553,69 +740,52 @@ async function generateSitemapXml() {
       }
     });
 
-    // 3. Process Software Tools
+    // Process Software Tools
     softwareTools.forEach((data: any) => {
-      // Exclude deleted content
       if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
         metrics.totalUrlsExcluded++;
         return;
       }
-
-      // Exclude drafts / hidden content / unpublished items explicitly
       if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       let slug = data.slug;
       if (!slug && data.name) {
         slug = data.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
       }
-      if (!slug) {
-        slug = data.id;
-      }
-
+      if (!slug) slug = data.id;
       const isPublished = data.status === 'published' || data.status === 'approved' || data.published === true;
       if (!isPublished) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       const isPublic = data.visibility === 'public' || data.visibility === undefined;
       if (!isPublic) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       const isIndexable = data.indexable === true || data.indexable === undefined;
       if (!isIndexable) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notIndexable++;
         return;
       }
-
-      const lastmod = calculateLastmod(data);
+      const lastmod = calculateLastmod(data, dynamicDate);
       if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
 
-      if (slug && isValidSlug(slug)) {
+      const locSlug = (slug && isValidSlug(slug)) ? slug : (data.id && isValidSlug(data.id) ? `sw-${data.id}` : null);
+      if (locSlug) {
         dynamicUrls.push({
-          loc: `https://www.amaanestate.com/product/${slug}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: "0.8"
-        });
-      } else if (data.id && isValidSlug(data.id)) {
-        dynamicUrls.push({
-          loc: `https://www.amaanestate.com/product/sw-${data.id}`,
+          loc: `https://www.amaanestate.com/software/${locSlug}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.8"
@@ -626,55 +796,48 @@ async function generateSitemapXml() {
       }
     });
 
-    // 4. Process Tech Gear Products
+    // Process Tech Gear Products
     techGearProducts.forEach((data: any) => {
-      // Exclude deleted content
       if (data.deleted === true || data.isDeleted === true || data.status === 'deleted' || data.status === 'DELETED') {
         metrics.totalUrlsExcluded++;
         return;
       }
-
-      // Exclude drafts / hidden content / unpublished items explicitly
       if (data.draft === true || data.status === 'draft' || data.status === 'DRAFT' || data.status === 'pending') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       if (data.hidden === true || data.visibility === 'hidden' || data.visibility === 'private' || data.visibility === 'PRIVATE') {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       const isPublished = data.status === 'approved' || data.status === 'published' || data.published === true;
       if (!isPublished) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublished++;
         return;
       }
-
       const isPublic = data.visibility === 'public' || data.visibility === undefined;
       if (!isPublic) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notPublic++;
         return;
       }
-
       const isIndexable = data.indexable === true || data.indexable === undefined;
       if (!isIndexable) {
         metrics.totalUrlsExcluded++;
         metrics.exclusionReasons.notIndexable++;
         return;
       }
-
-      const lastmod = calculateLastmod(data);
+      const lastmod = calculateLastmod(data, dynamicDate);
       if (lastmod > latestUpdateDate) latestUpdateDate = lastmod;
 
-      if (data.id && isValidSlug(data.id)) {
-        const productSlug = data.id.startsWith('tg-') ? data.id : `tg-${data.id}`;
+      let slug = data.slug || data.id;
+      if (slug && isValidSlug(slug)) {
+        const productSlug = slug.startsWith('tg-') ? slug : `tg-${slug}`;
         dynamicUrls.push({
-          loc: `https://www.amaanestate.com/product/${productSlug}`,
+          loc: `https://www.amaanestate.com/tech-gear/${productSlug}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.8"
@@ -685,47 +848,25 @@ async function generateSitemapXml() {
       }
     });
 
-    // Ensure latestUpdateDate doesn't overshoot today's date
-    if (latestUpdateDate > dynamicDate) {
-      latestUpdateDate = dynamicDate;
-    }
+    if (latestUpdateDate > dynamicDate) latestUpdateDate = dynamicDate;
 
-    // Static Base Routes - Fully indexable matching the Software & Technology Review Platform
+    // Static Base Routes
     urls.push({ loc: "https://www.amaanestate.com/", lastmod: latestUpdateDate, changefreq: "daily", priority: "1.0" });
+    urls.push({ loc: "https://www.amaanestate.com/reviews", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
     urls.push({ loc: "https://www.amaanestate.com/software", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
     urls.push({ loc: "https://www.amaanestate.com/tech-gear", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
-    urls.push({ loc: "https://www.amaanestate.com/deals", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.9" });
     urls.push({ loc: "https://www.amaanestate.com/news", lastmod: latestUpdateDate, changefreq: "daily", priority: "0.8" });
     urls.push({ loc: "https://www.amaanestate.com/about", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
     urls.push({ loc: "https://www.amaanestate.com/contact", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
-    urls.push({ loc: "https://www.amaanestate.com/agreements", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.7" });
     urls.push({ loc: "https://www.amaanestate.com/privacy", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
     urls.push({ loc: "https://www.amaanestate.com/terms", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
     urls.push({ loc: "https://www.amaanestate.com/disclaimer", lastmod: latestUpdateDate, changefreq: "monthly", priority: "0.5" });
 
-    // Append dynamic URLs
     urls.push(...dynamicUrls);
     metrics.totalUrlsIncluded = urls.length;
 
-    console.log("\n============================================");
-    console.log("       SITEMAP GENERATION METRICS REPORT     ");
-    console.log("============================================");
-    console.log(`Total Published Articles Found: ${metrics.totalPublishedArticlesFound}`);
-    console.log(`Total URLs Included in Sitemap: ${metrics.totalUrlsIncluded}`);
-    console.log(`Total URLs Excluded from Sitemap: ${metrics.totalUrlsExcluded}`);
-    console.log("Exclusion Breakdown:");
-    console.log(` - Legacy Real Estate content: ${metrics.exclusionReasons.legacyRealEstate}`);
-    console.log(` - Invalid / temporary slug: ${metrics.exclusionReasons.invalidSlug}`);
-    console.log(` - Not marked as Published: ${metrics.exclusionReasons.notPublished}`);
-    console.log(` - Not marked as Public: ${metrics.exclusionReasons.notPublic}`);
-    console.log(` - Not marked as Indexable: ${metrics.exclusionReasons.notIndexable}`);
-    console.log(` - Cities route / cities slug: ${metrics.exclusionReasons.citiesRoute}`);
-    console.log("============================================\n");
-
-    // Build XML sitemap complying with Google's XML sitemap protocols
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-    
     urls.forEach(url => {
       xml += `  <url>\n`;
       xml += `    <loc>${url.loc}</loc>\n`;
@@ -734,8 +875,8 @@ async function generateSitemapXml() {
       xml += `    <priority>${url.priority}</priority>\n`;
       xml += `  </url>\n`;
     });
-    
     xml += `</urlset>`;
+
     return { xml, count: urls.length, metrics };
   } catch (err: any) {
     console.error("[SITEMAP] CRITICAL ERROR in generation:", err.message);
@@ -744,7 +885,10 @@ async function generateSitemapXml() {
 }
 
 function generateRobotsTxt() {
-  return `User-agent: *\nAllow: /\n\nSitemap: https://www.amaanestate.com/sitemap.xml\n`;
+  return `User-agent: *
+Allow: /
+
+Sitemap: https://www.amaanestate.com/sitemap.xml`;
 }
 
 
@@ -1306,13 +1450,77 @@ async function startServer() {
   }
 
   // XML Sitemap Endpoint
-  app.get("/sitemap.xml", async (req, res) => {
+  app.get("/sitemap.xml", (req, res) => {
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    const sitemaps = [
+      'sitemap-pages.xml',
+      'sitemap-reviews.xml',
+      'sitemap-software.xml',
+      'sitemap-tech-gear.xml',
+      'sitemap-news.xml'
+    ];
+    sitemaps.forEach(sm => {
+      xml += `  <sitemap>\n`;
+      xml += `    <loc>https://www.amaanestate.com/${sm}</loc>\n`;
+      xml += `  </sitemap>\n`;
+    });
+    xml += `</sitemapindex>`;
+    res.header("Content-Type", "application/xml");
+    res.send(xml);
+  });
+
+  app.get("/sitemap-pages.xml", async (req, res) => {
     try {
-      const { xml } = await generateSitemapXml();
+      const xml = await generatePagesSitemap();
       res.header("Content-Type", "application/xml");
       res.send(xml);
     } catch (err: any) {
-      console.error("[SEO SERVER] Sitemap generation error:", err.message);
+      console.error("[SEO SERVER] Pages sitemap error:", err.message);
+      res.status(500).send("Internal Server Error: " + err.message);
+    }
+  });
+
+  app.get("/sitemap-reviews.xml", async (req, res) => {
+    try {
+      const xml = await generateReviewsSitemap();
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err: any) {
+      console.error("[SEO SERVER] Reviews sitemap error:", err.message);
+      res.status(500).send("Internal Server Error: " + err.message);
+    }
+  });
+
+  app.get("/sitemap-software.xml", async (req, res) => {
+    try {
+      const xml = await generateSoftwareSitemap();
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err: any) {
+      console.error("[SEO SERVER] Software sitemap error:", err.message);
+      res.status(500).send("Internal Server Error: " + err.message);
+    }
+  });
+
+  app.get("/sitemap-tech-gear.xml", async (req, res) => {
+    try {
+      const xml = await generateTechGearSitemap();
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err: any) {
+      console.error("[SEO SERVER] Tech gear sitemap error:", err.message);
+      res.status(500).send("Internal Server Error: " + err.message);
+    }
+  });
+
+  app.get("/sitemap-news.xml", async (req, res) => {
+    try {
+      const xml = await generateNewsSitemap();
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err: any) {
+      console.error("[SEO SERVER] News sitemap error:", err.message);
       res.status(500).send("Internal Server Error: " + err.message);
     }
   });

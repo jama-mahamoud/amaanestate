@@ -101,6 +101,8 @@ export default function App() {
                 {/* Reviews & Monetization Hub */}
                 <Route path="reviews" element={<DealsPage />} />
                 <Route path="reviews/:slug" element={<ProductDetailsPage />} />
+                <Route path="software/:slug" element={<ProductDetailsPage />} />
+                <Route path="tech-gear/:slug" element={<ProductDetailsPage />} />
                 <Route path="deals" element={<DealsPage />} />
                 <Route path="deals-and-offers" element={<DealsPage />} />
                 <Route path="product/:id" element={<ProductDetailsPage />} />
