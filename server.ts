@@ -110,8 +110,8 @@ app.use((req, res, next) => {
 // Vercel Internal URL Rewrite Adaptor Middleware
 // Intercepts requests rewritten under Vercel serverless environment mapping them back to dynamic semantic Express routes.
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/index') && req.query.path) {
-    const p = req.query.path as string;
+  if (req.query.path && typeof req.query.path === "string") {
+    const p = req.query.path;
     const id = req.query.id as string;
     
     console.log(`[VERCEL REWRITE REGISTRY] Intercepted path: ${req.path}, query path: ${p}, id: ${id}`);
@@ -1534,6 +1534,21 @@ async function startServer() {
       console.error("[SEO SERVER] Metrics fetch error:", err.message);
       res.status(500).json({ error: err.message });
     }
+  });
+
+  // Diagnostic Endpoint
+  app.get("/api/diagnose", (req, res) => {
+    res.json({
+      path: req.path,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      query: req.query,
+      headers: req.headers,
+      env: {
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL
+      }
+    });
   });
 
   // robots.txt Endpoint
