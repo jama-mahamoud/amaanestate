@@ -544,7 +544,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const t = (key: string, fallback?: string) => {
     if (!key) return '';
-    const currentLangDict = translations[language] as Record<string, string>;
+    const currentLangDict = (translations[language] || translations['en'] || {}) as Record<string, string>;
     
     // 1. Direct or nested key match (e.g., "common.home" or legacy verbatim "Home")
     if (currentLangDict[key]) {

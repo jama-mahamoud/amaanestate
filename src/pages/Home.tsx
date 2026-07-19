@@ -59,16 +59,24 @@ const getCleanCategoryLabel = (category?: string | string[], type?: string | str
 
 // Skeleton loader for an elegant, non-shifting First Contentful Paint
 function HomeSkeleton() {
+  const sections = [
+    { title: 'Featured Reviews', desc: 'Our latest comprehensive product assessments.' },
+    { title: 'Software & Tools', desc: 'Premium applications and enterprise tools.' },
+    { title: 'Tech Gear', desc: 'High-end hardware and technical equipment.' }
+  ];
+
   return (
     <div className="space-y-16 animate-pulse">
-      {[1, 2, 3].map((sectionIndex) => (
-        <section key={sectionIndex}>
+      {sections.map((sec, idx) => (
+        <section key={idx}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <div className="h-6 w-48 bg-white/5 rounded-md mb-2" />
-              <div className="h-4 w-64 bg-white/5 rounded-md" />
+              <h2 className="text-xl md:text-2xl font-semibold text-white">{sec.title}</h2>
+              <p className="text-sm text-neutral-400 mt-1">{sec.desc}</p>
             </div>
-            <div className="h-4 w-16 bg-white/5 rounded-md" />
+            <div className="text-sm font-medium text-[#C5A059] opacity-50">
+              View All
+            </div>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((cardIndex) => (

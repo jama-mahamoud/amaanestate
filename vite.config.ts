@@ -49,33 +49,6 @@ export default defineConfig(({mode}) => {
       minify: 'esbuild',
       cssCodeSplit: true,
       sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('firebase') || id.includes('@firebase')) {
-                return 'vendor-firebase';
-              }
-              if (id.includes('tiptap') || id.includes('@tiptap') || id.includes('lowlight') || id.includes('prosemirror')) {
-                return 'vendor-editor';
-              }
-              if (id.includes('leaflet') || id.includes('react-leaflet')) {
-                return 'vendor-maps';
-              }
-              if (id.includes('recharts') || id.includes('d3')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('framer-motion') || id.includes('motion')) {
-                return 'vendor-motion';
-              }
-              if (id.includes('jspdf')) {
-                return 'vendor-pdf';
-              }
-              return 'vendor-lib';
-            }
-          }
-        }
-      },
       chunkSizeWarningLimit: 1200
     }
   };
