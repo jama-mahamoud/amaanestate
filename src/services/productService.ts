@@ -40,6 +40,10 @@ export interface UnifiedProduct {
   bestFor?: string;
   alternativeProducts?: string[];
   officialWebsite?: string;
+  introduction?: string;
+  whatIsIt?: string;
+  finalVerdict?: string;
+  updatedAt?: string;
 
   // New Upgraded Tech Gear Specific Fields
   productType?: string;
@@ -154,12 +158,18 @@ export const productService = {
           pros: r.pros || ['Highly verified security', 'Excellent custom options', 'Premium publisher interface'],
           cons: r.cons || ['Requires modern network setup', 'Premium pricing tiers'],
           affiliateUrl: r.affiliateUrl || '#',
+          officialWebsite: r.affiliateUrl || '#',
           slug: r.slug,
           faqs: r.faqs?.map(f => ({ question: f.question, answer: f.answer })) || [],
-          buyingAdvice: r.bestFor || 'Highly recommended for enterprise pipelines, tech-focused organizations, and professional teams looking for integrated utility.',
-          editorialRecommendation: r.finalVerdict || 'A highly recommended solution showing absolute market leadership in technical audit metrics.',
-          compatibility: ['Cloud Server Core', 'Web Browser Integration', 'Mobile Sync API'],
-          availability: 'In Stock'
+          bestFor: r.bestFor,
+          buyingAdvice: r.bestFor ? `Recommended for ${r.bestFor}` : 'Highly recommended for content creators, technology teams, and professionals.',
+          editorialRecommendation: r.finalVerdict || r.excerpt || 'A highly recommended solution showing absolute market leadership in technical audit metrics.',
+          introduction: r.introduction,
+          whatIsIt: r.whatIsIt,
+          finalVerdict: r.finalVerdict,
+          updatedAt: r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'July 2026',
+          compatibility: ['Web Browser', 'Desktop App', 'Mobile App'],
+          availability: 'Available'
         });
       });
 
@@ -345,6 +355,16 @@ export const productService = {
 
   async getUnifiedProductById(id: string): Promise<UnifiedProduct | null> {
     const all = await this.getUnifiedProducts();
-    return all.find(p => p.id === id || p.slug === id) || null;
+    const cleanId = id.toLowerCase().trim();
+    return all.find(p => 
+      p.id === id || 
+      p.slug === id || 
+      p.sourceId === id ||
+      p.id.toLowerCase() === cleanId ||
+      (p.slug && p.slug.toLowerCase() === cleanId) ||
+      p.id === `rev-${id}` ||
+      p.id === `sw-${id}` ||
+      p.id === `tg-${id}`
+    ) || null;
   }
 };
