@@ -44,6 +44,7 @@ export interface UnifiedProduct {
   whatIsIt?: string;
   finalVerdict?: string;
   updatedAt?: string;
+  ctaButtons?: { text: string; url: string; style?: string }[];
 
   // New Upgraded Tech Gear Specific Fields
   productType?: string;
@@ -169,7 +170,14 @@ export const productService = {
           finalVerdict: r.finalVerdict,
           updatedAt: r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'July 2026',
           compatibility: ['Web Browser', 'Desktop App', 'Mobile App'],
-          availability: 'Available'
+          availability: 'Available',
+          ctaButtons: r.ctaButtons && r.ctaButtons.length > 0 
+            ? r.ctaButtons.map(b => ({ text: b.text, url: b.url, style: b.style }))
+            : r.affiliateNetworks && r.affiliateNetworks.length > 0
+            ? r.affiliateNetworks.map(an => ({ text: an.name, url: an.url, style: an.style }))
+            : r.affiliateUrl 
+            ? [{ text: r.ctaButtonText || 'Visit Official Website', url: r.affiliateUrl, style: 'solid-blue' }]
+            : []
         });
       });
 

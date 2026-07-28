@@ -195,7 +195,7 @@ export interface EditorialReview {
   ogImage?: string;
 
   // Affiliate & Monitization Extensions
-  affiliateNetworks?: { id: string; network: string; name: string; url: string; price?: string; discountPrice?: string; isPrimary?: boolean }[];
+  affiliateNetworks?: { id: string; network: string; name: string; url: string; price?: string; discountPrice?: string; isPrimary?: boolean; style?: string }[];
   couponCode?: string;
   couponDiscount?: string;
   couponExpiry?: string;

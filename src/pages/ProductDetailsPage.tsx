@@ -199,15 +199,35 @@ export default function ProductDetailsPage() {
               </p>
 
               {/* Main Call To Action */}
-              <div className="pt-2">
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm py-3.5 px-8 rounded-xl transition-all shadow-lg shadow-blue-600/25 active:scale-95 cursor-pointer"
-                >
-                  <Globe size={16} /> Visit Official Website <ExternalLink size={14} />
-                </a>
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                {product.ctaButtons && product.ctaButtons.length > 0 ? (
+                  product.ctaButtons.map((btn, idx) => (
+                    <a
+                      key={idx}
+                      href={btn.url || websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-2.5 font-semibold text-xs sm:text-sm py-3.5 px-6 sm:px-8 rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer ${
+                        btn.style === 'outline' || btn.style === 'minimal-border'
+                          ? 'border border-white/20 hover:border-white/40 text-white bg-white/5'
+                          : btn.style === 'secondary' || btn.style === 'solid-gold'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-black font-bold shadow-amber-500/20'
+                          : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+                      }`}
+                    >
+                      {btn.text || 'Visit Official Website'} <ExternalLink size={14} />
+                    </a>
+                  ))
+                ) : (
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm py-3.5 px-8 rounded-xl transition-all shadow-lg shadow-blue-600/25 active:scale-95 cursor-pointer"
+                  >
+                    <Globe size={16} /> Visit Official Website <ExternalLink size={14} />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -462,15 +482,37 @@ export default function ProductDetailsPage() {
                 )}
               </div>
 
-              {/* Sidebar Primary Button */}
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
-              >
-                Visit Official Website <ExternalLink size={13} />
-              </a>
+              {/* Sidebar Primary Buttons */}
+              <div className="space-y-2.5">
+                {product.ctaButtons && product.ctaButtons.length > 0 ? (
+                  product.ctaButtons.map((btn, idx) => (
+                    <a
+                      key={idx}
+                      href={btn.url || websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center ${
+                        btn.style === 'outline' || btn.style === 'minimal-border'
+                          ? 'border border-white/20 hover:border-white/40 text-white bg-white/5'
+                          : btn.style === 'secondary' || btn.style === 'solid-gold'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-black font-bold shadow-amber-500/20'
+                          : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+                      }`}
+                    >
+                      {btn.text || 'Visit Official Website'} <ExternalLink size={13} />
+                    </a>
+                  ))
+                ) : (
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
+                  >
+                    Visit Official Website <ExternalLink size={13} />
+                  </a>
+                )}
+              </div>
             </div>
 
           </div>
