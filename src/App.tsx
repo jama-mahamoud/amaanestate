@@ -22,60 +22,87 @@ function PageFallback() {
   );
 }
 
-// Lazy Loaded Base Pages
-const Home = lazy(() => import('./pages/Home'));
-const Agreements = lazy(() => import('./pages/Agreements'));
-const AdminAgreements = lazy(() => import('./pages/admin/AdminAgreements'));
-const PublicVerification = lazy(() => import('./pages/verify/PublicVerification'));
-const About = lazy(() => import('./pages/About'));
-const Contact = lazy(() => import('./pages/Contact'));
-const News = lazy(() => import('./pages/News'));
-const ArticleDetails = lazy(() => import('./pages/ArticleDetails'));
-// Verified Deals & Agents
-const NetworkPage = lazy(() => import('./pages/NetworkPage'));
-const DealsPage = lazy(() => import('./pages/DealsPage'));
-const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
-// const AgentDetails = lazy(() => import('./pages/agents/AgentDetails'));
-// const AgentRegister = lazy(() => import('./pages/agents/AgentRegister'));
+// Helper to handle and retry dynamic imports when they fail (e.g. due to temporary network issues or server restarts)
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  return lazy(async () => {
+    const pageHasAlreadyBeenReloaded = window.localStorage.getItem('page-has-been-reloaded-for-chunk');
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.warn("Dynamic import failed. Retrying once after 1.5 seconds...", error);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        return await componentImport();
+      } catch (retryError) {
+        console.error("Dynamic import retry failed. Attempting window reload fallback.", retryError);
+        if (!pageHasAlreadyBeenReloaded) {
+          window.localStorage.setItem('page-has-been-reloaded-for-chunk', 'true');
+          window.location.reload();
+          return new Promise(() => {}); // hang forever while reloading
+        }
+        window.localStorage.removeItem('page-has-been-reloaded-for-chunk');
+        throw retryError;
+      }
+    }
+  });
+}
 
-const SoftwareToolsPage = lazy(() => import('./pages/SoftwareToolsPage'));
-const TechGearPage = lazy(() => import('./pages/TechGearPage'));
+// Lazy Loaded Base Pages
+const Home = lazyWithRetry(() => import('./pages/Home'));
+const Agreements = lazyWithRetry(() => import('./pages/Agreements'));
+const AdminAgreements = lazyWithRetry(() => import('./pages/admin/AdminAgreements'));
+const PublicVerification = lazyWithRetry(() => import('./pages/verify/PublicVerification'));
+const About = lazyWithRetry(() => import('./pages/About'));
+const Contact = lazyWithRetry(() => import('./pages/Contact'));
+const News = lazyWithRetry(() => import('./pages/News'));
+const ArticleDetails = lazyWithRetry(() => import('./pages/ArticleDetails'));
+// Verified Deals & Agents
+const NetworkPage = lazyWithRetry(() => import('./pages/NetworkPage'));
+const DealsPage = lazyWithRetry(() => import('./pages/DealsPage'));
+const ProductDetailsPage = lazyWithRetry(() => import('./pages/ProductDetailsPage'));
+// const AgentDetails = lazyWithRetry(() => import('./pages/agents/AgentDetails'));
+// const AgentRegister = lazyWithRetry(() => import('./pages/agents/AgentRegister'));
+
+const SoftwareToolsPage = lazyWithRetry(() => import('./pages/SoftwareToolsPage'));
+const TechGearPage = lazyWithRetry(() => import('./pages/TechGearPage'));
 
 // Experts Module
-// const ExpertsPage = lazy(() => import('./pages/experts/ExpertsPage'));
-// const ExpertDetailsPage = lazy(() => import('./pages/experts/ExpertDetailsPage'));
-// const DashboardExperts = lazy(() => import('./pages/dashboard/DashboardExperts'));
+// const ExpertsPage = lazyWithRetry(() => import('./pages/experts/ExpertsPage'));
+// const ExpertDetailsPage = lazyWithRetry(() => import('./pages/experts/ExpertDetailsPage'));
+// const DashboardExperts = lazyWithRetry(() => import('./pages/dashboard/DashboardExperts'));
 
 // Product Custom Editors
-// const PropertyListingFormPage = lazy(() => import('./pages/PropertyListingFormPage'));
+// const PropertyListingFormPage = lazyWithRetry(() => import('./pages/PropertyListingFormPage'));
 
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService'));
-const Disclaimer = lazy(() => import('./pages/Disclaimer'));
+const PrivacyPolicy = lazyWithRetry(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazyWithRetry(() => import('./pages/TermsOfService'));
+const Disclaimer = lazyWithRetry(() => import('./pages/Disclaimer'));
 
 // Lazy Loaded Auth Pages
-const AuthGateway = lazy(() => import('./pages/AuthGateway'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const AuthGateway = lazyWithRetry(() => import('./pages/AuthGateway'));
+const ForgotPassword = lazyWithRetry(() => import('./pages/ForgotPassword'));
 
 // Lazy Loaded Dashboard
-const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout'));
-const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'));
-const ModerationCenter = lazy(() => import('./pages/dashboard/ModerationCenter'));
-const DashboardUsers = lazy(() => import('./pages/dashboard/DashboardUsers'));
-const DashboardSettings = lazy(() => import('./pages/dashboard/DashboardSettings'));
-const DashboardArticles = lazy(() => import('./pages/dashboard/DashboardArticles'));
-const CreateArticle = lazy(() => import('./pages/dashboard/CreateArticle'));
-const EditArticle = lazy(() => import('./pages/dashboard/EditArticle'));
-const DashboardReviewCms = lazy(() => import('./pages/dashboard/DashboardReviewCms'));
-const DashboardDeals = lazy(() => import('./pages/dashboard/DashboardDeals'));
+const DashboardLayout = lazyWithRetry(() => import('./pages/dashboard/DashboardLayout'));
+const DashboardHome = lazyWithRetry(() => import('./pages/dashboard/DashboardHome'));
+const ModerationCenter = lazyWithRetry(() => import('./pages/dashboard/ModerationCenter'));
+const DashboardUsers = lazyWithRetry(() => import('./pages/dashboard/DashboardUsers'));
+const DashboardSettings = lazyWithRetry(() => import('./pages/dashboard/DashboardSettings'));
+const DashboardArticles = lazyWithRetry(() => import('./pages/dashboard/DashboardArticles'));
+const CreateArticle = lazyWithRetry(() => import('./pages/dashboard/CreateArticle'));
+const EditArticle = lazyWithRetry(() => import('./pages/dashboard/EditArticle'));
+const DashboardReviewCms = lazyWithRetry(() => import('./pages/dashboard/DashboardReviewCms'));
+const DashboardDeals = lazyWithRetry(() => import('./pages/dashboard/DashboardDeals'));
 
 // Additional Dashboard Sub-Modules
-// const DashboardFavorites = lazy(() => import('./pages/dashboard/DashboardFavorites'));
-const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
-const DashboardSoftwareTools = lazy(() => import('./pages/dashboard/DashboardSoftwareTools'));
-const DashboardTechGear = lazy(() => import('./pages/dashboard/DashboardTechGear'));
-const DashboardSiteManagement = lazy(() => import('./pages/dashboard/DashboardSiteManagement'));
-const DashboardAnalytics = lazy(() => import('./pages/dashboard/DashboardAnalytics'));
+// const DashboardFavorites = lazyWithRetry(() => import('./pages/dashboard/DashboardFavorites'));
+const DashboardProfile = lazyWithRetry(() => import('./pages/dashboard/DashboardProfile'));
+const DashboardSoftwareTools = lazyWithRetry(() => import('./pages/dashboard/DashboardSoftwareTools'));
+const DashboardTechGear = lazyWithRetry(() => import('./pages/dashboard/DashboardTechGear'));
+const DashboardSiteManagement = lazyWithRetry(() => import('./pages/dashboard/DashboardSiteManagement'));
+const DashboardAnalytics = lazyWithRetry(() => import('./pages/dashboard/DashboardAnalytics'));
 
 export default function App() {
   return (

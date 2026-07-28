@@ -1048,6 +1048,86 @@ ${contextData.articlesStr}
   }
 });
 
+// AI Writer Endpoint for Review Editor
+app.post("/api/generate-review-content", async (req, res) => {
+  const { action, productTitle, brandName, category, currentText, prompt } = req.body;
+  
+  if (!action) {
+    return res.status(400).json({ error: "Action is required" });
+  }
+
+  let genAIClient: any;
+  try {
+    genAIClient = getGeminiClient();
+  } catch (err: any) {
+    console.error("[PROD] Gemini client error:", err.message);
+    return res.status(500).json({ error: "Gemini AI service unavailable" });
+  }
+
+  try {
+    let systemInstruction = "You are an elite editorial tech reviewer and SaaS analyst for Amaan Reviews CMS (similar to TechRadar, PCMag, CNET, and G2). Write engaging, objective, authoritative, and concise copy.";
+    let userPrompt = "";
+
+    const productNameStr = productTitle ? `${productTitle}${brandName ? ` by ${brandName}` : ''}` : "this product";
+    const categoryStr = category ? ` in the ${category} category` : "";
+
+    switch (action) {
+      case "generate-introduction":
+        userPrompt = `Write a compelling 2-3 paragraph hook and introduction for a professional review of ${productNameStr}${categoryStr}. Highlight why it matters today and what sets it apart.`;
+        break;
+      case "generate-whatIsIt":
+        userPrompt = `Write a detailed 3-4 paragraph Product Overview explaining what ${productNameStr}${categoryStr} is, its core architecture, value proposition, and primary workflow.`;
+        break;
+      case "generate-pros":
+        systemInstruction += " Output strictly 4 to 6 concise bullet points, ONE bullet per line, with NO leading bullet characters, hyphens, or numbers.";
+        userPrompt = `Generate top 5 distinct advantages and pros of using ${productNameStr}. Keep each item on its own new line.`;
+        break;
+      case "generate-cons":
+        systemInstruction += " Output strictly 3 to 5 concise bullet points, ONE bullet per line, with NO leading bullet characters, hyphens, or numbers.";
+        userPrompt = `Generate 3 to 4 realistic limitations or cons for ${productNameStr}. Keep each item on its own new line.`;
+        break;
+      case "generate-keyFeatures":
+        systemInstruction += " Output strictly 5 to 7 key feature highlights, ONE per line, with NO leading bullet characters or numbers.";
+        userPrompt = `List the 6 most important technical or functional key features of ${productNameStr}. One per line.`;
+        break;
+      case "generate-finalVerdict":
+        userPrompt = `Write a definitive, balanced Editorial Final Verdict for ${productNameStr}${categoryStr}. Give a summary rating recommendation, who should buy it, and who should pass.`;
+        break;
+      case "improve":
+        userPrompt = `Improve the writing quality, tone, and clarity of the following text while preserving all facts:\n\n${currentText || prompt}`;
+        break;
+      case "rewrite":
+        userPrompt = `Rewrite the following review copy in a highly professional, enterprise-grade editorial tone (like Wall Street Journal / G2 enterprise reports):\n\n${currentText || prompt}`;
+        break;
+      case "expand":
+        userPrompt = `Expand the following text with additional relevant details, technical depth, and editorial insights:\n\n${currentText || prompt}`;
+        break;
+      case "shorten":
+        userPrompt = `Shorten the following text into a crisp, highly punchy version that preserves the essential takeaways:\n\n${currentText || prompt}`;
+        break;
+      default:
+        userPrompt = prompt || `Provide editorial insights on ${productNameStr}`;
+        break;
+    }
+
+    const model = genAIClient.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: systemInstruction }]
+      }
+    });
+
+    const result = await model.generateContent(userPrompt);
+    const responseText = result.response.text();
+
+    res.json({ result: responseText });
+  } catch (error: any) {
+    console.error("[PROD] Review AI generation error:", error);
+    res.status(500).json({ error: "Failed to generate AI content" });
+  }
+});
+
 app.post("/api/contact", async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
   if (!name || !email || !message) {

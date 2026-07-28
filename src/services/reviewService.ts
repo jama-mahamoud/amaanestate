@@ -187,9 +187,26 @@ export interface EditorialReview {
   // SEO variables
   seoTitle: string;
   metaDescription: string;
+  focusKeyword?: string;
+  canonicalUrl?: string;
+  imageAlts?: Record<string, string>;
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+
+  // Affiliate & Monitization Extensions
+  affiliateNetworks?: { id: string; network: string; name: string; url: string; price?: string; discountPrice?: string; isPrimary?: boolean }[];
+  couponCode?: string;
+  couponDiscount?: string;
+  couponExpiry?: string;
+  discountLabel?: string; // e.g. "17% OFF", "Best Value", "Editor's Choice", "Limited Offer"
+
+  // Publishing & Revision History Extensions
+  scheduledPublishDate?: string;
+  scheduledPublishTime?: string;
+  timezone?: string;
+  autoUpdateDays?: number;
+  revisionHistory?: { id: string; timestamp: string; note: string; author?: string; snapshot: Partial<EditorialReview> }[];
 
   // Moderation Status Workflow:
   // 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | 'published'
