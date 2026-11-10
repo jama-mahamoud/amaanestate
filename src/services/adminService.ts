@@ -41,11 +41,12 @@ export async function getCurrentAdminProfile(): Promise<Profile | null> {
     if (error || !data) return null;
     const roleObj = data.roles || null;
     const roleName = roleObj?.name;
-    if (!['admin', 'editor', 'author'].includes(roleName)) {
+    if (!['admin', 'editor'].includes(roleName)) {
       return null;
     }
     return {
       ...data,
+      email: user.email || data.email,
       role: roleObj,
     } as Profile;
   }
@@ -59,7 +60,7 @@ export async function getCurrentAdminProfile(): Promise<Profile | null> {
 
 export async function signInAdmin(email: string, password: string): Promise<AdminAuthResult> {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error || !data.user) {
       return { success: false, error: error?.message || 'Invalid credentials.' };
     }
@@ -69,7 +70,7 @@ export async function signInAdmin(email: string, password: string): Promise<Admi
       await supabase.auth.signOut();
       return {
         success: false,
-        error: 'Your account does not have editorial or administrator permissions.',
+        error: 'Access denied. Only authorized admin or editor accounts can open this workspace.',
       };
     }
     return { success: true, profile };
@@ -136,9 +137,10 @@ export async function getAdminArticles(): Promise<Article[]> {
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  const [articles, categories, subscribers, messages] = await Promise.all([
+  const [articles, categories, authors, subscribers, messages] = await Promise.all([
     getAdminArticles(),
     getAdminCategories(),
+    getAdminAuthors(),
     getSubscribers(),
     getContactMessages(),
   ]);
@@ -149,7 +151,9 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     draftArticles: articles.filter((a) => a.status === 'draft').length,
     scheduledArticles: articles.filter((a) => a.status === 'scheduled').length,
     totalCategories: categories.length,
+    totalAuthors: authors.length,
     totalSubscribers: subscribers.filter((s) => s.status === 'subscribed').length,
+    totalViews: articles.reduce((sum, a) => sum + (Number(a.view_count) || 0), 0),
     unreadMessages: messages.filter((m) => m.status === 'unread').length,
     totalMessages: messages.length,
   };
@@ -370,6 +374,26 @@ export async function upsertAuthor(payload: Partial<Author> & { name: string; sl
   return { success: true };
 }
 
+export async function deleteAuthor(id: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('authors').delete().eq('id', id);
+    if (error) {
+      return {
+        success: false,
+        error: error.code === '23503' ? 'Cannot delete an author assigned to existing articles.' : error.message,
+      };
+    }
+    return { success: true };
+  }
+  const db = loadDemoDb();
+  if (db.articles.some((a) => a.author_id === id)) {
+    return { success: false, error: 'Cannot delete an author assigned to existing articles.' };
+  }
+  db.authors = db.authors.filter((a) => a.id !== id);
+  saveDemoDb(db);
+  return { success: true };
+}
+
 export async function getTags(): Promise<Tag[]> {
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from('tags').select('*').order('name', { ascending: true });
@@ -407,6 +431,42 @@ export async function createTag(name: string): Promise<Tag | null> {
   return created;
 }
 
+export async function updateTag(id: string, name: string): Promise<{ success: boolean; error?: string }> {
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  if (!slug) return { success: false, error: 'Tag name is required.' };
+
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('tags').update({ name: name.trim(), slug }).eq('id', id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+
+  const db = loadDemoDb();
+  const item = db.tags.find((t) => t.id === id);
+  if (item) {
+    item.name = name.trim();
+    item.slug = slug;
+    saveDemoDb(db);
+  }
+  return { success: true };
+}
+
+export async function deleteTag(id: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('tags').delete().eq('id', id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+  const db = loadDemoDb();
+  db.tags = db.tags.filter((t) => t.id !== id);
+  saveDemoDb(db);
+  return { success: true };
+}
+
 export async function getMediaLibrary(): Promise<MediaItem[]> {
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from('media').select('*').order('created_at', { ascending: false });
@@ -416,7 +476,19 @@ export async function getMediaLibrary(): Promise<MediaItem[]> {
   return [...loadDemoDb().media];
 }
 
-export async function uploadMediaFile(file: File, altText = ''): Promise<{ success: boolean; item?: MediaItem; error?: string }> {
+export async function uploadMediaFile(
+  file: File,
+  altText = '',
+  customTitle = ''
+): Promise<{ success: boolean; item?: MediaItem; error?: string }> {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+  if (!allowedTypes.includes(file.type)) {
+    return { success: false, error: 'Supported image formats: JPG, PNG, WebP, or AVIF.' };
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return { success: false, error: 'Image file size must be 5 MB or less.' };
+  }
+
   if (isSupabaseConfigured && supabase) {
     const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storagePath = `articles/${Date.now()}-${cleanName}`;
@@ -440,12 +512,12 @@ export async function uploadMediaFile(file: File, altText = ''): Promise<{ succe
     const { data: mediaRow, error: dbError } = await supabase
       .from('media')
       .insert({
-        file_name: file.name,
+        file_name: customTitle.trim() || file.name,
         storage_path: storagePath,
         public_url: publicUrl,
         mime_type: file.type || 'image/jpeg',
         size_bytes: file.size,
-        alt_text: altText,
+        alt_text: altText.trim(),
         uploaded_by: user?.id || null,
       })
       .select()
@@ -458,23 +530,82 @@ export async function uploadMediaFile(file: File, altText = ''): Promise<{ succe
     return { success: true, item: mediaRow as MediaItem };
   }
 
-  // Demonstration local file reader fallback
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Failed to read image file'));
-    reader.readAsDataURL(file);
-  });
+  return {
+    success: false,
+    error: 'Supabase environment variables are required to upload images to editorial-media storage.',
+  };
+}
+
+export async function registerExternalMediaUrl(payload: {
+  url: string;
+  title?: string;
+  altText?: string;
+  caption?: string;
+}): Promise<{ success: boolean; item?: MediaItem; error?: string }> {
+  const trimmedUrl = payload.url.trim();
+  if (/^data:/i.test(trimmedUrl)) {
+    return { success: false, error: 'Base64 data URLs are not allowed. Use a direct HTTPS image URL or file upload.' };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmedUrl);
+  } catch {
+    return { success: false, error: 'Please enter a valid http:// or https:// image URL.' };
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return { success: false, error: 'Image URL must use http:// or https://.' };
+  }
+
+  const inferredName =
+    payload.title?.trim() ||
+    decodeURIComponent(parsed.pathname.split('/').filter(Boolean).pop() || 'external-image');
+  const combinedAlt = [payload.altText?.trim(), payload.caption?.trim()].filter(Boolean).join(' — ');
+  const ext = parsed.pathname.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    png: 'image/png',
+    webp: 'image/webp',
+    avif: 'image/avif',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+  };
+  const mimeType = (ext && mimeMap[ext]) || 'image/jpeg';
+
+  if (isSupabaseConfigured && supabase) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const uniquePath = `external/${Date.now()}-${inferredName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { data: mediaRow, error } = await supabase
+      .from('media')
+      .insert({
+        file_name: inferredName,
+        storage_path: uniquePath,
+        public_url: trimmedUrl,
+        mime_type: mimeType,
+        size_bytes: 0,
+        alt_text: combinedAlt,
+        uploaded_by: user?.id || null,
+      })
+      .select()
+      .single();
+
+    if (error || !mediaRow) {
+      return { success: false, error: error?.message || 'Failed to save external image URL.' };
+    }
+    return { success: true, item: mediaRow as MediaItem };
+  }
 
   const db = loadDemoDb();
   const created: MediaItem = {
     id: `med-${Date.now()}`,
-    file_name: file.name,
-    storage_path: `demo/${Date.now()}-${file.name}`,
-    public_url: dataUrl,
-    mime_type: file.type || 'image/jpeg',
-    size_bytes: file.size,
-    alt_text: altText,
+    file_name: inferredName,
+    storage_path: `external/${Date.now()}-${inferredName}`,
+    public_url: trimmedUrl,
+    mime_type: mimeType,
+    size_bytes: 0,
+    alt_text: combinedAlt,
     created_at: new Date().toISOString(),
   };
   db.media.unshift(created);
@@ -482,9 +613,29 @@ export async function uploadMediaFile(file: File, altText = ''): Promise<{ succe
   return { success: true, item: created };
 }
 
+export async function updateMediaItem(
+  id: string,
+  updates: { file_name?: string; alt_text?: string }
+): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('media').update(updates).eq('id', id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+  const db = loadDemoDb();
+  const item = db.media.find((m) => m.id === id);
+  if (item) {
+    Object.assign(item, updates);
+    saveDemoDb(db);
+  }
+  return { success: true };
+}
+
 export async function deleteMediaItem(item: MediaItem): Promise<boolean> {
   if (isSupabaseConfigured && supabase) {
-    await supabase.storage.from('editorial-media').remove([item.storage_path]);
+    if (!item.storage_path.startsWith('external/') && !item.storage_path.startsWith('demo/')) {
+      await supabase.storage.from('editorial-media').remove([item.storage_path]);
+    }
     const { error } = await supabase.from('media').delete().eq('id', item.id);
     return !error;
   }
@@ -610,4 +761,45 @@ export async function updateUserRole(profileId: string, roleId: string): Promise
     saveDemoDb(db);
   }
   return { success: true };
+}
+
+export async function updateOwnProfile(updates: {
+  full_name: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured && supabase) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Not authenticated.' };
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: updates.full_name.trim(),
+        avatar_url: updates.avatar_url || null,
+        bio: updates.bio || null,
+      })
+      .eq('id', user.id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+  const db = loadDemoDb();
+  if (db.profiles[0]) {
+    db.profiles[0] = { ...db.profiles[0], ...updates };
+    saveDemoDb(db);
+  }
+  return { success: true };
+}
+
+export async function updateOwnPassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+  if (newPassword.length < 8) {
+    return { success: false, error: 'Password must be at least 8 characters.' };
+  }
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+  return { success: false, error: 'Password changes require a live Supabase session.' };
 }

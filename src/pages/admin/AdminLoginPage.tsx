@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { enterDemoAdminMode, getCurrentAdminProfile, signInAdmin } from '../../services/adminService';
 import { useSEO } from '../../hooks/useSEO';
 
@@ -9,7 +9,9 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useSEO({
     title: 'Editorial Admin Sign In',
@@ -26,12 +28,37 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setNotice(null);
     const res = await signInAdmin(email, password);
     setLoading(false);
     if (res.success) {
       navigate('/admin', { replace: true });
     } else {
       setError(res.error || 'Authentication failed.');
+    }
+  };
+
+  const handlePasswordRecovery = async () => {
+    const targetEmail = email.trim();
+    if (!targetEmail) {
+      setError('Enter your administrator email address above first.');
+      return;
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Supabase is not configured in this environment.');
+      return;
+    }
+    setSendingReset(true);
+    setError(null);
+    setNotice(null);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+      redirectTo: `${window.location.origin}/admin?section=account`,
+    });
+    setSendingReset(false);
+    if (resetError) {
+      setError(resetError.message);
+    } else {
+      setNotice(`If ${targetEmail} matches an account, a Supabase password recovery link has been sent.`);
     }
   };
 
@@ -51,7 +78,7 @@ export default function AdminLoginPage() {
             Editorial Administration Sign In
           </h1>
           <p className="text-xs text-[#5C5A55] leading-relaxed">
-            Authorized administrators, editors, and authors only. Protected by Supabase Authentication &amp; Row Level Security.
+            Authorized AMAAN ESTATE administrators and editors only. Protected by Supabase Authentication &amp; Row Level Security.
           </p>
         </div>
 
@@ -64,17 +91,30 @@ export default function AdminLoginPage() {
               id="admin-email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="editor@amaanestate.com"
+              placeholder="jaamacdeeq11@gmail.com"
               className="w-full h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="admin-password" className="text-xs font-semibold uppercase tracking-wider text-[#5C5A55] block">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="admin-password" className="text-xs font-semibold uppercase tracking-wider text-[#5C5A55] block">
+                Password
+              </label>
+              {isSupabaseConfigured && (
+                <button
+                  type="button"
+                  disabled={sendingReset}
+                  onClick={handlePasswordRecovery}
+                  className="text-xs font-semibold text-[#1E3A5F] hover:underline disabled:opacity-50 cursor-pointer"
+                >
+                  {sendingReset ? 'Sending link...' : 'Forgot password?'}
+                </button>
+              )}
+            </div>
             <input
               id="admin-password"
               type="password"
@@ -89,6 +129,12 @@ export default function AdminLoginPage() {
           {error && (
             <div role="alert" className="p-3 rounded bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#991B1B]">
               {error}
+            </div>
+          )}
+
+          {notice && (
+            <div role="status" className="p-3 rounded bg-[#F0FDF4] border border-[#BBF7D0] text-xs text-[#14532D]">
+              {notice}
             </div>
           )}
 

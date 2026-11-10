@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, Check, Copy, Share2 } from 'lucide-react';
 import { Article } from '../types';
 import { getPublishedArticleBySlug, getRelatedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { useSEO } from '../hooks/useSEO';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
+import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
 import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
 import { toast } from 'sonner';
@@ -284,9 +284,7 @@ export default function ArticleDetailsPage() {
 
         {/* Main Reading Column */}
         <div className="max-w-2xl mx-auto space-y-8">
-          <div className="prose prose-stone prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:text-[#141413] prose-p:text-[#292825] prose-p:leading-[1.8] prose-a:text-[#1E3A5F] prose-blockquote:border-[#D6CEBE] prose-blockquote:font-serif prose-blockquote:italic prose-blockquote:text-[#4A4843]">
-            <ReactMarkdown>{article.content}</ReactMarkdown>
-          </div>
+          <EditorialMarkdown content={article.content} />
 
           {/* Image Gallery if present */}
           {article.gallery_images && article.gallery_images.length > 0 && (

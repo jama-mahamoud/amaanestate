@@ -148,7 +148,9 @@ export interface DashboardMetrics {
   draftArticles: number;
   scheduledArticles: number;
   totalCategories: number;
+  totalAuthors: number;
   totalSubscribers: number;
+  totalViews: number;
   unreadMessages: number;
   totalMessages: number;
 }

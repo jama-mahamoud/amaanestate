@@ -1,9 +1,10 @@
-import React, { Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/layout/ScrollToTop';
+import { supabase } from './lib/supabase';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
@@ -27,6 +28,19 @@ function PageFallback() {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const subscription = supabase?.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/admin?section=account', { replace: true });
+      }
+    });
+    return () => {
+      subscription?.data.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   return (
     <ErrorBoundary>
       <ScrollToTop />
