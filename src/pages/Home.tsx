@@ -1,346 +1,480 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { motion } from 'framer-motion';
 import { 
-  ExternalLink,
-  ChevronRight,
-  Percent
+  Building, MapPin, Search, Sparkles, SlidersHorizontal, 
+  ArrowRight, ShieldCheck, CheckCircle2, Bookmark, Calendar, 
+  User, RefreshCw, Star, Landmark, Users 
 } from 'lucide-react';
-
-import { ProductCard } from '@/components/product/ProductCard';
-
-// Services
-import { productService, UnifiedProduct } from '@/services/productService';
-import { articleService } from '@/services/articleService';
-import { Article } from '@/types';
-
-// Date formatter helper for news
-const formatNewsDate = (dateValue: any) => {
-  if (!dateValue) return 'Recently';
-  let date: Date;
-  if (dateValue && typeof dateValue.toMillis === 'function') {
-    date = new Date(dateValue.toMillis());
-  } else if (dateValue && dateValue.seconds) {
-    date = new Date(dateValue.seconds * 1000);
-  } else if (dateValue instanceof Date) {
-    date = dateValue;
-  } else {
-    const parsed = new Date(dateValue);
-    if (!isNaN(parsed.getTime())) {
-      date = parsed;
-    } else {
-      return 'Recently';
-    }
-  }
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-// Clean Category Label filter for premium editorial aesthetic
-const getCleanCategoryLabel = (category?: string | string[], type?: string | string[]) => {
-  const catStr = Array.isArray(category) 
-    ? category.filter(c => typeof c === 'string').join(' ') 
-    : (typeof category === 'string' ? category : '');
-  const typeStr = Array.isArray(type) 
-    ? type.filter(t => typeof t === 'string').join(' ') 
-    : (typeof type === 'string' ? type : '');
-  const val = (catStr + ' ' + typeStr).toLowerCase().trim();
-  if (!val) return 'News';
-  if (val.includes('software') || val.includes('tool')) {
-    return 'Software & Tools';
-  }
-  if (val.includes('gear') || val.includes('hardware') || val.includes('tech')) {
-    return 'Tech Gear';
-  }
-  if (val.includes('review') || val.includes('assessment') || val.includes('editorial')) {
-    return 'Reviews';
-  }
-  return null;
-};
-
-// Skeleton loader for an elegant, non-shifting First Contentful Paint
-function HomeSkeleton() {
-  const sections = [
-    { title: 'Featured Reviews', desc: 'Our latest comprehensive product assessments.' },
-    { title: 'Software & Tools', desc: 'Premium applications and enterprise tools.' },
-    { title: 'Tech Gear', desc: 'High-end hardware and technical equipment.' }
-  ];
-
-  return (
-    <div className="space-y-16 animate-pulse">
-      {sections.map((sec, idx) => (
-        <section key={idx}>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-white">{sec.title}</h2>
-              <p className="text-sm text-neutral-400 mt-1">{sec.desc}</p>
-            </div>
-            <div className="text-sm font-medium text-[#C5A059] opacity-50">
-              View All
-            </div>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {[1, 2, 3, 4].map((cardIndex) => (
-              <div key={cardIndex} className="bg-[#0c0c11]/80 border border-white/5 rounded-xl overflow-hidden h-[340px] flex flex-col p-4 space-y-4">
-                <div className="aspect-[16/10] bg-white/5 rounded-lg w-full" />
-                <div className="h-4 w-3/4 bg-white/5 rounded" />
-                <div className="h-3 w-1/2 bg-white/5 rounded" />
-                <div className="space-y-2 pt-2 mt-auto">
-                  <div className="h-3 w-full bg-white/5 rounded" />
-                  <div className="h-3 w-5/6 bg-white/5 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
+import { useSEO } from '../hooks/useSEO';
+import { db, handleFirestoreError, OperationType } from '../services/firestore';
+import { searchProperties } from '../services/properties';
+import { getLatestArticles, Article } from '../services/articles';
+import { Property, Agent } from '../types';
+import PropertyCard from '../components/properties/PropertyCard';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import PremiumSelect from '../components/ui/PremiumSelect';
 
 export default function Home() {
   const navigate = useNavigate();
 
-  // Dynamic Data States with Instant localStorage fallback to reduce LCP to < 1s
-  const [products, setProducts] = useState<UnifiedProduct[]>(() => {
-    try {
-      const cached = localStorage.getItem('cache_home_products');
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
+  // Search form fields
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIntent, setSelectedIntent] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+
+  // Firestore retrieved sections
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [latestProperties, setLatestProperties] = useState<Property[]>([]);
+  const [featuredAgents, setFeaturedAgents] = useState<Agent[]>([]);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
+  const [activeLocations, setActiveLocations] = useState<{ neighborhood: string; city: string; count: number }[]>([]);
+  
+  const [loading, setLoading] = useState(true);
+
+  useSEO({
+    title: 'AmaanEstate | Modern Real Estate Marketplace',
+    description: 'The location-centric digital property discovery catalog and directory platform for Jigjiga, the Somali Region, and East Africa.'
   });
-  const [articles, setArticles] = useState<Article[]>(() => {
-    try {
-      const cached = localStorage.getItem('cache_home_articles');
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cachedP = localStorage.getItem('cache_home_products');
-      const cachedA = localStorage.getItem('cache_home_articles');
-      return !(cachedP && cachedA);
-    } catch {
-      return true;
-    }
-  });
+
+  // Handle Search submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate('/properties', {
+      state: {
+        searchQuery,
+        selectedIntent,
+        selectedType
+      }
+    });
+  };
 
   useEffect(() => {
-    let active = true;
-    const fetchHomeData = async () => {
+    async function loadHomepageData() {
+      setLoading(true);
       try {
-        const [productsData, articlesData] = await Promise.all([
-          productService.getUnifiedProducts(),
-          articleService.getArticles(undefined, undefined, true)
-        ]);
+        // 1. Fetch featured properties
+        const featuredProps = await searchProperties({ featured: true, status: 'available' });
+        setFeaturedProperties(featuredProps.slice(0, 3));
 
-        if (active) {
-          setProducts(productsData);
-          
-          // Sort and format articles securely
-          const sortedArticles = articlesData.sort((a, b) => {
-            const getTime = (val: any) => {
-              if (!val) return 0;
-              if (val && typeof val.toMillis === 'function') return val.toMillis();
-              if (val.seconds) return val.seconds * 1000;
-              if (val instanceof Date) return val.getTime();
-              const parsed = new Date(val);
-              return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
-            };
-            return getTime(b.createdAt) - getTime(a.createdAt);
-          });
-          setArticles(sortedArticles);
+        // 2. Fetch latest properties
+        const allProps = await searchProperties({ status: 'available' });
+        setLatestProperties(allProps.slice(0, 3));
 
-          // Update background cache
-          try {
-            localStorage.setItem('cache_home_products', JSON.stringify(productsData));
-            localStorage.setItem('cache_home_articles', JSON.stringify(sortedArticles));
-          } catch (cacheErr) {
-            console.warn("Failed caching home feed data locally:", cacheErr);
+        // Calculate active locations from real retrieved properties
+        const locationCounts: { [key: string]: { city: string; count: number } } = {};
+        allProps.forEach(prop => {
+          if (prop.location) {
+            const locName = prop.location.neighborhood || prop.location.district || 'General';
+            const city = prop.location.city || 'Jigjiga';
+            if (!locationCounts[locName]) {
+              locationCounts[locName] = { city, count: 0 };
+            }
+            locationCounts[locName].count += 1;
           }
-        }
+        });
+        const computedLocations = Object.entries(locationCounts).map(([neighborhood, info]) => ({
+          neighborhood,
+          city: info.city,
+          count: info.count
+        }));
+        setActiveLocations(computedLocations);
+
+        // 3. Fetch latest articles from preserved collection
+        const articles = await getLatestArticles(3);
+        setLatestArticles(articles);
+
+        // 4. Fetch featured agents from collection
+        const agentsRef = collection(db, 'agents');
+        const agentsSnap = await getDocs(query(agentsRef, limit(3)));
+        const agentsList: Agent[] = agentsSnap.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || 'AmaanEstate Partner',
+            profileImage: data.profileImage || '',
+            phone: data.phone || '[Phone Pending]',
+            email: data.email || '[Email Pending]',
+            bio: data.bio || 'Licensed Broker',
+            location: data.location || 'Jigjiga',
+            specialization: Array.isArray(data.specialization) ? data.specialization : ['Real Estate Consulting'],
+            active: !!data.active,
+            createdAt: data.createdAt || new Date().toISOString()
+          };
+        });
+        setFeaturedAgents(agentsList);
+
       } catch (err) {
-        console.error('Error orchestrating Home page dynamic catalog load:', err);
+        console.error('Error loading homepage contents:', err);
+        handleFirestoreError(err, OperationType.GET, 'homepage');
       } finally {
-        if (active) setLoading(false);
+        setLoading(false);
       }
-    };
-    fetchHomeData();
-    return () => {
-      active = false;
-    };
+    }
+    loadHomepageData();
   }, []);
 
-  // Section 1: Featured Reviews (only reviews)
-  const featuredReviews = useMemo(() => {
-    return products.filter(p => p.type === 'editorial-review').slice(0, 4);
-  }, [products]);
-
-  // Dynamically compute LCP image to preload it early
-  const lcpImageToPreload = useMemo(() => {
-    if (featuredReviews && featuredReviews.length > 0) {
-      return featuredReviews[0].featuredImage;
-    }
-    if (products && products.length > 0) {
-      return products[0].featuredImage;
-    }
-    return null;
-  }, [featuredReviews, products]);
-
-  // Section 2: Software & Tools (only software)
-  const softwareProducts = useMemo(() => {
-    return products.filter(p => p.type === 'software').slice(0, 4);
-  }, [products]);
-
-  // Section 3: Tech Gear (only tech gear)
-  const techGearProducts = useMemo(() => {
-    return products.filter(p => p.type === 'tech-gear').slice(0, 4);
-  }, [products]);
-
-  // Section 4: Latest News
-  const latestNews = useMemo(() => {
-    return articles.slice(0, 4);
-  }, [articles]);
-
   return (
-    <div className="pt-24 pb-20 min-h-screen bg-[#060608] text-white font-sans">
-      <Helmet>
-        <title>PrimeDeals - Premium Tech & Software Reviews</title>
-        <meta name="description" content="Discover our verified premium software tools and high-end technical equipment reviews." />
-        {lcpImageToPreload && (
-          <link rel="preload" as="image" href={lcpImageToPreload} />
-        )}
-      </Helmet>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="space-y-16 pb-12">
+      
+      {/* 1. HERO SECTION WITH SEARCH ENGINE */}
+      <section className="relative min-h-[80vh] sm:min-h-[85vh] flex items-center justify-center bg-gradient-to-b from-[#0b0b14] via-[#050508] to-[#050508] border-b border-white/[0.02] px-4 overflow-hidden">
+        {/* Abstract futuristic background grid lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)]" />
         
+        {/* Soft cyan radial lights */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-10 left-1/4 w-[300px] h-[300px] bg-blue-500/[0.02] rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-4xl w-full text-center space-y-8 relative z-10 py-12">
+          {/* Status Badge */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/5 border border-cyan-500/10 text-cyan-400 text-xxs font-semibold tracking-wider uppercase font-mono"
+          >
+            <Sparkles size={11} className="text-cyan-400 animate-pulse" />
+            <span>Marketplace Upgraded to Firestore Real-Time Engine</span>
+          </motion.div>
+
+          {/* Heading */}
+          <div className="space-y-4">
+            <motion.h1 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight font-display"
+            >
+              Discover Verified Properties <br className="hidden sm:inline" /> 
+              In Jigjiga & The Somali Region
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-xs sm:text-sm text-neutral-400 max-w-xl mx-auto leading-relaxed"
+            >
+              AmaanEstate is a location-centric property catalog and directory for Jigjiga and the Somali Region, simplifying listing discovery for buyers, tenants, and developers.
+            </motion.p>
+          </div>
+
+          {/* Core Structured Search Console */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="max-w-3xl mx-auto bg-[#0c0c14] border border-white/[0.05] rounded-xl p-4 sm:p-5 shadow-2xl shadow-cyan-500/[0.01]"
+          >
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Search query location */}
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" size={15} />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="E.g. Kebele 06, Airport Road..."
+                    className="pl-9 bg-[#050508] border-neutral-800 text-xs text-white placeholder-neutral-600 focus-visible:ring-cyan-500/10"
+                  />
+                </div>
+
+                {/* Intent type select */}
+                <PremiumSelect
+                  label="Listing Intent"
+                  value={selectedIntent}
+                  onChange={setSelectedIntent}
+                  options={[
+                    { value: 'all', label: 'Buy & Rent (All)' },
+                    { value: 'sale', label: 'For Sale' },
+                    { value: 'rent', label: 'For Rent' }
+                  ]}
+                  className="bg-[#050508] border-neutral-800 text-xs"
+                />
+
+                {/* Property category select */}
+                <PremiumSelect
+                  label="Classification"
+                  value={selectedType}
+                  onChange={setSelectedType}
+                  options={[
+                    { value: 'all', label: 'All Property Types' },
+                    { value: 'house', label: 'Residential House' },
+                    { value: 'apartment', label: 'Apartment Space' },
+                    { value: 'villa', label: 'Luxury Villa' },
+                    { value: 'land', label: 'Raw Land Parcel' },
+                    { value: 'commercial', label: 'Commercial Complex' }
+                  ]}
+                  className="bg-[#050508] border-neutral-800 text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-xs py-2.5 px-6 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/15"
+                >
+                  <Search size={13} />
+                  <span>Execute Verification Search</span>
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 2. CATEGORY QUICK LINKS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="space-y-1">
+          <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Classifications</span>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Browse By Listing Category</h2>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { to: '/buy', title: 'Buy Estates', desc: 'Verified houses & commercial investments.', icon: <Building size={18} /> },
+            { to: '/rent', title: 'Rent Space', desc: 'Apartments, duplexes and retail units.', icon: <CheckCircle2 size={18} /> },
+            { to: '/land', title: 'Land Parcels', desc: 'Raw development plot ownerships.', icon: <Landmark size={18} /> },
+            { to: '/commercial', title: 'Commercial Desk', desc: 'Offices, clinics, warehouses and shops.', icon: <Users size={18} /> }
+          ].map((cat, idx) => (
+            <Link 
+              key={idx} 
+              to={cat.to}
+              className="p-5 rounded-xl bg-[#0c0c14] border border-white/[0.04] hover:border-cyan-500/20 transition-all duration-300 flex flex-col justify-between space-y-4 group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/10 transition-colors">
+                {cat.icon}
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors uppercase tracking-wider font-mono">{cat.title}</h3>
+                <p className="text-xxs text-neutral-500 leading-normal">{cat.desc}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. FEATURED PROPERTIES (REAL FIRESTORE DATA) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-end justify-between border-b border-white/[0.02] pb-3">
+          <div className="space-y-1">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Premium Picks</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Featured Real Estate</h2>
+          </div>
+          <Link to="/properties" className="text-xxs font-bold text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1">
+            <span>View All</span>
+            <ArrowRight size={12} />
+          </Link>
+        </div>
+
         {loading ? (
-          <HomeSkeleton />
+          <div className="py-12 flex justify-center">
+            <RefreshCw className="text-cyan-400 animate-spin" size={24} />
+          </div>
+        ) : featuredProperties.length === 0 ? (
+          <div className="p-12 text-center bg-[#0c0c14]/30 border border-white/[0.02] rounded-xl text-neutral-500 text-xs">
+            No featured properties found in the database. 
+          </div>
         ) : (
-          <>
-            {/* Section 1: Featured Reviews */}
-            {featuredReviews.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-white">Featured Reviews</h2>
-                    <p className="text-sm text-neutral-400 mt-1">Our latest comprehensive product assessments.</p>
-                  </div>
-                  <Link to="/reviews" className="text-sm font-medium text-[#C5A059] hover:text-white flex items-center gap-1 transition-colors">
-                    View All <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
-                  {featuredReviews.map(p => <ProductCard key={`featured-${p.id}`} p={p} />)}
-                </div>
-              </section>
-            )}
-
-            {/* Section 2: Software & Tools */}
-            {softwareProducts.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-white">Software & Tools</h2>
-                    <p className="text-sm text-neutral-400 mt-1">Premium applications and enterprise tools.</p>
-                  </div>
-                  <Link to="/software" className="text-sm font-medium text-[#C5A059] hover:text-white flex items-center gap-1 transition-colors">
-                    View All <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
-                  {softwareProducts.map(p => <ProductCard key={`software-${p.id}`} p={p} />)}
-                </div>
-              </section>
-            )}
-
-            {/* Section 3: Tech Gear */}
-            {techGearProducts.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-white">Tech Gear</h2>
-                    <p className="text-sm text-neutral-400 mt-1">High-end hardware and technical equipment.</p>
-                  </div>
-                  <Link to="/tech-gear" className="text-sm font-medium text-[#C5A059] hover:text-white flex items-center gap-1 transition-colors">
-                    View All <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
-                  {techGearProducts.map(p => <ProductCard key={`tech-${p.id}`} p={p} />)}
-                </div>
-              </section>
-            )}
-
-            {/* Section 4: Latest News */}
-            {latestNews.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-semibold text-white">Latest News</h2>
-                    <p className="text-sm text-neutral-400 mt-1">Industry updates and technical intelligence.</p>
-                  </div>
-                  <Link to="/news" className="text-sm font-medium text-[#C5A059] hover:text-white flex items-center gap-1 transition-colors">
-                    View All <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
-                  {latestNews.map(article => {
-                    const cleanCategory = getCleanCategoryLabel(article.category, article.type);
-                    return (
-                      <div key={`news-${article.id}`} className="bg-[#0c0c11]/80 hover:bg-[#121218] border border-white/5 hover:border-[#C5A059]/20 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer" onClick={() => navigate(`/news/${article.slug || article.id}`)}>
-                        {(() => {
-                          const imgUrl = typeof article.featuredImage === 'string' ? article.featuredImage : article.featuredImage?.url;
-                          return imgUrl ? (
-                          <div className="aspect-video relative overflow-hidden bg-black/40 flex-shrink-0">
-                            <img 
-                              src={imgUrl} 
-                              alt={article.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              referrerPolicy="no-referrer"
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          <div className="aspect-video relative overflow-hidden bg-[#12121a] flex flex-col items-center justify-center border-b border-white/5 flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2">
-                              <svg className="w-5 h-5 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                              </svg>
-                            </div>
-                            <span className="text-white/20 text-[9px] font-mono tracking-widest uppercase">Intelligence</span>
-                          </div>
-                        );
-                        })()}
-                        
-                        <div className="p-3.5 sm:p-5 flex flex-col flex-grow">
-                          {cleanCategory && (
-                            <div className="mb-2 sm:mb-3">
-                              <span className="bg-white/5 border border-white/10 text-[#C5A059] px-2 py-0.5 rounded text-[9px] uppercase font-mono tracking-wider">
-                                {cleanCategory}
-                              </span>
-                            </div>
-                          )}
-                          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-white leading-snug line-clamp-2 h-9 sm:h-12 mb-2 sm:mb-4 group-hover:text-[#C5A059] transition-colors">
-                            {article.title}
-                          </h3>
-                          
-                          <div className="mt-auto pt-2.5 sm:pt-4 border-t border-white/5 flex items-center text-[10px] sm:text-[11px] font-bold uppercase tracking-widest font-mono text-[#C5A059] group-hover:text-white transition-colors">
-                            Read Article <ChevronRight size={14} className="ml-1" />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {featuredProperties.map((prop) => (
+              <PropertyCard key={prop.id} property={prop} />
+            ))}
+          </div>
         )}
+      </section>
 
-      </div>
+      {/* 4. LATEST LISTINGS (REAL FIRESTORE DATA) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-end justify-between border-b border-white/[0.02] pb-3">
+          <div className="space-y-1">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Fresh Registry</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Latest Property Listings</h2>
+          </div>
+          <Link to="/properties" className="text-xxs font-bold text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1">
+            <span>View All</span>
+            <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <RefreshCw className="text-cyan-400 animate-spin" size={24} />
+          </div>
+        ) : latestProperties.length === 0 ? (
+          <div className="p-12 text-center bg-[#0c0c14]/30 border border-white/[0.02] rounded-xl text-neutral-500 text-xs">
+            No property listings currently cataloged.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {latestProperties.map((prop) => (
+              <PropertyCard key={prop.id} property={prop} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 5. POPULAR INVESTMENT LOCATIONS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-end justify-between border-b border-white/[0.02] pb-3">
+          <div className="space-y-1">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Demographics</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Active Regional Zones</h2>
+          </div>
+          <Link to="/locations" className="text-xxs font-bold text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1">
+            <span>Explore Zones</span>
+            <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {activeLocations.length === 0 ? (
+          <div className="p-10 text-center bg-[#0c0c14]/30 border border-white/[0.02] rounded-xl text-neutral-500 text-xs">
+            No active properties cataloged in regional zones yet. Property counts will populate dynamically as listings are cataloged.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {activeLocations.slice(0, 3).map((loc, idx) => (
+              <div 
+                key={idx} 
+                className="p-5 rounded-xl bg-[#0c0c14] border border-white/[0.04] flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <span className="text-xxs font-mono font-bold text-cyan-400">{loc.neighborhood}</span>
+                  <h4 className="text-xs font-bold text-white">{loc.city}</h4>
+                </div>
+                <span className="px-2.5 py-1 text-xxs font-bold font-mono text-cyan-400 bg-cyan-500/5 rounded-md border border-cyan-500/10">
+                  {loc.count} {loc.count === 1 ? 'Property' : 'Properties'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 6. FEATURED AGENTS (REAL FIRESTORE DATA) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-end justify-between border-b border-white/[0.02] pb-3">
+          <div className="space-y-1">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Licensed Brokers</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Our Verified Advisors</h2>
+          </div>
+          <Link to="/agents" className="text-xxs font-bold text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1">
+            <span>Meet Agents</span>
+            <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <RefreshCw className="text-cyan-400 animate-spin" size={24} />
+          </div>
+        ) : featuredAgents.length === 0 ? (
+          <div className="p-12 text-center bg-[#0c0c14]/30 border border-white/[0.02] rounded-xl text-neutral-500 text-xs">
+            Agents directory currently offline. 
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {featuredAgents.map((agent) => (
+              <div key={agent.id} className="p-5 rounded-xl bg-[#0c0c14] border border-white/[0.04] space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full overflow-hidden bg-neutral-900 border border-white/[0.04]">
+                    <img 
+                      src={agent.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'} 
+                      alt={agent.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">{agent.name}</h4>
+                    <p className="text-xxs text-neutral-400">{agent.location}</p>
+                  </div>
+                </div>
+                <p className="text-xxs text-neutral-400 leading-normal italic line-clamp-2">
+                  "{agent.bio}"
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 7. LATEST ARTICLES (REAL FIRESTORE DATA) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-end justify-between border-b border-white/[0.02] pb-3">
+          <div className="space-y-1">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">Market Intelligence</span>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Market Reports & Guides</h2>
+          </div>
+          <Link to="/articles" className="text-xxs font-bold text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1">
+            <span>Read All Reports</span>
+            <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <RefreshCw className="text-cyan-400 animate-spin" size={24} />
+          </div>
+        ) : latestArticles.length === 0 ? (
+          <div className="p-12 text-center bg-[#0c0c14]/30 border border-white/[0.02] rounded-xl text-neutral-500 text-xs">
+            Market editorial indexes currently updating.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {latestArticles.map((art) => (
+              <div key={art.id} className="p-5 rounded-xl bg-[#0c0c14] border border-white/[0.04] space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xxs text-neutral-500 font-mono">
+                    <span className="flex items-center gap-1"><Calendar size={11} /> {new Date(art.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-white line-clamp-2 hover:text-cyan-300 transition-colors">
+                    <Link to={`/articles/${art.slug}`}>{art.title}</Link>
+                  </h4>
+                  <p className="text-xxs text-neutral-400 line-clamp-3 leading-normal">{art.summary}</p>
+                </div>
+                <Link to={`/articles/${art.slug}`} className="text-xxs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-widest flex items-center gap-1 pt-2">
+                  <span>Read Report</span>
+                  <ArrowRight size={11} />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 8. CALL TO ACTION SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="p-8 sm:p-12 rounded-2xl bg-gradient-to-r from-blue-950/40 via-cyan-950/20 to-[#0c0c14] border border-white/[0.04] text-center space-y-6 relative overflow-hidden">
+          {/* Subtle glow background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/[0.02] rounded-full blur-[60px] pointer-events-none" />
+          
+          <div className="max-w-xl mx-auto space-y-3">
+            <span className="text-xxs font-mono font-bold uppercase tracking-widest text-cyan-400">List With Us</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">Ready to Sell or Rent Your Property?</h2>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Submit your property details to our listings directory to connect directly with interested buyers and tenants across the region.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              onClick={() => navigate('/contact')}
+              className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs py-2.5 px-6 cursor-pointer"
+            >
+              List Property Form
+            </Button>
+            <Button
+              onClick={() => navigate('/contact')}
+              variant="outline"
+              className="w-full sm:w-auto border-neutral-800 text-neutral-300 hover:bg-white/[0.04] text-xs py-2.5 px-6 cursor-pointer"
+            >
+              Contact Advisory Office
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

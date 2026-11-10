@@ -12,7 +12,7 @@ export interface SEOProps {
 export function useSEO({ title, description, image, url, type = 'website', structuredData }: SEOProps) {
   useEffect(() => {
     // 1. Update document title
-    const fullTitle = `${title} | AmaanEstate — Tech & Software Publication`;
+    const fullTitle = title ? `${title} | AmaanEstate` : 'AmaanEstate - Modern Property Marketplace & Discovery';
     document.title = fullTitle;
 
     // 2. Helper to set meta tags safely

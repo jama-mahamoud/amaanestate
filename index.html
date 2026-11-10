@@ -3,63 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-    <title>AmaanEstate - Elite Tech & Software Review Hub</title>
+    <title>AmaanEstate - Modern Property Marketplace & Discovery</title>
     
     <!-- Connection Preconnects for Speed -->
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
-    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Fonts Loading (Standard & Safe) -->
+    <!-- Fonts Loading -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" />
 
-    <!-- Impact.com Verification -->
-    <meta name='impact-site-verification' value='567d6111-d094-481f-ba51-0aa4e73d9cf2'>
-    
-    <!-- Google AdSense (Lazy & Interactive-only Load) -->
-    <script>
-      (function() {
-        var adsenseLoaded = false;
-        function loadAdSense() {
-          if (adsenseLoaded) return;
-          adsenseLoaded = true;
-          var script = document.createElement('script');
-          script.async = true;
-          script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7610767464764502";
-          script.crossOrigin = "anonymous";
-          document.body.appendChild(script);
-          cleanup();
-        }
-        function cleanup() {
-          events.forEach(function(e) {
-            window.removeEventListener(e, loadAdSense);
-          });
-        }
-        var events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        events.forEach(function(e) {
-          window.addEventListener(e, loadAdSense, { passive: true });
-        });
-        // Non-blocking idle timer fallback
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(function() {
-            setTimeout(loadAdSense, 3000);
-          });
-        } else {
-          setTimeout(loadAdSense, 4000);
-        }
-      })();
-    </script>
-
-    <!-- Theme & Security Configuration -->
-    <meta name="theme-color" content="#050505" />
+    <!-- Theme & Display Configuration -->
+    <meta name="theme-color" content="#050508" />
     
     <!-- Primary SEO Metadata -->
-    <meta name="description" content="AmaanEstate is the premier tech media publication and professional review platform. We specialize in software depth, AI tool insights, SaaS analysis, and tech hardware performance benchmarks." />
-    <meta name="keywords" content="AmaanEstate, Software Reviews, SaaS platforms, AI Tools, Tech Hardware, Web Hosting, Tech Gear Reviews, Tech Publication" />
+    <meta name="description" content="A modern, trustworthy, location-centric digital property discovery and marketplace platform for Jigjiga, Somali Region, and beyond." />
+    <meta name="keywords" content="AmaanEstate, Property Discovery, Real Estate, Jigjiga, Somali Region, Ethiopia, Land, Houses, Commercial Properties" />
     <meta name="robots" content="index, follow" />
     
-    <!-- Favicon and App Icons (Multi-size Support) -->
+    <!-- Favicon and App Icons -->
     <link rel="shortcut icon" href="/brand/amaan_estate_icon.svg" />
     <link rel="icon" type="image/svg+xml" href="/brand/amaan_estate_icon.svg" />
     <link rel="canonical" href="https://www.amaanestate.com/" />
@@ -67,15 +28,15 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.amaanestate.com/" />
-    <meta property="og:title" content="AmaanEstate - Elite Tech & Software Review Hub" />
-    <meta property="og:description" content="AmaanEstate is the premier tech media publication and professional review platform. We specialize in software depth, AI tool insights, SaaS analysis, and tech hardware performance benchmarks." />
+    <meta property="og:title" content="AmaanEstate - Modern Property Marketplace & Discovery" />
+    <meta property="og:description" content="A modern, trustworthy, location-centric digital property discovery and marketplace platform for Jigjiga, Somali Region, and beyond." />
     <meta property="og:image" content="https://www.amaanestate.com/brand/amaan_estate_horizontal_dark.svg" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://www.amaanestate.com/" />
-    <meta name="twitter:title" content="AmaanEstate - Elite Tech & Software Review Hub" />
-    <meta name="twitter:description" content="AmaanEstate is the premier tech media publication and professional review platform. We specialize in software depth, AI tool insights, SaaS analysis, and tech hardware performance benchmarks." />
+    <meta name="twitter:title" content="AmaanEstate - Modern Property Marketplace & Discovery" />
+    <meta name="twitter:description" content="A modern, trustworthy, location-centric digital property discovery and marketplace platform for Jigjiga, Somali Region, and beyond." />
 
     <!-- Structured SEO Schema JSON-LD (Organization) -->
     <script type="application/ld+json">
@@ -84,31 +45,14 @@
         "@type": "Organization",
         "name": "AmaanEstate",
         "alternateName": "Amaan Estate",
-        "url": "https://amaanestate.com",
-        "logo": "https://amaanestate.com/brand/amaan_estate_horizontal_dark.svg",
-        "description": "AmaanEstate is the premier tech media publication and professional review platform. We specialize in software depth, AI tool insights, SaaS analysis, and tech hardware performance benchmarks.",
-        "sameAs": [
-          "https://www.facebook.com/amaanestate",
-          "https://twitter.com/amaanestate",
-          "https://www.instagram.com/amaanestate"
-        ]
+        "url": "https://www.amaanestate.com",
+        "logo": "https://www.amaanestate.com/brand/amaan_estate_horizontal_dark.svg",
+        "description": "A modern, trustworthy, location-centric digital property discovery and marketplace platform."
       }
     </script>
 
-    <!-- Structured SEO Schema JSON-LD (WebSite) -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "AmaanEstate",
-        "url": "https://amaanestate.com",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://amaanestate.com/search?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
-      }
-    </script>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7965451372324178" crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root"></div>

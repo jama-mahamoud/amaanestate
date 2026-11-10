@@ -1,50 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/api/index?path=sitemap.xml"
-    },
-    {
-      "source": "/sitemap-pages.xml",
-      "destination": "/api/index?path=sitemap-pages.xml"
-    },
-    {
-      "source": "/sitemap-reviews.xml",
-      "destination": "/api/index?path=sitemap-reviews.xml"
-    },
-    {
-      "source": "/sitemap-software.xml",
-      "destination": "/api/index?path=sitemap-software.xml"
-    },
-    {
-      "source": "/sitemap-tech-gear.xml",
-      "destination": "/api/index?path=sitemap-tech-gear.xml"
-    },
-    {
-      "source": "/sitemap-news.xml",
-      "destination": "/api/index?path=sitemap-news.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/index?path=robots.txt"
-    },
-    {
-      "source": "/news/:id",
-      "destination": "/api/index?path=news&id=:id"
-    },
-    {
-      "source": "/properties/:id",
-      "destination": "/api/index?path=properties&id=:id"
-    },
-    {
-      "source": "/vehicles/:id",
-      "destination": "/api/index?path=vehicles&id=:id"
-    },
-    {
-      "source": "/agents/:id",
-      "destination": "/api/index?path=agents&id=:id"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },

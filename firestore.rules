@@ -2,148 +2,83 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 0. Global Catch-all Deny
+    // 1. Global Safety Net
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 1. Reusable Primitives
-    function isSignedIn() { return request.auth != null; }
-    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-    function isAdmin() { return isSignedIn() && (
-      exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
-      request.auth.token.email.lower() == 'towinnow0@gmail.com'
-    ); }
-    function isEmailVerified() { return request.auth.token.email_verified == true; }
-    function docData(path) { return get(path).data; }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-
-    // -- VALIDATION HELPERS --
-    function isValidId(id) { return id is string && id.size() <= 128; }
-    
-    function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
-             data.uid is string && data.email is string && data.role is string;
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    function isValidEditorialReview(data) {
-      return data.keys().hasAll(['title', 'slug', 'status', 'category']) &&
-             data.title is string && data.slug is string &&
-             data.status in ['draft', 'pending', 'approved', 'rejected', 'archived', 'published'] &&
-             data.category is string && data.category.size() > 0 &&
-             (data.get('rating', 0) is number || data.get('rating', 0) is int);
-    }
-
-    function isValidStrategicTerm(data) {
-      return data.keys().hasAll(['term', 'definition', 'category', 'status']) &&
-             data.term is string && data.term.size() <= 200 &&
-             data.definition is string && data.definition.size() <= 10000 &&
-             data.category is string && data.category.size() <= 200 &&
-             data.status in ['draft', 'published'];
-    }
-
-    // -- COLLECTIONS --
-    
-    // USER PROFILES
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if (isOwner(userId) || isAdmin()) && (
-        !incoming().diff(existing()).affectedKeys().hasAny(['role']) || isAdmin()
-      );
-    }
-
-    // -- ADMINS --
-    match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-
-    // -- NOTIFICATIONS --
-    match /notifications/{notificationId} {
-      allow read: if isSignedIn() && (
-        existing().userId == request.auth.uid || isAdmin()
-      );
+    // Collection: properties
+    match /properties/{propertyId} {
+      allow read: if resource.data.get('status', 'available') in ['available', 'pending', 'sold', 'rented']
+                  || (isSignedIn() && resource.data.get('agentId', 'unassigned') == request.auth.uid);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        existing().userId == request.auth.uid || isAdmin()
-      );
+      allow update: if isSignedIn() && (resource.data.get('agentId', 'unassigned') == request.auth.uid || resource.data.get('agentId', 'unassigned') == 'unassigned');
+      allow delete: if isSignedIn() && resource.data.get('agentId', 'unassigned') == request.auth.uid;
     }
 
-    // -- AGREEMENTS --
-    match /agreements/{agreementId} {
-      allow read: if isAdmin() || (
-        isSignedIn() && (
-          existing().partyA.uid == request.auth.uid || 
-          existing().partyB.uid == request.auth.uid || 
-          existing().createdBy == request.auth.uid
-        )
-      );
-      allow list: if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update: if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
-      allow delete: if isAdmin();
+    // Collection: agents
+    match /agents/{agentId} {
+      allow read: if resource.data.get('active', true) == true || (isSignedIn() && agentId == request.auth.uid);
+      allow write: if isSignedIn() && agentId == request.auth.uid;
     }
 
-    // -- EDITORIAL REVIEWS --
-    match /editorial_reviews/{id} {
-      allow get: if isAdmin() || (existing().status == 'approved' || existing().status == 'published');
-      allow list: if isAdmin() || (resource.data.status == 'approved' || resource.data.status == 'published');
-      allow create: if isAdmin() && isValidEditorialReview(incoming());
-      allow update: if (isAdmin() && isValidEditorialReview(incoming())) || 
-                    (incoming().diff(existing()).affectedKeys().hasOnly(['views', 'clicks', 'ctr', 'bannerClicks', 'ctaButtons']));
-      allow delete: if isAdmin();
-    }
-
-    // -- GLOBAL STATS --
-    match /globalStats/{docId} {
+    // Collection: locations
+    match /locations/{locationId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
-    // -- ARTICLES --
+    // Collection: articles
     match /articles/{articleId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
-    // -- SOFTWARE TOOLS --
-    match /software_tools/{toolId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // -- STRATEGIC TERMS --
-    match /strategic_terms/{termId} {
-      allow read: if true;
-      allow create: if isAdmin() && isValidStrategicTerm(incoming());
-      allow update, delete: if isAdmin();
-    }
-
-    // -- TECH GEAR PRODUCTS --
-    match /tech_gear_products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // -- DEALS & OFFERS --
-    match /deals_and_offers/{dealId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // -- CONTACT MESSAGES --
-    match /contactMessages/{messageId} {
-      allow create: if true; // Public contact
-      allow read, write: if isAdmin();
-    }
-
-    // -- INQUIRIES --
-    match /inquiries/{inquiryId} {
+    // Collection: agreements
+    match /agreements/{agreementId} {
       allow create: if isSignedIn();
-      allow read: if isAdmin() || existing().senderId == request.auth.uid || existing().receiverId == request.auth.uid;
-      allow write: if isAdmin() || existing().senderId == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('agentId', '') == request.auth.uid);
+    }
+
+    // Collection: viewings
+    match /viewings/{viewingId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('agentId', '') == request.auth.uid);
+    }
+
+    // Collection: favorites
+    match /favorites/{favoriteId} {
+      allow create: if isSignedIn() && request.resource.data.get('userId', '') == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.get('userId', '') == request.auth.uid;
+    }
+
+    // Collection: leads
+    match /leads/{leadId} {
+      allow create: if true; // Public contact form / property inquiries
+      allow read, update, delete: if isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('agentId', '') == request.auth.uid);
+    }
+
+    // Collection: users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && userId == request.auth.uid;
+    }
+
+    // Collection: notifications
+    match /notifications/{notificationId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && resource.data.get('userId', '') == request.auth.uid;
+    }
+
+    // Collection: aiConversations
+    match /aiConversations/{conversationId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && resource.data.get('userId', '') == request.auth.uid;
     }
   }
 }

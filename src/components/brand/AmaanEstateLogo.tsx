@@ -206,7 +206,7 @@ export const AmaanEstateLogo: React.FC<AmaanEstateLogoProps> = ({
           Estate
         </text>
 
-        {/* Sub-label: Technology Publication */}
+        {/* Sub-label: Property Marketplace */}
         <text
           x="85"
           y="64"
@@ -217,7 +217,7 @@ export const AmaanEstateLogo: React.FC<AmaanEstateLogoProps> = ({
           letterSpacing="0.22em"
           textAnchor="start"
         >
-          TECH PUBLICATION
+          PROPERTY MARKETPLACE
         </text>
       </svg>
     );
@@ -274,7 +274,7 @@ export const AmaanEstateLogo: React.FC<AmaanEstateLogoProps> = ({
         letterSpacing="0.18em"
         textAnchor="middle"
       >
-        TECH PUBLICATION
+        PROPERTY MARKETPLACE
       </text>
     </svg>
   );
