@@ -13,11 +13,15 @@
       "destination": "/api/index"
     },
     {
+      "source": "/articles/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },
     {
-      "source": "/((?!sitemap\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|.*\\..*).*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|articles/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
