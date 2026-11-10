@@ -179,12 +179,14 @@ ${urlsXml}
 
 app.get("/sitemap.xml", async (req, res) => {
   const xml = await buildSitemapXml();
-  res.type("application/xml").send(xml);
+  res.header("Content-Type", "application/xml; charset=utf-8");
+  res.status(200).send(xml);
 });
 
 app.get("/api/sitemap.xml", async (req, res) => {
   const xml = await buildSitemapXml();
-  res.type("application/xml").send(xml);
+  res.header("Content-Type", "application/xml; charset=utf-8");
+  res.status(200).send(xml);
 });
 
 async function startServer() {
