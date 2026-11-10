@@ -15,6 +15,9 @@ const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 const EditorialPolicyPage = React.lazy(() => import('./pages/EditorialPolicyPage'));
 const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const CookiePolicyPage = React.lazy(() => import('./pages/CookiePolicyPage'));
+const AdvertisingDisclosurePage = React.lazy(() => import('./pages/AdvertisingDisclosurePage'));
+const CorrectionsPolicyPage = React.lazy(() => import('./pages/CorrectionsPolicyPage'));
 const NewsletterPage = React.lazy(() => import('./pages/NewsletterPage'));
 const AuthPage = React.lazy(() => import('./pages/AuthPage'));
 const AccountPage = React.lazy(() => import('./pages/AccountPage'));
@@ -70,7 +73,10 @@ export default function App() {
           <Route path="/about" element={<Layout><AboutPage /></Layout>} />
           <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
           <Route path="/editorial-policy" element={<Layout><EditorialPolicyPage /></Layout>} />
+          <Route path="/corrections-policy" element={<Layout><CorrectionsPolicyPage /></Layout>} />
           <Route path="/privacy-policy" element={<Layout><PrivacyPolicyPage /></Layout>} />
+          <Route path="/cookie-policy" element={<Layout><CookiePolicyPage /></Layout>} />
+          <Route path="/advertising-disclosure" element={<Layout><AdvertisingDisclosurePage /></Layout>} />
           <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
           <Route path="/newsletter" element={<Layout><NewsletterPage /></Layout>} />
           <Route path="*" element={<Layout><Home /></Layout>} />

@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, User, X } from 'lucide-react';
 import { getCurrentUserProfile, signOutUser } from '../../services/adminService';
+import { SocialLink, getActiveSocialLinks } from '../../services/socialService';
+import { subscribeNewsletter } from '../../services/editorialService';
+import { SocialIcon } from './SocialIcons';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../types';
+import { toast } from 'sonner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,11 +30,32 @@ export default function Layout({ children }: LayoutProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
 
+  // Social Links state
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  // Footer Newsletter State
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSubmitting, setNewsletterSubmitting] = useState(false);
+
+  const fetchSocialLinks = async () => {
+    const links = await getActiveSocialLinks();
+    setSocialLinks(links);
+  };
+
   useEffect(() => {
     let active = true;
+
     getCurrentUserProfile().then((prof) => {
       if (active) setCurrentUser(prof);
     });
+
+    fetchSocialLinks();
+
+    const handleSocialUpdate = () => {
+      fetchSocialLinks();
+    };
+
+    window.addEventListener('social_links_updated', handleSocialUpdate);
 
     const sub = supabase?.auth.onAuthStateChange(async (event) => {
       if (!active) return;
@@ -44,6 +69,7 @@ export default function Layout({ children }: LayoutProps) {
 
     return () => {
       active = false;
+      window.removeEventListener('social_links_updated', handleSocialUpdate);
       sub?.data.subscription.unsubscribe();
     };
   }, []);
@@ -54,6 +80,25 @@ export default function Layout({ children }: LayoutProps) {
     await signOutUser();
     setCurrentUser(null);
     navigate('/', { replace: true });
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    setNewsletterSubmitting(true);
+    const res = await subscribeNewsletter(newsletterEmail, 'footer-subscription');
+    setNewsletterSubmitting(false);
+
+    if (res.success) {
+      toast.success(res.message || 'Thank you for subscribing to AMAAN ESTATE briefings.');
+      setNewsletterEmail('');
+    } else {
+      toast.error(res.message || 'Unable to complete subscription.');
+    }
   };
 
   const roleName = currentUser?.role?.name;
@@ -253,64 +298,201 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
-      {/* Editorial Publication Footer */}
-      <footer className="bg-white border-t border-[#E5E0D8] mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-2 space-y-3">
-            <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-[#141413] block">
-              AMAAN ESTATE
-            </Link>
-            <p className="text-sm text-[#5C5A55] max-w-md leading-relaxed">
-              An international real estate media, research, and knowledge platform covering global property investment, architecture, construction technology, home living, and industry developments.
-            </p>
-            <div className="pt-2 flex flex-wrap items-center gap-5 text-xs font-medium text-[#5C5A55]">
-              <a href="https://x.com/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
-                X / Twitter
-              </a>
-              <a href="https://linkedin.com/company/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
-                LinkedIn
-              </a>
-              <a href="https://instagram.com/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
-                Instagram
-              </a>
+      {/* Premium International Editorial Publication Footer */}
+      <footer className="bg-white border-t border-[#E5E0D8] mt-16 text-[#141413]">
+        {/* Newsletter Subscription Bar */}
+        <div className="bg-[#FAF8F5] border-b border-[#E5E0D8]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center justify-between">
+              <div className="lg:col-span-6 space-y-1.5">
+                <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
+                  Stay Informed
+                </p>
+                <h3 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
+                  Receive Global Real Estate Research &amp; Briefings
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5C5A55] max-w-lg leading-relaxed">
+                  Receive selected insights, research and global real estate developments directly in your inbox.
+                </p>
+              </div>
+
+              <div className="lg:col-span-6">
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-2.5 max-w-lg lg:ml-auto">
+                  <input
+                    type="email"
+                    required
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    className="flex-1 h-11 px-4 bg-white border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsletterSubmitting}
+                    className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#141413] text-white text-xs font-semibold uppercase tracking-wider rounded transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+                  >
+                    {newsletterSubmitting ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413]">
-              Sections
-            </h3>
-            <ul className="space-y-2 text-sm text-[#5C5A55]">
-              <li><Link to="/investment" className="hover:text-[#141413]">Investment</Link></li>
-              <li><Link to="/architecture" className="hover:text-[#141413]">Architecture</Link></li>
-              <li><Link to="/construction" className="hover:text-[#141413]">Construction</Link></li>
-              <li><Link to="/home-living" className="hover:text-[#141413]">Home &amp; Living</Link></li>
-              <li><Link to="/news" className="hover:text-[#141413]">Global News</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413]">
-              Publication
-            </h3>
-            <ul className="space-y-2 text-sm text-[#5C5A55]">
-              <li><Link to="/about" className="hover:text-[#141413]">About</Link></li>
-              <li><Link to="/editorial-policy" className="hover:text-[#141413]">Editorial Policy</Link></li>
-              <li><Link to="/privacy-policy" className="hover:text-[#141413]">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-[#141413]">Terms of Use</Link></li>
-              <li><Link to="/contact" className="hover:text-[#141413]">Contact</Link></li>
-              <li><Link to="/newsletter" className="hover:text-[#141413]">Newsletter</Link></li>
-            </ul>
           </div>
         </div>
 
-        <div className="border-t border-[#E5E0D8]">
+        {/* 4-Column Main Editorial Footer Layout */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
+          
+          {/* Column 1: Brand & About (lg:col-span-5) */}
+          <div className="lg:col-span-5 space-y-5">
+            <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-[#141413] block">
+              AMAAN ESTATE
+            </Link>
+            
+            <p className="text-sm text-[#4A4843] leading-relaxed max-w-md">
+              An independent international real estate media and research platform exploring global property investment, architecture, construction, home living and the forces shaping the built environment.
+            </p>
+
+            <div className="pt-1">
+              <p className="text-xs font-serif italic text-[#8C4A27] font-medium border-l-2 border-[#8C4A27] pl-3 py-0.5">
+                Independent reporting. Informed perspectives. Global real estate.
+              </p>
+            </div>
+
+            {/* Dynamic Social Media Links with Recognizable Icons */}
+            <div className="pt-3 space-y-2.5">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-[#5C5A55]">
+                Follow AMAAN ESTATE
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.id || link.platform}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.name}
+                    aria-label={link.name}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#141413] bg-[#FAF8F5] hover:bg-[#1E3A5F] hover:text-white border border-[#E5E0D8] rounded transition-all duration-200 group"
+                  >
+                    <SocialIcon platform={link.icon_name || link.platform} size={15} />
+                    <span>{link.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Explore (lg:col-span-2) */}
+          <div className="lg:col-span-2 space-y-3.5">
+            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+              Explore
+            </h4>
+            <ul className="space-y-2.5 text-sm text-[#5C5A55]">
+              <li>
+                <Link to="/investment" className="hover:text-[#141413] transition-colors">
+                  Investment
+                </Link>
+              </li>
+              <li>
+                <Link to="/architecture" className="hover:text-[#141413] transition-colors">
+                  Architecture
+                </Link>
+              </li>
+              <li>
+                <Link to="/construction" className="hover:text-[#141413] transition-colors">
+                  Construction
+                </Link>
+              </li>
+              <li>
+                <Link to="/home-living" className="hover:text-[#141413] transition-colors">
+                  Home &amp; Living
+                </Link>
+              </li>
+              <li>
+                <Link to="/news" className="hover:text-[#141413] transition-colors">
+                  Global News
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: About & Publication (lg:col-span-2.5) */}
+          <div className="lg:col-span-2.5 space-y-3.5">
+            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+              Publication
+            </h4>
+            <ul className="space-y-2.5 text-sm text-[#5C5A55]">
+              <li>
+                <Link to="/about" className="hover:text-[#141413] transition-colors">
+                  About AMAAN ESTATE
+                </Link>
+              </li>
+              <li>
+                <Link to="/editorial-policy" className="hover:text-[#141413] transition-colors">
+                  Editorial Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/corrections-policy" className="hover:text-[#141413] transition-colors">
+                  Corrections Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-[#141413] transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/newsletter" className="hover:text-[#141413] transition-colors">
+                  Newsletter
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Policies & Transparency (lg:col-span-2.5) */}
+          <div className="lg:col-span-2.5 space-y-3.5">
+            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+              Policies &amp; Trust
+            </h4>
+            <ul className="space-y-2.5 text-sm text-[#5C5A55]">
+              <li>
+                <Link to="/privacy-policy" className="hover:text-[#141413] transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-[#141413] transition-colors">
+                  Terms of Use
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookie-policy" className="hover:text-[#141413] transition-colors">
+                  Cookie Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/advertising-disclosure" className="hover:text-[#141413] transition-colors">
+                  Advertising Disclosure
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Footer Bar */}
+        <div className="border-t border-[#E5E0D8] bg-[#FAF8F5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#7A7770]">
-            <span>&copy; {new Date().getFullYear()} AMAAN ESTATE (amaanestate.com). All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} AMAAN ESTATE. All rights reserved.</span>
             <div className="flex items-center gap-4">
-              <a href="/sitemap.xml" className="hover:text-[#141413]">Sitemap</a>
+              <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="hover:text-[#141413] transition-colors">
+                Sitemap
+              </a>
               <span aria-hidden="true">·</span>
-              <a href="/robots.txt" className="hover:text-[#141413]">Robots</a>
+              <a href="/robots.txt" target="_blank" rel="noopener noreferrer" className="hover:text-[#141413] transition-colors">
+                Robots.txt
+              </a>
             </div>
           </div>
         </div>

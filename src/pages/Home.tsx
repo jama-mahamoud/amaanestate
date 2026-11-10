@@ -86,45 +86,113 @@ export default function Home() {
       )}
 
       {/* A. HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch pb-12 border-b border-[#E5E0D8]">
-          <div className="lg:col-span-7 flex flex-col justify-between space-y-8">
-            <div className="space-y-5">
-              <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-                Global Real Estate Media, Research &amp; Knowledge
-              </p>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-serif font-semibold leading-[1.08] text-[#141413]">
-                Independent Intelligence on Capital, Architecture &amp; the Built World
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center pb-12 sm:pb-16 border-b border-[#E5E0D8]">
+          
+          {/* Left Column: Editorial Content & CTAs */}
+          <div className="lg:col-span-6 flex flex-col justify-center space-y-6 sm:space-y-8">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="inline-flex items-center gap-2">
+                <span className="h-px w-6 bg-[#8C4A27]"></span>
+                <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
+                  Global Real Estate Intelligence
+                </p>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-serif font-semibold leading-[1.08] text-[#141413] tracking-tight">
+                Understanding the Forces Shaping the Built World.
               </h1>
-              <p className="text-base sm:text-lg text-[#4A4843] leading-relaxed max-w-2xl">
-                AMAAN ESTATE delivers global reporting and technical research for property investors, architects, structural engineers, and thoughtful homeowners.
+
+              <p className="text-base sm:text-lg text-[#4A4843] leading-relaxed max-w-xl font-normal">
+                Independent reporting, investment insights and architectural research exploring the ideas, markets and innovations transforming real estate worldwide.
               </p>
             </div>
 
-            <div className="space-y-2">
-              <GlobalSearchBar variant="hero" />
-              <p className="text-xs text-[#7A7770]">
-                Explore global coverage across Investment, Architecture, Construction, Home &amp; Living, and Industry News.
-              </p>
+            {/* CTAs & Global Search Integration */}
+            <div className="space-y-6 pt-1">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                <a
+                  href="#featured-heading"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#1E3A5F] hover:bg-[#141413] text-white text-sm font-semibold rounded shadow-2xs transition-all duration-200 cursor-pointer group whitespace-nowrap"
+                >
+                  <span>Explore Insights</span>
+                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-1 font-sans">
+                    &rarr;
+                  </span>
+                </a>
+
+                <Link
+                  to="/investment"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-[#1E3A5F] text-[#1E3A5F] hover:bg-[#1E3A5F] hover:text-white text-sm font-semibold rounded transition-all duration-200 cursor-pointer whitespace-nowrap"
+                >
+                  <span>Discover Our Research</span>
+                </Link>
+              </div>
+
+              {/* Integrated Search Bar */}
+              <div className="pt-2 max-w-xl">
+                <GlobalSearchBar variant="hero" />
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5">
-            <figure className="h-full flex flex-col">
-              <div className="flex-1 min-h-[260px] lg:min-h-[360px] overflow-hidden rounded bg-[#EBE6DF]">
+          {/* Right Column: Dominant Architectural Photograph */}
+          <div className="lg:col-span-6">
+            <figure className="relative group overflow-hidden rounded bg-[#EBE6DF] border border-[#E5E0D8]">
+              <div className="relative aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/3] overflow-hidden">
                 <img
                   src={resolveEditorialImage('hero-pavilion')}
-                  alt="Contemporary travertine limestone and glass architectural pavilion at golden hour"
+                  alt="Contemporary travertine limestone and glass architectural pavilion"
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                 />
+                
+                {/* Small Editorial Category Overlay Label */}
+                <div className="absolute top-4 left-4 bg-[#141413]/85 backdrop-blur-xs text-white text-[11px] uppercase tracking-widest font-semibold px-3 py-1.5 rounded-xs border border-white/10">
+                  Monograph 01 — Architecture &amp; Climate
+                </div>
               </div>
-              <figcaption className="text-xs font-serif italic text-[#5C5A55] mt-2.5">
-                Fig. 1 — Contemporary limestone thermal mass pavilion, featured in our Architecture &amp; Climate monograph.
+
+              <figcaption className="p-3.5 sm:p-4 bg-white border-t border-[#E5E0D8] flex items-center justify-between gap-4 text-xs text-[#5C5A55]">
+                <span className="font-serif italic leading-normal">
+                  Fig. 1 — Contemporary limestone thermal mass pavilion, featured in our global research archive.
+                </span>
+                <span className="font-mono text-[11px] text-[#8C4A27] shrink-0 font-medium uppercase tracking-wider">
+                  AMAAN Archive
+                </span>
               </figcaption>
             </figure>
           </div>
+
         </div>
+
+        {/* 4. REFINED HORIZONTAL EDITORIAL CATEGORY NAVIGATION */}
+        <nav aria-label="Editorial Categories" className="pt-6 pb-2 border-b border-[#E5E0D8]">
+          <div className="flex items-center justify-between flex-wrap gap-4 text-xs uppercase tracking-widest font-semibold text-[#5C5A55]">
+            <span className="text-[#8C4A27] font-bold text-[11px] shrink-0">Editorial Sections</span>
+            <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto py-1">
+              <Link to="/investment" className="text-[#141413] hover:text-[#1E3A5F] transition-colors whitespace-nowrap hover:underline underline-offset-4 decoration-[#1E3A5F]">
+                Investment
+              </Link>
+              <span aria-hidden="true" className="text-[#D6CEBE]">|</span>
+              <Link to="/architecture" className="text-[#141413] hover:text-[#1E3A5F] transition-colors whitespace-nowrap hover:underline underline-offset-4 decoration-[#1E3A5F]">
+                Architecture
+              </Link>
+              <span aria-hidden="true" className="text-[#D6CEBE]">|</span>
+              <Link to="/construction" className="text-[#141413] hover:text-[#1E3A5F] transition-colors whitespace-nowrap hover:underline underline-offset-4 decoration-[#1E3A5F]">
+                Construction
+              </Link>
+              <span aria-hidden="true" className="text-[#D6CEBE]">|</span>
+              <Link to="/home-living" className="text-[#141413] hover:text-[#1E3A5F] transition-colors whitespace-nowrap hover:underline underline-offset-4 decoration-[#1E3A5F]">
+                Home &amp; Living
+              </Link>
+              <span aria-hidden="true" className="text-[#D6CEBE]">|</span>
+              <Link to="/news" className="text-[#141413] hover:text-[#1E3A5F] transition-colors whitespace-nowrap hover:underline underline-offset-4 decoration-[#1E3A5F]">
+                Industry News
+              </Link>
+            </div>
+          </div>
+        </nav>
       </section>
 
       {/* B. FEATURED STORIES */}
