@@ -306,8 +306,8 @@ const initialSiteSettings: SiteSettings = {
     instagram: 'https://instagram.com/amaanestate',
     youtube: '',
   },
-  adsense_client_id: '',
-  adsense_enabled: false,
+  adsense_client_id: 'ca-pub-7965451372324178',
+  adsense_enabled: true,
   updated_at: '2026-11-01T00:00:00Z',
 };
 

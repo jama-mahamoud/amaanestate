@@ -210,10 +210,25 @@ app.get("/004_editorial_25_articles.sql", (req, res) => {
 // Robots.txt (both root and /api)
 function buildRobotsTxt(): string {
   return [
+    "User-agent: Mediapartners-Google",
+    "Allow: /",
+    "",
+    "User-agent: Google-Display-Ads-Bot",
+    "Allow: /",
+    "",
+    "User-agent: Googlebot",
+    "Allow: /",
+    "Disallow: /admin",
+    "Disallow: /admin/",
+    "Disallow: /account",
+    "Disallow: /auth",
+    "",
     "User-agent: *",
     "Allow: /",
     "Disallow: /admin",
     "Disallow: /admin/",
+    "Disallow: /account",
+    "Disallow: /auth",
     "",
     `Sitemap: ${SITE_URL}/sitemap.xml`,
   ].join("\n");
@@ -243,6 +258,9 @@ async function buildSitemapXml(): Promise<string> {
     { path: "/editorial-policy", changefreq: "monthly", priority: "0.5" },
     { path: "/privacy-policy", changefreq: "monthly", priority: "0.5" },
     { path: "/terms", changefreq: "monthly", priority: "0.5" },
+    { path: "/cookie-policy", changefreq: "monthly", priority: "0.5" },
+    { path: "/advertising-disclosure", changefreq: "monthly", priority: "0.5" },
+    { path: "/corrections-policy", changefreq: "monthly", priority: "0.5" },
   ];
 
   const seedArticleEntries: { slug: string; updatedAt: string }[] = [
