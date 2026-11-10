@@ -218,15 +218,15 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-8 items-start">
             {news.slice(0, 2).map((item) => (
               <ArticleCard key={item.id} article={item} />
             ))}
           </div>
 
           {/* H. LATEST ARTICLES COMPACT FEED */}
-          <div className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-6 flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-6 flex flex-col">
             <div>
               <div className="flex items-baseline justify-between border-b border-[#E5E0D8] pb-3 mb-2">
                 <h3 className="text-lg font-serif font-semibold text-[#141413]">Latest Articles</h3>
