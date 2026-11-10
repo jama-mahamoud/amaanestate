@@ -1,21 +1,34 @@
 import { useEffect } from 'react';
 
 export interface SEOProps {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   image?: string;
   url?: string;
   type?: 'website' | 'article' | 'profile';
-  structuredData?: Record<string, any>;
+  structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
-export function useSEO({ title, description, image, url, type = 'website', structuredData }: SEOProps) {
+export function useSEO({
+  title,
+  description,
+  image,
+  url,
+  type = 'website',
+  structuredData,
+}: SEOProps) {
   useEffect(() => {
-    // 1. Update document title
-    const fullTitle = title ? `${title} | AmaanEstate` : 'AmaanEstate - Modern Property Marketplace & Discovery';
+    const fullTitle = title
+      ? title.includes('AMAAN ESTATE')
+        ? title
+        : `${title} | AMAAN ESTATE`
+      : 'AMAAN ESTATE — Global Real Estate Media, Research & Knowledge';
     document.title = fullTitle;
 
-    // 2. Helper to set meta tags safely
+    const metaDesc =
+      description ||
+      'AMAAN ESTATE is a global real estate media, research, and knowledge platform covering investment, architecture, construction, home living, and property industry news.';
+
     const setMetaTag = (attributeName: string, attributeValue: string, content: string) => {
       let element = document.querySelector(`meta[${attributeName}="${attributeValue}"]`);
       if (!element) {
@@ -26,51 +39,50 @@ export function useSEO({ title, description, image, url, type = 'website', struc
       element.setAttribute('content', content);
     };
 
-    // Standard SEO Meta Tags
-    setMetaTag('name', 'description', description);
+    const canonicalUrl = url || window.location.origin + window.location.pathname;
+    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
+
+    setMetaTag('name', 'description', metaDesc);
     setMetaTag('name', 'robots', 'index, follow');
 
-    // Open Graph Meta Tags (Facebook / LinkedIn / Mobile messengers integration)
+    setMetaTag('property', 'og:site_name', 'AMAAN ESTATE');
     setMetaTag('property', 'og:title', fullTitle);
-    setMetaTag('property', 'og:description', description);
+    setMetaTag('property', 'og:description', metaDesc);
     setMetaTag('property', 'og:type', type);
+    setMetaTag('property', 'og:url', canonicalUrl);
     if (image) {
       setMetaTag('property', 'og:image', image);
     } else {
-      const el = document.querySelector('meta[property="og:image"]');
-      if (el) el.remove();
-    }
-    if (url) {
-      setMetaTag('property', 'og:url', url);
-    } else {
-      setMetaTag('property', 'og:url', window.location.href);
+      document.querySelector('meta[property="og:image"]')?.remove();
     }
 
-    // Twitter Card Tags
     setMetaTag('name', 'twitter:card', 'summary_large_image');
     setMetaTag('name', 'twitter:title', fullTitle);
-    setMetaTag('name', 'twitter:description', description);
+    setMetaTag('name', 'twitter:description', metaDesc);
     if (image) {
       setMetaTag('name', 'twitter:image', image);
     } else {
-      const el = document.querySelector('meta[name="twitter:image"]');
-      if (el) el.remove();
+      document.querySelector('meta[name="twitter:image"]')?.remove();
     }
 
-    // 3. Structured Data JSON-LD Schema Injection
-    let scriptElement = document.querySelector('script[id="amaanestate-structured-data"]') as HTMLScriptElement;
+    const existingScripts = document.querySelectorAll('script[data-amaan-seo="true"]');
+    existingScripts.forEach((s) => s.remove());
+
     if (structuredData) {
-      if (!scriptElement) {
-        scriptElement = document.createElement('script');
-        scriptElement.setAttribute('id', 'amaanestate-structured-data');
-        scriptElement.setAttribute('type', 'application/ld+json');
-        document.head.appendChild(scriptElement);
-      }
-      scriptElement.textContent = JSON.stringify(structuredData);
-    } else {
-      if (scriptElement) {
-        scriptElement.remove();
-      }
+      const blocks = Array.isArray(structuredData) ? structuredData : [structuredData];
+      blocks.forEach((block) => {
+        const scriptEl = document.createElement('script');
+        scriptEl.setAttribute('type', 'application/ld+json');
+        scriptEl.setAttribute('data-amaan-seo', 'true');
+        scriptEl.textContent = JSON.stringify(block);
+        document.head.appendChild(scriptEl);
+      });
     }
   }, [title, description, image, url, type, structuredData]);
 }

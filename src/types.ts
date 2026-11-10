@@ -1,164 +1,154 @@
-/**
- * AmaanEstate - Core Domain TypeScript Models
- * Undergoing upgrading and transformation for a professional real estate platform.
- */
+export type RoleName = 'admin' | 'editor' | 'author' | 'reader';
 
-// Property Core Sub-Types
-export type PropertyType = 
-  | 'house' 
-  | 'apartment' 
-  | 'villa' 
-  | 'land' 
-  | 'shop' 
-  | 'office' 
-  | 'warehouse' 
-  | 'commercial' 
-  | 'other';
-
-export type ListingType = 'sale' | 'rent';
-
-export type PropertyStatus = 
-  | 'available' 
-  | 'pending' 
-  | 'sold' 
-  | 'rented' 
-  | 'draft' 
-  | 'archived';
-
-// Location Geo-Hierarchy model
-export interface LocationInfo {
-  region: string;
-  city: string;
-  district?: string;
-  neighborhood?: string;
-}
-
-// Property Model definition
-export interface Property {
+export interface Role {
   id: string;
-  title: string;
-  description: string;
-  propertyType: PropertyType;
-  listingType: ListingType;
-  price: number;
-  currency: 'ETB' | 'USD';
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: number; // Sq meters
-  location: LocationInfo;
-  address?: string;
-  images: string[];
-  features?: string[];
-  amenities?: string[];
-  agentId: string;
-  status: PropertyStatus;
-  featured?: boolean;
-  availability?: string;
-  createdAt: string; // ISO String (UTC)
-  updatedAt?: string; // ISO String (UTC)
+  name: RoleName;
+  description?: string;
+  created_at: string;
 }
 
-// Agent Model definition
-export interface Agent {
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+  role_id?: string | null;
+  role?: Role | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Category {
   id: string;
   name: string;
-  profileImage?: string;
-  phone?: string;
-  email: string;
-  bio?: string;
-  location?: string;
-  specialization?: string[];
-  active: boolean;
-  createdAt: string; // ISO String
-  updatedAt?: string; // ISO String
+  slug: string;
+  description: string;
+  image_url?: string | null;
+  display_order: number;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  created_at: string;
+  updated_at?: string;
 }
 
-// Viewing Appointment Model
-export type ViewingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
-
-export interface Viewing {
+export interface Author {
   id: string;
-  propertyId: string;
-  userId: string;
-  agentId: string;
-  requestedDate: string; // YYYY-MM-DD
-  requestedTime: string; // HH:MM
-  status: ViewingStatus;
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-// Favorite Saved Property Model
-export interface Favorite {
-  id: string;
-  userId: string;
-  propertyId: string;
-  createdAt: string;
-}
-
-// Lead / Inquiry Model
-export type LeadSource = 'website' | 'property_inquiry' | 'ai' | 'viewing' | 'contact';
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'closed';
-
-export interface Lead {
-  id: string;
-  userId?: string;
-  propertyId?: string;
-  agentId?: string;
-  source: LeadSource;
-  message?: string;
-  status: LeadStatus;
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-// User Profile Model
-export type UserRole = 'user' | 'agent' | 'admin';
-
-export interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  phone?: string;
-  role: UserRole;
-  avatarUrl?: string;
-  createdAt: string;
-}
-
-// In-App Notification Model
-export interface Notification {
-  id: string;
-  userId: string;
-  type: string;
+  profile_id?: string | null;
+  name: string;
+  slug: string;
   title: string;
-  message: string;
-  read: boolean;
-  relatedId?: string;
-  createdAt: string;
+  bio: string;
+  avatar_url?: string | null;
+  email?: string | null;
+  twitter_url?: string | null;
+  linkedin_url?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at?: string;
 }
 
-// Chat System Messages
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string;
-  name?: string;
-  toolCallId?: string;
-  toolCalls?: any[]; // For future Gemini tools / function calls
-}
-
-// AI Chat Conversation Model
-export interface AIConversation {
+export interface Tag {
   id: string;
-  userId: string;
-  messages: ChatMessage[];
-  createdAt: string;
-  updatedAt?: string;
+  name: string;
+  slug: string;
+  created_at: string;
 }
 
-// --- Backward Compatibility Types & Aliases ---
-export type PropertyListing = Property;
-export type UserAccount = User;
-export type ListingIntent = 'for_sale' | 'for_rent';
-export type VerificationStatus = 'pending' | 'verified' | 'unverified';
+export type ArticleStatus = 'draft' | 'scheduled' | 'published';
+
+export interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featured_image?: string | null;
+  gallery_images: string[];
+  category_id: string;
+  author_id: string;
+  category?: Category | null;
+  author?: Author | null;
+  tags?: Tag[];
+  status: ArticleStatus;
+  is_featured: boolean;
+  reading_time: number;
+  view_count: number;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  og_image?: string | null;
+  published_at?: string | null;
+  scheduled_for?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface MediaItem {
+  id: string;
+  file_name: string;
+  storage_path: string;
+  public_url: string;
+  mime_type: string;
+  size_bytes: number;
+  alt_text?: string;
+  uploaded_by?: string | null;
+  created_at: string;
+}
+
+export type SubscriberStatus = 'subscribed' | 'unsubscribed';
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  status: SubscriberStatus;
+  source: string;
+  confirmed_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type ContactMessageStatus = 'unread' | 'read' | 'replied' | 'archived';
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: ContactMessageStatus;
+  admin_notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface SiteSettings {
+  id: number;
+  site_name: string;
+  tagline: string;
+  domain: string;
+  default_seo_title: string;
+  default_seo_description: string;
+  default_og_image?: string | null;
+  editorial_email: string;
+  social_links: {
+    twitter?: string;
+    linkedin?: string;
+    instagram?: string;
+    youtube?: string;
+  };
+  adsense_client_id?: string;
+  adsense_enabled: boolean;
+  updated_at?: string;
+}
+
+export interface DashboardMetrics {
+  totalArticles: number;
+  publishedArticles: number;
+  draftArticles: number;
+  scheduledArticles: number;
+  totalCategories: number;
+  totalSubscribers: number;
+  unreadMessages: number;
+  totalMessages: number;
+}

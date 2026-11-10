@@ -1,195 +1,189 @@
 import React, { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, Sparkles, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
-import { BrandHeader } from '../brand/BrandHeader';
-import { Button } from '../ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
+import { Link, NavLink } from 'react-router-dom';
+import { Menu, Search, X } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-export default function Layout({ children }: LayoutProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const navigate = useNavigate();
+const NAV_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/investment', label: 'Investment' },
+  { to: '/architecture', label: 'Architecture' },
+  { to: '/construction', label: 'Construction' },
+  { to: '/home-living', label: 'Home & Living' },
+  { to: '/news', label: 'News' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
+];
 
-  const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/properties', label: 'All Properties' },
-    { to: '/buy', label: 'Buy' },
-    { to: '/rent', label: 'Rent' },
-    { to: '/land', label: 'Land' },
-    { to: '/commercial', label: 'Commercial' },
-    { to: '/agents', label: 'Agents' },
-    { to: '/articles', label: 'Articles' },
-    { to: '/about', label: 'About' },
-    { to: '/contact', label: 'Contact' }
-  ];
+export default function Layout({ children }: LayoutProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#050508] text-neutral-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-50 bg-[#050508]/80 backdrop-blur-md border-b border-white/[0.04]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          {/* Brand Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <BrandHeader size="sm" theme="dark" />
-          </div>
+    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
+      {/* Clean Single-Row Editorial Header */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E5E0D8]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+          {/* Zone 1: Single-line Wordmark */}
+          <Link
+            to="/"
+            className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#141413] whitespace-nowrap shrink-0"
+          >
+            AMAAN ESTATE
+          </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex space-x-1 xl:space-x-2">
-            {navLinks.map((link) => (
+          {/* Zone 2: Clean Typographic Navigation */}
+          <nav
+            aria-label="Primary navigation"
+            className="hidden xl:flex items-center gap-6 text-sm font-medium text-[#5C5A55]"
+          >
+            {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
-                className={({ isActive }) => `
-                  px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                  ${isActive 
-                    ? 'bg-white/[0.04] text-cyan-400 font-semibold' 
-                    : 'text-neutral-400 hover:text-white hover:bg-white/[0.02]'
-                  }
-                `}
+                end={link.to === '/'}
+                className={({ isActive }) =>
+                  `whitespace-nowrap shrink-0 py-1 transition-colors border-b-2 ${
+                    isActive
+                      ? 'text-[#141413] border-[#1E3A5F] font-semibold'
+                      : 'border-transparent hover:text-[#141413] hover:border-[#D6CEBE]'
+                  }`
+                }
               >
                 {link.label}
               </NavLink>
             ))}
           </nav>
 
-          {/* Action Button: AI Search Trigger */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/properties')}
-              className="border-neutral-800 hover:bg-white/[0.04] text-xs font-medium cursor-pointer"
+          {/* Zone 3: Single Primary Utility Action + Mobile Drawer Trigger */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              to="/search"
+              aria-label="Search articles"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
             >
-              Search Hub
-            </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-medium text-xs flex items-center gap-1.5 shadow-lg shadow-blue-500/10 border-0 cursor-pointer"
+              <Search size={14} />
+              <span>Search</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              className="xl:hidden p-2 text-[#141413] hover:bg-[#EBE6DF] rounded transition-colors cursor-pointer"
             >
-              <Sparkles size={13} className="text-cyan-200 animate-pulse" />
-              <span>AI Assistant</span>
-            </Button>
-          </div>
-
-          {/* Mobile Navigation Toggle */}
-          <div className="flex lg:hidden items-center space-x-2">
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger className="text-neutral-400 hover:text-white p-2 shrink-0 cursor-pointer">
-                <Menu size={24} />
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-[#08080f] border-l border-neutral-900 p-6 text-white w-80">
-                <div className="flex flex-col h-full justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-8 border-b border-neutral-900 pb-4">
-                      <BrandHeader size="sm" theme="dark" />
-                    </div>
-                    <nav className="flex flex-col space-y-3">
-                      {navLinks.map((link) => (
-                        <NavLink
-                          key={link.to}
-                          to={link.to}
-                          onClick={() => setMobileOpen(false)}
-                          className={({ isActive }) => `
-                            px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 block
-                            ${isActive 
-                              ? 'bg-neutral-900 text-cyan-400 font-bold border-l-2 border-cyan-400 rounded-l-none' 
-                              : 'text-neutral-400 hover:text-white hover:bg-neutral-900/50'
-                            }
-                          `}
-                        >
-                          {link.label}
-                        </NavLink>
-                      ))}
-                    </nav>
-                  </div>
-
-                  <div className="border-t border-neutral-900 pt-6 space-y-3">
-                    <Button
-                      onClick={() => { setMobileOpen(false); navigate('/properties'); }}
-                      variant="outline"
-                      className="w-full border-neutral-800 text-white justify-center py-2.5"
-                    >
-                      Browse Properties
-                    </Button>
-                    <Button
-                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white justify-center py-2.5"
-                    >
-                      <Sparkles size={14} className="text-cyan-200" />
-                      <span>Chat with AI</span>
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </div>
-      </header>
 
-      {/* Main Content Area */}
-      <main className="flex-grow">
-        {children}
-      </main>
-
-      {/* Professional Footer */}
-      <footer className="bg-[#030306] border-t border-white/[0.03] pt-16 pb-8 text-neutral-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          
-          <div className="space-y-4">
-            <BrandHeader size="md" theme="dark" className="!-ml-3" />
-            <p className="text-xs text-neutral-500 leading-relaxed max-w-sm">
-              The premier, digital property marketplace and location-centric discovery platform for Jigjiga, the Somali Region, and East Africa.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-4 font-mono">Marketplace</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><Link to="/buy" className="hover:text-white transition-colors">Properties for Sale</Link></li>
-              <li><Link to="/rent" className="hover:text-white transition-colors">Properties for Rent</Link></li>
-              <li><Link to="/land" className="hover:text-white transition-colors">Land Parcels</Link></li>
-              <li><Link to="/commercial" className="hover:text-white transition-colors">Commercial Estates</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-4 font-mono">Company</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/agents" className="hover:text-white transition-colors">Trusted Agents</Link></li>
-              <li><Link to="/articles" className="hover:text-white transition-colors">Market Intelligence</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Support</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 font-mono">Contact Info</h4>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-neutral-500">
-                <MapPin size={14} className="text-neutral-400 flex-shrink-0" />
-                <span>Jigjiga, Somali Region, Ethiopia</span>
-              </div>
-              <div className="flex items-center gap-2 text-neutral-500">
-                <Phone size={14} className="text-neutral-400 flex-shrink-0" />
-                <span>[Contact Phone Pending Configuration]</span>
-              </div>
-              <div className="flex items-center gap-2 text-neutral-500">
-                <Mail size={14} className="text-neutral-400 flex-shrink-0" />
-                <span>[Contact Email Pending Configuration]</span>
-              </div>
+        {/* Mobile / Tablet Navigation Panel */}
+        {mobileMenuOpen && (
+          <div className="xl:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-5 space-y-2">
+            <nav aria-label="Mobile navigation" className="grid grid-cols-2 gap-2">
+              {NAV_LINKS.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === '/'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `px-3 py-2.5 rounded text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-[#1E3A5F] text-white font-semibold'
+                        : 'text-[#141413] hover:bg-[#EBE6DF]'
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="pt-3 border-t border-[#E5E0D8] flex items-center justify-between gap-3">
+              <Link
+                to="/search"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 py-2.5 px-4 text-center text-sm font-semibold bg-white border border-[#E5E0D8] rounded text-[#141413]"
+              >
+                Search Articles
+              </Link>
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-4 text-center text-sm font-semibold text-[#1E3A5F] hover:underline"
+              >
+                Admin Desk
+              </Link>
             </div>
           </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
+
+      {/* Editorial Publication Footer */}
+      <footer className="bg-white border-t border-[#E5E0D8] mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div className="md:col-span-2 space-y-3">
+            <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-[#141413] block">
+              AMAAN ESTATE
+            </Link>
+            <p className="text-sm text-[#5C5A55] max-w-md leading-relaxed">
+              An international real estate media, research, and knowledge platform covering global property investment, architecture, construction technology, home living, and industry developments.
+            </p>
+            <div className="pt-2 flex flex-wrap items-center gap-5 text-xs font-medium text-[#5C5A55]">
+              <a href="https://x.com/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
+                X / Twitter
+              </a>
+              <a href="https://linkedin.com/company/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
+                LinkedIn
+              </a>
+              <a href="https://instagram.com/amaanestate" target="_blank" rel="noreferrer" className="hover:text-[#141413] underline">
+                Instagram
+              </a>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413]">
+              Sections
+            </h3>
+            <ul className="space-y-2 text-sm text-[#5C5A55]">
+              <li><Link to="/investment" className="hover:text-[#141413]">Investment</Link></li>
+              <li><Link to="/architecture" className="hover:text-[#141413]">Architecture</Link></li>
+              <li><Link to="/construction" className="hover:text-[#141413]">Construction</Link></li>
+              <li><Link to="/home-living" className="hover:text-[#141413]">Home &amp; Living</Link></li>
+              <li><Link to="/news" className="hover:text-[#141413]">Global News</Link></li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413]">
+              Publication
+            </h3>
+            <ul className="space-y-2 text-sm text-[#5C5A55]">
+              <li><Link to="/about" className="hover:text-[#141413]">About</Link></li>
+              <li><Link to="/editorial-policy" className="hover:text-[#141413]">Editorial Policy</Link></li>
+              <li><Link to="/privacy-policy" className="hover:text-[#141413]">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-[#141413]">Terms of Use</Link></li>
+              <li><Link to="/contact" className="hover:text-[#141413]">Contact</Link></li>
+              <li><Link to="/newsletter" className="hover:text-[#141413]">Newsletter</Link></li>
+              <li><Link to="/admin" className="hover:text-[#1E3A5F] font-medium">Editorial Admin</Link></li>
+            </ul>
+          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/[0.02] pt-8 flex flex-col sm:flex-row items-center justify-between text-xxs text-neutral-600 font-mono">
-          <span>&copy; {new Date().getFullYear()} AmaanEstate. All rights reserved.</span>
-          <div className="flex space-x-4 mt-4 sm:mt-0">
-            <a href="#" className="hover:text-neutral-400 transition-colors">Terms of Service</a>
-            <span>&bull;</span>
-            <a href="#" className="hover:text-neutral-400 transition-colors">Privacy Policy</a>
+        <div className="border-t border-[#E5E0D8]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#7A7770]">
+            <span>&copy; {new Date().getFullYear()} AMAAN ESTATE (amaanestate.com). All rights reserved.</span>
+            <div className="flex items-center gap-4">
+              <a href="/sitemap.xml" className="hover:text-[#141413]">Sitemap</a>
+              <span aria-hidden="true">·</span>
+              <a href="/robots.txt" className="hover:text-[#141413]">Robots</a>
+            </div>
           </div>
         </div>
       </footer>

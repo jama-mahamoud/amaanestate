@@ -43,39 +43,39 @@ export default class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#070707] text-white p-6 select-none font-sans">
-          <div className="max-w-md w-full glass-card p-8 md:p-10 rounded-[2.5rem] border border-white/5 text-center relative overflow-hidden shadow-2xl bg-[#0a0a0abd]/80 backdrop-blur-xl">
-            {/* Background Accent */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-red-500/5 blur-[40px] pointer-events-none" />
-            
-            <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-6">
-              <ShieldAlert size={32} />
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#FAF8F5] text-[#141413] p-6 font-sans">
+          <div className="max-w-md w-full bg-white p-8 md:p-10 rounded-xl border border-[#E2DDD5] text-center shadow-sm">
+            <div className="w-14 h-14 bg-[#FAF8F5] border border-[#E2DDD5] rounded-lg flex items-center justify-center text-[#8C4A27] mx-auto mb-6">
+              <ShieldAlert size={26} />
             </div>
 
-            <h2 className="text-2xl md:text-3xl font-display font-light text-white tracking-tight mb-3">
-              Unexpected <span className="font-bold text-red-400">interruption</span>
+            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-[#5C5A55] mb-2">
+              AMAAN ESTATE
+            </p>
+            <h2 className="text-2xl md:text-3xl font-serif font-semibold text-[#141413] tracking-tight mb-3">
+              Unexpected interruption
             </h2>
-            
-            <p className="text-white/40 text-sm mb-8 leading-relaxed font-light">
-              An error occurred while loading this view. Our security shields kept the application stable.
-              <span className="block mt-2 font-mono text-[10px] text-red-300/60 font-medium truncate max-w-full">
-                {this.state.error?.message || "Internal Rendering Crash"}
+
+            <p className="text-[#5C5A55] text-sm mb-8 leading-relaxed">
+              An error occurred while rendering this view. Please reload the page or return to the publication homepage.
+              <span className="block mt-3 font-mono text-[11px] text-[#8C4A27] bg-[#FAF8F5] border border-[#E2DDD5] rounded px-3 py-2 truncate max-w-full">
+                {this.state.error?.message || 'Unexpected rendering error'}
               </span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={this.handleReload} 
+              <Button
+                onClick={this.handleReload}
                 variant="outline"
-                className="flex-1 h-12 rounded-xl border-white/10 hover:border-white/20 bg-white/5 text-xs font-bold uppercase tracking-widest text-white/80 transition-all cursor-pointer"
+                className="flex-1 h-11 rounded-md border-[#E2DDD5] hover:bg-[#FAF8F5] text-xs font-semibold uppercase tracking-wider text-[#141413] cursor-pointer"
               >
-                <RefreshCw size={14} className="mr-2 animate-spin-slow" /> Retry
+                <RefreshCw size={14} className="mr-2" /> Reload
               </Button>
-              <Button 
+              <Button
                 onClick={this.handleReset}
-                className="flex-1 bg-luxury-gold text-black hover:bg-white h-12 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-lg shadow-luxury-gold/5 cursor-pointer"
+                className="flex-1 bg-[#141413] text-white hover:bg-[#1E3A5F] h-11 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
               >
-                <Home size={14} className="mr-2" /> Go Home
+                <Home size={14} className="mr-2" /> Homepage
               </Button>
             </div>
           </div>
