@@ -41,6 +41,7 @@ import {
   getAdminCategories,
   getContactMessages,
   getCurrentAdminProfile,
+  getCurrentUserProfile,
   getDashboardMetrics,
   getMediaLibrary,
   getSubscribers,
@@ -71,6 +72,7 @@ import {
   SeoSettingsSection,
 } from '../../components/admin/AdminSettingsSection';
 import ArticlePreviewModal from '../../components/admin/ArticlePreviewModal';
+import { toast } from 'sonner';
 
 type AdminTab =
   | 'overview'
@@ -172,13 +174,19 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     let active = true;
     async function verifySession() {
-      const prof = await getCurrentAdminProfile();
+      const userProf = await getCurrentUserProfile();
       if (!active) return;
-      if (!prof) {
-        navigate('/admin/login', { replace: true });
+      if (!userProf) {
+        navigate('/login', { replace: true });
         return;
       }
-      setProfile(prof);
+      const roleName = userProf.role?.name;
+      if (roleName !== 'admin' && roleName !== 'editor') {
+        toast.error('Access denied. Administrator or Editor permissions are required.');
+        navigate('/account', { replace: true });
+        return;
+      }
+      setProfile(userProf);
       setCheckingAuth(false);
       await loadAllData();
     }
@@ -186,7 +194,7 @@ export default function AdminDashboardPage() {
 
     const authListener = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
-        navigate('/admin/login', { replace: true });
+        navigate('/login', { replace: true });
       } else if (event === 'PASSWORD_RECOVERY') {
         setActiveTab('account');
       }
@@ -201,7 +209,7 @@ export default function AdminDashboardPage() {
   const handleSignOut = async () => {
     setAccountMenuOpen(false);
     await signOutAdmin();
-    navigate('/admin/login', { replace: true });
+    navigate('/login', { replace: true });
   };
 
   const openCreateArticle = () => {
@@ -226,6 +234,8 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const isAdmin = profile?.role?.name === 'admin';
+
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={16} /> },
     { id: 'articles', label: 'Articles', icon: <BookOpen size={16} /> },
@@ -241,8 +251,12 @@ export default function AdminDashboardPage() {
       icon: <MessageSquare size={16} />,
       count: metrics.unreadMessages > 0 ? metrics.unreadMessages : undefined,
     },
-    { id: 'seo-settings', label: 'SEO & Website Settings', icon: <Globe size={16} /> },
-    { id: 'editorial-settings', label: 'Editorial Settings', icon: <Settings size={16} /> },
+    ...(isAdmin
+      ? [
+          { id: 'seo-settings' as AdminTab, label: 'SEO & Website Settings', icon: <Globe size={16} /> },
+          { id: 'editorial-settings' as AdminTab, label: 'Editorial Settings', icon: <Settings size={16} /> },
+        ]
+      : []),
     { id: 'account', label: 'My Account', icon: <UserCircle size={16} /> },
   ];
 
@@ -584,14 +598,22 @@ export default function AdminDashboardPage() {
               )}
 
               {activeTab === 'subscribers' && (
-                <SubscribersSection subscribers={subscribers} onRefresh={loadAllData} />
+                <SubscribersSection
+                  subscribers={subscribers}
+                  canDelete={isAdmin}
+                  onRefresh={loadAllData}
+                />
               )}
 
               {activeTab === 'messages' && (
-                <MessagesSection messages={messages} onRefresh={loadAllData} />
+                <MessagesSection
+                  messages={messages}
+                  canDelete={isAdmin}
+                  onRefresh={loadAllData}
+                />
               )}
 
-              {activeTab === 'seo-settings' && (
+              {activeTab === 'seo-settings' && isAdmin && (
                 <SeoSettingsSection
                   siteSettings={siteSettings}
                   media={media}
@@ -600,7 +622,7 @@ export default function AdminDashboardPage() {
                 />
               )}
 
-              {activeTab === 'editorial-settings' && (
+              {activeTab === 'editorial-settings' && isAdmin && (
                 <EditorialSettingsSection
                   siteSettings={siteSettings}
                   users={users}

@@ -16,7 +16,8 @@ const EditorialPolicyPage = React.lazy(() => import('./pages/EditorialPolicyPage
 const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage'));
 const NewsletterPage = React.lazy(() => import('./pages/NewsletterPage'));
-const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'));
+const AuthPage = React.lazy(() => import('./pages/AuthPage'));
+const AccountPage = React.lazy(() => import('./pages/AccountPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
 
 function PageFallback() {
@@ -33,7 +34,7 @@ export default function App() {
   useEffect(() => {
     const subscription = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        navigate('/admin?section=account', { replace: true });
+        navigate('/account', { replace: true });
       }
     });
     return () => {
@@ -47,8 +48,13 @@ export default function App() {
       <Toaster position="bottom-right" richColors />
       <Suspense fallback={<PageFallback />}>
         <Routes>
+          {/* Unified Authentication & Account Routes */}
+          <Route path="/login" element={<Layout><AuthPage initialMode="signin" /></Layout>} />
+          <Route path="/register" element={<Layout><AuthPage initialMode="register" /></Layout>} />
+          <Route path="/account" element={<Layout><AccountPage /></Layout>} />
+
           {/* Standalone Admin Workspace */}
-          <Route path="/admin/login" element={<Layout><AdminLoginPage /></Layout>} />
+          <Route path="/admin/login" element={<Layout><AuthPage initialMode="signin" /></Layout>} />
           <Route path="/admin" element={<AdminDashboardPage />} />
 
           {/* Public Editorial Publication Routes */}

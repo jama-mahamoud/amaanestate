@@ -25,7 +25,7 @@ export interface AdminAuthResult {
   error?: string;
 }
 
-export async function getCurrentAdminProfile(): Promise<Profile | null> {
+export async function getCurrentUserProfile(): Promise<Profile | null> {
   if (isSupabaseConfigured && supabase) {
     const {
       data: { user },
@@ -38,12 +38,20 @@ export async function getCurrentAdminProfile(): Promise<Profile | null> {
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error || !data) return null;
-    const roleObj = data.roles || null;
-    const roleName = roleObj?.name;
-    if (!['admin', 'editor'].includes(roleName)) {
-      return null;
+    if (error || !data) {
+      return {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || '',
+        avatar_url: null,
+        bio: null,
+        role_id: null,
+        role: { id: 'reader', name: 'reader', created_at: new Date().toISOString() },
+        created_at: user.created_at || new Date().toISOString(),
+      };
     }
+
+    const roleObj = data.roles || null;
     return {
       ...data,
       email: user.email || data.email,
@@ -56,6 +64,93 @@ export async function getCurrentAdminProfile(): Promise<Profile | null> {
     return db.profiles[0] || null;
   }
   return null;
+}
+
+export async function getCurrentAdminProfile(): Promise<Profile | null> {
+  const profile = await getCurrentUserProfile();
+  if (!profile) return null;
+  const roleName = profile.role?.name;
+  if (!roleName || !['admin', 'editor'].includes(roleName)) {
+    return null;
+  }
+  return profile;
+}
+
+export async function signInUser(email: string, password: string): Promise<AdminAuthResult> {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error || !data.user) {
+      return { success: false, error: error?.message || 'Invalid login credentials.' };
+    }
+
+    const profile = await getCurrentUserProfile();
+    if (!profile) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        error: 'Unable to load your account profile. Please try again.',
+      };
+    }
+    return { success: true, profile };
+  }
+
+  return {
+    success: false,
+    error: 'Supabase environment variables are not configured.',
+  };
+}
+
+export interface RegisterPublicUserResult {
+  success: boolean;
+  requiresEmailConfirmation?: boolean;
+  profile?: Profile | null;
+  error?: string;
+}
+
+export async function registerPublicUser(payload: {
+  fullName: string;
+  email: string;
+  password: string;
+}): Promise<RegisterPublicUserResult> {
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      success: false,
+      error: 'Supabase authentication is not configured in this environment.',
+    };
+  }
+
+  const emailRedirectTo =
+    typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined;
+
+  const { data, error } = await supabase.auth.signUp({
+    email: payload.email.trim(),
+    password: payload.password,
+    options: {
+      data: {
+        full_name: payload.fullName.trim(),
+      },
+      emailRedirectTo,
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (!data.session) {
+    return {
+      success: true,
+      requiresEmailConfirmation: true,
+      profile: null,
+    };
+  }
+
+  const profile = await getCurrentUserProfile();
+  return {
+    success: true,
+    requiresEmailConfirmation: false,
+    profile,
+  };
 }
 
 export async function signInAdmin(email: string, password: string): Promise<AdminAuthResult> {
@@ -98,6 +193,8 @@ export async function signOutAdmin(): Promise<void> {
     window.localStorage.removeItem(DEMO_ADMIN_SESSION_KEY);
   }
 }
+
+export const signOutUser = signOutAdmin;
 
 export async function getAdminArticles(): Promise<Article[]> {
   if (isSupabaseConfigured && supabase) {

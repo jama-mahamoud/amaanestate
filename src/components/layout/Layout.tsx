@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Menu, Search, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, User, X } from 'lucide-react';
+import { getCurrentUserProfile, signOutUser } from '../../services/adminService';
+import { supabase } from '../../lib/supabase';
+import { Profile } from '../../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,17 +21,57 @@ const NAV_LINKS = [
 ];
 
 export default function Layout({ children }: LayoutProps) {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getCurrentUserProfile().then((prof) => {
+      if (active) setCurrentUser(prof);
+    });
+
+    const sub = supabase?.auth.onAuthStateChange(async (event) => {
+      if (!active) return;
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+      } else {
+        const prof = await getCurrentUserProfile();
+        if (active) setCurrentUser(prof);
+      }
+    });
+
+    return () => {
+      active = false;
+      sub?.data.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    await signOutUser();
+    setCurrentUser(null);
+    navigate('/', { replace: true });
+  };
+
+  const roleName = currentUser?.role?.name;
+  const isStaff = roleName === 'admin' || roleName === 'editor';
+  const displayName =
+    currentUser?.full_name?.trim().split(/\s+/)[0] ||
+    currentUser?.email?.split('@')[0] ||
+    'Account';
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
       {/* Clean Single-Row Editorial Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E5E0D8]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 sm:gap-6">
           {/* Zone 1: Single-line Wordmark */}
           <Link
             to="/"
-            className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#141413] whitespace-nowrap shrink-0"
+            className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-[#141413] whitespace-nowrap shrink-0"
           >
             AMAAN ESTATE
           </Link>
@@ -56,16 +99,80 @@ export default function Layout({ children }: LayoutProps) {
             ))}
           </nav>
 
-          {/* Zone 3: Single Primary Utility Action + Mobile Drawer Trigger */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Zone 3: Search + Auth Login / Account Action + Mobile Drawer Trigger */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <Link
               to="/search"
               aria-label="Search articles"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
             >
               <Search size={14} />
               <span>Search</span>
             </Link>
+
+            {currentUser ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((o) => !o)}
+                  aria-expanded={userMenuOpen}
+                  aria-label="Account menu"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <User size={14} />
+                  <span className="max-w-[90px] truncate">{displayName}</span>
+                  <ChevronDown size={13} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E5E0D8] rounded shadow-lg py-1.5 z-50">
+                    <div className="px-4 py-2 border-b border-[#E5E0D8]">
+                      <div className="text-xs font-semibold text-[#141413] truncate">
+                        {currentUser.full_name || currentUser.email}
+                      </div>
+                      <div className="text-[11px] font-mono text-[#7A7770] truncate">
+                        {currentUser.email}
+                      </div>
+                    </div>
+                    {isStaff && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="px-4 py-2 text-xs font-semibold text-[#1E3A5F] hover:bg-[#FAF8F5] flex items-center gap-2"
+                      >
+                        <LayoutDashboard size={14} />
+                        <span>Editorial CMS</span>
+                      </Link>
+                    )}
+                    <Link
+                      to="/account"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="px-4 py-2 text-xs font-medium text-[#141413] hover:bg-[#FAF8F5] flex items-center gap-2"
+                    >
+                      <User size={14} />
+                      <span>My Account</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="w-full px-4 py-2 text-left text-xs font-medium text-[#991B1B] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogOut size={14} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                aria-label="Login or create account"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0"
+              >
+                <User size={14} />
+                <span>Login</span>
+              </Link>
+            )}
 
             <button
               type="button"
@@ -81,7 +188,7 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Mobile / Tablet Navigation Panel */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-5 space-y-2">
+          <div className="xl:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-5 space-y-3">
             <nav aria-label="Mobile navigation" className="grid grid-cols-2 gap-2">
               {NAV_LINKS.map((link) => (
                 <NavLink
@@ -101,7 +208,7 @@ export default function Layout({ children }: LayoutProps) {
                 </NavLink>
               ))}
             </nav>
-            <div className="pt-3 border-t border-[#E5E0D8] flex items-center justify-between gap-3">
+            <div className="pt-3 border-t border-[#E5E0D8] flex flex-wrap items-center justify-between gap-2.5">
               <Link
                 to="/search"
                 onClick={() => setMobileMenuOpen(false)}
@@ -109,13 +216,35 @@ export default function Layout({ children }: LayoutProps) {
               >
                 Search Articles
               </Link>
-              <Link
-                to="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-2.5 px-4 text-center text-sm font-semibold text-[#1E3A5F] hover:underline"
-              >
-                Admin Desk
-              </Link>
+              {currentUser ? (
+                <>
+                  {isStaff && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded"
+                    >
+                      Editorial CMS
+                    </Link>
+                  )}
+                  <Link
+                    to="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2.5 px-4 text-center text-sm font-semibold bg-[#EFECE6] text-[#141413] rounded"
+                  >
+                    My Account
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded inline-flex items-center gap-1.5"
+                >
+                  <User size={14} />
+                  <span>Login</span>
+                </Link>
+              )}
             </div>
           </div>
         )}
@@ -171,7 +300,6 @@ export default function Layout({ children }: LayoutProps) {
               <li><Link to="/terms" className="hover:text-[#141413]">Terms of Use</Link></li>
               <li><Link to="/contact" className="hover:text-[#141413]">Contact</Link></li>
               <li><Link to="/newsletter" className="hover:text-[#141413]">Newsletter</Link></li>
-              <li><Link to="/admin" className="hover:text-[#1E3A5F] font-medium">Editorial Admin</Link></li>
             </ul>
           </div>
         </div>

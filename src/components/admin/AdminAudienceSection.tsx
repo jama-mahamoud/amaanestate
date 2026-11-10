@@ -12,10 +12,15 @@ import { toast } from 'sonner';
 
 interface SubscribersSectionProps {
   subscribers: NewsletterSubscriber[];
+  canDelete?: boolean;
   onRefresh: () => void;
 }
 
-export function SubscribersSection({ subscribers, onRefresh }: SubscribersSectionProps) {
+export function SubscribersSection({
+  subscribers,
+  canDelete = true,
+  onRefresh,
+}: SubscribersSectionProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('all');
   const [deleteTarget, setDeleteTarget] = useState<NewsletterSubscriber | null>(null);
@@ -137,14 +142,16 @@ export function SubscribersSection({ subscribers, onRefresh }: SubscribersSectio
                     >
                       {sub.status === 'subscribed' ? 'Unsubscribe' : 'Reactivate'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(sub)}
-                      className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
-                      title="Delete Subscriber"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(sub)}
+                        className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                        title="Delete Subscriber"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -176,10 +183,11 @@ export function SubscribersSection({ subscribers, onRefresh }: SubscribersSectio
 
 interface MessagesSectionProps {
   messages: ContactMessage[];
+  canDelete?: boolean;
   onRefresh: () => void;
 }
 
-export function MessagesSection({ messages, onRefresh }: MessagesSectionProps) {
+export function MessagesSection({ messages, canDelete = true, onRefresh }: MessagesSectionProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | ContactMessageStatus>('all');
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<ContactMessage | null>(null);
@@ -257,14 +265,16 @@ export function MessagesSection({ messages, onRefresh }: MessagesSectionProps) {
                       <option value="replied">Replied</option>
                       <option value="archived">Archived</option>
                     </select>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(msg)}
-                      className="p-2 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
-                      title="Delete Message"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(msg)}
+                        className="p-2 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                        title="Delete Message"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
