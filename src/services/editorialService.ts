@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { Article, Category, SiteSettings } from '../types';
+import { Article, Category, SiteSettings, Tag } from '../types';
+import { SEED_ARTICLE_BY_SLUG } from '../data/allArticles';
 import { hydrateDemoArticle, loadDemoDb, saveDemoDb } from './demoContent';
 
 export interface ArticleQueryOptions {
@@ -12,11 +13,15 @@ export interface ArticleQueryOptions {
 }
 
 function normalizeArticleRow(row: any): Article {
-  const tags = Array.isArray(row.article_tags)
+  const tags: Tag[] = Array.isArray(row.article_tags)
     ? row.article_tags.map((at: any) => at.tags).filter(Boolean)
     : Array.isArray(row.tags)
     ? row.tags
     : [];
+  const seed = row.slug ? SEED_ARTICLE_BY_SLUG[row.slug] : undefined;
+  const keywords = seed
+    ? [seed.primary_keyword, ...seed.secondary_keywords]
+    : tags.map((t) => t.name).filter(Boolean);
 
   return {
     id: row.id,
@@ -25,12 +30,15 @@ function normalizeArticleRow(row: any): Article {
     excerpt: row.excerpt || '',
     content: row.content || '',
     featured_image: row.featured_image || null,
+    featured_image_alt: row.featured_image_alt || seed?.featured_image_alt || null,
+    featured_image_caption: row.featured_image_caption || seed?.featured_image_caption || null,
     gallery_images: Array.isArray(row.gallery_images) ? row.gallery_images : [],
     category_id: row.category_id,
     author_id: row.author_id,
     category: row.categories || row.category || null,
     author: row.authors || row.author || null,
     tags,
+    keywords,
     status: row.status,
     is_featured: Boolean(row.is_featured),
     reading_time: Number(row.reading_time) || 5,

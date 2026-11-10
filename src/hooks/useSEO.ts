@@ -4,17 +4,35 @@ export interface SEOProps {
   title?: string;
   description?: string;
   image?: string;
+  imageAlt?: string;
   url?: string;
   type?: 'website' | 'article' | 'profile';
+  keywords?: string[];
+  publishedTime?: string;
+  modifiedTime?: string;
   structuredData?: Record<string, any> | Array<Record<string, any>>;
+}
+
+function toAbsoluteUrl(value?: string): string | undefined {
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://amaanestate.com';
+  return `${origin}${value.startsWith('/') ? '' : '/'}${value}`;
 }
 
 export function useSEO({
   title,
   description,
   image,
+  imageAlt,
   url,
   type = 'website',
+  keywords,
+  publishedTime,
+  modifiedTime,
   structuredData,
 }: SEOProps) {
   useEffect(() => {
@@ -51,24 +69,56 @@ export function useSEO({
     setMetaTag('name', 'description', metaDesc);
     setMetaTag('name', 'robots', 'index, follow');
 
+    if (keywords && keywords.length > 0) {
+      setMetaTag('name', 'keywords', keywords.join(', '));
+    } else {
+      document.querySelector('meta[name="keywords"]')?.remove();
+    }
+
+    const absoluteImage = toAbsoluteUrl(image);
+
     setMetaTag('property', 'og:site_name', 'AMAAN ESTATE');
     setMetaTag('property', 'og:title', fullTitle);
     setMetaTag('property', 'og:description', metaDesc);
     setMetaTag('property', 'og:type', type);
     setMetaTag('property', 'og:url', canonicalUrl);
-    if (image) {
-      setMetaTag('property', 'og:image', image);
+    if (absoluteImage) {
+      setMetaTag('property', 'og:image', absoluteImage);
+      if (imageAlt) {
+        setMetaTag('property', 'og:image:alt', imageAlt);
+      } else {
+        document.querySelector('meta[property="og:image:alt"]')?.remove();
+      }
     } else {
       document.querySelector('meta[property="og:image"]')?.remove();
+      document.querySelector('meta[property="og:image:alt"]')?.remove();
+    }
+
+    if (type === 'article' && publishedTime) {
+      setMetaTag('property', 'article:published_time', publishedTime);
+    } else {
+      document.querySelector('meta[property="article:published_time"]')?.remove();
+    }
+
+    if (type === 'article' && modifiedTime) {
+      setMetaTag('property', 'article:modified_time', modifiedTime);
+    } else {
+      document.querySelector('meta[property="article:modified_time"]')?.remove();
     }
 
     setMetaTag('name', 'twitter:card', 'summary_large_image');
     setMetaTag('name', 'twitter:title', fullTitle);
     setMetaTag('name', 'twitter:description', metaDesc);
-    if (image) {
-      setMetaTag('name', 'twitter:image', image);
+    if (absoluteImage) {
+      setMetaTag('name', 'twitter:image', absoluteImage);
+      if (imageAlt) {
+        setMetaTag('name', 'twitter:image:alt', imageAlt);
+      } else {
+        document.querySelector('meta[name="twitter:image:alt"]')?.remove();
+      }
     } else {
       document.querySelector('meta[name="twitter:image"]')?.remove();
+      document.querySelector('meta[name="twitter:image:alt"]')?.remove();
     }
 
     const existingScripts = document.querySelectorAll('script[data-amaan-seo="true"]');
@@ -84,5 +134,5 @@ export function useSEO({
         document.head.appendChild(scriptEl);
       });
     }
-  }, [title, description, image, url, type, structuredData]);
+  }, [title, description, image, imageAlt, url, type, keywords, publishedTime, modifiedTime, structuredData]);
 }

@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Copy, Share2 } from 'lucide-react';
 import { Article } from '../types';
 import { getPublishedArticleBySlug, getRelatedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
+import { countArticleBodyWords } from '../data/allArticles';
 import { useSEO } from '../hooks/useSEO';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
@@ -56,17 +57,38 @@ export default function ArticleDetailsPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const articleUrl = typeof window !== 'undefined' ? window.location.href : `https://amaanestate.com/articles/${slug}`;
+  const articleUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}${window.location.pathname}`
+      : `https://amaanestate.com/articles/${slug}`;
+
+  const articleKeywords = useMemo(() => {
+    if (!article) return undefined;
+    if (article.keywords && article.keywords.length > 0) return article.keywords;
+    if (article.tags && article.tags.length > 0) return article.tags.map((t) => t.name);
+    return undefined;
+  }, [article]);
 
   const structuredData = useMemo(() => {
     if (!article) return undefined;
-    const articleSchema = {
+    const rawImg = article.og_image || article.featured_image;
+    const absoluteImg = rawImg
+      ? /^https?:\/\//i.test(rawImg)
+        ? rawImg
+        : `${typeof window !== 'undefined' ? window.location.origin : 'https://amaanestate.com'}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`
+      : undefined;
+    const wordCount = countArticleBodyWords(article.content);
+    const articleSchema: Record<string, any> = {
       '@context': 'https://schema.org',
-      '@type': 'Article',
+      '@type': article.category?.slug === 'news' ? 'NewsArticle' : 'Article',
       headline: article.seo_title || article.title,
       description: article.seo_description || article.excerpt,
       datePublished: article.published_at || article.created_at,
       dateModified: article.updated_at || article.published_at || article.created_at,
+      articleSection: article.category?.name || 'Editorial',
+      wordCount,
+      ...(absoluteImg ? { image: [absoluteImg] } : {}),
+      ...(articleKeywords && articleKeywords.length > 0 ? { keywords: articleKeywords.join(', ') } : {}),
       author: {
         '@type': 'Person',
         name: article.author?.name || 'AMAAN ESTATE Editorial Desk',
@@ -104,13 +126,18 @@ export default function ArticleDetailsPage() {
     };
 
     return [articleSchema, breadcrumbSchema];
-  }, [article, articleUrl]);
+  }, [article, articleKeywords, articleUrl]);
 
   useSEO({
     title: article ? article.seo_title || article.title : 'Article Not Found',
     description: article ? article.seo_description || article.excerpt : 'Read international real estate research on AMAAN ESTATE.',
     image: article?.og_image || article?.featured_image || undefined,
+    imageAlt: article?.featured_image_alt || article?.title || undefined,
+    url: article ? articleUrl : undefined,
     type: 'article',
+    keywords: articleKeywords,
+    publishedTime: article?.published_at || article?.created_at || undefined,
+    modifiedTime: article?.updated_at || article?.published_at || article?.created_at || undefined,
     structuredData,
   });
 
@@ -272,13 +299,13 @@ export default function ArticleDetailsPage() {
           <div className="aspect-[16/9] w-full overflow-hidden rounded bg-[#EBE6DF]">
             <img
               src={featuredImageSrc}
-              alt={article.title}
+              alt={article.featured_image_alt || article.title}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />
           </div>
           <figcaption className="text-xs font-serif italic text-[#5C5A55] max-w-3xl mx-auto">
-            AMAAN ESTATE Editorial Photography · {article.category?.name || 'Global Coverage'}
+            {article.featured_image_caption || `AMAAN ESTATE Editorial Photography · ${article.category?.name || 'Global Coverage'}`}
           </figcaption>
         </figure>
 

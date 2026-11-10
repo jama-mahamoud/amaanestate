@@ -34,7 +34,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           {!imgFailed ? (
             <img
               src={imageSrc}
-              alt={article.title}
+              alt={article.featured_image_alt || article.title}
               referrerPolicy="no-referrer"
               onError={() => setImgFailed(true)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
@@ -51,7 +51,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest font-semibold text-[#5C5A55]">
               {article.category && (
                 <Link
-                  to={`/category/${article.category.slug}`}
+                  to={`/${article.category.slug}`}
                   className="text-[#8C4A27] hover:underline"
                 >
                   {article.category.name}
@@ -95,7 +95,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
       <article className="group py-4 border-b border-[#E5E0D8] last:border-b-0 flex flex-col gap-2">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-medium text-[#5C5A55]">
           {article.category && (
-            <Link to={`/category/${article.category.slug}`} className="text-[#8C4A27] hover:underline">
+            <Link to={`/${article.category.slug}`} className="text-[#8C4A27] hover:underline">
               {article.category.name}
             </Link>
           )}
@@ -125,7 +125,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
         {!imgFailed ? (
           <img
             src={imageSrc}
-            alt={article.title}
+            alt={article.featured_image_alt || article.title}
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setImgFailed(true)}
@@ -142,7 +142,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider font-medium text-[#5C5A55]">
             {article.category && (
-              <Link to={`/category/${article.category.slug}`} className="text-[#8C4A27] hover:underline">
+              <Link to={`/${article.category.slug}`} className="text-[#8C4A27] hover:underline">
                 {article.category.name}
               </Link>
             )}

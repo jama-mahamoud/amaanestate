@@ -64,12 +64,15 @@ export interface Article {
   excerpt: string;
   content: string;
   featured_image?: string | null;
+  featured_image_alt?: string | null;
+  featured_image_caption?: string | null;
   gallery_images: string[];
   category_id: string;
   author_id: string;
   category?: Category | null;
   author?: Author | null;
   tags?: Tag[];
+  keywords?: string[];
   status: ArticleStatus;
   is_featured: boolean;
   reading_time: number;

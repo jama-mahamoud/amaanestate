@@ -50,6 +50,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Direct file attachment download for 004_editorial_25_articles.sql
+app.get("/004_editorial_25_articles.sql", (req, res) => {
+  const filePath = path.join(process.cwd(), "supabase", "migrations", "004_editorial_25_articles.sql");
+  res.download(filePath, "004_editorial_25_articles.sql");
+});
+
 // Robots.txt (both root and /api)
 function buildRobotsTxt(): string {
   return [
@@ -88,23 +94,35 @@ async function buildSitemapXml(): Promise<string> {
     { path: "/terms", changefreq: "monthly", priority: "0.5" },
   ];
 
-  const demoSlugs = [
-    "sovereign-capital-logistics-europe-east-africa-2026",
-    "reit-debt-maturities-refinancing-cycles",
-    "travertine-climate-responsive-civic-pavilions",
-    "adaptive-reuse-industrial-silos-cultural-commons",
-    "hybrid-mass-timber-high-rise-seismic-standards",
-    "geopolymer-low-carbon-concrete-site-trials",
-    "passive-cooling-travertine-courtyard-residences",
-    "smart-grid-home-batteries-residential-roi",
-    "eu-building-energy-performance-mandate-commercial-retrofits",
-    "transit-oriented-zoning-reforms-global-capitals",
+  const seedArticleEntries: { slug: string; updatedAt: string }[] = [
+    { slug: "sovereign-capital-logistics-europe-east-africa-2026", updatedAt: "2026-10-28" },
+    { slug: "reit-debt-maturities-refinancing-cycles", updatedAt: "2026-10-16" },
+    { slug: "build-to-rent-multifamily-underwriting-global-cities", updatedAt: "2026-10-12" },
+    { slug: "data-center-real-estate-power-land-underwriting", updatedAt: "2026-10-05" },
+    { slug: "brown-discount-commercial-office-retrofit-yields", updatedAt: "2026-09-29" },
+    { slug: "travertine-climate-responsive-civic-pavilions", updatedAt: "2026-10-24" },
+    { slug: "adaptive-reuse-industrial-silos-cultural-commons", updatedAt: "2026-10-04" },
+    { slug: "biophilic-high-rise-sky-gardens-urban-microclimate", updatedAt: "2026-09-28" },
+    { slug: "rammed-earth-thermal-mass-arid-architecture", updatedAt: "2026-09-20" },
+    { slug: "sponge-city-coastal-urban-design-resilience", updatedAt: "2026-09-12" },
+    { slug: "hybrid-mass-timber-high-rise-seismic-standards", updatedAt: "2026-10-20" },
+    { slug: "geopolymer-low-carbon-concrete-site-trials", updatedAt: "2026-10-08" },
+    { slug: "volumetric-modular-prefabrication-economics", updatedAt: "2026-10-02" },
+    { slug: "prefabricated-facade-overcladding-occupied-retrofits", updatedAt: "2026-09-24" },
+    { slug: "digital-twin-lidar-robotics-construction-productivity", updatedAt: "2026-09-16" },
+    { slug: "passive-cooling-travertine-courtyard-residences", updatedAt: "2026-10-14" },
+    { slug: "smart-grid-home-batteries-residential-roi", updatedAt: "2026-10-01" },
+    { slug: "small-space-urban-apartment-joinery-solutions", updatedAt: "2026-09-25" },
+    { slug: "circadian-lighting-acoustic-residential-interior-design", updatedAt: "2026-09-18" },
+    { slug: "deep-energy-heritage-townhouse-retrofit-guide", updatedAt: "2026-09-10" },
+    { slug: "eu-building-energy-performance-mandate-commercial-retrofits", updatedAt: "2026-10-11" },
+    { slug: "uk-planning-infrastructure-act-2025-housing-reforms", updatedAt: "2026-09-26" },
+    { slug: "singapore-ura-master-plan-2025-housing-supply", updatedAt: "2026-09-22" },
+    { slug: "dubai-real-estate-strategy-2033-dld-market-roadmap", updatedAt: "2026-09-19" },
+    { slug: "eu-construction-products-regulation-2024-digital-product-passports", updatedAt: "2026-09-14" },
   ];
 
-  let articleEntries: { slug: string; updatedAt: string }[] = demoSlugs.map((slug) => ({
-    slug,
-    updatedAt: today,
-  }));
+  let articleEntries: { slug: string; updatedAt: string }[] = seedArticleEntries;
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
@@ -122,7 +140,7 @@ async function buildSitemapXml(): Promise<string> {
       );
       if (response.ok) {
         const rows = (await response.json()) as Array<{ slug: string; updated_at?: string; published_at?: string }>;
-        if (Array.isArray(rows)) {
+        if (Array.isArray(rows) && rows.length > 0) {
           articleEntries = rows.map((row) => ({
             slug: row.slug,
             updatedAt: (row.updated_at || row.published_at || today).split("T")[0],
@@ -131,7 +149,6 @@ async function buildSitemapXml(): Promise<string> {
       }
     } catch (err) {
       console.error("[Sitemap] Failed to query Supabase articles:", err);
-      articleEntries = [];
     }
   }
 
