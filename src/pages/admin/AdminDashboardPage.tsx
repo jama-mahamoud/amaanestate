@@ -136,6 +136,7 @@ export default function AdminDashboardPage() {
   useSEO({
     title: 'Editorial CMS Dashboard',
     description: 'AMAAN ESTATE editorial content management and publishing workspace.',
+    noIndex: true,
   });
 
   const loadAllData = useCallback(async () => {

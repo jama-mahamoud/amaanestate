@@ -5,7 +5,7 @@ import { Article } from '../types';
 import { getPublishedArticleBySlug, getRelatedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { countArticleBodyWords } from '../data/allArticles';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
 import NewsletterBox from '../components/editorial/NewsletterBox';
@@ -56,10 +56,7 @@ export default function ArticleDetailsPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const articleUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}${window.location.pathname}`
-      : `https://amaanestate.com/articles/${slug}`;
+  const articleUrl = `${getCanonicalOrigin()}/articles/${article?.slug || slug || ''}`;
 
   const articleKeywords = useMemo(() => {
     if (!article) return undefined;
@@ -74,7 +71,7 @@ export default function ArticleDetailsPage() {
     const absoluteImg = rawImg
       ? /^https?:\/\//i.test(rawImg)
         ? rawImg
-        : `${typeof window !== 'undefined' ? window.location.origin : 'https://amaanestate.com'}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`
+        : `${getCanonicalOrigin()}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`
       : undefined;
     const wordCount = countArticleBodyWords(article.content);
     const articleSchema: Record<string, any> = {
@@ -133,6 +130,7 @@ export default function ArticleDetailsPage() {
     image: article?.og_image || article?.featured_image || undefined,
     imageAlt: article?.featured_image_alt || article?.title || undefined,
     url: article ? articleUrl : undefined,
+    noIndex: !loading && !article,
     type: 'article',
     keywords: articleKeywords,
     publishedTime: article?.published_at || article?.created_at || undefined,

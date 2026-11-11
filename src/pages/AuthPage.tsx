@@ -39,6 +39,7 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
   useSEO({
     title: mode === 'register' ? 'Create Account' : mode === 'forgot' ? 'Reset Password' : 'Sign In',
     description: 'Sign in or create a reader account on AMAAN ESTATE.',
+    noIndex: true,
   });
 
   useEffect(() => {

@@ -6,6 +6,7 @@ export interface SEOProps {
   image?: string;
   imageAlt?: string;
   url?: string;
+  noIndex?: boolean;
   type?: 'website' | 'article' | 'profile';
   keywords?: string[];
   publishedTime?: string;
@@ -13,13 +14,21 @@ export interface SEOProps {
   structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
+export function getCanonicalOrigin(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return window.location.origin;
+    }
+    return 'https://amaanestate.com';
+  }
+  return 'https://amaanestate.com';
+}
+
 function toAbsoluteUrl(value?: string): string | undefined {
   if (!value) return undefined;
   if (/^https?:\/\//i.test(value)) return value;
-  const origin =
-    typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'https://amaanestate.com';
+  const origin = getCanonicalOrigin();
   return `${origin}${value.startsWith('/') ? '' : '/'}${value}`;
 }
 
@@ -29,6 +38,7 @@ export function useSEO({
   image,
   imageAlt,
   url,
+  noIndex = false,
   type = 'website',
   keywords,
   publishedTime,
@@ -57,7 +67,7 @@ export function useSEO({
       element.setAttribute('content', content);
     };
 
-    const canonicalUrl = url || window.location.origin + window.location.pathname;
+    const canonicalUrl = url || getCanonicalOrigin() + window.location.pathname;
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonicalLink) {
       canonicalLink = document.createElement('link');
@@ -67,7 +77,7 @@ export function useSEO({
     canonicalLink.setAttribute('href', canonicalUrl);
 
     setMetaTag('name', 'description', metaDesc);
-    setMetaTag('name', 'robots', 'index, follow');
+    setMetaTag('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow');
 
     if (keywords && keywords.length > 0) {
       setMetaTag('name', 'keywords', keywords.join(', '));
@@ -134,5 +144,5 @@ export function useSEO({
         document.head.appendChild(scriptEl);
       });
     }
-  }, [title, description, image, imageAlt, url, type, keywords, publishedTime, modifiedTime, structuredData]);
+  }, [title, description, image, imageAlt, url, noIndex, type, keywords, publishedTime, modifiedTime, structuredData]);
 }

@@ -28,6 +28,7 @@ export default function AccountPage() {
   useSEO({
     title: 'My Account',
     description: 'Manage your AMAAN ESTATE account profile and password.',
+    noIndex: true,
   });
 
   useEffect(() => {

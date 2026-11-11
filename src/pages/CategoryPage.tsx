@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Article, Category } from '../types';
 import { getCategoryBySlug, getPublishedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import ArticleCard from '../components/editorial/ArticleCard';
 import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
@@ -47,6 +47,7 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
       category?.seo_description ||
       category?.description ||
       'Curated international real estate coverage and research on AMAAN ESTATE.',
+    url: `${getCanonicalOrigin()}/${activeSlug}`,
     structuredData: category
       ? {
           '@context': 'https://schema.org',

@@ -5,6 +5,10 @@
       "destination": "/api/index"
     },
     {
+      "source": "/sitemap-:page.xml",
+      "destination": "/api/index"
+    },
+    {
       "source": "/robots.txt",
       "destination": "/api/index"
     },
@@ -21,7 +25,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!sitemap\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|articles/|.*\\..*).*)",
+      "source": "/((?!sitemap\\.xml|sitemap-.*\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|articles/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
