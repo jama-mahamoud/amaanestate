@@ -20,9 +20,9 @@ export function getCanonicalOrigin(): string {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return window.location.origin;
     }
-    return 'https://amaanestate.com';
+    return 'https://www.amaanestate.com';
   }
-  return 'https://amaanestate.com';
+  return 'https://www.amaanestate.com';
 }
 
 function toAbsoluteUrl(value?: string): string | undefined {

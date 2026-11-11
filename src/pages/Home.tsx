@@ -27,10 +27,10 @@ export default function Home() {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'AMAAN ESTATE',
-      url: 'https://amaanestate.com',
+      url: 'https://www.amaanestate.com',
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://amaanestate.com/search?q={search_term_string}',
+        target: 'https://www.amaanestate.com/search?q={search_term_string}',
         'query-input': 'required name=search_term_string',
       },
     },

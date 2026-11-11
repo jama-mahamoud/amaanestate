@@ -40,21 +40,30 @@ export const app = express();
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  const rawHost = (req.headers["x-forwarded-host"] || req.headers.host || "").toString().split(",")[0].trim();
+  const hostname = rawHost.split(":")[0].toLowerCase();
+  if (hostname === "amaanestate.com") {
+    return res.redirect(308, `https://www.amaanestate.com${req.originalUrl}`);
+  }
+  return next();
+});
+
 function normalizeCanonicalOrigin(rawUrl?: string | null): string {
   const raw = (rawUrl || "").trim().replace(/\/+$/, "");
-  if (!raw) return "https://amaanestate.com";
+  if (!raw) return "https://www.amaanestate.com";
   try {
     const parsed = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
     if (parsed.hostname === "www.amaanestate.com" || parsed.hostname === "amaanestate.com") {
-      return "https://amaanestate.com";
+      return "https://www.amaanestate.com";
     }
     return `${parsed.protocol}//${parsed.host}`;
   } catch {
-    return "https://amaanestate.com";
+    return "https://www.amaanestate.com";
   }
 }
 
-const SITE_URL = normalizeCanonicalOrigin(process.env.CANONICAL_SITE_URL || "https://amaanestate.com");
+const SITE_URL = normalizeCanonicalOrigin(process.env.CANONICAL_SITE_URL || "https://www.amaanestate.com");
 const MAX_URLS_PER_SITEMAP = 45000;
 const MAX_BYTES_PER_SITEMAP = 45 * 1024 * 1024;
 
@@ -274,8 +283,7 @@ app.get("/004_editorial_25_articles.sql", (req, res) => {
 
 function setNoCacheSeoHeaders(res: express.Response) {
   res.setHeader("Cache-Control", "public, max-age=0, s-maxage=0, must-revalidate");
-  res.setHeader("CDN-Cache-Control", "no-store");
-  res.setHeader("Vercel-CDN-Cache-Control", "no-store");
+  res.setHeader("Vercel-CDN-Cache-Control", "max-age=0, must-revalidate");
 }
 
 // Robots.txt (both root and /api)

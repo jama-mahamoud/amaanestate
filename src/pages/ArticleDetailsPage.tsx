@@ -92,7 +92,7 @@ export default function ArticleDetailsPage() {
       publisher: {
         '@type': 'Organization',
         name: 'AMAAN ESTATE',
-        url: 'https://amaanestate.com',
+        url: 'https://www.amaanestate.com',
       },
       mainEntityOfPage: articleUrl,
     };
@@ -101,14 +101,14 @@ export default function ArticleDetailsPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://amaanestate.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
         ...(article.category
           ? [
               {
                 '@type': 'ListItem',
                 position: 2,
                 name: article.category.name,
-                item: `https://amaanestate.com/${article.category.slug}`,
+                item: `https://www.amaanestate.com/${article.category.slug}`,
               },
             ]
           : []),
