@@ -8,7 +8,6 @@ import { countArticleBodyWords } from '../data/allArticles';
 import { useSEO } from '../hooks/useSEO';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
-import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
 import { toast } from 'sonner';
 
@@ -350,7 +349,6 @@ export default function ArticleDetailsPage() {
             </div>
           )}
 
-          <AdPlacement slotName="amaan-article-inline" format="inline" />
 
           {/* Author Bio Card */}
           {article.author && (
@@ -404,7 +402,6 @@ export default function ArticleDetailsPage() {
           </section>
         )}
 
-        <NewsletterBox source={`article:${article.slug}`} />
       </article>
     </div>
   );

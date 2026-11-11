@@ -7,7 +7,6 @@ import { resolveEditorialImage } from '../lib/editorialImages';
 import { useSEO } from '../hooks/useSEO';
 import GlobalSearchBar from '../components/editorial/GlobalSearchBar';
 import ArticleCard from '../components/editorial/ArticleCard';
-import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
 
 export default function Home() {
@@ -227,10 +226,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Subtle AdSense-Ready Placement */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AdPlacement slotName="amaan-home-top-leaderboard" format="leaderboard" />
-      </div>
 
       {/* C. INVESTMENT INSIGHTS */}
       <CategoryBand
