@@ -4,7 +4,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
-import { SEED_ARTICLE_BY_SLUG } from "./src/data/allArticles";
+import { SEED_ARTICLE_BY_SLUG, ALL_SEED_EDITORIAL_ARTICLES } from "./src/data/allArticles";
 
 dotenv.config();
 
@@ -242,7 +242,7 @@ app.get("/api/robots.txt", (req, res) => {
   res.type("text/plain").send(buildRobotsTxt());
 });
 
-// Dynamic XML Sitemap (queries published articles from Supabase if configured)
+// Dynamic XML Sitemap (queries published articles from Supabase dynamically and merges with seed catalog)
 async function buildSitemapXml(): Promise<string> {
   const today = new Date().toISOString().split("T")[0];
   const staticPaths = [
@@ -263,43 +263,24 @@ async function buildSitemapXml(): Promise<string> {
     { path: "/corrections-policy", changefreq: "monthly", priority: "0.5" },
   ];
 
-  const seedArticleEntries: { slug: string; updatedAt: string }[] = [
-    { slug: "sovereign-capital-logistics-europe-east-africa-2026", updatedAt: "2026-10-28" },
-    { slug: "reit-debt-maturities-refinancing-cycles", updatedAt: "2026-10-16" },
-    { slug: "build-to-rent-multifamily-underwriting-global-cities", updatedAt: "2026-10-12" },
-    { slug: "data-center-real-estate-power-land-underwriting", updatedAt: "2026-10-05" },
-    { slug: "brown-discount-commercial-office-retrofit-yields", updatedAt: "2026-09-29" },
-    { slug: "travertine-climate-responsive-civic-pavilions", updatedAt: "2026-10-24" },
-    { slug: "adaptive-reuse-industrial-silos-cultural-commons", updatedAt: "2026-10-04" },
-    { slug: "biophilic-high-rise-sky-gardens-urban-microclimate", updatedAt: "2026-09-28" },
-    { slug: "rammed-earth-thermal-mass-arid-architecture", updatedAt: "2026-09-20" },
-    { slug: "sponge-city-coastal-urban-design-resilience", updatedAt: "2026-09-12" },
-    { slug: "hybrid-mass-timber-high-rise-seismic-standards", updatedAt: "2026-10-20" },
-    { slug: "geopolymer-low-carbon-concrete-site-trials", updatedAt: "2026-10-08" },
-    { slug: "volumetric-modular-prefabrication-economics", updatedAt: "2026-10-02" },
-    { slug: "prefabricated-facade-overcladding-occupied-retrofits", updatedAt: "2026-09-24" },
-    { slug: "digital-twin-lidar-robotics-construction-productivity", updatedAt: "2026-09-16" },
-    { slug: "passive-cooling-travertine-courtyard-residences", updatedAt: "2026-10-14" },
-    { slug: "smart-grid-home-batteries-residential-roi", updatedAt: "2026-10-01" },
-    { slug: "small-space-urban-apartment-joinery-solutions", updatedAt: "2026-09-25" },
-    { slug: "circadian-lighting-acoustic-residential-interior-design", updatedAt: "2026-09-18" },
-    { slug: "deep-energy-heritage-townhouse-retrofit-guide", updatedAt: "2026-09-10" },
-    { slug: "eu-building-energy-performance-mandate-commercial-retrofits", updatedAt: "2026-10-11" },
-    { slug: "uk-planning-infrastructure-act-2025-housing-reforms", updatedAt: "2026-09-26" },
-    { slug: "singapore-ura-master-plan-2025-housing-supply", updatedAt: "2026-09-22" },
-    { slug: "dubai-real-estate-strategy-2033-dld-market-roadmap", updatedAt: "2026-09-19" },
-    { slug: "eu-construction-products-regulation-2024-digital-product-passports", updatedAt: "2026-09-14" },
-  ];
+  const articleMap = new Map<string, string>(); // slug -> updatedAt
 
-  let articleEntries: { slug: string; updatedAt: string }[] = seedArticleEntries;
+  // 1. Load seed catalog articles as baseline
+  for (const art of ALL_SEED_EDITORIAL_ARTICLES) {
+    if (art.slug) {
+      const updatedAt = (art.published_at || today).split("T")[0];
+      articleMap.set(art.slug, updatedAt);
+    }
+  }
 
+  // 2. Query all published articles dynamically from Supabase
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
   if (supabaseUrl && supabaseAnonKey) {
     try {
       const response = await fetch(
-        `${supabaseUrl.replace(/\/+$/, "")}/rest/v1/articles?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc&limit=500`,
+        `${supabaseUrl.replace(/\/+$/, "")}/rest/v1/articles?select=slug,updated_at,published_at,status&status=eq.published&order=published_at.desc&limit=1000`,
         {
           headers: {
             apikey: supabaseAnonKey,
@@ -308,18 +289,25 @@ async function buildSitemapXml(): Promise<string> {
         }
       );
       if (response.ok) {
-        const rows = (await response.json()) as Array<{ slug: string; updated_at?: string; published_at?: string }>;
-        if (Array.isArray(rows) && rows.length > 0) {
-          articleEntries = rows.map((row) => ({
-            slug: row.slug,
-            updatedAt: (row.updated_at || row.published_at || today).split("T")[0],
-          }));
+        const rows = (await response.json()) as Array<{ slug: string; updated_at?: string; published_at?: string; status?: string }>;
+        if (Array.isArray(rows)) {
+          for (const row of rows) {
+            if (row.slug && row.status === "published") {
+              const updatedAt = (row.updated_at || row.published_at || today).split("T")[0];
+              articleMap.set(row.slug, updatedAt);
+            }
+          }
         }
       }
     } catch (err) {
       console.error("[Sitemap] Failed to query Supabase articles:", err);
     }
   }
+
+  const articleEntries = Array.from(articleMap.entries()).map(([slug, updatedAt]) => ({
+    slug,
+    updatedAt,
+  }));
 
   const urlsXml = [
     ...staticPaths.map(
