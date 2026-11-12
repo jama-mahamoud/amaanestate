@@ -15,13 +15,8 @@ interface LayoutProps {
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
-  { to: '/investment', label: 'Investment' },
-  { to: '/architecture', label: 'Architecture' },
-  { to: '/construction', label: 'Construction' },
-  { to: '/home-living', label: 'Home & Living' },
-  { to: '/news', label: 'News' },
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/buy', label: 'Buy' },
+  { to: '/rent', label: 'Rent' },
 ];
 
 export default function Layout({ children }: LayoutProps) {
@@ -124,7 +119,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Zone 2: Clean Typographic Navigation */}
           <nav
             aria-label="Primary navigation"
-            className="hidden xl:flex items-center gap-6 text-sm font-medium text-[#5C5A55]"
+            className="hidden md:flex items-center gap-7 text-sm font-medium text-[#5C5A55]"
           >
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -224,7 +219,7 @@ export default function Layout({ children }: LayoutProps) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
-              className="xl:hidden p-2 text-[#141413] hover:bg-[#EBE6DF] rounded transition-colors cursor-pointer"
+              className="md:hidden p-2 text-[#141413] hover:bg-[#EBE6DF] rounded transition-colors cursor-pointer"
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -233,8 +228,8 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Mobile / Tablet Navigation Panel */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-5 space-y-3">
-            <nav aria-label="Mobile navigation" className="grid grid-cols-2 gap-2">
+          <div className="md:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-5 space-y-3">
+            <nav aria-label="Mobile navigation" className="grid grid-cols-3 gap-2">
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.to}
@@ -306,13 +301,13 @@ export default function Layout({ children }: LayoutProps) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center justify-between">
               <div className="lg:col-span-6 space-y-1.5">
                 <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
-                  Stay Informed
+                  Global Real Estate Briefing
                 </p>
                 <h3 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
-                  Receive Global Real Estate Research &amp; Briefings
+                  Stay Informed. Think Globally.
                 </h3>
                 <p className="text-xs sm:text-sm text-[#5C5A55] max-w-lg leading-relaxed">
-                  Receive selected insights, research and global real estate developments directly in your inbox.
+                  Receive selected property research, market insights and international real estate developments in your inbox.
                 </p>
               </div>
 
@@ -339,22 +334,22 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        {/* 4-Column Main Editorial Footer Layout */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
+        {/* Main Editorial & Marketplace Footer Layout */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-10">
           
-          {/* Column 1: Brand & About (lg:col-span-5) */}
-          <div className="lg:col-span-5 space-y-5">
+          {/* Column 1: Brand & About (lg:col-span-4) */}
+          <div className="lg:col-span-4 space-y-5">
             <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-[#141413] block">
               AMAAN ESTATE
             </Link>
             
             <p className="text-sm text-[#4A4843] leading-relaxed max-w-md">
-              An independent international real estate media and research platform exploring global property investment, architecture, construction, home living and the forces shaping the built environment.
+              An independent international real estate marketplace, media and research platform.
             </p>
 
             <div className="pt-1">
               <p className="text-xs font-serif italic text-[#8C4A27] font-medium border-l-2 border-[#8C4A27] pl-3 py-0.5">
-                Independent reporting. Informed perspectives. Global real estate.
+                Global Property Marketplace. Independent Reporting. Real Estate Intelligence.
               </p>
             </div>
 
@@ -382,10 +377,44 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          {/* Column 2: Explore (lg:col-span-2) */}
+          {/* Column 2: Marketplace (lg:col-span-2) */}
           <div className="lg:col-span-2 space-y-3.5">
             <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
-              Explore
+              Marketplace
+            </h4>
+            <ul className="space-y-2.5 text-sm text-[#5C5A55]">
+              <li>
+                <Link to="/buy" className="hover:text-[#141413] transition-colors">
+                  Buy Property
+                </Link>
+              </li>
+              <li>
+                <Link to="/rent" className="hover:text-[#141413] transition-colors">
+                  Rent Property
+                </Link>
+              </li>
+              <li>
+                <Link to="/buy?type=house" className="hover:text-[#141413] transition-colors">
+                  Houses for Sale
+                </Link>
+              </li>
+              <li>
+                <Link to="/buy?type=apartment" className="hover:text-[#141413] transition-colors">
+                  Apartments for Sale
+                </Link>
+              </li>
+              <li>
+                <Link to="/rent?type=apartment" className="hover:text-[#141413] transition-colors">
+                  Apartments for Rent
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Editorial Categories (lg:col-span-2) */}
+          <div className="lg:col-span-2 space-y-3.5">
+            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+              Editorial
             </h4>
             <ul className="space-y-2.5 text-sm text-[#5C5A55]">
               <li>
@@ -416,8 +445,8 @@ export default function Layout({ children }: LayoutProps) {
             </ul>
           </div>
 
-          {/* Column 3: About & Publication (lg:col-span-2.5) */}
-          <div className="lg:col-span-2.5 space-y-3.5">
+          {/* Column 4: About & Publication (lg:col-span-2) */}
+          <div className="lg:col-span-2 space-y-3.5">
             <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
               Publication
             </h4>
@@ -450,8 +479,8 @@ export default function Layout({ children }: LayoutProps) {
             </ul>
           </div>
 
-          {/* Column 4: Policies & Transparency (lg:col-span-2.5) */}
-          <div className="lg:col-span-2.5 space-y-3.5">
+          {/* Column 5: Policies & Transparency (lg:col-span-2) */}
+          <div className="lg:col-span-2 space-y-3.5">
             <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
               Policies &amp; Trust
             </h4>

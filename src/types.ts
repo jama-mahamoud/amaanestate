@@ -156,4 +156,148 @@ export interface DashboardMetrics {
   totalViews: number;
   unreadMessages: number;
   totalMessages: number;
+  totalProperties?: number;
+  saleProperties?: number;
+  rentProperties?: number;
+  newEnquiries?: number;
 }
+
+export type TransactionType = 'sale' | 'rent';
+
+export type PropertyType =
+  | 'house'
+  | 'apartment'
+  | 'villa'
+  | 'townhouse'
+  | 'condominium'
+  | 'land'
+  | 'other';
+
+export type ListingStatus =
+  | 'available'
+  | 'pending'
+  | 'under_contract'
+  | 'sold'
+  | 'rented'
+  | 'off_market';
+
+export type PublicationStatus = 'draft' | 'published' | 'archived';
+
+export type RentalPeriod = 'month' | 'year' | 'week';
+
+export type AreaUnit = 'sqft' | 'sqm' | 'acres';
+
+export interface ListingSource {
+  id: string;
+  source_name: string;
+  source_type: 'manual' | 'listhub' | 'feed' | 'api';
+  feed_url?: string | null;
+  is_active: boolean;
+  sync_frequency?: string | null;
+  last_synced_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PropertyImage {
+  id: string;
+  property_id: string;
+  image_url: string;
+  alt_text?: string | null;
+  display_order: number;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export interface Property {
+  id: string;
+  title: string;
+  slug: string;
+  transaction_type: TransactionType;
+  property_type: PropertyType;
+  listing_status: ListingStatus;
+  publication_status: PublicationStatus;
+  price: number;
+  currency: string;
+  rental_period?: RentalPeriod | null;
+  available_from?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  area_value?: number | null;
+  area_unit: AreaUnit;
+  address_line?: string | null;
+  city: string;
+  state_region?: string | null;
+  country: string;
+  postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  description: string;
+  features: string[];
+  is_featured: boolean;
+  agent_name?: string | null;
+  agent_email?: string | null;
+  agent_phone?: string | null;
+  brokerage_name?: string | null;
+  source_id?: string | null;
+  source_name: string;
+  source_listing_id?: string | null;
+  source_url?: string | null;
+  published_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at?: string;
+  images?: PropertyImage[];
+  is_sample?: boolean;
+}
+
+export type EnquiryStatus = 'new' | 'contacted' | 'closed' | 'archived';
+
+export interface PropertyEnquiry {
+  id: string;
+  property_id: string;
+  property?: Pick<Property, 'id' | 'title' | 'slug' | 'transaction_type' | 'city' | 'country'> | null;
+  full_name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  status: EnquiryStatus;
+  admin_notes?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PropertyFilterOptions {
+  transaction_type: TransactionType;
+  property_type?: string;
+  location?: string;
+  min_price?: string | number;
+  max_price?: string | number;
+  bedrooms?: string | number;
+  bathrooms?: string | number;
+  listing_status?: string;
+  rental_period?: string;
+  availability_date?: string;
+  featured?: boolean;
+  sort?: 'newest' | 'price_asc' | 'price_desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface PropertySearchResult {
+  properties: Property[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  schemaPending?: boolean;
+}
+
+export interface PropertyLocationStat {
+  city: string;
+  country: string;
+  totalCount: number;
+  saleCount: number;
+  rentCount: number;
+}
+

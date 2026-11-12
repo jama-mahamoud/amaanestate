@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
+  Building2,
   ChevronDown,
   ExternalLink,
   FilePlus2,
   FolderTree,
   Globe,
   Image as ImageIcon,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -31,6 +33,8 @@ import {
   MediaItem,
   NewsletterSubscriber,
   Profile,
+  Property,
+  PropertyEnquiry,
   Role,
   SiteSettings,
   Tag,
@@ -50,12 +54,15 @@ import {
   signOutAdmin,
 } from '../../services/adminService';
 import { getSiteSettings } from '../../services/editorialService';
+import { getAdminEnquiries, getAdminProperties } from '../../services/propertyService';
 import { supabase } from '../../lib/supabase';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 import { useSEO } from '../../hooks/useSEO';
 import AdminOverviewSection from '../../components/admin/AdminOverviewSection';
 import AdminArticlesSection from '../../components/admin/AdminArticlesSection';
 import ArticleEditorView from '../../components/admin/ArticleEditorView';
+import AdminPropertiesSection from '../../components/admin/AdminPropertiesSection';
+import AdminEnquiriesSection from '../../components/admin/AdminEnquiriesSection';
 import {
   AuthorsSection,
   CategoriesSection,
@@ -78,6 +85,8 @@ type AdminTab =
   | 'overview'
   | 'articles'
   | 'create-article'
+  | 'properties'
+  | 'enquiries'
   | 'categories'
   | 'tags'
   | 'authors'
@@ -128,6 +137,9 @@ export default function AdminDashboardPage() {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [users, setUsers] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertyEnquiries, setPropertyEnquiries] = useState<PropertyEnquiry[]>([]);
+  const [marketplaceSchemaPending, setMarketplaceSchemaPending] = useState(false);
 
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
@@ -135,25 +147,28 @@ export default function AdminDashboardPage() {
 
   useSEO({
     title: 'Editorial CMS Dashboard',
-    description: 'AMAAN ESTATE editorial content management and publishing workspace.',
+    description: 'AMAAN ESTATE editorial content and property marketplace workspace.',
     noIndex: true,
   });
 
   const loadAllData = useCallback(async () => {
     setLoadError(null);
     try {
-      const [m, arts, cats, auths, tgs, med, subs, msgs, setts, usersData] = await Promise.all([
-        getDashboardMetrics(),
-        getAdminArticles(),
-        getAdminCategories(),
-        getAdminAuthors(),
-        getTags(),
-        getMediaLibrary(),
-        getSubscribers(),
-        getContactMessages(),
-        getSiteSettings(),
-        getUsersAndRoles(),
-      ]);
+      const [m, arts, cats, auths, tgs, med, subs, msgs, setts, usersData, propsRes, enqRes] =
+        await Promise.all([
+          getDashboardMetrics(),
+          getAdminArticles(),
+          getAdminCategories(),
+          getAdminAuthors(),
+          getTags(),
+          getMediaLibrary(),
+          getSubscribers(),
+          getContactMessages(),
+          getSiteSettings(),
+          getUsersAndRoles(),
+          getAdminProperties().catch(() => ({ properties: [], schemaPending: true })),
+          getAdminEnquiries().catch(() => ({ enquiries: [], schemaPending: true })),
+        ]);
       setMetrics(m);
       setArticles(arts);
       setCategories(cats);
@@ -165,6 +180,9 @@ export default function AdminDashboardPage() {
       setSiteSettings(setts);
       setUsers(usersData.profiles);
       setRoles(usersData.roles);
+      setProperties(propsRes.properties);
+      setPropertyEnquiries(enqRes.enquiries);
+      setMarketplaceSchemaPending(propsRes.schemaPending || enqRes.schemaPending);
     } catch (err: any) {
       setLoadError(err?.message || 'Unable to synchronize editorial data from Supabase.');
     } finally {
@@ -237,8 +255,17 @@ export default function AdminDashboardPage() {
 
   const isAdmin = profile?.role?.name === 'admin';
 
+  const newEnquiriesCount = propertyEnquiries.filter((e) => e.status === 'new').length;
+
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={16} /> },
+    { id: 'properties', label: 'Properties', icon: <Building2 size={16} />, count: properties.length || undefined },
+    {
+      id: 'enquiries',
+      label: 'Property Enquiries',
+      icon: <Inbox size={16} />,
+      count: newEnquiriesCount > 0 ? newEnquiriesCount : undefined,
+    },
     { id: 'articles', label: 'Articles', icon: <BookOpen size={16} /> },
     { id: 'create-article', label: 'Create New Article', icon: <FilePlus2 size={16} /> },
     { id: 'categories', label: 'Categories', icon: <FolderTree size={16} /> },
@@ -544,6 +571,23 @@ export default function AdminDashboardPage() {
                   onCreateArticle={openCreateArticle}
                   onEditArticle={openEditArticle}
                   onPreviewArticle={(art) => setPreviewArticle(art)}
+                  onRefresh={loadAllData}
+                />
+              )}
+
+              {activeTab === 'properties' && (
+                <AdminPropertiesSection
+                  properties={properties}
+                  schemaPending={marketplaceSchemaPending}
+                  onRefresh={loadAllData}
+                />
+              )}
+
+              {activeTab === 'enquiries' && (
+                <AdminEnquiriesSection
+                  enquiries={propertyEnquiries}
+                  schemaPending={marketplaceSchemaPending}
+                  canDelete={isAdmin}
                   onRefresh={loadAllData}
                 />
               )}

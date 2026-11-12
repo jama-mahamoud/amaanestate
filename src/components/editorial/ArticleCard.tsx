@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Building2 } from 'lucide-react';
 import { Article } from '../../types';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 
@@ -39,8 +40,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center p-8 bg-[#F4F1EC] text-[#5C5A55] font-serif text-lg text-center">
-              {article.title}
+            <div className="w-full h-full flex items-center justify-center p-8 bg-[#F4F1EC] text-[#7A7770]">
+              <Building2 size={36} strokeWidth={1.5} />
             </div>
           )}
         </Link>
@@ -142,8 +143,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             className="w-full h-full object-cover transition-transform duration-600 ease-out group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center p-6 bg-[#F4F1EC] text-[#5C5A55] font-serif text-sm text-center">
-            {article.title}
+          <div className="w-full h-full flex items-center justify-center p-6 bg-[#F4F1EC] text-[#7A7770]">
+            <Building2 size={28} strokeWidth={1.5} />
           </div>
         )}
       </Link>

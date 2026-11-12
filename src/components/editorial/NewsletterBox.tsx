@@ -32,16 +32,16 @@ export default function NewsletterBox({ source = 'homepage' }: NewsletterBoxProp
     >
       <div className="max-w-3xl mx-auto text-center space-y-5">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-          Weekly Editorial Dispatch
+          Global Real Estate Briefing
         </p>
         <h2
           id="newsletter-heading"
           className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413]"
         >
-          Receive Global Real Estate Intelligence
+          Stay Informed. Think Globally.
         </h2>
         <p className="text-sm sm:text-base text-[#5C5A55] max-w-xl mx-auto leading-relaxed">
-          Curated research across capital markets, architectural innovation, sustainable engineering, and urban policy—delivered every Thursday.
+          Receive selected property research, market insights and international real estate developments in your inbox.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto pt-2">
