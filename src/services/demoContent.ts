@@ -296,19 +296,19 @@ const initialProfiles: Profile[] = [
 
 const initialSiteSettings: SiteSettings = {
   id: 1,
-  site_name: 'AMAAN ESTATE',
-  tagline: 'Global Real Estate Media, Research & Knowledge Platform',
+  site_name: 'AmaanEstate',
+  tagline: 'Global Real Estate Media, Research & Marketplace',
   domain: 'amaanestate.com',
-  default_seo_title: 'AMAAN ESTATE — Global Real Estate Media, Research & Knowledge',
+  default_seo_title: 'AmaanEstate | Global Real Estate News, Research & Property Marketplace',
   default_seo_description:
-    'Independent international reporting, institutional research, and editorial analysis on real estate investment, architecture, construction, home living, and property markets.',
+    'Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.',
   default_og_image: 'hero-pavilion',
   editorial_email: 'editorial@amaanestate.com',
   social_links: {
     twitter: 'https://x.com/amaanestate',
     linkedin: 'https://linkedin.com/company/amaanestate',
     instagram: 'https://instagram.com/amaanestate',
-    youtube: '',
+    youtube: 'https://youtube.com/@amaanestate',
   },
   adsense_client_id: 'ca-pub-7965451372324178',
   adsense_enabled: true,

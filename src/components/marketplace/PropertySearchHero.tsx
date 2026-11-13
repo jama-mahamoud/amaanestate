@@ -58,12 +58,15 @@ export default function PropertySearchHero() {
         {/* Architectural Headline + Visual Spread */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
           <div className="lg:col-span-6 flex flex-col justify-center space-y-5 py-1">
+            <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
+              AmaanEstate · Global Real Estate Media, Research &amp; Marketplace
+            </p>
             <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-serif font-semibold leading-[1.06] text-[#141413] tracking-tight text-balance">
               Global Real Estate. Informed Decisions.
             </h1>
 
             <p className="text-base sm:text-[1.0625rem] text-[#4A4843] leading-[1.65] max-w-xl">
-              Explore international properties for sale and rent, alongside independent real estate journalism, architectural insight, and global market research.
+              Explore international properties for sale and rent on AmaanEstate, alongside independent property market news, housing research, real estate investment insights, and global market analysis.
             </p>
 
             {/* Primary Transaction Mode Quick Links */}

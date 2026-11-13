@@ -1,10 +1,12 @@
 import React from 'react';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function TermsPage() {
   useSEO({
-    title: 'Terms of Use',
-    description: 'Terms of Use governing access to AMAAN ESTATE articles, research briefings, and digital services.',
+    title: 'Terms of Use | AmaanEstate',
+    description:
+      'Terms of Use governing access to AmaanEstate real estate news, housing research, property marketplace listings, and digital services.',
+    url: `${getCanonicalOrigin()}/terms`,
   });
 
   return (

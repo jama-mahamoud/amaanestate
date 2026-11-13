@@ -42,11 +42,11 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
   }, [activeSlug, sortBy, keyword]);
 
   useSEO({
-    title: category?.seo_title || category?.name || 'Editorial Section',
+    title: category?.seo_title || category?.name || 'Real Estate Insights & News',
     description:
       category?.seo_description ||
       category?.description ||
-      'Curated international real estate coverage and research on AMAAN ESTATE.',
+      'Explore global real estate news, housing market research, and property investment insights on AmaanEstate.',
     url: `${getCanonicalOrigin()}/${activeSlug}`,
     structuredData: category
       ? {

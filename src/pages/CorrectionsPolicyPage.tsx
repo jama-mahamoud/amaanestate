@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function CorrectionsPolicyPage() {
   useSEO({
-    title: 'Corrections & Fact-Checking Policy',
+    title: 'Corrections & Fact-Checking Policy | AmaanEstate',
     description:
-      'AMAAN ESTATE fact-checking methodology, editorial standards, error report workflow, and corrections policy.',
+      'AmaanEstate fact-checking methodology, real estate research standards, error report workflow, and corrections policy.',
+    url: `${getCanonicalOrigin()}/corrections-policy`,
   });
 
   return (

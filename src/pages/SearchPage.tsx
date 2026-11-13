@@ -18,7 +18,7 @@ export default function SearchPage() {
 
   useSEO({
     title: initialQuery ? `Search: ${initialQuery}` : 'Search & Archive',
-    description: 'Search AMAAN ESTATE global real estate research, architectural monographs, construction studies, and market news.',
+    description: 'Search AmaanEstate real estate news, housing research, investment insights, architectural monographs, and market analysis.',
     noIndex: true,
   });
 

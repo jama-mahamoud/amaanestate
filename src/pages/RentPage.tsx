@@ -38,10 +38,18 @@ export default function RentPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useSEO({
-    title: 'Rent Real Estate — Properties for Rent',
+    title: 'Rent Real Estate & Properties for Lease | AmaanEstate',
     description:
-      'Browse apartments, houses, villas, and townhouses available for lease on AMAAN ESTATE.',
+      'Browse apartments, houses, villas, and townhouses available for rent internationally on the AmaanEstate global property marketplace.',
     url: `${getCanonicalOrigin()}/rent`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Rent Property', item: 'https://www.amaanestate.com/rent' },
+      ],
+    },
   });
 
   useEffect(() => {

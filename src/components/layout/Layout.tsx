@@ -344,12 +344,12 @@ export default function Layout({ children }: LayoutProps) {
             </Link>
             
             <p className="text-sm text-[#4A4843] leading-relaxed max-w-md">
-              An independent international real estate marketplace, media and research platform.
+              AmaanEstate is a global real estate platform providing property market news, housing research, investment insights, market analysis, and property discovery.
             </p>
 
             <div className="pt-1">
               <p className="text-xs font-serif italic text-[#8C4A27] font-medium border-l-2 border-[#8C4A27] pl-3 py-0.5">
-                Global Property Marketplace. Independent Reporting. Real Estate Intelligence.
+                Global Real Estate Media, Research &amp; Marketplace.
               </p>
             </div>
 

@@ -221,8 +221,11 @@ function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: s
 
   const canonicalUrl = `${baseUrl}/articles/${encodeURIComponent(article.slug)}`;
   const rawTitle = article.seo_title || article.title;
-  const pageTitle = rawTitle.includes("AMAAN ESTATE") ? rawTitle : `${rawTitle} | AMAAN ESTATE`;
-  const rawDescription = article.seo_description || article.excerpt || "AMAAN ESTATE — Global Real Estate Media, Research & Knowledge Platform";
+  const pageTitle = /amaan\s*estate/i.test(rawTitle) ? rawTitle : `${rawTitle} | AmaanEstate`;
+  const rawDescription =
+    article.seo_description ||
+    article.excerpt ||
+    "Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.";
   const cleanDescription = stripHtml(rawDescription).slice(0, 180);
 
   const rawImage = article.og_image || article.featured_image;
@@ -237,7 +240,7 @@ function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: s
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="AMAAN ESTATE" />
+    <meta property="og:site_name" content="AmaanEstate" />
     <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
     <meta property="og:title" content="${escapeHtml(pageTitle)}" />
     <meta property="og:description" content="${escapeHtml(cleanDescription)}" />
@@ -271,7 +274,7 @@ app.get("/api/health", (req, res) => {
   const supabaseConfig = getSupabaseConfig();
   res.json({
     status: "healthy",
-    app: "AMAAN ESTATE — Global Real Estate Media, Research & Knowledge Platform",
+    app: "AmaanEstate — Global Real Estate Media, Research & Marketplace",
     supabaseConfigured: Boolean(supabaseConfig),
     timestamp: new Date().toISOString(),
   });

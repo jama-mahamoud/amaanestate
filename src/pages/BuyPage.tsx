@@ -36,10 +36,18 @@ export default function BuyPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useSEO({
-    title: 'Buy Real Estate — Properties for Sale',
+    title: 'Buy Real Estate & Properties for Sale | AmaanEstate',
     description:
-      'Explore residential homes, apartments, villas, townhouses, and land for sale on AMAAN ESTATE.',
+      'Explore houses, apartments, villas, townhouses, and land for sale worldwide on the AmaanEstate global property marketplace.',
     url: `${getCanonicalOrigin()}/buy`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Buy Property', item: 'https://www.amaanestate.com/buy' },
+      ],
+    },
   });
 
   useEffect(() => {

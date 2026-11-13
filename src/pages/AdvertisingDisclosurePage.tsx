@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function AdvertisingDisclosurePage() {
   useSEO({
-    title: 'Advertising & Commercial Disclosure',
+    title: 'Advertising & Commercial Disclosure | AmaanEstate',
     description:
-      'AMAAN ESTATE advertising policy, sponsored content guidelines, affiliate disclosures, and programmatic ad standards.',
+      'AmaanEstate advertising policy, sponsored content guidelines, property marketplace disclosures, and programmatic ad standards.',
+    url: `${getCanonicalOrigin()}/advertising-disclosure`,
   });
 
   return (

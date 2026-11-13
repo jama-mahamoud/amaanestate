@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function EditorialPolicyPage() {
   useSEO({
-    title: 'Editorial Policy & Standards',
+    title: 'Editorial Policy & Standards | AmaanEstate',
     description:
-      'AMAAN ESTATE editorial independence, fact-checking methodology, corrections policy, and advertising separation standards.',
+      'AmaanEstate editorial independence, real estate research verification methodology, corrections policy, and advertising separation standards.',
+    url: `${getCanonicalOrigin()}/editorial-policy`,
   });
 
   return (

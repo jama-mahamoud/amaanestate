@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function CookiePolicyPage() {
   useSEO({
-    title: 'Cookie Policy & Consent Settings',
+    title: 'Cookie Policy & Consent Settings | AmaanEstate',
     description:
-      'AMAAN ESTATE Cookie Policy detailing strictly necessary, analytical, and third-party advertising cookies including Google AdSense.',
+      'AmaanEstate Cookie Policy detailing strictly necessary, analytical, and third-party advertising cookies including Google AdSense.',
+    url: `${getCanonicalOrigin()}/cookie-policy`,
   });
 
   return (

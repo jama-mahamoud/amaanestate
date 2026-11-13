@@ -6,7 +6,7 @@ import {
   getFeaturedProperties,
   getShowcaseProperties,
 } from '../services/propertyService';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import PropertySearchHero from '../components/marketplace/PropertySearchHero';
 import PropertyCard from '../components/marketplace/PropertyCard';
 import GlobalMarketsSection from '../components/marketplace/GlobalMarketsSection';
@@ -20,20 +20,12 @@ export default function Home() {
   const [loadingNews, setLoadingNews] = useState(true);
 
   useSEO({
-    title: 'AMAAN ESTATE — Global Property Marketplace & Real Estate Intelligence',
+    title: 'AmaanEstate | Global Real Estate News, Research & Property Marketplace',
     description:
-      'Discover global properties for sale and rent alongside independent real estate research, architectural criticism, and market reporting.',
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'AMAAN ESTATE',
-      url: 'https://www.amaanestate.com',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: 'https://www.amaanestate.com/buy?location={search_term_string}',
-        'query-input': 'required name=search_term_string',
-      },
-    },
+      'Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.',
+    url: `${getCanonicalOrigin()}/`,
+    image: '/images/articles/sovereign-capital-logistics-corridors.jpg',
+    imageAlt: 'AmaanEstate — Global Real Estate Media, Research & Marketplace',
   });
 
   useEffect(() => {

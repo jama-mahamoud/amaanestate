@@ -87,12 +87,20 @@ export default function ArticleDetailsPage() {
       ...(articleKeywords && articleKeywords.length > 0 ? { keywords: articleKeywords.join(', ') } : {}),
       author: {
         '@type': 'Person',
-        name: article.author?.name || 'AMAAN ESTATE Editorial Desk',
+        name: article.author?.name || 'AmaanEstate Editorial Desk',
       },
       publisher: {
         '@type': 'Organization',
-        name: 'AMAAN ESTATE',
-        url: 'https://www.amaanestate.com',
+        '@id': 'https://www.amaanestate.com/#organization',
+        name: 'AmaanEstate',
+        alternateName: 'Amaan Estate',
+        url: 'https://www.amaanestate.com/',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://www.amaanestate.com/android-chrome-192x192.png',
+          width: 192,
+          height: 192,
+        },
       },
       mainEntityOfPage: articleUrl,
     };
@@ -126,7 +134,7 @@ export default function ArticleDetailsPage() {
 
   useSEO({
     title: article ? article.seo_title || article.title : 'Article Not Found',
-    description: article ? article.seo_description || article.excerpt : 'Read international real estate research on AMAAN ESTATE.',
+    description: article ? article.seo_description || article.excerpt : 'Read international real estate news, housing research, and market analysis on AmaanEstate.',
     image: article?.og_image || article?.featured_image || undefined,
     imageAlt: article?.featured_image_alt || article?.title || undefined,
     url: article ? articleUrl : undefined,

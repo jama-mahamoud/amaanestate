@@ -32,6 +32,13 @@ function toAbsoluteUrl(value?: string): string | undefined {
   return `${origin}${value.startsWith('/') ? '' : '/'}${value}`;
 }
 
+const DEFAULT_SEO_TITLE =
+  'AmaanEstate | Global Real Estate News, Research & Property Marketplace';
+const DEFAULT_SEO_DESCRIPTION =
+  'Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.';
+const DEFAULT_OG_IMAGE = '/images/articles/sovereign-capital-logistics-corridors.jpg';
+const DEFAULT_OG_IMAGE_ALT = 'AmaanEstate — Global Real Estate Media, Research & Marketplace';
+
 export function useSEO({
   title,
   description,
@@ -46,16 +53,15 @@ export function useSEO({
   structuredData,
 }: SEOProps) {
   useEffect(() => {
+    const hasBrand = title ? /amaan\s*estate/i.test(title) : false;
     const fullTitle = title
-      ? title.includes('AMAAN ESTATE')
+      ? hasBrand
         ? title
-        : `${title} | AMAAN ESTATE`
-      : 'AMAAN ESTATE — Global Real Estate Media, Research & Knowledge';
+        : `${title} | AmaanEstate`
+      : DEFAULT_SEO_TITLE;
     document.title = fullTitle;
 
-    const metaDesc =
-      description ||
-      'AMAAN ESTATE is a global real estate media, research, and knowledge platform covering investment, architecture, construction, home living, and property industry news.';
+    const metaDesc = description || DEFAULT_SEO_DESCRIPTION;
 
     const setMetaTag = (attributeName: string, attributeValue: string, content: string) => {
       let element = document.querySelector(`meta[${attributeName}="${attributeValue}"]`);
@@ -85,23 +91,18 @@ export function useSEO({
       document.querySelector('meta[name="keywords"]')?.remove();
     }
 
-    const absoluteImage = toAbsoluteUrl(image);
+    const resolvedImage = image || DEFAULT_OG_IMAGE;
+    const resolvedImageAlt = imageAlt || (image ? fullTitle : DEFAULT_OG_IMAGE_ALT);
+    const absoluteImage = toAbsoluteUrl(resolvedImage);
 
-    setMetaTag('property', 'og:site_name', 'AMAAN ESTATE');
+    setMetaTag('property', 'og:site_name', 'AmaanEstate');
     setMetaTag('property', 'og:title', fullTitle);
     setMetaTag('property', 'og:description', metaDesc);
     setMetaTag('property', 'og:type', type);
     setMetaTag('property', 'og:url', canonicalUrl);
     if (absoluteImage) {
       setMetaTag('property', 'og:image', absoluteImage);
-      if (imageAlt) {
-        setMetaTag('property', 'og:image:alt', imageAlt);
-      } else {
-        document.querySelector('meta[property="og:image:alt"]')?.remove();
-      }
-    } else {
-      document.querySelector('meta[property="og:image"]')?.remove();
-      document.querySelector('meta[property="og:image:alt"]')?.remove();
+      setMetaTag('property', 'og:image:alt', resolvedImageAlt);
     }
 
     if (type === 'article' && publishedTime) {
@@ -121,14 +122,7 @@ export function useSEO({
     setMetaTag('name', 'twitter:description', metaDesc);
     if (absoluteImage) {
       setMetaTag('name', 'twitter:image', absoluteImage);
-      if (imageAlt) {
-        setMetaTag('name', 'twitter:image:alt', imageAlt);
-      } else {
-        document.querySelector('meta[name="twitter:image:alt"]')?.remove();
-      }
-    } else {
-      document.querySelector('meta[name="twitter:image"]')?.remove();
-      document.querySelector('meta[name="twitter:image:alt"]')?.remove();
+      setMetaTag('name', 'twitter:image:alt', resolvedImageAlt);
     }
 
     const existingScripts = document.querySelectorAll('script[data-amaan-seo="true"]');

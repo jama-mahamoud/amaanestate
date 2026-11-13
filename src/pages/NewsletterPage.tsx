@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { subscribeNewsletter, unsubscribeNewsletter } from '../services/editorialService';
 
 export default function NewsletterPage() {
@@ -9,8 +9,10 @@ export default function NewsletterPage() {
   const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   useSEO({
-    title: 'Newsletter & Subscription Management',
-    description: 'Subscribe to AMAAN ESTATE weekly real estate briefings or manage your existing email preferences.',
+    title: 'Newsletter & Real Estate Briefing | AmaanEstate',
+    description:
+      'Subscribe to AmaanEstate global real estate news, housing research briefings, investment insights, and property market analysis.',
+    url: `${getCanonicalOrigin()}/newsletter`,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

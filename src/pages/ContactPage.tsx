@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { submitContactMessage } from '../services/editorialService';
 import { toast } from 'sonner';
 
@@ -13,9 +13,18 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false);
 
   useSEO({
-    title: 'Contact Editorial & Business Desk',
+    title: 'Contact AmaanEstate | Editorial, Research & Marketplace Desk',
     description:
-      'Contact AMAAN ESTATE for editorial pitches, research collaborations, advertising partnerships, or reader corrections.',
+      'Contact AmaanEstate for property marketplace inquiries, real estate news tips, housing research collaborations, partnerships, or reader corrections.',
+    url: `${getCanonicalOrigin()}/contact`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Contact', item: 'https://www.amaanestate.com/contact' },
+      ],
+    },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

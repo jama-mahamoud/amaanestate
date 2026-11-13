@@ -1,38 +1,47 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import NewsletterBox from '../components/editorial/NewsletterBox';
 
 export default function AboutPage() {
   useSEO({
-    title: 'About AMAAN ESTATE',
+    title: 'About AmaanEstate | Global Real Estate Media, Research & Marketplace',
     description:
-      'Learn about AMAAN ESTATE, an international real estate media, research, and knowledge platform covering capital markets, architecture, construction, and residential living.',
+      'AmaanEstate is a global real estate platform providing property market news, housing research, real estate investment insights, market analysis, and property discovery.',
+    url: `${getCanonicalOrigin()}/about`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
+        { '@type': 'ListItem', position: 2, name: 'About', item: 'https://www.amaanestate.com/about' },
+      ],
+    },
   });
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-14">
       <header className="space-y-4 border-b border-[#E5E0D8] pb-10">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-          About the Publication
+          About AmaanEstate
         </p>
         <h1 className="text-3xl sm:text-5xl font-serif font-semibold text-[#141413] max-w-3xl leading-tight">
-          Rigorous Journalism and Research for the Global Built Environment
+          Global Real Estate Media, Research &amp; Property Marketplace
         </h1>
         <p className="text-base sm:text-lg text-[#4A4843] leading-relaxed max-w-2xl">
-          AMAAN ESTATE (amaanestate.com) is an independent international real estate media and knowledge platform dedicated to how capital, architecture, engineering, and policy shape cities and homes worldwide.
+          AmaanEstate (amaanestate.com) is a global real estate platform providing property market news, housing research, real estate investment insights, market analysis, industry developments, and international property discovery.
         </p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-7 space-y-6 text-base text-[#292825] leading-relaxed">
-          <h2 className="text-2xl font-serif font-semibold text-[#141413]">Our Editorial Mission</h2>
+          <h2 className="text-2xl font-serif font-semibold text-[#141413]">Our Editorial &amp; Marketplace Mission</h2>
           <p>
             The global property industry spans trillions of dollars in infrastructure, residential housing, commercial architecture, and building technology—yet public discourse is often fragmented between brokerage marketing and short-lived headlines.
           </p>
           <p>
-            AMAAN ESTATE bridges that gap by uniting financial rigor, architectural criticism, structural engineering reporting, and practical residential guidance under a single English-first international publication.
+            AmaanEstate bridges that gap by uniting financial rigor, housing market research, architectural criticism, construction reporting, and global property discovery under a single English-first international platform.
           </p>
 
           <h2 className="text-2xl font-serif font-semibold text-[#141413] pt-4">Who Reads AMAAN ESTATE</h2>

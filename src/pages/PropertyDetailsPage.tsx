@@ -61,40 +61,61 @@ export default function PropertyDetailsPage() {
     title: property
       ? `${property.title} — ${priceText}`
       : loading
-      ? 'Loading Property | AMAAN ESTATE'
-      : 'Property Unavailable | AMAAN ESTATE',
+      ? 'Loading Property | AmaanEstate'
+      : 'Property Unavailable | AmaanEstate',
     description: property
       ? `${formatPropertyTypeLabel(property.property_type)} ${
           property.transaction_type === 'rent' ? 'for rent' : 'for sale'
         } in ${locationText}. ${(property.description || '').slice(0, 140)}`
-      : 'Browse verified residential properties for sale and rent on AMAAN ESTATE.',
+      : 'Browse residential properties for sale and rent on the AmaanEstate global property marketplace.',
     image: primaryImage?.image_url || undefined,
     imageAlt: primaryImage?.alt_text || property?.title,
     url: property ? `${getCanonicalOrigin()}/properties/${encodeURIComponent(property.slug)}` : undefined,
     noIndex: !loading && !property,
     structuredData: property
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'RealEstateListing',
-          name: property.title,
-          description: property.description,
-          url: `${getCanonicalOrigin()}/properties/${encodeURIComponent(property.slug)}`,
-          datePosted: property.published_at || property.created_at,
-          image: (property.images || []).map((img) => img.image_url),
-          offers: {
-            '@type': 'Offer',
-            price: property.price,
-            priceCurrency: property.currency || 'USD',
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'RealEstateListing',
+            name: property.title,
+            description: property.description,
+            url: `https://www.amaanestate.com/properties/${encodeURIComponent(property.slug)}`,
+            datePosted: property.published_at || property.created_at,
+            image: (property.images || []).map((img) => img.image_url),
+            offers: {
+              '@type': 'Offer',
+              price: property.price,
+              priceCurrency: property.currency || 'USD',
+            },
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: property.address_line || undefined,
+              addressLocality: property.city,
+              addressRegion: property.state_region || undefined,
+              addressCountry: property.country,
+              postalCode: property.postal_code || undefined,
+            },
           },
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: property.address_line || undefined,
-            addressLocality: property.city,
-            addressRegion: property.state_region || undefined,
-            addressCountry: property.country,
-            postalCode: property.postal_code || undefined,
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: property.transaction_type === 'rent' ? 'Rent Property' : 'Buy Property',
+                item: `https://www.amaanestate.com/${property.transaction_type === 'rent' ? 'rent' : 'buy'}`,
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: property.title,
+                item: `https://www.amaanestate.com/properties/${encodeURIComponent(property.slug)}`,
+              },
+            ],
           },
-        }
+        ]
       : undefined,
   });
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 
 export default function PrivacyPolicyPage() {
   useSEO({
-    title: 'Privacy Policy',
+    title: 'Privacy Policy | AmaanEstate',
     description:
-      'Privacy Policy for AMAAN ESTATE (amaanestate.com) covering newsletter data, contact inquiries, cookies, and third-party advertising.',
+      'Privacy Policy for AmaanEstate (amaanestate.com) covering property marketplace inquiries, newsletter subscriptions, cookies, and advertising.',
+    url: `${getCanonicalOrigin()}/privacy-policy`,
   });
 
   return (

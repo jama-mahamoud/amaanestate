@@ -1,6 +1,6 @@
 {
   "name": "AmaanEstate",
-  "description": "AMAAN ESTATE — Global Real Estate Media, Research & Knowledge Platform covering investment, architecture, construction, home living, and property news.",
+  "description": "AmaanEstate is a global real estate platform providing property market news, housing research, real estate investment insights, market analysis, industry developments, and property discovery.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
