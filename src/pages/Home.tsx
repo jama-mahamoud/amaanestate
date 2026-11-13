@@ -92,9 +92,6 @@ export default function Home() {
             <h2 id="featured-properties-heading" className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413]">
               Featured International Properties
             </h2>
-            <p className="text-xs sm:text-sm text-[#5C5A55]">
-              Some properties displayed are illustrative examples for presentation purposes and are not confirmed active market listings.
-            </p>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold text-[#1E3A5F] shrink-0">

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Building2, Info } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { Property, PropertyFilterOptions } from '../types';
 import { getProperties } from '../services/propertyService';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
@@ -156,13 +156,6 @@ export default function RentPage() {
         onApply={applyFiltersToUrl}
         onReset={handleReset}
       />
-
-      <div className="bg-[#FAF8F5] border border-[#D6CEBE] rounded px-4 py-3 text-xs text-[#5C5A55] flex items-center gap-2.5">
-        <Info size={16} className="text-[#8C4A27] shrink-0" />
-        <span>
-          Some properties are illustrative examples provided for marketplace presentation and are not confirmed active market listings.
-        </span>
-      </div>
 
       {errorMsg && (
         <div
