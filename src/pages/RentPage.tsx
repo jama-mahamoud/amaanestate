@@ -10,6 +10,7 @@ import PropertySearchFilter from '../components/marketplace/PropertySearchFilter
 function parseFiltersFromSearchParams(params: URLSearchParams): PropertyFilterOptions {
   return {
     transaction_type: 'rent',
+    country: params.get('country') || '',
     location: params.get('location') || '',
     property_type: params.get('type') || 'all',
     min_price: params.get('min_price') || '',
@@ -71,6 +72,9 @@ export default function RentPage() {
 
   const applyFiltersToUrl = (next: PropertyFilterOptions) => {
     const params = new URLSearchParams();
+    if (next.country && String(next.country).trim()) {
+      params.set('country', String(next.country).trim());
+    }
     if (next.location && String(next.location).trim()) {
       params.set('location', String(next.location).trim());
     }
@@ -129,7 +133,7 @@ export default function RentPage() {
         </div>
 
         <Link
-          to="/buy"
+          to={filters.country ? `/buy?country=${encodeURIComponent(filters.country)}` : '/buy'}
           className="text-xs font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap shrink-0"
         >
           Looking to purchase? Browse Properties for Sale &rarr;

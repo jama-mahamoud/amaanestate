@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RotateCcw, Search } from 'lucide-react';
-import { PropertyFilterOptions, TransactionType } from '../../types';
+import { PropertyCountryStat, PropertyFilterOptions, TransactionType } from '../../types';
+import { getPropertyCountries } from '../../services/propertyService';
 
 interface PropertySearchFilterProps {
   transactionType: TransactionType;
@@ -38,10 +39,25 @@ export default function PropertySearchFilter({
   onReset,
 }: PropertySearchFilterProps) {
   const [draft, setDraft] = useState<PropertyFilterOptions>(filters);
+  const [countryOptions, setCountryOptions] = useState<PropertyCountryStat[]>([]);
 
   useEffect(() => {
     setDraft(filters);
   }, [filters]);
+
+  useEffect(() => {
+    let active = true;
+    getPropertyCountries()
+      .then((res) => {
+        if (active) setCountryOptions(res.countries);
+      })
+      .catch(() => {
+        if (active) setCountryOptions([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,15 +88,40 @@ export default function PropertySearchFilter({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
+          <label htmlFor="filter-country" className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5">
+            Country
+          </label>
+          <select
+            id="filter-country"
+            value={draft.country || ''}
+            onChange={(e) => setDraft((prev) => ({ ...prev, country: e.target.value }))}
+            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+          >
+            <option value="">All Countries</option>
+            {draft.country &&
+              !countryOptions.some(
+                (c) => c.country.toLowerCase() === String(draft.country).trim().toLowerCase()
+              ) && (
+                <option value={draft.country}>{draft.country}</option>
+              )}
+            {countryOptions.map((c) => (
+              <option key={c.countryCode || c.country} value={c.country}>
+                {c.flag} {c.country} ({c.totalCount})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
           <label htmlFor="filter-location" className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5">
-            Location
+            City / Location
           </label>
           <input
             id="filter-location"
             type="text"
             value={draft.location || ''}
             onChange={(e) => setDraft((prev) => ({ ...prev, location: e.target.value }))}
-            placeholder="City, neighborhood, country..."
+            placeholder="City, neighborhood, address..."
             className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
           />
         </div>

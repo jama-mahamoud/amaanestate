@@ -1,22 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
-import { Article, Property, PropertyLocationStat } from '../types';
+import { Article, Property } from '../types';
 import { getPublishedArticles } from '../services/editorialService';
 import {
   getFeaturedProperties,
-  getPropertyLocations,
   getShowcaseProperties,
 } from '../services/propertyService';
 import { useSEO } from '../hooks/useSEO';
 import PropertySearchHero from '../components/marketplace/PropertySearchHero';
 import PropertyCard from '../components/marketplace/PropertyCard';
+import GlobalMarketsSection from '../components/marketplace/GlobalMarketsSection';
 import ArticleCard from '../components/editorial/ArticleCard';
 
 export default function Home() {
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [showcaseProperties, setShowcaseProperties] = useState<Property[]>([]);
-  const [locations, setLocations] = useState<PropertyLocationStat[]>([]);
   const [latestNews, setLatestNews] = useState<Article[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -44,19 +42,16 @@ export default function Home() {
     async function loadMarketplace() {
       setLoadingProperties(true);
       try {
-        const [featRes, locRes, showcaseRes] = await Promise.all([
+        const [featRes, showcaseRes] = await Promise.all([
           getFeaturedProperties(undefined, 6),
-          getPropertyLocations(),
           getShowcaseProperties(),
         ]);
         if (!active) return;
         setFeaturedProperties(featRes.properties);
-        setLocations(locRes.locations);
         setShowcaseProperties(showcaseRes.properties);
       } catch {
         if (!active) return;
         setFeaturedProperties([]);
-        setLocations([]);
         setShowcaseProperties([]);
       } finally {
         if (active) setLoadingProperties(false);
@@ -145,38 +140,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* 3. GLOBAL MARKETS (EXPLORE INTERNATIONAL LOCATIONS) */}
-      {locations.length > 0 && (
-        <section aria-labelledby="explore-locations-heading" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="border-b border-[#E5E0D8] pb-4 space-y-1">
-            <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-              Global Markets
-            </p>
-            <h2 id="explore-locations-heading" className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413]">
-              Explore International Locations
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {locations.map((loc) => (
-              <Link
-                key={`${loc.city}-${loc.country}`}
-                to={`/buy?location=${encodeURIComponent(loc.city)}`}
-                className="bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded p-5 space-y-2 transition-colors"
-              >
-                <div className="flex items-center gap-2 text-[#141413] font-serif font-semibold text-base">
-                  <MapPin size={15} className="text-[#8C4A27] shrink-0" />
-                  <span className="truncate">{loc.city}</span>
-                </div>
-                <div className="text-xs text-[#5C5A55]">{loc.country}</div>
-                <div className="text-xs font-mono tabular-nums text-[#1E3A5F] pt-1">
-                  {loc.totalCount === 1 ? 'Showcase property' : `${loc.totalCount} active listings`}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* 3. GLOBAL MARKETS (INTERNATIONAL COUNTRY DIRECTORY) */}
+      <GlobalMarketsSection />
 
       {/* 4. EDITORIAL INTELLIGENCE */}
       <section aria-labelledby="latest-news-heading" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">

@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { SEED_ARTICLE_BY_SLUG, ALL_SEED_EDITORIAL_ARTICLES } from "./src/data/allArticles";
+import { normalizeCountryInfo, getCountryQueryVariants } from "./src/lib/countries";
 
 dotenv.config();
 
@@ -1005,6 +1006,118 @@ app.get("/api/properties/showcase", async (req, res) => {
   });
 });
 
+function isShowcaseOrSampleRow(row: any): boolean {
+  if (!row) return false;
+  const src = String(row.source_name || "").trim().toLowerCase();
+  if (src === "showcase_sample" || src === "illustrative_sample") return true;
+  if (row.raw_payload && (row.raw_payload.is_sample === true || row.raw_payload.showcase === true)) {
+    return true;
+  }
+  return Boolean(row.is_sample);
+}
+
+app.get("/api/properties/countries", async (req, res) => {
+  const supabaseConfig = getSupabaseConfig();
+  if (!supabaseConfig) {
+    return res.status(200).json({ countries: [], schemaPending: false });
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.set(
+      "select",
+      "country,transaction_type,source_name,raw_payload,published_at,created_at"
+    );
+    params.set("publication_status", "eq.published");
+    params.set("listing_status", "in.(available,pending,under_contract)");
+    params.set("source_name", "neq.showcase_sample");
+    params.set("order", "published_at.asc.nullslast,created_at.asc");
+    params.set("limit", "5000");
+
+    const response = await fetch(`${supabaseConfig.url}/rest/v1/properties?${params.toString()}`, {
+      headers: {
+        apikey: supabaseConfig.anonKey,
+        Authorization: `Bearer ${supabaseConfig.anonKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      if (isMissingRelationError(response.status, errText)) {
+        return res.status(200).json({ countries: [], schemaPending: true });
+      }
+      return res.status(502).json({ error: "Unable to load international country directory." });
+    }
+
+    const rows = (await response.json()) as Array<{
+      country?: string | null;
+      transaction_type?: string | null;
+      source_name?: string | null;
+      raw_payload?: any;
+      published_at?: string | null;
+      created_at?: string | null;
+    }>;
+
+    const buckets = new Map<
+      string,
+      {
+        country: string;
+        countryCode: string;
+        flag: string;
+        totalCount: number;
+        saleCount: number;
+        rentCount: number;
+        earliestAt: number;
+      }
+    >();
+
+    if (Array.isArray(rows)) {
+      for (const row of rows) {
+        if (isShowcaseOrSampleRow(row)) continue;
+
+        const normalized = normalizeCountryInfo(row.country);
+        if (!normalized) continue;
+
+        const key = normalized.code || normalized.name.toLowerCase();
+        const tsRaw = row.published_at || row.created_at;
+        const ts = tsRaw ? Date.parse(tsRaw) : Number.MAX_SAFE_INTEGER;
+        const safeTs = Number.isFinite(ts) ? ts : Number.MAX_SAFE_INTEGER;
+
+        const existing = buckets.get(key) || {
+          country: normalized.name,
+          countryCode: normalized.code,
+          flag: normalized.flag,
+          totalCount: 0,
+          saleCount: 0,
+          rentCount: 0,
+          earliestAt: safeTs,
+        };
+
+        existing.totalCount += 1;
+        if (row.transaction_type === "sale") existing.saleCount += 1;
+        if (row.transaction_type === "rent") existing.rentCount += 1;
+        if (safeTs < existing.earliestAt) existing.earliestAt = safeTs;
+
+        buckets.set(key, existing);
+      }
+    }
+
+    const countries = Array.from(buckets.values())
+      .sort(
+        (a, b) =>
+          b.totalCount - a.totalCount ||
+          a.earliestAt - b.earliestAt ||
+          a.country.localeCompare(b.country)
+      )
+      .map(({ earliestAt: _earliestAt, ...countryStat }) => countryStat);
+
+    return res.status(200).json({ countries, schemaPending: false });
+  } catch (err) {
+    console.error("[Properties API] Countries error:", err);
+    return res.status(500).json({ error: "Internal error loading property countries." });
+  }
+});
+
 app.get("/api/properties/locations", async (req, res) => {
   const supabaseConfig = getSupabaseConfig();
   if (!supabaseConfig) {
@@ -1013,9 +1126,10 @@ app.get("/api/properties/locations", async (req, res) => {
 
   try {
     const params = new URLSearchParams();
-    params.set("select", "city,country,transaction_type");
+    params.set("select", "city,country,transaction_type,source_name,raw_payload");
     params.set("publication_status", "eq.published");
     params.set("listing_status", "in.(available,pending,under_contract)");
+    params.set("source_name", "neq.showcase_sample");
     params.set("limit", "1000");
 
     const response = await fetch(`${supabaseConfig.url}/rest/v1/properties?${params.toString()}`, {
@@ -1037,6 +1151,8 @@ app.get("/api/properties/locations", async (req, res) => {
       city?: string | null;
       country?: string | null;
       transaction_type?: string | null;
+      source_name?: string | null;
+      raw_payload?: any;
     }>;
 
     const buckets = new Map<
@@ -1046,13 +1162,14 @@ app.get("/api/properties/locations", async (req, res) => {
 
     if (Array.isArray(rows)) {
       for (const row of rows) {
+        if (isShowcaseOrSampleRow(row)) continue;
         const city = (row.city || "").trim();
-        const country = (row.country || "").trim();
-        if (!city || !country) continue;
-        const key = `${city.toLowerCase()}::${country.toLowerCase()}`;
+        const normalizedCountry = normalizeCountryInfo(row.country);
+        if (!city || !normalizedCountry) continue;
+        const key = `${city.toLowerCase()}::${(normalizedCountry.code || normalizedCountry.name).toLowerCase()}`;
         const existing = buckets.get(key) || {
           city,
-          country,
+          country: normalizedCountry.name,
           totalCount: 0,
           saleCount: 0,
           rentCount: 0,
@@ -1100,6 +1217,7 @@ app.get("/api/properties", async (req, res) => {
     const bathrooms = req.query.bathrooms !== undefined ? Number(req.query.bathrooms) : NaN;
     const listingStatus = typeof req.query.listing_status === "string" ? req.query.listing_status.trim() : "";
     const rentalPeriod = typeof req.query.rental_period === "string" ? req.query.rental_period.trim() : "";
+    const countryParam = typeof req.query.country === "string" ? sanitizeSearchTerm(req.query.country) : "";
     const location = typeof req.query.location === "string" ? sanitizeSearchTerm(req.query.location) : "";
     const sort = typeof req.query.sort === "string" ? req.query.sort.trim() : "newest";
 
@@ -1127,6 +1245,15 @@ app.get("/api/properties", async (req, res) => {
     }
     if (transactionType === "rent" && rentalPeriod && ALLOWED_RENTAL_PERIODS.has(rentalPeriod)) {
       list = list.filter((p) => p.rental_period === rentalPeriod);
+    }
+    if (countryParam) {
+      const target = normalizeCountryInfo(countryParam);
+      list = list.filter((p) => {
+        const rowCountry = normalizeCountryInfo(p.country);
+        if (!target || !rowCountry) return false;
+        if (target.code && rowCountry.code) return target.code === rowCountry.code;
+        return target.name.toLowerCase() === rowCountry.name.toLowerCase();
+      });
     }
     if (location) {
       const loc = location.toLowerCase();
@@ -1165,6 +1292,7 @@ app.get("/api/properties", async (req, res) => {
       "publication_status=eq.published",
       `transaction_type=eq.${encodeURIComponent(transactionType)}`,
     ];
+    const orConditions: string[] = [];
 
     const listingStatus =
       typeof req.query.listing_status === "string" ? req.query.listing_status.trim() : "";
@@ -1210,16 +1338,35 @@ app.get("/api/properties", async (req, res) => {
       const availabilityDate =
         typeof req.query.availability_date === "string" ? req.query.availability_date.trim() : "";
       if (/^\d{4}-\d{2}-\d{2}$/.test(availabilityDate)) {
-        queryParts.push(`or=(available_from.is.null,available_from.lte.${availabilityDate})`);
+        orConditions.push(`or(available_from.is.null,available_from.lte.${availabilityDate})`);
+      }
+    }
+
+    const countryParam =
+      typeof req.query.country === "string" ? sanitizeSearchTerm(req.query.country) : "";
+    if (countryParam) {
+      const variants = getCountryQueryVariants(countryParam);
+      if (variants.length > 0) {
+        const countryClauses = variants.map(
+          (v) => `country.ilike.${encodeURIComponent(`"${v.replace(/"/g, "")}"`)}`
+        );
+        orConditions.push(`or(${countryClauses.join(",")})`);
       }
     }
 
     const location = typeof req.query.location === "string" ? sanitizeSearchTerm(req.query.location) : "";
     if (location) {
       const pattern = encodeURIComponent(`*${location}*`);
-      queryParts.push(
-        `or=(city.ilike.${pattern},country.ilike.${pattern},state_region.ilike.${pattern},address_line.ilike.${pattern},title.ilike.${pattern})`
+      orConditions.push(
+        `or(city.ilike.${pattern},country.ilike.${pattern},state_region.ilike.${pattern},address_line.ilike.${pattern},title.ilike.${pattern})`
       );
+    }
+
+    if (orConditions.length === 1) {
+      // Top-level PostgREST expects `or=(...)`
+      queryParts.push(orConditions[0].replace(/^or\(/, "or=("));
+    } else if (orConditions.length > 1) {
+      queryParts.push(`and=(${orConditions.join(",")})`);
     }
 
     if (req.query.featured === "true") {

@@ -270,6 +270,7 @@ export interface PropertyEnquiry {
 export interface PropertyFilterOptions {
   transaction_type: TransactionType;
   property_type?: string;
+  country?: string;
   location?: string;
   min_price?: string | number;
   max_price?: string | number;
@@ -299,5 +300,15 @@ export interface PropertyLocationStat {
   totalCount: number;
   saleCount: number;
   rentCount: number;
+}
+
+export interface PropertyCountryStat {
+  country: string;
+  countryCode: string;
+  flag: string;
+  totalCount: number;
+  saleCount: number;
+  rentCount: number;
+  imageUrl?: string | null;
 }
 

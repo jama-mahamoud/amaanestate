@@ -5,6 +5,7 @@ import {
   EnquiryStatus,
   ListingStatus,
   Property,
+  PropertyCountryStat,
   PropertyEnquiry,
   PropertyFilterOptions,
   PropertyImage,
@@ -169,6 +170,9 @@ export async function getProperties(options: PropertyFilterOptions): Promise<Pro
   if (options.property_type && options.property_type !== 'all') {
     params.set('property_type', options.property_type);
   }
+  if (options.country && String(options.country).trim()) {
+    params.set('country', String(options.country).trim());
+  }
   if (options.location && String(options.location).trim()) {
     params.set('location', String(options.location).trim());
   }
@@ -299,6 +303,23 @@ export async function getPropertyLocations(): Promise<{
 
   return {
     locations: Array.isArray(payload.locations) ? payload.locations : [],
+    schemaPending: Boolean(payload.schemaPending),
+  };
+}
+
+export async function getPropertyCountries(): Promise<{
+  countries: PropertyCountryStat[];
+  schemaPending: boolean;
+}> {
+  const response = await fetch('/api/properties/countries', { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload?.error || 'Unable to load international markets.');
+  }
+
+  return {
+    countries: Array.isArray(payload.countries) ? payload.countries : [],
     schemaPending: Boolean(payload.schemaPending),
   };
 }
