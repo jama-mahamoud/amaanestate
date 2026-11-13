@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Search, SlidersHorizontal, X } from 'lucide-react';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 import { TransactionType } from '../../types';
 
@@ -12,45 +12,80 @@ const PROPERTY_TYPE_OPTIONS = [
   { value: 'townhouse', label: 'Townhouse' },
   { value: 'condominium', label: 'Condominium' },
   { value: 'land', label: 'Land' },
+  { value: 'other', label: 'Other' },
 ];
 
-const SALE_BUDGET_OPTIONS = [
-  { value: '', label: 'Any Max Budget' },
-  { value: '500000', label: 'Up to $500,000' },
-  { value: '1000000', label: 'Up to $1,000,000' },
-  { value: '2500000', label: 'Up to $2,500,000' },
-  { value: '5000000', label: 'Up to $5,000,000' },
-  { value: '10000000', label: 'Up to $10,000,000' },
-];
-
-const RENT_BUDGET_OPTIONS = [
-  { value: '', label: 'Any Max Rent / mo' },
-  { value: '2500', label: 'Up to $2,500 / mo' },
-  { value: '5000', label: 'Up to $5,000 / mo' },
-  { value: '10000', label: 'Up to $10,000 / mo' },
-  { value: '20000', label: 'Up to $20,000 / mo' },
+const LISTING_STATUSES = [
+  { value: 'all', label: 'All Active Listings' },
+  { value: 'available', label: 'Available' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'under_contract', label: 'Under Contract' },
 ];
 
 export default function PropertySearchHero() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<TransactionType>('sale');
+  const [mode, setMode] = useState<TransactionType>('rent');
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('');
+
+  // Expandable advanced filters (hidden by default)
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [bedrooms, setBedrooms] = useState('');
+  const [bathrooms, setBathrooms] = useState('');
+  const [listingStatus, setListingStatus] = useState('all');
+  const [rentalPeriod, setRentalPeriod] = useState('all');
+  const [availabilityDate, setAvailabilityDate] = useState('');
+
+  const isRent = mode === 'rent';
+
+  const activeAdvancedCount = [
+    minPrice.trim(),
+    maxPrice.trim(),
+    bedrooms,
+    bathrooms,
+    listingStatus !== 'all' ? listingStatus : '',
+    isRent && rentalPeriod !== 'all' ? rentalPeriod : '',
+    isRent ? availabilityDate : '',
+  ].filter(Boolean).length;
+
+  const handleTransactionChange = (nextMode: TransactionType) => {
+    setMode(nextMode);
+    if (nextMode === 'sale') {
+      setRentalPeriod('all');
+      setAvailabilityDate('');
+    }
+  };
+
+  const clearAdvancedFilters = () => {
+    setMinPrice('');
+    setMaxPrice('');
+    setBedrooms('');
+    setBathrooms('');
+    setListingStatus('all');
+    setRentalPeriod('all');
+    setAvailabilityDate('');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const targetPath = mode === 'rent' ? '/rent' : '/buy';
     const params = new URLSearchParams();
+
     if (location.trim()) params.set('location', location.trim());
     if (propertyType) params.set('type', propertyType);
-    if (maxPrice) params.set('max_price', maxPrice);
+    if (minPrice.trim()) params.set('min_price', minPrice.trim());
+    if (maxPrice.trim()) params.set('max_price', maxPrice.trim());
+    if (bedrooms) params.set('bedrooms', bedrooms);
+    if (bathrooms) params.set('bathrooms', bathrooms);
+    if (listingStatus && listingStatus !== 'all') params.set('status', listingStatus);
+    if (isRent && rentalPeriod && rentalPeriod !== 'all') params.set('rental_period', rentalPeriod);
+    if (isRent && availabilityDate) params.set('availability_date', availabilityDate);
 
     const qs = params.toString();
     navigate(qs ? `${targetPath}?${qs}` : targetPath);
   };
-
-  const budgetOptions = mode === 'rent' ? RENT_BUDGET_OPTIONS : SALE_BUDGET_OPTIONS;
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-14">
@@ -101,31 +136,17 @@ export default function PropertySearchHero() {
           </div>
         </div>
 
-        {/* Dedicated Marketplace Search Bar */}
+        {/* Clean Unified Marketplace Search Bar */}
         <div className="bg-white border border-[#E5E0D8] rounded-[6px] p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E0D8] pb-3">
-            <div className="inline-flex items-center gap-1 p-1 bg-[#FAF8F5] border border-[#E5E0D8] rounded">
+            <div
+              role="group"
+              aria-label="Transaction type"
+              className="inline-flex items-center gap-1 p-1 bg-[#FAF8F5] border border-[#E5E0D8] rounded"
+            >
               <button
                 type="button"
-                onClick={() => {
-                  setMode('sale');
-                  setMaxPrice('');
-                }}
-                aria-pressed={mode === 'sale'}
-                className={`px-4 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
-                  mode === 'sale'
-                    ? 'bg-[#1E3A5F] text-white'
-                    : 'text-[#5C5A55] hover:text-[#141413]'
-                }`}
-              >
-                Buy
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('rent');
-                  setMaxPrice('');
-                }}
+                onClick={() => handleTransactionChange('rent')}
                 aria-pressed={mode === 'rent'}
                 className={`px-4 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
                   mode === 'rent'
@@ -133,77 +154,278 @@ export default function PropertySearchHero() {
                     : 'text-[#5C5A55] hover:text-[#141413]'
                 }`}
               >
-                Rent
+                For Rent
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTransactionChange('sale')}
+                aria-pressed={mode === 'sale'}
+                className={`px-4 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
+                  mode === 'sale'
+                    ? 'bg-[#1E3A5F] text-white'
+                    : 'text-[#5C5A55] hover:text-[#141413]'
+                }`}
+              >
+                For Sale
               </button>
             </div>
 
             <p className="text-xs text-[#5C5A55]">
-              {mode === 'sale'
-                ? 'Search residential & land acquisitions worldwide'
-                : 'Search residences available for lease'}
+              {isRent
+                ? 'Search residences available for lease'
+                : 'Search residential & land acquisitions worldwide'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-            <div className="lg:col-span-5">
-              <label htmlFor="hero-location" className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1">
-                Location
-              </label>
-              <input
-                id="hero-location"
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="City, region, or country (e.g. Toronto, Dubai, London)"
-                className="w-full h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
-              />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+              {/* Unified Location Field */}
+              <div className="sm:col-span-2 lg:col-span-6">
+                <label
+                  htmlFor="hero-location"
+                  className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                >
+                  Location
+                </label>
+                <div className="relative">
+                  <MapPin
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7770] pointer-events-none"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="hero-location"
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Enter city, country, address, neighborhood or postcode..."
+                    className="w-full h-11 pl-10 pr-9 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+                  />
+                  {location && (
+                    <button
+                      type="button"
+                      onClick={() => setLocation('')}
+                      aria-label="Clear location"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#7A7770] hover:text-[#141413] cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Property Type Selector */}
+              <div className="lg:col-span-3">
+                <label
+                  htmlFor="hero-property-type"
+                  className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                >
+                  Property Type
+                </label>
+                <select
+                  id="hero-property-type"
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value)}
+                  className="w-full h-11 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                >
+                  {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value || 'all'} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Prominent Search Properties CTA */}
+              <div className="lg:col-span-3 flex items-end">
+                <button
+                  type="submit"
+                  className="w-full h-11 px-5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold uppercase tracking-wider rounded inline-flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <Search size={15} />
+                  <span>Search Properties</span>
+                </button>
+              </div>
             </div>
 
-            <div className="lg:col-span-3">
-              <label htmlFor="hero-property-type" className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1">
-                Property Type
-              </label>
-              <select
-                id="hero-property-type"
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value)}
-                className="w-full h-11 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
-              >
-                {PROPERTY_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value || 'all'} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="lg:col-span-2">
-              <label htmlFor="hero-budget" className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1">
-                {mode === 'rent' ? 'Max Monthly Rent' : 'Max Budget'}
-              </label>
-              <select
-                id="hero-budget"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full h-11 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
-              >
-                {budgetOptions.map((opt) => (
-                  <option key={opt.value || 'any'} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="lg:col-span-2 flex items-end">
+            {/* Compact More Filters Trigger */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
               <button
-                type="submit"
-                className="w-full h-11 px-4 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold uppercase tracking-wider rounded inline-flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
+                type="button"
+                onClick={() => setShowMoreFilters((prev) => !prev)}
+                aria-expanded={showMoreFilters}
+                aria-controls="hero-more-filters"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] hover:text-[#142944] cursor-pointer"
               >
-                <Search size={15} />
-                <span>Search</span>
+                <SlidersHorizontal size={13} aria-hidden="true" />
+                <span>
+                  More Filters{activeAdvancedCount > 0 ? ` (${activeAdvancedCount})` : ''}
+                </span>
+                {showMoreFilters ? (
+                  <ChevronUp size={14} aria-hidden="true" />
+                ) : (
+                  <ChevronDown size={14} aria-hidden="true" />
+                )}
               </button>
+
+              {activeAdvancedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAdvancedFilters}
+                  className="text-xs font-medium text-[#5C5A55] hover:text-[#141413] underline cursor-pointer"
+                >
+                  Clear advanced filters
+                </button>
+              )}
             </div>
+
+            {/* Collapsible Advanced Filters */}
+            {showMoreFilters && (
+              <div
+                id="hero-more-filters"
+                className="pt-4 border-t border-[#E5E0D8] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+              >
+                <div>
+                  <label
+                    htmlFor="hero-min-price"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                  >
+                    {isRent ? 'Min Monthly Rent' : 'Min Price'}
+                  </label>
+                  <input
+                    id="hero-min-price"
+                    type="number"
+                    min={0}
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder={isRent ? 'e.g. 1500' : 'e.g. 250000'}
+                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-mono text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hero-max-price"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                  >
+                    {isRent ? 'Max Monthly Rent' : 'Max Price'}
+                  </label>
+                  <input
+                    id="hero-max-price"
+                    type="number"
+                    min={0}
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder={isRent ? 'e.g. 8000' : 'e.g. 2500000'}
+                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-mono text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hero-bedrooms"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                  >
+                    Bedrooms
+                  </label>
+                  <select
+                    id="hero-bedrooms"
+                    value={bedrooms}
+                    onChange={(e) => setBedrooms(e.target.value)}
+                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                  >
+                    <option value="">Any</option>
+                    <option value="1">1+ Bedroom</option>
+                    <option value="2">2+ Bedrooms</option>
+                    <option value="3">3+ Bedrooms</option>
+                    <option value="4">4+ Bedrooms</option>
+                    <option value="5">5+ Bedrooms</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hero-bathrooms"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                  >
+                    Bathrooms
+                  </label>
+                  <select
+                    id="hero-bathrooms"
+                    value={bathrooms}
+                    onChange={(e) => setBathrooms(e.target.value)}
+                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                  >
+                    <option value="">Any</option>
+                    <option value="1">1+ Bathroom</option>
+                    <option value="2">2+ Bathrooms</option>
+                    <option value="3">3+ Bathrooms</option>
+                    <option value="4">4+ Bathrooms</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hero-listing-status"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                  >
+                    Listing Status
+                  </label>
+                  <select
+                    id="hero-listing-status"
+                    value={listingStatus}
+                    onChange={(e) => setListingStatus(e.target.value)}
+                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                  >
+                    {LISTING_STATUSES.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {isRent && (
+                  <>
+                    <div>
+                      <label
+                        htmlFor="hero-rental-period"
+                        className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                      >
+                        Rental Duration
+                      </label>
+                      <select
+                        id="hero-rental-period"
+                        value={rentalPeriod}
+                        onChange={(e) => setRentalPeriod(e.target.value)}
+                        className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                      >
+                        <option value="all">Any Billing Period</option>
+                        <option value="month">Monthly</option>
+                        <option value="year">Yearly</option>
+                        <option value="week">Weekly</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="hero-availability-date"
+                        className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] mb-1.5"
+                      >
+                        Available By
+                      </label>
+                      <input
+                        id="hero-availability-date"
+                        type="date"
+                        value={availabilityDate}
+                        onChange={(e) => setAvailabilityDate(e.target.value)}
+                        className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-mono text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -4,7 +4,11 @@ import { ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import 'flag-icons/css/flag-icons.min.css';
 import { PropertyCountryStat } from '../../types';
-import { getPropertyCountries } from '../../services/propertyService';
+import {
+  PROPERTY_CATALOG_CHANNEL,
+  PROPERTY_CATALOG_UPDATED_EVENT,
+  getPropertyCountries,
+} from '../../services/propertyService';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { normalizeCountryInfo } from '../../lib/countries';
 
@@ -94,8 +98,23 @@ export default function GlobalMarketsSection() {
       }
     };
 
+    const handleCatalogUpdate = () => {
+      fetchCountries(false);
+    };
+
     window.addEventListener('focus', handleFocusOrVisibility);
     document.addEventListener('visibilitychange', handleFocusOrVisibility);
+    window.addEventListener(PROPERTY_CATALOG_UPDATED_EVENT, handleCatalogUpdate);
+
+    let broadcastChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        broadcastChannel = new BroadcastChannel(PROPERTY_CATALOG_CHANNEL);
+        broadcastChannel.onmessage = handleCatalogUpdate;
+      } catch {
+        broadcastChannel = null;
+      }
+    }
 
     const intervalId = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
@@ -120,6 +139,10 @@ export default function GlobalMarketsSection() {
     return () => {
       window.removeEventListener('focus', handleFocusOrVisibility);
       document.removeEventListener('visibilitychange', handleFocusOrVisibility);
+      window.removeEventListener(PROPERTY_CATALOG_UPDATED_EVENT, handleCatalogUpdate);
+      if (broadcastChannel) {
+        broadcastChannel.close();
+      }
       window.clearInterval(intervalId);
       if (realtimeChannel && supabase) {
         supabase.removeChannel(realtimeChannel);
@@ -232,7 +255,7 @@ export default function GlobalMarketsSection() {
                 const key = getCountryKey(item);
                 const encodedCountry = encodeURIComponent(item.country);
                 const href =
-                  item.saleCount > 0
+                  item.saleCount > item.rentCount
                     ? `/buy?country=${encodedCountry}`
                     : `/rent?country=${encodedCountry}`;
                 const countLabel = `${item.totalCount} ${

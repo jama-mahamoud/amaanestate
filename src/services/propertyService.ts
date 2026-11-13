@@ -17,6 +17,27 @@ import {
   TransactionType,
 } from '../types';
 
+export const PROPERTY_CATALOG_UPDATED_EVENT = 'amaan:properties-updated';
+export const PROPERTY_CATALOG_CHANNEL = 'amaan_properties_updates';
+
+export function notifyPropertyCatalogUpdated() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent(PROPERTY_CATALOG_UPDATED_EVENT));
+  } catch {
+    // Ignore event dispatch errors in restricted environments
+  }
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const channel = new BroadcastChannel(PROPERTY_CATALOG_CHANNEL);
+      channel.postMessage({ type: 'updated', timestamp: Date.now() });
+      channel.close();
+    } catch {
+      // Ignore BroadcastChannel errors
+    }
+  }
+}
+
 export function isPgrst205Error(error: any): boolean {
   if (!error) return false;
   const code = String(error.code || '');
@@ -212,7 +233,7 @@ export async function getProperties(options: PropertyFilterOptions): Promise<Pro
     params.set('limit', String(options.limit));
   }
 
-  const response = await fetch(`/api/properties?${params.toString()}`);
+  const response = await fetch(`/api/properties?${params.toString()}`, { cache: 'no-store' });
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -239,7 +260,9 @@ export async function getFeaturedProperties(
     params.set('transaction_type', transactionType);
   }
 
-  const response = await fetch(`/api/properties/featured?${params.toString()}`);
+  const response = await fetch(`/api/properties/featured?${params.toString()}`, {
+    cache: 'no-store',
+  });
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -294,7 +317,7 @@ export async function getPropertyLocations(): Promise<{
   locations: PropertyLocationStat[];
   schemaPending: boolean;
 }> {
-  const response = await fetch('/api/properties/locations');
+  const response = await fetch('/api/properties/locations', { cache: 'no-store' });
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -509,6 +532,7 @@ export async function saveProperty(
       db.properties.unshift(savedProperty);
     }
     saveDemoDb(db);
+    notifyPropertyCatalogUpdated();
     return { success: true, property: savedProperty };
   }
 
@@ -613,6 +637,7 @@ export async function saveProperty(
     .eq('id', savedId)
     .maybeSingle();
 
+  notifyPropertyCatalogUpdated();
   return {
     success: true,
     property: fullProperty ? normalizePropertyRow(fullProperty) : undefined,
@@ -624,12 +649,14 @@ export async function deleteProperty(id: string): Promise<{ success: boolean; er
     const db = loadDemoDb();
     db.properties = (db.properties || []).filter((p) => p.id !== id);
     saveDemoDb(db);
+    notifyPropertyCatalogUpdated();
     return { success: true };
   }
   const { error } = await supabase.from('properties').delete().eq('id', id);
   if (error) {
     return { success: false, error: error.message };
   }
+  notifyPropertyCatalogUpdated();
   return { success: true };
 }
 
