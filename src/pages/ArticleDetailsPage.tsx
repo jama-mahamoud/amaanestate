@@ -6,9 +6,11 @@ import { getPublishedArticleBySlug, getRelatedArticles } from '../services/edito
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { countArticleBodyWords } from '../data/allArticles';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { resolveLegacyArticleRedirectSlug } from '../lib/legacyRedirects';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
 import NewsletterBox from '../components/editorial/NewsletterBox';
+import NotFoundPage from './NotFoundPage';
 import { toast } from 'sonner';
 
 export default function ArticleDetailsPage() {
@@ -24,10 +26,26 @@ export default function ArticleDetailsPage() {
   useEffect(() => {
     let active = true;
     async function load() {
-      if (!slug) return;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const data = await getPublishedArticleBySlug(slug);
       if (!active) return;
+
+      if (!data) {
+        const mappedSlug = resolveLegacyArticleRedirectSlug(slug);
+        if (mappedSlug) {
+          const replacement = await getPublishedArticleBySlug(mappedSlug);
+          if (!active) return;
+          if (replacement) {
+            navigate(`/articles/${encodeURIComponent(replacement.slug)}`, { replace: true });
+            return;
+          }
+        }
+      }
+
       setArticle(data);
       if (data) {
         const rel = await getRelatedArticles(data, 3);
@@ -41,7 +59,7 @@ export default function ArticleDetailsPage() {
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, navigate]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -56,7 +74,7 @@ export default function ArticleDetailsPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const articleUrl = `${getCanonicalOrigin()}/articles/${article?.slug || slug || ''}`;
+  const articleUrl = `${getCanonicalOrigin()}/articles/${encodeURIComponent(article?.slug || slug || '')}`;
 
   const articleKeywords = useMemo(() => {
     if (!article) return undefined;
@@ -133,13 +151,20 @@ export default function ArticleDetailsPage() {
   }, [article, articleKeywords, articleUrl]);
 
   useSEO({
-    title: article ? article.seo_title || article.title : 'Article Not Found',
-    description: article ? article.seo_description || article.excerpt : 'Read international real estate news, housing research, and market analysis on AmaanEstate.',
+    title: article
+      ? article.seo_title || article.title
+      : loading
+      ? 'Loading Article | AmaanEstate'
+      : 'Article Not Found (404) | AmaanEstate',
+    description: article
+      ? article.seo_description || article.excerpt
+      : 'Read international real estate news, housing research, and market analysis on AmaanEstate.',
     image: article?.og_image || article?.featured_image || undefined,
     imageAlt: article?.featured_image_alt || article?.title || undefined,
     url: article ? articleUrl : undefined,
     noIndex: !loading && !article,
-    type: 'article',
+    omitCanonical: !loading && !article,
+    type: article ? 'article' : 'website',
     keywords: articleKeywords,
     publishedTime: article?.published_at || article?.created_at || undefined,
     modifiedTime: article?.updated_at || article?.published_at || article?.created_at || undefined,
@@ -167,19 +192,11 @@ export default function ArticleDetailsPage() {
 
   if (!article) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-24 text-center space-y-4">
-        <h1 className="text-3xl font-serif font-semibold text-[#141413]">Article Not Available</h1>
-        <p className="text-sm text-[#5C5A55]">
-          The requested article could not be found or has not been published.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="px-5 py-2.5 bg-[#1E3A5F] text-white text-sm font-semibold rounded cursor-pointer"
-        >
-          Return Home
-        </button>
-      </div>
+      <NotFoundPage
+        title="Article Not Found (404) | AmaanEstate"
+        heading="Article Not Available"
+        message="The requested article could not be found, has not been published, or has been removed from the archive."
+      />
     );
   }
 

@@ -7,6 +7,7 @@ export interface SEOProps {
   imageAlt?: string;
   url?: string;
   noIndex?: boolean;
+  omitCanonical?: boolean;
   type?: 'website' | 'article' | 'profile';
   keywords?: string[];
   publishedTime?: string;
@@ -46,6 +47,7 @@ export function useSEO({
   imageAlt,
   url,
   noIndex = false,
+  omitCanonical = false,
   type = 'website',
   keywords,
   publishedTime,
@@ -74,13 +76,17 @@ export function useSEO({
     };
 
     const canonicalUrl = url || getCanonicalOrigin() + window.location.pathname;
-    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalLink);
+    if (omitCanonical) {
+      document.querySelector('link[rel="canonical"]')?.remove();
+    } else {
+      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      if (!canonicalLink) {
+        canonicalLink = document.createElement('link');
+        canonicalLink.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalLink);
+      }
+      canonicalLink.setAttribute('href', canonicalUrl);
     }
-    canonicalLink.setAttribute('href', canonicalUrl);
 
     setMetaTag('name', 'description', metaDesc);
     setMetaTag('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow');
@@ -99,7 +105,11 @@ export function useSEO({
     setMetaTag('property', 'og:title', fullTitle);
     setMetaTag('property', 'og:description', metaDesc);
     setMetaTag('property', 'og:type', type);
-    setMetaTag('property', 'og:url', canonicalUrl);
+    if (omitCanonical) {
+      document.querySelector('meta[property="og:url"]')?.remove();
+    } else {
+      setMetaTag('property', 'og:url', canonicalUrl);
+    }
     if (absoluteImage) {
       setMetaTag('property', 'og:image', absoluteImage);
       setMetaTag('property', 'og:image:alt', resolvedImageAlt);
@@ -138,5 +148,5 @@ export function useSEO({
         document.head.appendChild(scriptEl);
       });
     }
-  }, [title, description, image, imageAlt, url, noIndex, type, keywords, publishedTime, modifiedTime, structuredData]);
+  }, [title, description, image, imageAlt, url, noIndex, omitCanonical, type, keywords, publishedTime, modifiedTime, structuredData]);
 }

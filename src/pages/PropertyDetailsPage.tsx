@@ -72,6 +72,7 @@ export default function PropertyDetailsPage() {
     imageAlt: primaryImage?.alt_text || property?.title,
     url: property ? `${getCanonicalOrigin()}/properties/${encodeURIComponent(property.slug)}` : undefined,
     noIndex: !loading && !property,
+    omitCanonical: !loading && !property,
     structuredData: property
       ? [
           {

@@ -7,6 +7,7 @@ import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import ArticleCard from '../components/editorial/ArticleCard';
 import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
+import NotFoundPage from './NotFoundPage';
 
 interface CategoryPageProps {
   forcedSlug?: string;
@@ -47,7 +48,9 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
       category?.seo_description ||
       category?.description ||
       'Explore global real estate news, housing market research, and property investment insights on AmaanEstate.',
-    url: `${getCanonicalOrigin()}/${activeSlug}`,
+    url: category ? `${getCanonicalOrigin()}/${encodeURIComponent(category.slug)}` : undefined,
+    noIndex: !loading && !category,
+    omitCanonical: !loading && !category,
     structuredData: category
       ? {
           '@context': 'https://schema.org',
@@ -64,6 +67,16 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
         }
       : undefined,
   });
+
+  if (!loading && !category) {
+    return (
+      <NotFoundPage
+        title="Section Not Found (404) | AmaanEstate"
+        heading="Editorial Section Not Found"
+        message="The requested editorial section does not exist or has been moved."
+      />
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">

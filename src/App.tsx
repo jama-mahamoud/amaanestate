@@ -25,6 +25,8 @@ const NewsletterPage = React.lazy(() => import('./pages/NewsletterPage'));
 const AuthPage = React.lazy(() => import('./pages/AuthPage'));
 const AccountPage = React.lazy(() => import('./pages/AccountPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
+const LegacyNewsRoute = React.lazy(() => import('./pages/LegacyNewsRoute'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 function PageFallback() {
   return (
@@ -73,6 +75,7 @@ export default function App() {
           <Route path="/construction" element={<Layout><CategoryPage forcedSlug="construction" /></Layout>} />
           <Route path="/home-living" element={<Layout><CategoryPage forcedSlug="home-living" /></Layout>} />
           <Route path="/news" element={<Layout><CategoryPage forcedSlug="news" /></Layout>} />
+          <Route path="/news/:slug" element={<Layout><LegacyNewsRoute /></Layout>} />
           <Route path="/category/:slug" element={<Layout><CategoryPage /></Layout>} />
           <Route path="/search" element={<Layout><SearchPage /></Layout>} />
           <Route path="/articles/:slug" element={<Layout><ArticleDetailsPage /></Layout>} />
@@ -85,7 +88,7 @@ export default function App() {
           <Route path="/advertising-disclosure" element={<Layout><AdvertisingDisclosurePage /></Layout>} />
           <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
           <Route path="/newsletter" element={<Layout><NewsletterPage /></Layout>} />
-          <Route path="*" element={<Layout><Home /></Layout>} />
+          <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
         </Routes>
       </Suspense>
     </ErrorBoundary>

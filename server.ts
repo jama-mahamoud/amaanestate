@@ -4,11 +4,17 @@ import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
-import { createServer as createViteServer } from "vite";
+import { createServer as createViteServer, ViteDevServer } from "vite";
 import { SEED_ARTICLE_BY_SLUG, ALL_SEED_EDITORIAL_ARTICLES } from "./src/data/allArticles";
 import { normalizeCountryInfo, getCountryQueryVariants } from "./src/lib/countries";
+import {
+  normalizeArticleSlugInput,
+  resolveLegacyArticleRedirectSlug,
+} from "./src/lib/legacyRedirects";
 
 dotenv.config();
+
+let devViteServer: ViteDevServer | null = null;
 
 let activeFilename = "";
 let activeDirname = "";
@@ -205,15 +211,31 @@ async function fetchArticleForOg(slug: string): Promise<{
 }
 
 function getIndexTemplateHtml(): string {
+  const isProdOrVercel =
+    (process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL)) && !devViteServer;
   const distHtmlPath = path.join(process.cwd(), "dist", "index.html");
-  if (fs.existsSync(distHtmlPath)) {
+  const rootHtmlPath = path.join(process.cwd(), "index.html");
+
+  if (isProdOrVercel && fs.existsSync(distHtmlPath)) {
     return fs.readFileSync(distHtmlPath, "utf-8");
   }
-  const rootHtmlPath = path.join(process.cwd(), "index.html");
   if (fs.existsSync(rootHtmlPath)) {
     return fs.readFileSync(rootHtmlPath, "utf-8");
   }
+  if (fs.existsSync(distHtmlPath)) {
+    return fs.readFileSync(distHtmlPath, "utf-8");
+  }
   return `<!doctype html><html lang="en"><head><meta charset="UTF-8" /></head><body><div id="root"></div></body></html>`;
+}
+
+function stripSeoHeadTags(templateHtml: string): string {
+  return templateHtml
+    .replace(/<title>[\s\S]*?<\/title>/gi, "")
+    .replace(/<meta\s+[^>]*name=["']description["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*name=["']robots["'][^>]*>/gi, "")
+    .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*property=["']og:[^"']*["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
 }
 
 function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: string): string {
@@ -236,6 +258,7 @@ function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: s
   const metadataHtml = `
     <title>${escapeHtml(pageTitle)}</title>
     <meta name="description" content="${escapeHtml(cleanDescription)}" />
+    <meta name="robots" content="index, follow" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
@@ -259,14 +282,78 @@ function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: s
     <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
   `;
 
-  const cleanHtml = templateHtml
-    .replace(/<title>.*?<\/title>/gi, "")
-    .replace(/<meta\s+name=["']description["'].*?>/gi, "")
-    .replace(/<link\s+rel=["']canonical["'].*?>/gi, "")
-    .replace(/<meta\s+property=["']og:.*?["'].*?>/gi, "")
-    .replace(/<meta\s+name=["']twitter:.*?["'].*?>/gi, "");
-
+  const cleanHtml = stripSeoHeadTags(templateHtml);
   return cleanHtml.replace("</head>", `${metadataHtml}\n  </head>`);
+}
+
+function injectNotFoundMetadata(
+  templateHtml: string,
+  options?: { title?: string; description?: string }
+): string {
+  const title = options?.title || "Page Not Found (404) | AmaanEstate";
+  const description =
+    options?.description ||
+    "The requested page or article could not be found on AmaanEstate.";
+  const metadataHtml = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <meta name="robots" content="noindex, nofollow" />
+  `;
+  const cleanHtml = stripSeoHeadTags(templateHtml);
+  return cleanHtml.replace("</head>", `${metadataHtml}\n  </head>`);
+}
+
+function injectSpaRouteMetadata(
+  templateHtml: string,
+  options: {
+    canonicalUrl?: string;
+    noIndex?: boolean;
+    title?: string;
+    description?: string;
+  }
+): string {
+  let html = templateHtml;
+  if (options.title) {
+    html = html.replace(/<title>[\s\S]*?<\/title>/gi, `<title>${escapeHtml(options.title)}</title>`);
+  }
+  if (options.description) {
+    html = html.replace(
+      /<meta\s+[^>]*name=["']description["'][^>]*>/gi,
+      `<meta name="description" content="${escapeHtml(options.description)}" />`
+    );
+  }
+  html = html
+    .replace(/<meta\s+[^>]*name=["']robots["'][^>]*>/gi, "")
+    .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*property=["']og:url["'][^>]*>/gi, "");
+
+  const tags: string[] = [
+    `<meta name="robots" content="${options.noIndex ? "noindex, nofollow" : "index, follow"}" />`,
+  ];
+  if (options.canonicalUrl && !options.noIndex) {
+    tags.push(`<link rel="canonical" href="${escapeHtml(options.canonicalUrl)}" />`);
+    tags.push(`<meta property="og:url" content="${escapeHtml(options.canonicalUrl)}" />`);
+  }
+
+  return html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`);
+}
+
+async function sendHtmlPage(
+  req: express.Request,
+  res: express.Response,
+  statusCode: number,
+  html: string
+) {
+  let finalHtml = html;
+  if (devViteServer) {
+    try {
+      finalHtml = await devViteServer.transformIndexHtml(req.originalUrl, html);
+    } catch (err) {
+      console.error("[Vite] transformIndexHtml error:", err);
+    }
+  }
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  return res.status(statusCode).send(finalHtml);
 }
 
 // Health Check
@@ -1843,20 +1930,299 @@ app.get(["/sitemap-:page.xml", "/api/sitemap-:page.xml"], async (req, res) => {
   }
 });
 
-// Dynamic Article Open Graph SSR Metadata Route
-app.get(["/articles/:slug", "/api/articles-og/:slug"], async (req, res) => {
-  const { slug } = req.params;
-  const templateHtml = getIndexTemplateHtml();
-  const article = await fetchArticleForOg(slug);
+async function fetchPropertyForSeo(rawSlug: string): Promise<any | null> {
+  const cleanSlug = rawSlug.replace(/^sample-/, "");
+  const isUuid = UUID_REGEX.test(rawSlug);
+  const supabaseConfig = getSupabaseConfig();
 
-  if (article) {
-    const injectedHtml = injectArticleOgMetadata(templateHtml, article, req.headers.host);
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res.status(200).send(injectedHtml);
+  if (supabaseConfig) {
+    try {
+      const filterCondition = isUuid
+        ? `id=eq.${encodeURIComponent(rawSlug)}`
+        : `or=(slug.eq.${encodeURIComponent(rawSlug)},slug.eq.${encodeURIComponent(cleanSlug)})`;
+      const endpoint = `${supabaseConfig.url}/rest/v1/properties?${filterCondition}&publication_status=eq.published&listing_status=in.(available,pending,under_contract)&select=title,slug,city,country,description,transaction_type,property_type&limit=1`;
+      const response = await fetch(endpoint, {
+        headers: {
+          apikey: supabaseConfig.anonKey,
+          Authorization: `Bearer ${supabaseConfig.anonKey}`,
+        },
+      });
+      if (response.ok) {
+        const rows = (await response.json()) as any[];
+        if (Array.isArray(rows) && rows.length > 0) {
+          return rows[0];
+        }
+      }
+    } catch (err) {
+      console.error("[SEO-SSR] Supabase property lookup error:", err);
+    }
   }
 
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  return res.status(200).send(templateHtml);
+  return (
+    SHOWCASE_PROPERTIES_SEED.find(
+      (p) => p.slug === rawSlug || p.slug === cleanSlug || p.id === rawSlug
+    ) || null
+  );
+}
+
+const FALLBACK_CATEGORY_SLUGS = new Set([
+  "investment",
+  "architecture",
+  "construction",
+  "home-living",
+  "news",
+]);
+
+async function fetchCategoryForSeo(slug: string): Promise<{ name: string; slug: string; seo_title?: string | null; seo_description?: string | null; description?: string | null } | null> {
+  const supabaseConfig = getSupabaseConfig();
+  if (supabaseConfig) {
+    try {
+      const endpoint = `${supabaseConfig.url}/rest/v1/categories?slug=eq.${encodeURIComponent(slug)}&select=name,slug,seo_title,seo_description,description&limit=1`;
+      const response = await fetch(endpoint, {
+        headers: {
+          apikey: supabaseConfig.anonKey,
+          Authorization: `Bearer ${supabaseConfig.anonKey}`,
+        },
+      });
+      if (response.ok) {
+        const rows = (await response.json()) as any[];
+        if (Array.isArray(rows) && rows.length > 0) {
+          return rows[0];
+        }
+        return null;
+      }
+    } catch (err) {
+      console.error("[SEO-SSR] Supabase category lookup error:", err);
+    }
+  }
+
+  if (FALLBACK_CATEGORY_SLUGS.has(slug)) {
+    return { name: slug, slug };
+  }
+  return null;
+}
+
+// Legacy /news/:slug article handler (301 to genuine replacement or existing article, otherwise real HTTP 404)
+app.get("/news/:slug", async (req, res) => {
+  const slug = normalizeArticleSlugInput(req.params.slug);
+  const templateHtml = getIndexTemplateHtml();
+
+  if (!slug) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "Article Not Found (404) | AmaanEstate",
+        description: "The requested legacy news article could not be found on AmaanEstate.",
+      })
+    );
+  }
+
+  // 1. Check verified legacy replacement mapping (permanent 301 only if replacement exists)
+  const mappedTarget = resolveLegacyArticleRedirectSlug(slug);
+  if (mappedTarget) {
+    const targetArticle = await fetchArticleForOg(mappedTarget);
+    if (targetArticle) {
+      return res.redirect(301, `/articles/${encodeURIComponent(targetArticle.slug)}`);
+    }
+  }
+
+  // 2. Check if an article with this exact slug exists under /articles/:slug
+  const existingArticle = await fetchArticleForOg(slug);
+  if (existingArticle) {
+    return res.redirect(301, `/articles/${encodeURIComponent(existingArticle.slug)}`);
+  }
+
+  // 3. No replacement & no article -> HTTP 404 (never redirect missing articles to homepage)
+  setNoCacheSeoHeaders(res);
+  return sendHtmlPage(
+    req,
+    res,
+    404,
+    injectNotFoundMetadata(templateHtml, {
+      title: "Article Not Found (404) | AmaanEstate",
+      description: "The requested legacy news article could not be found or is no longer published on AmaanEstate.",
+    })
+  );
+});
+
+// Dynamic Article Open Graph SSR Metadata Route
+app.get(["/articles/:slug", "/api/articles-og/:slug"], async (req, res) => {
+  const slug = normalizeArticleSlugInput(req.params.slug);
+  const templateHtml = getIndexTemplateHtml();
+
+  if (!slug) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, { title: "Article Not Found (404) | AmaanEstate" })
+    );
+  }
+
+  const article = await fetchArticleForOg(slug);
+  if (article) {
+    const injectedHtml = injectArticleOgMetadata(templateHtml, article, req.headers.host);
+    return sendHtmlPage(req, res, 200, injectedHtml);
+  }
+
+  const mappedTarget = resolveLegacyArticleRedirectSlug(slug);
+  if (mappedTarget && mappedTarget !== slug) {
+    const targetArticle = await fetchArticleForOg(mappedTarget);
+    if (targetArticle) {
+      return res.redirect(301, `/articles/${encodeURIComponent(targetArticle.slug)}`);
+    }
+  }
+
+  setNoCacheSeoHeaders(res);
+  return sendHtmlPage(
+    req,
+    res,
+    404,
+    injectNotFoundMetadata(templateHtml, {
+      title: "Article Not Found (404) | AmaanEstate",
+      description: "The requested article could not be found or is no longer published on AmaanEstate.",
+    })
+  );
+});
+
+// Property detail SEO & 404 status route
+app.get("/properties/:slug", async (req, res) => {
+  const slug = normalizeArticleSlugInput(req.params.slug);
+  const templateHtml = getIndexTemplateHtml();
+  if (!slug) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, { title: "Property Unavailable (404) | AmaanEstate" })
+    );
+  }
+
+  const prop = await fetchPropertyForSeo(slug);
+  if (!prop) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "Property Unavailable (404) | AmaanEstate",
+        description: "The requested property listing is unavailable or no longer active on AmaanEstate.",
+      })
+    );
+  }
+
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const canonicalUrl = `${baseUrl}/properties/${encodeURIComponent(prop.slug)}`;
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl,
+    title: `${prop.title} | AmaanEstate`,
+    description: stripHtml(prop.description || `${prop.title} in ${prop.city}, ${prop.country}`).slice(0, 160),
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
+// Category slug route (/category/:slug)
+app.get("/category/:slug", async (req, res) => {
+  const slug = normalizeArticleSlugInput(req.params.slug);
+  const templateHtml = getIndexTemplateHtml();
+  const cat = slug ? await fetchCategoryForSeo(slug) : null;
+  if (!cat) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, { title: "Section Not Found (404) | AmaanEstate" })
+    );
+  }
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl: `${baseUrl}/${encodeURIComponent(cat.slug)}`,
+    title: cat.seo_title || `${cat.name} | AmaanEstate`,
+    description: cat.seo_description || cat.description || undefined,
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
+const PUBLIC_INDEXABLE_SPA_ROUTES = new Map<string, { title?: string; description?: string }>([
+  ["/", {}],
+  ["/buy", { title: "Buy Real Estate & Properties for Sale | AmaanEstate" }],
+  ["/rent", { title: "Rent Real Estate & Properties for Lease | AmaanEstate" }],
+  ["/investment", { title: "Real Estate Investment | AmaanEstate" }],
+  ["/architecture", { title: "Architecture | AmaanEstate" }],
+  ["/construction", { title: "Construction | AmaanEstate" }],
+  ["/home-living", { title: "Home & Living | AmaanEstate" }],
+  ["/news", { title: "Global Real Estate News | AmaanEstate" }],
+  ["/about", { title: "About AmaanEstate | Global Real Estate Media, Research & Marketplace" }],
+  ["/contact", { title: "Contact AmaanEstate" }],
+  ["/editorial-policy", { title: "Editorial Policy & Standards | AmaanEstate" }],
+  ["/corrections-policy", { title: "Corrections & Fact-Checking Policy | AmaanEstate" }],
+  ["/privacy-policy", { title: "Privacy Policy | AmaanEstate" }],
+  ["/cookie-policy", { title: "Cookie Policy | AmaanEstate" }],
+  ["/advertising-disclosure", { title: "Advertising Disclosure | AmaanEstate" }],
+  ["/terms", { title: "Terms of Use | AmaanEstate" }],
+  ["/newsletter", { title: "Newsletter & Briefings | AmaanEstate" }],
+]);
+
+const NOINDEX_SPA_ROUTES = new Set<string>([
+  "/search",
+  "/login",
+  "/register",
+  "/account",
+  "/admin",
+  "/admin/login",
+]);
+
+app.use(async (req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (
+    req.path.startsWith("/api/") ||
+    req.path.startsWith("/src/") ||
+    req.path.startsWith("/@") ||
+    req.path.startsWith("/node_modules/") ||
+    /\.[a-z0-9]{1,8}$/i.test(req.path)
+  ) {
+    return next();
+  }
+
+  const cleanPath = req.path.length > 1 ? req.path.replace(/\/+$/, "") : req.path;
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const templateHtml = getIndexTemplateHtml();
+
+  if (PUBLIC_INDEXABLE_SPA_ROUTES.has(cleanPath)) {
+    const meta = PUBLIC_INDEXABLE_SPA_ROUTES.get(cleanPath) || {};
+    const canonicalUrl = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
+    const html = injectSpaRouteMetadata(templateHtml, {
+      canonicalUrl,
+      title: meta.title,
+      description: meta.description,
+    });
+    return sendHtmlPage(req, res, 200, html);
+  }
+
+  if (NOINDEX_SPA_ROUTES.has(cleanPath)) {
+    const html = injectSpaRouteMetadata(templateHtml, {
+      noIndex: true,
+    });
+    return sendHtmlPage(req, res, 200, html);
+  }
+
+  // Any other unknown route returns a proper HTTP 404 without homepage canonical
+  setNoCacheSeoHeaders(res);
+  return sendHtmlPage(
+    req,
+    res,
+    404,
+    injectNotFoundMetadata(templateHtml, {
+      title: "Page Not Found (404) | AmaanEstate",
+    })
+  );
 });
 
 async function startServer() {
@@ -1872,12 +2238,13 @@ async function startServer() {
       },
       appType: "spa",
     });
+    devViteServer = vite;
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      return res.status(404).type("text/plain").send("Not Found");
     });
   }
 

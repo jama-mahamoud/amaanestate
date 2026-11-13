@@ -34,12 +34,28 @@
       "destination": "/api/index"
     },
     {
+      "source": "/news/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/properties/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/category/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },
     {
-      "source": "/((?!sitemap\\.xml|sitemap-.*\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|articles/|.*\\..*).*)",
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!sitemap\\.xml|sitemap-.*\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|.*\\..*).*)",
+      "destination": "/api/index"
     }
   ],
   "functions": {
