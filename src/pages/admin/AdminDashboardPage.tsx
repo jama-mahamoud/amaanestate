@@ -58,6 +58,7 @@ import { getAdminEnquiries, getAdminProperties } from '../../services/propertySe
 import { supabase } from '../../lib/supabase';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 import { useSEO } from '../../hooks/useSEO';
+import BrandLogo from '../../components/layout/BrandLogo';
 import AdminOverviewSection from '../../components/admin/AdminOverviewSection';
 import AdminArticlesSection from '../../components/admin/AdminArticlesSection';
 import ArticleEditorView from '../../components/admin/ArticleEditorView';
@@ -350,10 +351,10 @@ export default function AdminDashboardPage() {
         <div className={`px-4 py-5 border-b border-[#E5E0D8] flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
           {!sidebarCollapsed && (
             <div className="min-w-0">
-              <Link to="/" className="font-serif text-lg font-bold text-[#141413] block truncate">
-                AMAAN ESTATE
+              <Link to="/" className="inline-block">
+                <BrandLogo variant="admin" />
               </Link>
-              <p className="text-[11px] uppercase tracking-widest text-[#8C4A27] font-semibold mt-0.5">
+              <p className="text-[11px] uppercase tracking-widest text-[#8C4A27] font-semibold mt-1">
                 Editorial CMS
               </p>
             </div>
@@ -400,8 +401,10 @@ export default function AdminDashboardPage() {
           <aside className="relative w-72 max-w-[85vw] bg-white border-r border-[#E5E0D8] flex flex-col z-10 h-full">
             <div className="px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between">
               <div>
-                <div className="font-serif text-lg font-bold text-[#141413]">AMAAN ESTATE</div>
-                <div className="text-[11px] uppercase tracking-widest text-[#8C4A27] font-semibold">
+                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="inline-block">
+                  <BrandLogo variant="admin" />
+                </Link>
+                <div className="text-[11px] uppercase tracking-widest text-[#8C4A27] font-semibold mt-1">
                   Editorial CMS
                 </div>
               </div>

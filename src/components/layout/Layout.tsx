@@ -5,6 +5,7 @@ import { getCurrentUserProfile, signOutUser } from '../../services/adminService'
 import { SocialLink, getActiveSocialLinks } from '../../services/socialService';
 import { subscribeNewsletter } from '../../services/editorialService';
 import { SocialIcon } from './SocialIcons';
+import BrandLogo from './BrandLogo';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../types';
 import { toast } from 'sonner';
@@ -107,13 +108,14 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
       {/* Clean Single-Row Editorial Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E5E0D8]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 sm:gap-6">
-          {/* Zone 1: Single-line Wordmark */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between gap-4 sm:gap-6">
+          {/* Zone 1: Official AmaanEstate Logo */}
           <Link
             to="/"
-            className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-[#141413] whitespace-nowrap shrink-0"
+            aria-label="AmaanEstate — Global Real Estate Media, Research & Marketplace"
+            className="inline-flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
           >
-            AMAAN ESTATE
+            <BrandLogo variant="header" />
           </Link>
 
           {/* Zone 2: Clean Typographic Navigation */}
@@ -339,8 +341,12 @@ export default function Layout({ children }: LayoutProps) {
           
           {/* Column 1: Brand & About (lg:col-span-4) */}
           <div className="lg:col-span-4 space-y-5">
-            <Link to="/" className="font-serif text-2xl font-bold tracking-tight text-[#141413] block">
-              AMAAN ESTATE
+            <Link
+              to="/"
+              aria-label="AmaanEstate — Global Real Estate Media, Research & Marketplace"
+              className="inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
+            >
+              <BrandLogo variant="footer" />
             </Link>
             
             <p className="text-sm text-[#4A4843] leading-relaxed max-w-md">

@@ -10,6 +10,7 @@ import {
 } from '../services/adminService';
 import { Profile } from '../types';
 import { useSEO } from '../hooks/useSEO';
+import BrandLogo from '../components/layout/BrandLogo';
 
 interface AuthPageProps {
   initialMode?: 'signin' | 'register' | 'forgot';
@@ -151,10 +152,10 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-white border border-[#E5E0D8] rounded p-7 sm:p-8 space-y-6">
-        <div className="space-y-2 border-b border-[#E5E0D8] pb-5">
-          <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-            AMAAN ESTATE
-          </p>
+        <div className="space-y-3 border-b border-[#E5E0D8] pb-5">
+          <Link to="/" className="inline-block">
+            <BrandLogo variant="auth" />
+          </Link>
           <h1 className="text-2xl font-serif font-semibold text-[#141413]">
             {mode === 'register'
               ? 'Create Your Account'

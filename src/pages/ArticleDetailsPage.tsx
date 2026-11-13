@@ -97,9 +97,9 @@ export default function ArticleDetailsPage() {
         url: 'https://www.amaanestate.com/',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.amaanestate.com/android-chrome-192x192.png',
-          width: 192,
-          height: 192,
+          url: 'https://www.amaanestate.com/images/amaanestate-logo.png',
+          width: 1672,
+          height: 941,
         },
       },
       mainEntityOfPage: articleUrl,

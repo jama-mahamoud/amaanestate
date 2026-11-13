@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import BrandLogo from './layout/BrandLogo';
 import { ShieldAlert, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -49,9 +50,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <ShieldAlert size={26} />
             </div>
 
-            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-[#5C5A55] mb-2">
-              AMAAN ESTATE
-            </p>
+            <BrandLogo variant="error" className="mb-3" />
             <h2 className="text-2xl md:text-3xl font-serif font-semibold text-[#141413] tracking-tight mb-3">
               Unexpected interruption
             </h2>
