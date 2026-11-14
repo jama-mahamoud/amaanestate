@@ -74,7 +74,29 @@ export default function ArticleDetailsPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const articleUrl = `${getCanonicalOrigin()}/articles/${encodeURIComponent(article?.slug || slug || '')}`;
+  const [alternateArticle, setAlternateArticle] = useState<Article | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function verifyAlternate() {
+      if (article?.alternate_language && article?.alternate_article_slug) {
+        const alt = await getPublishedArticleBySlug(article.alternate_article_slug);
+        if (active) setAlternateArticle(alt);
+      } else if (active) {
+        setAlternateArticle(null);
+      }
+    }
+    verifyAlternate();
+    return () => {
+      active = false;
+    };
+  }, [article?.alternate_language, article?.alternate_article_slug]);
+
+  const selfArticleUrl = `${getCanonicalOrigin()}/articles/${encodeURIComponent(article?.slug || slug || '')}`;
+  const articleUrl =
+    article?.canonical_url && /^https?:\/\//i.test(article.canonical_url.trim())
+      ? article.canonical_url.trim()
+      : selfArticleUrl;
 
   const articleKeywords = useMemo(() => {
     if (!article) return undefined;
@@ -82,6 +104,18 @@ export default function ArticleDetailsPage() {
     if (article.tags && article.tags.length > 0) return article.tags.map((t) => t.name);
     return undefined;
   }, [article]);
+
+  const alternateLinks = useMemo(() => {
+    if (!article || !alternateArticle || !article.alternate_language) return undefined;
+    const altLang = article.alternate_language.trim().toLowerCase();
+    const selfLang = altLang === 'en' ? 'so' : 'en';
+    const altHref = `${getCanonicalOrigin()}/articles/${encodeURIComponent(alternateArticle.slug)}`;
+    return [
+      { hrefLang: selfLang, href: selfArticleUrl },
+      { hrefLang: altLang, href: altHref },
+      { hrefLang: 'x-default', href: selfLang === 'en' ? selfArticleUrl : altHref },
+    ];
+  }, [article, alternateArticle, selfArticleUrl]);
 
   const structuredData = useMemo(() => {
     if (!article) return undefined;
@@ -92,9 +126,11 @@ export default function ArticleDetailsPage() {
         : `${getCanonicalOrigin()}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`
       : undefined;
     const wordCount = countArticleBodyWords(article.content);
+    const schemaType =
+      article.schema_type || (article.category?.slug === 'news' ? 'NewsArticle' : 'Article');
     const articleSchema: Record<string, any> = {
       '@context': 'https://schema.org',
-      '@type': article.category?.slug === 'news' ? 'NewsArticle' : 'Article',
+      '@type': schemaType,
       headline: article.seo_title || article.title,
       description: article.seo_description || article.excerpt,
       datePublished: article.published_at || article.created_at,
@@ -120,7 +156,7 @@ export default function ArticleDetailsPage() {
           height: 941,
         },
       },
-      mainEntityOfPage: articleUrl,
+      mainEntityOfPage: selfArticleUrl,
     };
 
     const breadcrumbSchema = {
@@ -142,13 +178,13 @@ export default function ArticleDetailsPage() {
           '@type': 'ListItem',
           position: article.category ? 3 : 2,
           name: article.title,
-          item: articleUrl,
+          item: selfArticleUrl,
         },
       ],
     };
 
     return [articleSchema, breadcrumbSchema];
-  }, [article, articleKeywords, articleUrl]);
+  }, [article, articleKeywords, selfArticleUrl]);
 
   useSEO({
     title: article
@@ -163,11 +199,17 @@ export default function ArticleDetailsPage() {
     imageAlt: article?.featured_image_alt || article?.title || undefined,
     url: article ? articleUrl : undefined,
     noIndex: !loading && !article,
+    robotsDirective: article
+      ? article.robots_directive || 'index, follow'
+      : !loading
+      ? 'noindex, nofollow'
+      : undefined,
     omitCanonical: !loading && !article,
     type: article ? 'article' : 'website',
     keywords: articleKeywords,
     publishedTime: article?.published_at || article?.created_at || undefined,
     modifiedTime: article?.updated_at || article?.published_at || article?.created_at || undefined,
+    alternateLinks,
     structuredData,
   });
 

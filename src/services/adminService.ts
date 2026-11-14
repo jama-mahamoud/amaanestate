@@ -224,6 +224,10 @@ export async function getAdminArticles(): Promise<Article[]> {
         ? row.article_tags.map((t: any) => t.tags).filter(Boolean)
         : [],
       gallery_images: Array.isArray(row.gallery_images) ? row.gallery_images : [],
+      supporting_keywords: Array.isArray(row.supporting_keywords) ? row.supporting_keywords : [],
+      search_intent: row.search_intent || 'Informational',
+      robots_directive: row.robots_directive || 'index, follow',
+      schema_type: row.schema_type || (row.categories?.slug === 'news' ? 'NewsArticle' : 'Article'),
     }));
   }
 
@@ -263,6 +267,8 @@ export interface UpsertArticlePayload {
   excerpt: string;
   content: string;
   featured_image?: string | null;
+  featured_image_alt?: string | null;
+  featured_image_caption?: string | null;
   gallery_images: string[];
   category_id: string;
   author_id: string;
@@ -272,12 +278,45 @@ export interface UpsertArticlePayload {
   seo_title?: string | null;
   seo_description?: string | null;
   og_image?: string | null;
+  focus_keyword?: string | null;
+  supporting_keywords?: string[];
+  search_intent?: Article['search_intent'];
+  target_country?: string | null;
+  target_audience?: string | null;
+  canonical_url?: string | null;
+  robots_directive?: Article['robots_directive'];
+  schema_type?: Article['schema_type'];
+  alternate_language?: string | null;
+  alternate_article_slug?: string | null;
+  seo_score?: number | null;
+  seo_analysis_json?: Record<string, any> | null;
+  last_seo_analyzed_at?: string | null;
   published_at?: string | null;
   scheduled_for?: string | null;
   tagIds?: string[];
 }
 
-export async function upsertArticle(payload: UpsertArticlePayload): Promise<{ success: boolean; article?: Article; error?: string }> {
+const EXTENDED_SEO_ARTICLE_COLUMNS = [
+  'featured_image_alt',
+  'featured_image_caption',
+  'focus_keyword',
+  'supporting_keywords',
+  'search_intent',
+  'target_country',
+  'target_audience',
+  'canonical_url',
+  'robots_directive',
+  'schema_type',
+  'alternate_language',
+  'alternate_article_slug',
+  'seo_score',
+  'seo_analysis_json',
+  'last_seo_analyzed_at',
+] as const;
+
+export async function upsertArticle(
+  payload: UpsertArticlePayload
+): Promise<{ success: boolean; article?: Article; error?: string; seoSchemaPending?: boolean }> {
   const { tagIds = [], id, ...fields } = payload;
 
   const computedPublishedAt =
@@ -290,18 +329,39 @@ export async function upsertArticle(payload: UpsertArticlePayload): Promise<{ su
       data: { user },
     } = await supabase.auth.getUser();
 
-    const record = {
+    const record: Record<string, any> = {
       ...fields,
       published_at: computedPublishedAt,
       scheduled_for: fields.status === 'scheduled' ? fields.scheduled_for || null : null,
       ...(id ? {} : { created_by: user?.id || null }),
     };
 
-    const query = id
-      ? supabase.from('articles').update(record).eq('id', id).select().single()
-      : supabase.from('articles').insert(record).select().single();
+    const runMutation = (rec: Record<string, any>) =>
+      id
+        ? supabase!.from('articles').update(rec).eq('id', id).select().single()
+        : supabase!.from('articles').insert(rec).select().single();
 
-    const { data, error } = await query;
+    let { data, error } = await runMutation(record);
+    let seoSchemaPending = false;
+
+    // Graceful fallback if extended SEO columns migration has not been applied on Supabase yet
+    if (
+      error &&
+      (error.code === '42703' ||
+        error.code === 'PGRST204' ||
+        /column .* of relation "articles" does not exist/i.test(error.message || '') ||
+        /Could not find the .* column of 'articles'/i.test(error.message || ''))
+    ) {
+      seoSchemaPending = true;
+      const legacyRecord = { ...record };
+      for (const col of EXTENDED_SEO_ARTICLE_COLUMNS) {
+        delete legacyRecord[col];
+      }
+      const fallbackRes = await runMutation(legacyRecord);
+      data = fallbackRes.data;
+      error = fallbackRes.error;
+    }
+
     if (error || !data) {
       return { success: false, error: error?.message || 'Failed to save article.' };
     }
@@ -323,7 +383,7 @@ export async function upsertArticle(payload: UpsertArticlePayload): Promise<{ su
       }
     }
 
-    return { success: true, article: data as Article };
+    return { success: true, article: data as Article, seoSchemaPending };
   }
 
   const db = loadDemoDb();

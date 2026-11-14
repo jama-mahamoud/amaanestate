@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Edit3, Eye, Plus, Search, Star, Trash2 } fro
 import { Article, Category } from '../../types';
 import { deleteArticle, upsertArticle } from '../../services/adminService';
 import { resolveEditorialImage } from '../../lib/editorialImages';
+import { analyzeArticleSeo } from '../../lib/seoAnalyzer';
 import ConfirmDialog from './ConfirmDialog';
 import { toast } from 'sonner';
 
@@ -220,6 +221,7 @@ export default function AdminArticlesSection({
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Author</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">SEO</th>
                   <th className="px-4 py-3">Published</th>
                   <th className="px-4 py-3 text-right">Views</th>
                   <th className="px-4 py-3">Updated</th>
@@ -280,6 +282,50 @@ export default function AdminArticlesSection({
                       >
                         {art.status}
                       </span>
+                    </td>
+
+                    <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
+                      {(() => {
+                        const computedScore =
+                          typeof art.seo_score === 'number'
+                            ? art.seo_score
+                            : analyzeArticleSeo(
+                                {
+                                  articleId: art.id,
+                                  title: art.title,
+                                  slug: art.slug,
+                                  excerpt: art.excerpt,
+                                  content: art.content,
+                                  categoryId: art.category_id,
+                                  authorId: art.author_id,
+                                  seoTitle: art.seo_title || undefined,
+                                  seoDescription: art.seo_description || undefined,
+                                  ogImage: art.og_image || undefined,
+                                  featuredImage: art.featured_image || undefined,
+                                  featuredImageAlt: art.featured_image_alt || undefined,
+                                  focusKeyword: art.focus_keyword || undefined,
+                                  supportingKeywords: art.supporting_keywords,
+                                  searchIntent: art.search_intent,
+                                  canonicalUrl: art.canonical_url || undefined,
+                                  robotsDirective: art.robots_directive,
+                                  schemaType: art.schema_type,
+                                },
+                                { articles, categories }
+                              ).score;
+                        return (
+                          <span
+                            className={`text-xs font-bold ${
+                              computedScore >= 80
+                                ? 'text-[#16A34A]'
+                                : computedScore >= 55
+                                ? 'text-[#D97706]'
+                                : 'text-[#DC2626]'
+                            }`}
+                          >
+                            {computedScore}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     <td className="px-4 py-3.5 text-xs font-mono tabular-nums text-[#5C5A55] whitespace-nowrap">

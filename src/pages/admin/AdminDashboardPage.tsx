@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
+  LineChart,
   LogOut,
   Mail,
   Menu,
@@ -79,6 +80,7 @@ import {
   MyAccountSection,
   SeoSettingsSection,
 } from '../../components/admin/AdminSettingsSection';
+import SeoDashboardSection from '../../components/admin/SeoDashboardSection';
 import ArticlePreviewModal from '../../components/admin/ArticlePreviewModal';
 import { toast } from 'sonner';
 
@@ -94,6 +96,7 @@ type AdminTab =
   | 'media'
   | 'subscribers'
   | 'messages'
+  | 'seo-dashboard'
   | 'seo-settings'
   | 'editorial-settings'
   | 'account';
@@ -280,6 +283,7 @@ export default function AdminDashboardPage() {
       icon: <MessageSquare size={16} />,
       count: metrics.unreadMessages > 0 ? metrics.unreadMessages : undefined,
     },
+    { id: 'seo-dashboard', label: 'SEO Intelligence', icon: <LineChart size={16} /> },
     ...(isAdmin
       ? [
           { id: 'seo-settings' as AdminTab, label: 'SEO & Website Settings', icon: <Globe size={16} /> },
@@ -599,6 +603,8 @@ export default function AdminDashboardPage() {
                 <ArticleEditorView
                   key={editorInstanceKey}
                   article={editingArticle}
+                  allArticles={articles}
+                  properties={properties}
                   categories={categories}
                   authors={authors}
                   tags={tags}
@@ -658,6 +664,15 @@ export default function AdminDashboardPage() {
                   messages={messages}
                   canDelete={isAdmin}
                   onRefresh={loadAllData}
+                />
+              )}
+
+              {activeTab === 'seo-dashboard' && (
+                <SeoDashboardSection
+                  articles={articles}
+                  properties={properties}
+                  categories={categories}
+                  onEditArticle={openEditArticle}
                 />
               )}
 

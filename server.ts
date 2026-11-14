@@ -11,6 +11,11 @@ import {
   normalizeArticleSlugInput,
   resolveLegacyArticleRedirectSlug,
 } from "./src/lib/legacyRedirects";
+import {
+  getActiveRedirectSourceSet,
+  lookupActiveRedirect,
+  registerSeoRoutes,
+} from "./server/seoRoutes";
 
 dotenv.config();
 
@@ -238,10 +243,24 @@ function stripSeoHeadTags(templateHtml: string): string {
     .replace(/<meta\s+[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
 }
 
-function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: string): string {
+async function injectArticleOgMetadata(
+  templateHtml: string,
+  article: any,
+  reqHost?: string
+): Promise<string> {
   const baseUrl = getCanonicalBaseUrl(reqHost);
 
-  const canonicalUrl = `${baseUrl}/articles/${encodeURIComponent(article.slug)}`;
+  const selfCanonicalUrl = `${baseUrl}/articles/${encodeURIComponent(article.slug)}`;
+  const customCanonical =
+    typeof article.canonical_url === "string" && /^https?:\/\//i.test(article.canonical_url.trim())
+      ? article.canonical_url.trim()
+      : null;
+  const canonicalUrl = customCanonical || selfCanonicalUrl;
+  const robotsContent =
+    typeof article.robots_directive === "string" && article.robots_directive.trim()
+      ? article.robots_directive.trim()
+      : "index, follow";
+
   const rawTitle = article.seo_title || article.title;
   const pageTitle = /amaan\s*estate/i.test(rawTitle) ? rawTitle : `${rawTitle} | AmaanEstate`;
   const rawDescription =
@@ -255,11 +274,31 @@ function injectArticleOgMetadata(templateHtml: string, article: any, reqHost?: s
   const imageAlt = article.featured_image_alt || article.title;
   const publishedTime = article.published_at || article.created_at || new Date().toISOString();
 
+  let hreflangTags = "";
+  if (
+    typeof article.alternate_language === "string" &&
+    article.alternate_language.trim() &&
+    typeof article.alternate_article_slug === "string" &&
+    article.alternate_article_slug.trim()
+  ) {
+    const altArticle = await fetchArticleForOg(article.alternate_article_slug.trim());
+    if (altArticle) {
+      const altLang = article.alternate_language.trim().toLowerCase();
+      const selfLang = altLang === "en" ? "so" : "en";
+      const altHref = `${baseUrl}/articles/${encodeURIComponent(altArticle.slug)}`;
+      const xDefaultHref = selfLang === "en" ? selfCanonicalUrl : altHref;
+      hreflangTags = `
+    <link rel="alternate" hreflang="${escapeHtml(selfLang)}" href="${escapeHtml(selfCanonicalUrl)}" data-amaan-hreflang="true" />
+    <link rel="alternate" hreflang="${escapeHtml(altLang)}" href="${escapeHtml(altHref)}" data-amaan-hreflang="true" />
+    <link rel="alternate" hreflang="x-default" href="${escapeHtml(xDefaultHref)}" data-amaan-hreflang="true" />`;
+    }
+  }
+
   const metadataHtml = `
     <title>${escapeHtml(pageTitle)}</title>
     <meta name="description" content="${escapeHtml(cleanDescription)}" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <meta name="robots" content="${escapeHtml(robotsContent)}" />
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />${hreflangTags}
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="article" />
@@ -356,16 +395,86 @@ async function sendHtmlPage(
   return res.status(statusCode).send(finalHtml);
 }
 
-// Health Check
-app.get("/api/health", (req, res) => {
+// Health Check (plus safe local-only boolean readiness verification when ?verify_seo=1)
+app.get("/api/health", async (req, res) => {
   const supabaseConfig = getSupabaseConfig();
-  res.json({
+  const basePayload = {
     status: "healthy",
     app: "AmaanEstate — Global Real Estate Media, Research & Marketplace",
     supabaseConfigured: Boolean(supabaseConfig),
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  const isLoopback =
+    req.hostname === "127.0.0.1" ||
+    req.hostname === "localhost" ||
+    req.ip === "127.0.0.1" ||
+    req.ip === "::1" ||
+    req.ip === "::ffff:127.0.0.1";
+
+  if (req.query.verify_seo === "1" && isLoopback) {
+    const envFlags = {
+      GOOGLE_OAUTH_CLIENT_ID: Boolean((process.env.GOOGLE_OAUTH_CLIENT_ID || "").trim()),
+      GOOGLE_OAUTH_CLIENT_SECRET: Boolean((process.env.GOOGLE_OAUTH_CLIENT_SECRET || "").trim()),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean((process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim()),
+      GEMINI_API_KEY: Boolean((process.env.GEMINI_API_KEY || "").trim()),
+      APP_URL: Boolean((process.env.APP_URL || "").trim()),
+      CANONICAL_SITE_URL: Boolean((process.env.CANONICAL_SITE_URL || "").trim()),
+      VITE_SUPABASE_URL: Boolean((process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").trim()),
+      VITE_SUPABASE_ANON_KEY: Boolean((process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "").trim()),
+      configuredCallbackUrl: `${(
+        process.env.APP_URL ||
+        process.env.CANONICAL_SITE_URL ||
+        "https://www.amaanestate.com"
+      )
+        .trim()
+        .replace(/\/+$/, "")}/api/seo/gsc/callback`,
+    };
+
+    const schemaCheck: Record<string, boolean | string> = {};
+    if (supabaseConfig) {
+      const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim() || supabaseConfig.anonKey;
+      const headers = { apikey: supabaseConfig.anonKey, Authorization: `Bearer ${key}` };
+      const checkEndpoint = async (label: string, pathQuery: string) => {
+        try {
+          const r = await fetch(`${supabaseConfig.url}/rest/v1/${pathQuery}`, { headers });
+          if (r.ok) {
+            schemaCheck[label] = true;
+          } else {
+            const txt = await r.text().catch(() => "");
+            schemaCheck[label] = txt.includes("42P01") || txt.includes("42703") || txt.includes("PGRST205") || txt.includes("PGRST204")
+              ? false
+              : `http_${r.status}`;
+          }
+        } catch {
+          schemaCheck[label] = "network_error";
+        }
+      };
+
+      await Promise.all([
+        checkEndpoint(
+          "articles_seo_columns",
+          "articles?select=id,featured_image_alt,focus_keyword,supporting_keywords,search_intent,target_country,target_audience,canonical_url,robots_directive,schema_type,alternate_language,alternate_article_slug,seo_score,seo_analysis_json,last_seo_analyzed_at&limit=0"
+        ),
+        checkEndpoint("seo_redirects", "seo_redirects?select=id&limit=0"),
+        checkEndpoint("seo_audit_runs", "seo_audit_runs?select=id&limit=0"),
+        checkEndpoint("gsc_connections", "gsc_connections?select=id&limit=0"),
+        checkEndpoint("gsc_analytics_cache", "gsc_analytics_cache?select=id&limit=0"),
+      ]);
+    }
+
+    return res.json({
+      ...basePayload,
+      envFlags,
+      schemaCheck,
+    });
+  }
+
+  return res.json(basePayload);
 });
+
+// Register Rank Math-level SEO, AI Optimization, Redirect Manager, Audit & Google Search Console Routes
+registerSeoRoutes(app);
 
 // Direct file attachment download for 004_editorial_25_articles.sql
 app.get("/004_editorial_25_articles.sql", (req, res) => {
@@ -428,6 +537,7 @@ interface SitemapArticleRow {
   slug: string;
   status?: string | null;
   category_id?: string | null;
+  robots_directive?: string | null;
   published_at?: string | null;
   updated_at?: string | null;
   created_at?: string | null;
@@ -478,9 +588,13 @@ async function fetchEligibleArticlesFromSupabase(config: { url: string; anonKey:
   const nowMs = Date.now();
   const nowIso = encodeURIComponent(new Date(nowMs).toISOString());
   const allRows: SitemapArticleRow[] = [];
+  let includeRobotsDirective = true;
 
   while (true) {
-    const endpoint = `${config.url}/rest/v1/articles?select=slug,status,category_id,published_at,updated_at,created_at&status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})&order=published_at.desc.nullslast,id.asc&limit=${pageSize}&offset=${offset}`;
+    const selectCols = includeRobotsDirective
+      ? "slug,status,category_id,robots_directive,published_at,updated_at,created_at"
+      : "slug,status,category_id,published_at,updated_at,created_at";
+    const endpoint = `${config.url}/rest/v1/articles?select=${selectCols}&status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})&order=published_at.desc.nullslast,id.asc&limit=${pageSize}&offset=${offset}`;
     const response = await fetch(endpoint, {
       headers: {
         apikey: config.anonKey,
@@ -489,6 +603,11 @@ async function fetchEligibleArticlesFromSupabase(config: { url: string; anonKey:
     });
 
     if (!response.ok) {
+      const bodyText = await response.text().catch(() => "");
+      if (includeRobotsDirective && (bodyText.includes("42703") || bodyText.includes("robots_directive"))) {
+        includeRobotsDirective = false;
+        continue;
+      }
       throw new Error(`Supabase articles query failed (${response.status})`);
     }
 
@@ -498,6 +617,7 @@ async function fetchEligibleArticlesFromSupabase(config: { url: string; anonKey:
     for (const row of rows) {
       if (row.status !== "published") continue;
       if (!isValidPublicSlug(row.slug)) continue;
+      if ((row.robots_directive || "").toLowerCase().startsWith("noindex")) continue;
       if (row.published_at) {
         const pubMs = Date.parse(row.published_at);
         if (!Number.isNaN(pubMs) && pubMs > nowMs) continue;
@@ -588,9 +708,13 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
     }
   }
 
+  const activeRedirectSources = await getActiveRedirectSourceSet().catch(() => new Set<string>());
   const dedupedUrls = new Map<string, string | null>();
   const addUrl = (urlPath: string, lastmod: string | null = null) => {
     const cleanPath = urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
+    if (cleanPath !== "/" && activeRedirectSources.has(cleanPath.toLowerCase())) {
+      return;
+    }
     const fullLoc = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
     const existing = dedupedUrls.get(fullLoc);
     if (existing === undefined) {
@@ -2004,6 +2128,11 @@ async function fetchCategoryForSeo(slug: string): Promise<{ name: string; slug: 
 
 // Legacy /news/:slug article handler (301 to genuine replacement or existing article, otherwise real HTTP 404)
 app.get("/news/:slug", async (req, res) => {
+  const customRedirect = await lookupActiveRedirect(req.path);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
   const slug = normalizeArticleSlugInput(req.params.slug);
   const templateHtml = getIndexTemplateHtml();
 
@@ -2050,6 +2179,13 @@ app.get("/news/:slug", async (req, res) => {
 
 // Dynamic Article Open Graph SSR Metadata Route
 app.get(["/articles/:slug", "/api/articles-og/:slug"], async (req, res) => {
+  if (!req.path.startsWith("/api/")) {
+    const customRedirect = await lookupActiveRedirect(req.path);
+    if (customRedirect) {
+      return res.redirect(customRedirect.status_code, customRedirect.target_path);
+    }
+  }
+
   const slug = normalizeArticleSlugInput(req.params.slug);
   const templateHtml = getIndexTemplateHtml();
 
@@ -2065,7 +2201,7 @@ app.get(["/articles/:slug", "/api/articles-og/:slug"], async (req, res) => {
 
   const article = await fetchArticleForOg(slug);
   if (article) {
-    const injectedHtml = injectArticleOgMetadata(templateHtml, article, req.headers.host);
+    const injectedHtml = await injectArticleOgMetadata(templateHtml, article, req.headers.host);
     return sendHtmlPage(req, res, 200, injectedHtml);
   }
 
@@ -2192,6 +2328,13 @@ app.use(async (req, res, next) => {
   }
 
   const cleanPath = req.path.length > 1 ? req.path.replace(/\/+$/, "") : req.path;
+
+  // Check SEO Redirect Manager rules before route matching or 404
+  const customRedirect = await lookupActiveRedirect(cleanPath);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const templateHtml = getIndexTemplateHtml();
 

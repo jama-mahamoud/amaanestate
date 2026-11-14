@@ -11,17 +11,33 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { Article, ArticleStatus, Author, Category, MediaItem, Tag } from '../../types';
+import {
+  Article,
+  ArticleSchemaType,
+  ArticleStatus,
+  Author,
+  Category,
+  MediaItem,
+  Property,
+  RobotsDirective,
+  SearchIntent,
+  Tag,
+} from '../../types';
 import { createTag, updateMediaItem, upsertArticle } from '../../services/adminService';
 import { resolveEditorialImage } from '../../lib/editorialImages';
+import { analyzeArticleSeo } from '../../lib/seoAnalyzer';
+import { recommendInternalLinks } from '../../lib/internalLinker';
 import EditorialMarkdown from '../editorial/EditorialMarkdown';
 import MediaPickerModal from './MediaPickerModal';
 import ArticlePreviewModal from './ArticlePreviewModal';
 import EditorialWysiwygEditor from './EditorialWysiwygEditor';
+import ArticleSeoPanel from './ArticleSeoPanel';
 import { toast } from 'sonner';
 
 interface ArticleEditorViewProps {
   article: Article | null;
+  allArticles?: Article[];
+  properties?: Property[];
   categories: Category[];
   authors: Author[];
   tags: Tag[];
@@ -52,6 +68,8 @@ function toDatetimeLocalValue(iso?: string | null): string {
 
 export default function ArticleEditorView({
   article,
+  allArticles = [],
+  properties = [],
   categories,
   authors,
   tags,
@@ -77,7 +95,9 @@ export default function ArticleEditorView({
 
   const [featuredImage, setFeaturedImage] = useState(article?.featured_image || '');
   const [featuredImageId, setFeaturedImageId] = useState<string | null>(initialFeaturedMedia?.id || null);
-  const [featuredImageAlt, setFeaturedImageAlt] = useState(initialFeaturedMedia?.alt_text || '');
+  const [featuredImageAlt, setFeaturedImageAlt] = useState(
+    article?.featured_image_alt || initialFeaturedMedia?.alt_text || ''
+  );
   const [galleryImages, setGalleryImages] = useState<string[]>(article?.gallery_images || []);
 
   const [status, setStatus] = useState<ArticleStatus>(article?.status || 'draft');
@@ -94,6 +114,28 @@ export default function ArticleEditorView({
     (article?.tags || []).map((t) => t.name).join(', ')
   );
   const [ogImage, setOgImage] = useState(article?.og_image || '');
+
+  // Rank Math SEO Fields
+  const [focusKeyword, setFocusKeyword] = useState(article?.focus_keyword || '');
+  const [supportingKeywords, setSupportingKeywords] = useState<string[]>(
+    article?.supporting_keywords || []
+  );
+  const [searchIntent, setSearchIntent] = useState<SearchIntent>(
+    article?.search_intent || 'Informational'
+  );
+  const [targetCountry, setTargetCountry] = useState(article?.target_country || '');
+  const [targetAudience, setTargetAudience] = useState(article?.target_audience || '');
+  const [canonicalUrl, setCanonicalUrl] = useState(article?.canonical_url || '');
+  const [robotsDirective, setRobotsDirective] = useState<RobotsDirective>(
+    article?.robots_directive || 'index, follow'
+  );
+  const [schemaType, setSchemaType] = useState<ArticleSchemaType>(
+    article?.schema_type || 'Article'
+  );
+  const [alternateLanguage, setAlternateLanguage] = useState(article?.alternate_language || '');
+  const [alternateArticleSlug, setAlternateArticleSlug] = useState(
+    article?.alternate_article_slug || ''
+  );
 
   const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('write');
   const [saving, setSaving] = useState(false);
@@ -122,6 +164,136 @@ export default function ArticleEditorView({
   const activeCategory = categories.find((c) => c.id === categoryId) || null;
   const activeAuthor = authors.find((a) => a.id === authorId) || null;
   const selectedTagObjects = tags.filter((t) => selectedTagIds.includes(t.id));
+
+  const seoAnalysis = useMemo(
+    () =>
+      analyzeArticleSeo(
+        {
+          articleId: article?.id,
+          title,
+          slug: slugify(slug || title),
+          excerpt,
+          content,
+          categoryId,
+          authorId,
+          seoTitle,
+          seoDescription,
+          ogImage,
+          featuredImage,
+          featuredImageAlt,
+          focusKeyword,
+          supportingKeywords,
+          searchIntent,
+          targetCountry,
+          targetAudience,
+          canonicalUrl,
+          robotsDirective,
+          schemaType,
+          alternateLanguage,
+          alternateArticleSlug,
+          tags: selectedTagObjects.map((t) => t.name),
+        },
+        {
+          articles: allArticles,
+          properties,
+          categories,
+        }
+      ),
+    [
+      article?.id,
+      title,
+      slug,
+      excerpt,
+      content,
+      categoryId,
+      authorId,
+      seoTitle,
+      seoDescription,
+      ogImage,
+      featuredImage,
+      featuredImageAlt,
+      focusKeyword,
+      supportingKeywords,
+      searchIntent,
+      targetCountry,
+      targetAudience,
+      canonicalUrl,
+      robotsDirective,
+      schemaType,
+      alternateLanguage,
+      alternateArticleSlug,
+      selectedTagObjects,
+      allArticles,
+      properties,
+      categories,
+    ]
+  );
+
+  const internalRecommendations = useMemo(
+    () =>
+      recommendInternalLinks(
+        {
+          currentArticleId: article?.id,
+          currentSlug: slug,
+          title,
+          excerpt,
+          content,
+          categoryId,
+          categoryName: activeCategory?.name,
+          focusKeyword,
+          supportingKeywords,
+          targetCountry,
+          tags: selectedTagObjects.map((t) => t.name),
+        },
+        allArticles,
+        properties,
+        categories,
+        8
+      ),
+    [
+      article?.id,
+      slug,
+      title,
+      excerpt,
+      content,
+      categoryId,
+      activeCategory?.name,
+      focusKeyword,
+      supportingKeywords,
+      targetCountry,
+      selectedTagObjects,
+      allArticles,
+      properties,
+      categories,
+    ]
+  );
+
+  const handleApplySuggestedTags = async (tagNames: string[]) => {
+    const nextIds = new Set(selectedTagIds);
+    const mergedKeywords = new Set(
+      seoKeywords
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+    for (const rawName of tagNames) {
+      const cleanName = rawName.trim();
+      if (!cleanName) continue;
+      mergedKeywords.add(cleanName);
+      const existing = tags.find((t) => t.name.toLowerCase() === cleanName.toLowerCase());
+      if (existing) {
+        nextIds.add(existing.id);
+      } else {
+        const created = await createTag(cleanName);
+        if (created) {
+          onTagAdded(created);
+          nextIds.add(created.id);
+        }
+      }
+    }
+    setSelectedTagIds(Array.from(nextIds));
+    setSeoKeywords(Array.from(mergedKeywords).join(', '));
+  };
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -219,6 +391,7 @@ export default function ArticleEditorView({
       excerpt: excerpt.trim(),
       content: content.trim(),
       featured_image: featuredImage.trim() || null,
+      featured_image_alt: featuredImageAlt.trim() || null,
       gallery_images: galleryImages,
       category_id: categoryId,
       author_id: authorId,
@@ -228,6 +401,24 @@ export default function ArticleEditorView({
       seo_title: seoTitle.trim() || null,
       seo_description: seoDescription.trim() || null,
       og_image: ogImage.trim() || featuredImage.trim() || null,
+      focus_keyword: focusKeyword.trim() || null,
+      supporting_keywords: supportingKeywords,
+      search_intent: searchIntent,
+      target_country: targetCountry.trim() || null,
+      target_audience: targetAudience.trim() || null,
+      canonical_url: canonicalUrl.trim() || null,
+      robots_directive: robotsDirective,
+      schema_type: schemaType,
+      alternate_language: alternateLanguage.trim() || null,
+      alternate_article_slug: alternateArticleSlug.trim() || null,
+      seo_score: seoAnalysis.score,
+      seo_analysis_json: {
+        score: seoAnalysis.score,
+        grade: seoAnalysis.grade,
+        counts: seoAnalysis.counts,
+        metrics: seoAnalysis.metrics,
+      },
+      last_seo_analyzed_at: new Date().toISOString(),
       published_at:
         targetStatus === 'published'
           ? publishedAt
@@ -247,13 +438,19 @@ export default function ArticleEditorView({
 
     if (res.success && res.article) {
       setStatus(targetStatus);
-      toast.success(
-        targetStatus === 'published'
-          ? 'Article published live to AMAAN ESTATE.'
-          : targetStatus === 'scheduled'
-          ? 'Article scheduled for publication.'
-          : 'Draft saved successfully.'
-      );
+      if (res.seoSchemaPending) {
+        toast.warning(
+          'Article saved, but run supabase/migrations/20261114000000_rankmath_seo_system.sql to persist extended SEO metadata fields.'
+        );
+      } else {
+        toast.success(
+          targetStatus === 'published'
+            ? 'Article published live to AMAAN ESTATE.'
+            : targetStatus === 'scheduled'
+            ? 'Article scheduled for publication.'
+            : 'Draft saved successfully.'
+        );
+      }
       onSaved(res.article);
     } else {
       toast.error(res.error || 'Failed to save article.');
@@ -285,6 +482,18 @@ export default function ArticleEditorView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <div
+            title={`SEO Score: ${seoAnalysis.score}/100 (${seoAnalysis.grade})`}
+            className={`px-3 py-1.5 rounded border text-xs font-mono font-semibold tabular-nums ${
+              seoAnalysis.score >= 80
+                ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#16A34A]'
+                : seoAnalysis.score >= 55
+                ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#D97706]'
+                : 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]'
+            }`}
+          >
+            SEO {seoAnalysis.score}/100
+          </div>
           {article?.status === 'published' && slug && (
             <a
               href={`/articles/${slug}`}
@@ -518,101 +727,64 @@ export default function ArticleEditorView({
             )}
           </div>
 
-          {/* SEO & SERP Preview */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
-            <h2 className="text-base font-serif font-semibold text-[#141413]">Search Engine Optimization</h2>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#5C5A55]">SEO Meta Title</label>
-                  <span className="text-[11px] font-mono tabular-nums text-[#7A7770]">
-                    {(seoTitle || title).length}/60 recommended
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={seoTitle}
-                  onChange={(e) => setSeoTitle(e.target.value)}
-                  placeholder={title || 'Defaults to article headline'}
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#5C5A55]">SEO Meta Description</label>
-                  <span className="text-[11px] font-mono tabular-nums text-[#7A7770]">
-                    {(seoDescription || excerpt).length}/160 recommended
-                  </span>
-                </div>
-                <textarea
-                  rows={2}
-                  value={seoDescription}
-                  onChange={(e) => setSeoDescription(e.target.value)}
-                  placeholder={excerpt || 'Defaults to short description'}
-                  className="w-full p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#5C5A55]">
-                    SEO Keywords (Synced to Article Tags)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleSyncKeywordsToTags}
-                    className="text-[11px] font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
-                  >
-                    Sync Keywords to Tags
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={seoKeywords}
-                  onChange={(e) => setSeoKeywords(e.target.value)}
-                  placeholder="Urban Economics, Capital Markets, Timber Architecture"
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#5C5A55] block">OpenGraph Social Image Override</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={ogImage}
-                    onChange={(e) => setOgImage(e.target.value)}
-                    placeholder="Defaults to Featured Cover Image"
-                    className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setMediaPickerTarget('og')}
-                    className="px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer whitespace-nowrap"
-                  >
-                    Choose Image
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded space-y-1">
-              <div className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
-                Google Search Snippet Preview
-              </div>
-              <div className="text-sm font-semibold text-[#1E3A5F]">
-                {seoTitle || title || 'AMAAN ESTATE — Real Estate Intelligence'}
-              </div>
-              <div className="text-xs font-mono text-[#14532D]">
-                https://amaanestate.com/articles/{slug || 'article-slug'}
-              </div>
-              <p className="text-xs text-[#5C5A55]">
-                {seoDescription || excerpt || 'Add a concise editorial deck or SEO description above.'}
-              </p>
-            </div>
-          </div>
+          {/* Complete Rank Math SEO Suite */}
+          <ArticleSeoPanel
+            articleId={article?.id}
+            title={title}
+            slug={slug}
+            excerpt={excerpt}
+            content={content}
+            featuredImage={featuredImage}
+            featuredImageAlt={featuredImageAlt}
+            categoryId={categoryId}
+            categories={categories}
+            allArticles={allArticles}
+            properties={properties}
+            media={media}
+            seoTitle={seoTitle}
+            seoDescription={seoDescription}
+            seoKeywords={seoKeywords}
+            ogImage={ogImage}
+            focusKeyword={focusKeyword}
+            supportingKeywords={supportingKeywords}
+            searchIntent={searchIntent}
+            targetCountry={targetCountry}
+            targetAudience={targetAudience}
+            canonicalUrl={canonicalUrl}
+            robotsDirective={robotsDirective}
+            schemaType={schemaType}
+            alternateLanguage={alternateLanguage}
+            alternateArticleSlug={alternateArticleSlug}
+            analysis={seoAnalysis}
+            internalRecommendations={internalRecommendations}
+            onChangeSeoTitle={setSeoTitle}
+            onChangeSeoDescription={setSeoDescription}
+            onChangeSeoKeywords={setSeoKeywords}
+            onChangeOgImage={setOgImage}
+            onOpenOgPicker={() => setMediaPickerTarget('og')}
+            onSyncKeywordsToTags={handleSyncKeywordsToTags}
+            onChangeFocusKeyword={setFocusKeyword}
+            onChangeSupportingKeywords={setSupportingKeywords}
+            onChangeSearchIntent={setSearchIntent}
+            onChangeTargetCountry={setTargetCountry}
+            onChangeTargetAudience={setTargetAudience}
+            onChangeCanonicalUrl={setCanonicalUrl}
+            onChangeRobotsDirective={setRobotsDirective}
+            onChangeSchemaType={setSchemaType}
+            onChangeAlternateLanguage={setAlternateLanguage}
+            onChangeAlternateArticleSlug={setAlternateArticleSlug}
+            onChangeTitle={handleTitleChange}
+            onChangeSlug={(val) => {
+              setSlugLocked(true);
+              setSlug(slugify(val));
+            }}
+            onChangeCategoryId={setCategoryId}
+            onChangeFeaturedImageAlt={setFeaturedImageAlt}
+            onAppendContentHtml={(html) =>
+              setContent((prev) => `${prev ? `${prev}\n` : ''}${html}`)
+            }
+            onApplySuggestedTags={handleApplySuggestedTags}
+          />
         </div>
 
         {/* Right: Publishing, Taxonomy, Cover Image */}

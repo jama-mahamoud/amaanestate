@@ -57,6 +57,16 @@ export interface Tag {
 
 export type ArticleStatus = 'draft' | 'scheduled' | 'published';
 
+export type SearchIntent = 'Informational' | 'Commercial' | 'Transactional' | 'Navigational';
+
+export type RobotsDirective =
+  | 'index, follow'
+  | 'noindex, follow'
+  | 'noindex, nofollow'
+  | 'index, nofollow';
+
+export type ArticleSchemaType = 'Article' | 'NewsArticle';
+
 export interface Article {
   id: string;
   title: string;
@@ -80,11 +90,165 @@ export interface Article {
   seo_title?: string | null;
   seo_description?: string | null;
   og_image?: string | null;
+  focus_keyword?: string | null;
+  supporting_keywords?: string[];
+  search_intent?: SearchIntent;
+  target_country?: string | null;
+  target_audience?: string | null;
+  canonical_url?: string | null;
+  robots_directive?: RobotsDirective;
+  schema_type?: ArticleSchemaType;
+  alternate_language?: string | null;
+  alternate_article_slug?: string | null;
+  seo_score?: number | null;
+  seo_analysis_json?: Record<string, any> | null;
+  last_seo_analyzed_at?: string | null;
   published_at?: string | null;
   scheduled_for?: string | null;
   created_by?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface SeoRedirect {
+  id: string;
+  source_path: string;
+  target_path: string;
+  status_code: 301 | 302;
+  is_active: boolean;
+  notes?: string;
+  hit_count: number;
+  last_hit_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface SeoAuditIssue {
+  id: string;
+  severity: 'critical' | 'warning' | 'passed';
+  category:
+    | 'metadata'
+    | 'content'
+    | 'media'
+    | 'links'
+    | 'technical'
+    | 'structured_data'
+    | 'redirects';
+  title: string;
+  description: string;
+  url?: string;
+  entityType?: 'article' | 'property' | 'category' | 'site' | 'redirect';
+  entityId?: string;
+  recommendation?: string;
+}
+
+export interface SeoAuditSummary {
+  auditedAt: string;
+  totalUrlsChecked: number;
+  publishedArticlesCount: number;
+  publishedPropertiesCount: number;
+  criticalCount: number;
+  warningCount: number;
+  passedCount: number;
+  orphanArticleIds: string[];
+  duplicateTitlesCount: number;
+  duplicateDescriptionsCount: number;
+  brokenInternalLinksCount: number;
+  missingAltCount: number;
+  noindexArticlesCount: number;
+  averageArticleSeoScore: number;
+}
+
+export interface SeoAuditRun {
+  id?: string;
+  summary: SeoAuditSummary;
+  issues: SeoAuditIssue[];
+  created_at: string;
+}
+
+export interface GscStatusResponse {
+  oauthConfigured: boolean;
+  connected: boolean;
+  needsReconnect?: boolean;
+  googleEmail?: string | null;
+  selectedSiteUrl?: string | null;
+  permissionLevel?: string | null;
+  sites: Array<{ siteUrl: string; permissionLevel: string }>;
+  callbackUrls: {
+    development: string;
+    production?: string;
+    configuredAppUrl?: string;
+  };
+  missingEnvVars?: string[];
+  message?: string;
+}
+
+export interface GscAnalyticsResponse {
+  connected: boolean;
+  siteUrl?: string;
+  dateRange: '7d' | '28d' | '90d';
+  periodStart: string;
+  periodEnd: string;
+  totals: {
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+    prevClicks?: number;
+    prevImpressions?: number;
+  };
+  daily: Array<{
+    date: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  topQueries: Array<{
+    query: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  topPages: Array<{
+    page: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  highImpressionLowCtr: Array<{
+    page: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  decliningPages: Array<{
+    page: string;
+    clicks: number;
+    prevClicks: number;
+    clickDelta: number;
+    impressions: number;
+    prevImpressions: number;
+    position: number;
+  }>;
+  countries: Array<{
+    country: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  devices: Array<{
+    device: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  error?: string;
 }
 
 export interface MediaItem {

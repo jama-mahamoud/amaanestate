@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 
+import { RobotsDirective } from '../types';
+
 export interface SEOProps {
   title?: string;
   description?: string;
@@ -7,11 +9,13 @@ export interface SEOProps {
   imageAlt?: string;
   url?: string;
   noIndex?: boolean;
+  robotsDirective?: RobotsDirective;
   omitCanonical?: boolean;
   type?: 'website' | 'article' | 'profile';
   keywords?: string[];
   publishedTime?: string;
   modifiedTime?: string;
+  alternateLinks?: Array<{ hrefLang: string; href: string }>;
   structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
@@ -47,11 +51,13 @@ export function useSEO({
   imageAlt,
   url,
   noIndex = false,
+  robotsDirective,
   omitCanonical = false,
   type = 'website',
   keywords,
   publishedTime,
   modifiedTime,
+  alternateLinks,
   structuredData,
 }: SEOProps) {
   useEffect(() => {
@@ -88,8 +94,9 @@ export function useSEO({
       canonicalLink.setAttribute('href', canonicalUrl);
     }
 
+    const effectiveRobots = robotsDirective || (noIndex ? 'noindex, nofollow' : 'index, follow');
     setMetaTag('name', 'description', metaDesc);
-    setMetaTag('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow');
+    setMetaTag('name', 'robots', effectiveRobots);
 
     if (keywords && keywords.length > 0) {
       setMetaTag('name', 'keywords', keywords.join(', '));
@@ -135,6 +142,20 @@ export function useSEO({
       setMetaTag('name', 'twitter:image:alt', resolvedImageAlt);
     }
 
+    // Hreflang alternate links
+    document.querySelectorAll('link[data-amaan-hreflang="true"]').forEach((el) => el.remove());
+    if (alternateLinks && alternateLinks.length > 0 && !omitCanonical) {
+      alternateLinks.forEach((alt) => {
+        if (!alt.hrefLang || !alt.href) return;
+        const link = document.createElement('link');
+        link.setAttribute('rel', 'alternate');
+        link.setAttribute('hreflang', alt.hrefLang);
+        link.setAttribute('href', alt.href);
+        link.setAttribute('data-amaan-hreflang', 'true');
+        document.head.appendChild(link);
+      });
+    }
+
     const existingScripts = document.querySelectorAll('script[data-amaan-seo="true"]');
     existingScripts.forEach((s) => s.remove());
 
@@ -148,5 +169,20 @@ export function useSEO({
         document.head.appendChild(scriptEl);
       });
     }
-  }, [title, description, image, imageAlt, url, noIndex, omitCanonical, type, keywords, publishedTime, modifiedTime, structuredData]);
+  }, [
+    title,
+    description,
+    image,
+    imageAlt,
+    url,
+    noIndex,
+    robotsDirective,
+    omitCanonical,
+    type,
+    keywords,
+    publishedTime,
+    modifiedTime,
+    alternateLinks,
+    structuredData,
+  ]);
 }
