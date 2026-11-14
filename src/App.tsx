@@ -5,6 +5,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/layout/ScrollToTop';
 import { supabase } from './lib/supabase';
+import { getCurrentUserProfile } from './services/adminService';
+import {
+  installInternalTrafficGlobalHelper,
+  syncInternalTrafficWithProfile,
+} from './lib/internalTraffic';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const BuyPage = React.lazy(() => import('./pages/BuyPage'));
@@ -40,12 +45,33 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    installInternalTrafficGlobalHelper();
+    let active = true;
+
+    getCurrentUserProfile()
+      .then((profile) => {
+        if (active) {
+          syncInternalTrafficWithProfile(profile);
+        }
+      })
+      .catch(() => {});
+
     const subscription = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         navigate('/account', { replace: true });
       }
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        getCurrentUserProfile()
+          .then((profile) => {
+            if (active) {
+              syncInternalTrafficWithProfile(profile);
+            }
+          })
+          .catch(() => {});
+      }
     });
     return () => {
+      active = false;
       subscription?.data.subscription.unsubscribe();
     };
   }, [navigate]);

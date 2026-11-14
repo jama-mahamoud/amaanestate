@@ -1,6 +1,40 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Internal Traffic DataLayer Initialization (runs synchronously before GTM) -->
+    <script>
+      (function () {
+        try {
+          var INTERNAL_KEY = 'amaan_internal_traffic';
+          var OVERRIDE_KEY = 'amaan_internal_traffic_override';
+          var w = window;
+          w.dataLayer = w.dataLayer || [];
+
+          var search = w.location.search || '';
+          if (search && search.indexOf('ae_traffic=public') !== -1) {
+            var params = new URLSearchParams(search);
+            if (params.get('ae_traffic') === 'public') {
+              w.localStorage.removeItem(INTERNAL_KEY);
+              w.localStorage.setItem(OVERRIDE_KEY, 'public');
+              params.delete('ae_traffic');
+              var cleanQs = params.toString();
+              var cleanUrl = w.location.pathname + (cleanQs ? '?' + cleanQs : '') + w.location.hash;
+              w.history.replaceState(null, '', cleanUrl);
+            }
+          }
+
+          var path = w.location.pathname || '/';
+          var isAdminPath = path === '/admin' || path.indexOf('/admin/') === 0;
+          var isMarkedInternal = w.localStorage.getItem(INTERNAL_KEY) === '1';
+
+          if (isAdminPath || isMarkedInternal) {
+            w.dataLayer.push({ traffic_type: 'internal' });
+          }
+        } catch (e) {
+          // Ignore storage access restrictions
+        }
+      })();
+    </script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

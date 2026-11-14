@@ -5,6 +5,7 @@ import {
   Building2,
   ChevronDown,
   ExternalLink,
+  EyeOff,
   FilePlus2,
   FolderTree,
   Globe,
@@ -20,6 +21,7 @@ import {
   PanelLeftOpen,
   Plus,
   Settings,
+  ShieldCheck,
   Tags as TagsIcon,
   UserCircle,
   Users,
@@ -58,6 +60,13 @@ import { getSiteSettings } from '../../services/editorialService';
 import { getAdminEnquiries, getAdminProperties } from '../../services/propertyService';
 import { supabase } from '../../lib/supabase';
 import { resolveEditorialImage } from '../../lib/editorialImages';
+import {
+  clearInternalTrafficMarker,
+  enableInternalTrafficMarker,
+  INTERNAL_TRAFFIC_EVENT,
+  isInternalTrafficMarked,
+  syncInternalTrafficWithProfile,
+} from '../../lib/internalTraffic';
 import { useSEO } from '../../hooks/useSEO';
 import BrandLogo from '../../components/layout/BrandLogo';
 import AdminOverviewSection from '../../components/admin/AdminOverviewSection';
@@ -117,6 +126,7 @@ export default function AdminDashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [internalMarkerActive, setInternalMarkerActive] = useState(() => isInternalTrafficMarked());
 
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalArticles: 0,
@@ -210,10 +220,15 @@ export default function AdminDashboardPage() {
         return;
       }
       setProfile(userProf);
+      syncInternalTrafficWithProfile(userProf);
+      setInternalMarkerActive(isInternalTrafficMarked());
       setCheckingAuth(false);
       await loadAllData();
     }
     verifySession();
+
+    const syncMarkerState = () => setInternalMarkerActive(isInternalTrafficMarked());
+    window.addEventListener(INTERNAL_TRAFFIC_EVENT, syncMarkerState);
 
     const authListener = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
@@ -225,9 +240,23 @@ export default function AdminDashboardPage() {
 
     return () => {
       active = false;
+      window.removeEventListener(INTERNAL_TRAFFIC_EVENT, syncMarkerState);
       authListener?.data.subscription.unsubscribe();
     };
   }, [navigate, loadAllData]);
+
+  const handleToggleInternalTraffic = () => {
+    setAccountMenuOpen(false);
+    if (internalMarkerActive) {
+      clearInternalTrafficMarker();
+      setInternalMarkerActive(false);
+      toast.success('Internal traffic marker cleared. Open a public route (e.g. /) or reload to test as a normal visitor.');
+    } else {
+      enableInternalTrafficMarker({ force: true });
+      setInternalMarkerActive(true);
+      toast.success('This browser is now marked as internal traffic (traffic_type = "internal").');
+    }
+  };
 
   const handleSignOut = async () => {
     setAccountMenuOpen(false);
@@ -524,8 +553,25 @@ export default function AdminDashboardPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={handleToggleInternalTraffic}
+                    className="w-full px-4 py-2 text-left text-xs font-medium text-[#141413] hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer border-t border-[#F0ECE4]"
+                  >
+                    {internalMarkerActive ? (
+                      <>
+                        <EyeOff size={14} className="text-[#8C4A27] shrink-0" />
+                        <span>Clear Internal Marker (Public Test)</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck size={14} className="text-[#1E3A5F] shrink-0" />
+                        <span>Mark Browser as Internal Traffic</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleSignOut}
-                    className="w-full px-4 py-2 text-left text-xs font-medium text-[#991B1B] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer"
+                    className="w-full px-4 py-2 text-left text-xs font-medium text-[#991B1B] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer border-t border-[#F0ECE4]"
                   >
                     <LogOut size={14} /> Sign Out
                   </button>

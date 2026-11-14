@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, LogOut, ShieldCheck, User } from 'lucide-react';
+import { EyeOff, LayoutDashboard, LogOut, ShieldCheck, User } from 'lucide-react';
 import {
   getCurrentUserProfile,
   signOutUser,
@@ -8,6 +8,13 @@ import {
   updateOwnProfile,
 } from '../services/adminService';
 import { supabase } from '../lib/supabase';
+import {
+  clearInternalTrafficMarker,
+  enableInternalTrafficMarker,
+  INTERNAL_TRAFFIC_EVENT,
+  isInternalTrafficMarked,
+  syncInternalTrafficWithProfile,
+} from '../lib/internalTraffic';
 import { Profile } from '../types';
 import { useSEO } from '../hooks/useSEO';
 import { toast } from 'sonner';
@@ -24,6 +31,7 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+  const [internalMarkerActive, setInternalMarkerActive] = useState(() => isInternalTrafficMarked());
 
   useSEO({
     title: 'My Account',
@@ -41,11 +49,16 @@ export default function AccountPage() {
         return;
       }
       setProfile(prof);
+      syncInternalTrafficWithProfile(prof);
+      setInternalMarkerActive(isInternalTrafficMarked());
       setFullName(prof.full_name || '');
       setBio(prof.bio || '');
       setLoading(false);
     }
     load();
+
+    const syncMarkerState = () => setInternalMarkerActive(isInternalTrafficMarked());
+    window.addEventListener(INTERNAL_TRAFFIC_EVENT, syncMarkerState);
 
     const sub = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
@@ -55,6 +68,7 @@ export default function AccountPage() {
 
     return () => {
       active = false;
+      window.removeEventListener(INTERNAL_TRAFFIC_EVENT, syncMarkerState);
       sub?.data.subscription.unsubscribe();
     };
   }, [navigate]);
@@ -146,13 +160,42 @@ export default function AccountPage() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {canOpenCms && (
-            <Link
-              to="/admin"
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5"
-            >
-              <LayoutDashboard size={14} />
-              <span>Open Editorial CMS</span>
-            </Link>
+            <>
+              <Link
+                to="/admin"
+                className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5"
+              >
+                <LayoutDashboard size={14} />
+                <span>Open Editorial CMS</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  if (internalMarkerActive) {
+                    clearInternalTrafficMarker();
+                    setInternalMarkerActive(false);
+                    toast.success('Internal traffic marker cleared for public visitor testing.');
+                  } else {
+                    enableInternalTrafficMarker({ force: true });
+                    setInternalMarkerActive(true);
+                    toast.success('Browser marked as internal traffic (traffic_type = "internal").');
+                  }
+                }}
+                className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] text-[#141413] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                {internalMarkerActive ? (
+                  <>
+                    <EyeOff size={14} className="text-[#8C4A27]" />
+                    <span>Clear Internal Marker</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={14} className="text-[#1E3A5F]" />
+                    <span>Mark as Internal Traffic</span>
+                  </>
+                )}
+              </button>
+            </>
           )}
           <button
             type="button"

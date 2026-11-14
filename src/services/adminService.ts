@@ -16,6 +16,7 @@ import {
   Tag,
 } from '../types';
 import { hydrateDemoArticle, loadDemoDb, saveDemoDb } from './demoContent';
+import { syncInternalTrafficWithProfile } from '../lib/internalTraffic';
 
 const DEMO_ADMIN_SESSION_KEY = 'amaan_estate_demo_admin_session';
 
@@ -91,6 +92,7 @@ export async function signInUser(email: string, password: string): Promise<Admin
         error: 'Unable to load your account profile. Please try again.',
       };
     }
+    syncInternalTrafficWithProfile(profile, { force: true });
     return { success: true, profile };
   }
 
@@ -168,6 +170,7 @@ export async function signInAdmin(email: string, password: string): Promise<Admi
         error: 'Access denied. Only authorized admin or editor accounts can open this workspace.',
       };
     }
+    syncInternalTrafficWithProfile(profile, { force: true });
     return { success: true, profile };
   }
 
@@ -182,7 +185,9 @@ export function enterDemoAdminMode(): Profile {
     window.localStorage.setItem(DEMO_ADMIN_SESSION_KEY, 'active');
   }
   const db = loadDemoDb();
-  return db.profiles[0];
+  const profile = db.profiles[0];
+  syncInternalTrafficWithProfile(profile, { force: true });
+  return profile;
 }
 
 export async function signOutAdmin(): Promise<void> {
