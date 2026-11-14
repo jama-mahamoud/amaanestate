@@ -18,6 +18,9 @@ const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/buy', label: 'Buy' },
   { to: '/rent', label: 'Rent' },
+  { to: '/search', label: 'Search' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export default function Layout({ children }: LayoutProps) {
@@ -121,7 +124,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Zone 2: Clean Typographic Navigation */}
           <nav
             aria-label="Primary navigation"
-            className="hidden md:flex items-center gap-7 text-sm font-medium text-[#5C5A55]"
+            className="hidden md:flex items-center gap-5 lg:gap-7 text-sm font-medium text-[#5C5A55]"
           >
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -141,12 +144,12 @@ export default function Layout({ children }: LayoutProps) {
             ))}
           </nav>
 
-          {/* Zone 3: Search + Auth Login / Account Action + Mobile Drawer Trigger */}
+          {/* Zone 3: Tablet Search + Auth Login / Account Action + Mobile Drawer Trigger */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <Link
               to="/search"
               aria-label="Search articles"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex md:hidden items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
             >
               <Search size={14} />
               <span>Search</span>
@@ -250,21 +253,14 @@ export default function Layout({ children }: LayoutProps) {
                 </NavLink>
               ))}
             </nav>
-            <div className="pt-3 border-t border-[#E5E0D8] flex flex-wrap items-center justify-between gap-2.5">
-              <Link
-                to="/search"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 py-2.5 px-4 text-center text-sm font-semibold bg-white border border-[#E5E0D8] rounded text-[#141413]"
-              >
-                Search Articles
-              </Link>
+            <div className="pt-3 border-t border-[#E5E0D8] flex flex-wrap items-center justify-end gap-2.5">
               {currentUser ? (
                 <>
                   {isStaff && (
                     <Link
                       to="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded"
+                      className="flex-1 py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded"
                     >
                       Editorial CMS
                     </Link>
@@ -272,7 +268,7 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     to="/account"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 px-4 text-center text-sm font-semibold bg-[#EFECE6] text-[#141413] rounded"
+                    className="flex-1 py-2.5 px-4 text-center text-sm font-semibold bg-[#EFECE6] text-[#141413] rounded"
                   >
                     My Account
                   </Link>
@@ -281,7 +277,7 @@ export default function Layout({ children }: LayoutProps) {
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded inline-flex items-center gap-1.5"
+                  className="w-full py-2.5 px-4 text-center text-sm font-semibold bg-[#1E3A5F] text-white rounded inline-flex items-center justify-center gap-1.5"
                 >
                   <User size={14} />
                   <span>Login</span>

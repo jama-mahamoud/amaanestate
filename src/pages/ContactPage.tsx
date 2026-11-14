@@ -61,22 +61,26 @@ export default function ContactPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
-            <h2 className="text-xl font-serif font-semibold text-[#141413]">Direct Channels</h2>
+            <h2 className="text-xl font-serif font-semibold text-[#141413]">Direct Contact</h2>
             <dl className="space-y-4 text-sm">
-              <div className="border-b border-[#E5E0D8] pb-3">
-                <dt className="text-xs uppercase tracking-widest text-[#5C5A55] font-semibold">Editorial Desk</dt>
-                <dd className="text-[#141413] font-medium mt-1">editorial@amaanestate.com</dd>
-              </div>
-              <div className="border-b border-[#E5E0D8] pb-3">
-                <dt className="text-xs uppercase tracking-widest text-[#5C5A55] font-semibold">Research &amp; Syndication</dt>
-                <dd className="text-[#141413] font-medium mt-1">research@amaanestate.com</dd>
-              </div>
               <div>
-                <dt className="text-xs uppercase tracking-widest text-[#5C5A55] font-semibold">Advertising &amp; Partnerships</dt>
-                <dd className="text-[#141413] font-medium mt-1">partnerships@amaanestate.com</dd>
+                <dt className="text-xs uppercase tracking-widest text-[#5C5A55] font-semibold">
+                  Official Contact Desk
+                </dt>
+                <dd className="mt-1.5">
+                  <a
+                    href="mailto:info@amaanestate.com"
+                    className="text-[#1E3A5F] hover:text-[#141413] font-medium underline underline-offset-4 transition-colors"
+                  >
+                    info@amaanestate.com
+                  </a>
+                </dd>
+                <p className="text-xs text-[#5C5A55] mt-2 leading-relaxed">
+                  For editorial inquiries, housing research collaborations, advertising partnerships, and reader corrections.
+                </p>
               </div>
             </dl>
-            <p className="text-xs text-[#5C5A55] leading-relaxed">
+            <p className="text-xs text-[#5C5A55] leading-relaxed border-t border-[#E5E0D8] pt-4">
               Before pitching an article, please review our{' '}
               <Link to="/editorial-policy" className="text-[#1E3A5F] underline">
                 Editorial Policy
