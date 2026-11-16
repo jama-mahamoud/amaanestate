@@ -574,12 +574,12 @@ export function EditorialSettingsSection({
   currentProfile,
   onRefresh,
 }: EditorialSettingsSectionProps) {
-  const [editorialEmail, setEditorialEmail] = useState(siteSettings?.editorial_email || 'editorial@amaanestate.com');
+  const [editorialEmail, setEditorialEmail] = useState(siteSettings?.editorial_email || 'info@amaanestate.com');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (siteSettings) {
-      setEditorialEmail(siteSettings.editorial_email || 'editorial@amaanestate.com');
+      setEditorialEmail(siteSettings.editorial_email || 'info@amaanestate.com');
     }
   }, [siteSettings]);
 

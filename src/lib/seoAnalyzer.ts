@@ -711,19 +711,20 @@ export function analyzeArticleSeo(
 
   // 17. Structured Data & Classification readiness (6 pts)
   const hasCategory = Boolean(input.categoryId);
-  const hasAuthor = Boolean(input.authorId);
-  const schemaOk = hasCategory && hasAuthor && Boolean(title) && Boolean(excerpt || effectiveMetaDesc);
+  const hasIndividualAuthor = Boolean(input.authorId);
+  const hasExcerptOrDesc = Boolean(excerpt || effectiveMetaDesc);
+  const schemaOk = hasCategory && hasExcerptOrDesc;
   checks.push({
     id: 'structured-data-readiness',
     category: 'technical',
-    status: schemaOk ? 'passed' : !hasCategory || !hasAuthor ? 'error' : 'warning',
-    points: (hasCategory ? 2 : 0) + (hasAuthor ? 2 : 0) + (Boolean(excerpt || effectiveMetaDesc) ? 2 : 0),
+    status: schemaOk ? 'passed' : !hasCategory ? 'error' : 'warning',
+    points: (hasCategory ? 3 : 0) + (hasExcerptOrDesc ? 3 : 0),
     maxPoints: 6,
     title: `Schema.org ${input.schemaType || 'Article'} + BreadcrumbList readiness`,
-    detail: `Category: ${hasCategory ? 'Assigned' : 'Missing'} · Author: ${hasAuthor ? 'Assigned' : 'Missing'} · Schema: ${input.schemaType || 'Article'}.`,
-    isCriticalForPublish: !hasCategory || !hasAuthor,
+    detail: `Category: ${hasCategory ? 'Assigned' : 'Missing'} · Byline: ${hasIndividualAuthor ? 'Named Author (Person)' : 'Editorial Desk (Organization)'} · Schema: ${input.schemaType || 'Article'}.`,
+    isCriticalForPublish: !hasCategory,
     recommendation: !schemaOk
-      ? 'Ensure Category, Author, and Excerpt are populated so Article and BreadcrumbList JSON-LD validate cleanly.'
+      ? 'Ensure Category and Excerpt/Meta Description are populated so Article and BreadcrumbList JSON-LD validate cleanly.'
       : undefined,
   });
 

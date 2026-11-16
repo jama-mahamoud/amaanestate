@@ -25,6 +25,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     property.rental_period
   );
 
+  const isSample = Boolean(property.is_sample || property.source_name === 'showcase_sample');
+
   const specItems: string[] = [];
   if (property.bedrooms !== null && property.bedrooms !== undefined) {
     specItems.push(`${property.bedrooms} ${property.bedrooms === 1 ? 'Bed' : 'Beds'}`);
@@ -65,6 +67,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </span>
             <span aria-hidden="true">·</span>
             <span>{formatPropertyTypeLabel(property.property_type)}</span>
+            {isSample && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-[#7A7770]">Illustrative Sample</span>
+              </>
+            )}
             {property.listing_status && property.listing_status !== 'available' && (
               <>
                 <span aria-hidden="true">·</span>

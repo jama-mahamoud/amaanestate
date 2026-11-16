@@ -170,14 +170,18 @@ export default function EditorialWysiwygEditor({
 
   const handleSetLink = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!linkUrl.trim()) {
+    const trimmedUrl = linkUrl.trim();
+    if (!trimmedUrl) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
     } else {
+      const isInternal =
+        trimmedUrl.startsWith('/') ||
+        /^https?:\/\/(www\.)?amaanestate\.com(\/|$|#|\?)/i.test(trimmedUrl);
       editor
         .chain()
         .focus()
         .extendMarkRange('link')
-        .setLink({ href: linkUrl.trim(), target: '_blank' })
+        .setLink({ href: trimmedUrl, target: isInternal ? null : '_blank' })
         .run();
     }
     setShowLinkModal(false);
@@ -244,7 +248,6 @@ export default function EditorialWysiwygEditor({
             className="h-8 px-2 bg-white border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] cursor-pointer"
           >
             <option value="paragraph">Normal Paragraph</option>
-            <option value="h1">Heading 1 (Title)</option>
             <option value="h2">Heading 2 (Section)</option>
             <option value="h3">Heading 3 (Sub-section)</option>
           </select>

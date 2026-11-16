@@ -526,6 +526,13 @@ app.get(["/robots.txt", "/api/robots.txt"], (req, res) => {
   res.type("text/plain; charset=utf-8").status(200).send(buildRobotsTxt(baseUrl));
 });
 
+app.get("/ads.txt", (req, res) => {
+  res
+    .type("text/plain; charset=utf-8")
+    .status(200)
+    .send("google.com, pub-7965451372324178, DIRECT, f08c47fec0942fa0\n");
+});
+
 interface SitemapCategoryRow {
   id: string;
   slug: string;

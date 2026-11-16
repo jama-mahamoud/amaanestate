@@ -9,7 +9,7 @@ export interface SeedEditorialArticle {
   featured_image_caption: string;
   gallery_images: string[];
   category_slug: 'investment' | 'architecture' | 'construction' | 'home-living' | 'news';
-  author_slug: 'eleanor-vance' | 'marcus-thorne' | 'kenji-takahashi' | 'nadia-al-mansoor';
+  author_slug: 'eleanor-vance' | 'marcus-thorne' | 'nadia-al-mansoor' | null;
   is_featured: boolean;
   view_count: number;
   seo_title: string;
@@ -886,7 +886,7 @@ export const INVESTMENT_ARTICLES: SeedEditorialArticle[] = [
 <h2>References and Further Reading</h2>
 <ul>
   <li><a href="https://www.worldgbc.org/" target="_blank" rel="noopener noreferrer">World Green Building Council — Whole Life Carbon &amp; Retrofit Economics</a></li>
-  <li><a href="https://www.crrem.eu/" target="_blank" rel="noopener noreferrer">Carbon Risk Real Estate Monitor (CRREM) — Stranding Pathways for Commercial Assets</a></li>
+  <li><a href="https://www.crrem.eu/about-crrem/" target="_blank" rel="noopener noreferrer">Carbon Risk Real Estate Monitor (CRREM) — Stranding Pathways for Commercial Assets</a></li>
   <li><a href="https://energy.ec.europa.eu/" target="_blank" rel="noopener noreferrer">European Commission — Energy Performance of Buildings Directive Resources</a></li>
 </ul>`,
   },

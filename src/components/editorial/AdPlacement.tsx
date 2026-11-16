@@ -14,7 +14,10 @@ export default function AdPlacement({ slotName, format = 'leaderboard' }: AdPlac
     getSiteSettings().then(setSettings).catch(() => {});
   }, []);
 
-  const enabled = settings?.adsense_enabled && settings?.adsense_client_id;
+  const enabled = Boolean(settings?.adsense_enabled && settings?.adsense_client_id);
+  if (!enabled) {
+    return null;
+  }
 
   return (
     <aside
@@ -26,22 +29,16 @@ export default function AdPlacement({ slotName, format = 'leaderboard' }: AdPlac
       <span className="text-[11px] uppercase tracking-widest text-[#7A7770] font-medium mb-1">
         Advertisement
       </span>
-      {enabled ? (
-        <div className="w-full flex items-center justify-center text-xs text-[#5C5A55] font-mono">
-          {/* Google AdSense unit slot ready for script initialization */}
-          <ins
-            className="adsbygoogle block w-full"
-            data-ad-client={settings?.adsense_client_id}
-            data-ad-slot={slotName}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
-        </div>
-      ) : (
-        <p className="text-xs text-[#7A7770]">
-          Reserved Sponsorship Slot · Configure Google AdSense in Editorial Settings
-        </p>
-      )}
+      <div className="w-full flex items-center justify-center text-xs text-[#5C5A55] font-mono">
+        {/* Google AdSense unit slot ready for script initialization */}
+        <ins
+          className="adsbygoogle block w-full"
+          data-ad-client={settings?.adsense_client_id}
+          data-ad-slot={slotName}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
     </aside>
   );
 }

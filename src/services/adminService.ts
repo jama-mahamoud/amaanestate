@@ -276,7 +276,7 @@ export interface UpsertArticlePayload {
   featured_image_caption?: string | null;
   gallery_images: string[];
   category_id: string;
-  author_id: string;
+  author_id?: string | null;
   status: ArticleStatus;
   is_featured: boolean;
   reading_time: number;
@@ -336,6 +336,7 @@ export async function upsertArticle(
 
     const record: Record<string, any> = {
       ...fields,
+      author_id: fields.author_id || null,
       published_at: computedPublishedAt,
       scheduled_for: fields.status === 'scheduled' ? fields.scheduled_for || null : null,
       ...(id ? {} : { created_by: user?.id || null }),
@@ -401,6 +402,7 @@ export async function upsertArticle(
     db.articles[idx] = {
       ...db.articles[idx],
       ...fields,
+      author_id: fields.author_id || null,
       published_at: computedPublishedAt,
       scheduled_for: fields.status === 'scheduled' ? fields.scheduled_for || null : null,
       tags: resolvedTags,
@@ -413,6 +415,7 @@ export async function upsertArticle(
   const created: Article = {
     id: `art-${Date.now()}`,
     ...fields,
+    author_id: fields.author_id || null,
     view_count: 0,
     published_at: computedPublishedAt,
     scheduled_for: fields.status === 'scheduled' ? fields.scheduled_for || null : null,

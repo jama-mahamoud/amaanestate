@@ -639,7 +639,7 @@ export const NEWS_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/digital-twin-lidar-construction-productivity.jpg',
     ],
     category_slug: 'news',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: false,
     view_count: 915,
     seo_title: 'EU Construction Products Regulation 2024/3110 & DPP Rules',

@@ -139,10 +139,17 @@ export default function ArticleDetailsPage() {
       wordCount,
       ...(absoluteImg ? { image: [absoluteImg] } : {}),
       ...(articleKeywords && articleKeywords.length > 0 ? { keywords: articleKeywords.join(', ') } : {}),
-      author: {
-        '@type': 'Person',
-        name: article.author?.name || 'AmaanEstate Editorial Desk',
-      },
+      author: article.author?.name
+        ? {
+            '@type': 'Person',
+            name: article.author.name,
+          }
+        : {
+            '@type': 'Organization',
+            '@id': 'https://www.amaanestate.com/#organization',
+            name: 'AmaanEstate',
+            url: 'https://www.amaanestate.com/',
+          },
       publisher: {
         '@type': 'Organization',
         '@id': 'https://www.amaanestate.com/#organization',
@@ -308,22 +315,33 @@ export default function ArticleDetailsPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[#E5E0D8]">
-            <div className="flex items-center gap-3">
-              <img
-                src={authorAvatar}
-                alt={article.author?.name || 'Author'}
-                referrerPolicy="no-referrer"
-                className="w-10 h-10 rounded-full object-cover bg-[#EBE6DF]"
-              />
-              <div>
-                <div className="text-sm font-semibold text-[#141413]">
-                  {article.author?.name || 'AMAAN ESTATE Desk'}
-                </div>
-                <div className="text-xs text-[#5C5A55]">
-                  {article.author?.title || 'Editorial Staff'}
+            {article.author ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={authorAvatar}
+                  alt={article.author.name}
+                  referrerPolicy="no-referrer"
+                  className="w-10 h-10 rounded-full object-cover bg-[#EBE6DF]"
+                />
+                <div>
+                  <div className="text-sm font-semibold text-[#141413]">
+                    {article.author.name}
+                  </div>
+                  <div className="text-xs text-[#5C5A55]">
+                    {article.author.title}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <div className="text-sm font-semibold text-[#141413]">
+                  AMAAN ESTATE Editorial Desk
+                </div>
+                <div className="text-xs text-[#5C5A55]">
+                  Institutional Research &amp; Market Reporting
+                </div>
+              </div>
+            )}
 
             {/* Social Sharing */}
             <div className="flex items-center gap-2 text-xs font-medium">

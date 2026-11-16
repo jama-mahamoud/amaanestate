@@ -582,7 +582,7 @@ async function loadRealCmsCatalog(bearerToken?: string | null): Promise<{
       featured_image_caption: s.featured_image_caption,
       gallery_images: [],
       category_id: `cat-${s.category_slug}`,
-      author_id: "seed-author",
+      author_id: s.author_slug ? `auth-${s.author_slug}` : null,
       category: {
         id: `cat-${s.category_slug}`,
         name: s.category_slug.replace(/-/g, " "),
@@ -1233,13 +1233,13 @@ export function registerSeoRoutes(app: express.Application) {
           });
         }
 
-        if (!art.author_id || !art.category_id) {
+        if (!art.category_id) {
           issues.push({
             id: `art-schema-missing-${art.id}`,
             severity: "critical",
             category: "structured_data",
-            title: "Incomplete Article Schema.org author or category",
-            description: `"${art.title}" is missing author or category assignment for JSON-LD.`,
+            title: "Incomplete Article Schema.org category",
+            description: `"${art.title}" is missing category assignment for JSON-LD.`,
             url: artUrl,
             entityType: "article",
             entityId: art.id,

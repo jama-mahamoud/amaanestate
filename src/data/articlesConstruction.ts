@@ -17,7 +17,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/volumetric-modular-prefabrication-economics.jpg',
     ],
     category_slug: 'construction',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: true,
     view_count: 1185,
     seo_title: 'Hybrid Mass-Timber Construction & Seismic Engineering',
@@ -176,7 +176,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
   },
   {
     id: 'art-cons-2',
-    title: 'Geopolymer Concrete Field Trials Cut Structural Embodied Carbon by 48%',
+    title: 'Alkali-Activated & Geopolymer Concrete: Field Trial Engineering & Embodied Carbon Benchmarks',
     slug: 'geopolymer-low-carbon-concrete-site-trials',
     excerpt:
       'Replacing Portland cement clinker with alkali-activated industrial aluminosilicates and calcined clays is achieving 50 MPa structural strengths on live urban jobsites without thermal steam curing.',
@@ -190,7 +190,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/hybrid-mass-timber-seismic-engineering.jpg',
     ],
     category_slug: 'construction',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: false,
     view_count: 780,
     seo_title: 'Geopolymer Low-Carbon Concrete Field Trials & Standards',
@@ -365,7 +365,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/prefabricated-facade-overcladding-retrofits.jpg',
     ],
     category_slug: 'construction',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: false,
     view_count: 930,
     seo_title: 'Volumetric Modular Construction Economics & Factory Scale',
@@ -527,7 +527,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/deep-energy-heritage-townhouse-retrofit.jpg',
     ],
     category_slug: 'construction',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: false,
     view_count: 845,
     seo_title: 'Prefabricated Facade Over-Cladding for Occupied Retrofits',
@@ -676,7 +676,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
 <ul>
   <li><a href="https://energiesprong.org/" target="_blank" rel="noopener noreferrer">Energiesprong Global Alliance — Net-Zero Prefabricated Retrofit Market Reports</a></li>
   <li><a href="https://bpie.eu/" target="_blank" rel="noopener noreferrer">Buildings Performance Institute Europe (BPIE) — Industrialized Deep Renovation Blueprints</a></li>
-  <li><a href="https://www.facadeengineering.org/" target="_blank" rel="noopener noreferrer">Society of Facade Engineering — High-Rise Over-Cladding &amp; Fire Compartmentation Guidance</a></li>
+  <li><a href="https://www.cibse.org/" target="_blank" rel="noopener noreferrer">Chartered Institution of Building Services Engineers (CIBSE) — Facade &amp; Building Services Engineering Guidance</a></li>
 </ul>`,
   },
   {
@@ -695,7 +695,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
       '/images/articles/hybrid-mass-timber-seismic-engineering.jpg',
     ],
     category_slug: 'construction',
-    author_slug: 'kenji-takahashi',
+    author_slug: null,
     is_featured: false,
     view_count: 1015,
     seo_title: 'Digital Twins & LiDAR in Construction Productivity',
@@ -738,7 +738,7 @@ export const CONSTRUCTION_ARTICLES: SeedEditorialArticle[] = [
     <tr>
       <th>Field Technology Tool</th>
       <th>Primary Jobsite Problem Solved</th>
-      <th>Verified Contractor Productivity Gain</th>
+      <th>Reported Industry Range &amp; Operational Effect</th>
     </tr>
   </thead>
   <tbody>

@@ -80,7 +80,7 @@ export default function ArticleEditorView({
   onSaved,
 }: ArticleEditorViewProps) {
   const initialCategoryId = article?.category_id || categories[0]?.id || '';
-  const initialAuthorId = article?.author_id || authors.find((a) => a.active)?.id || authors[0]?.id || '';
+  const initialAuthorId = article?.author_id || '';
   const initialFeaturedMedia = media.find((m) => m.public_url === article?.featured_image);
 
   const [title, setTitle] = useState(article?.title || '');
@@ -364,10 +364,6 @@ export default function ArticleEditorView({
       toast.error('Please select one of the editorial categories.');
       return;
     }
-    if (!authorId) {
-      toast.error('Please select an editorial author.');
-      return;
-    }
     if (!content.trim()) {
       toast.error('Main article content cannot be empty.');
       return;
@@ -394,7 +390,7 @@ export default function ArticleEditorView({
       featured_image_alt: featuredImageAlt.trim() || null,
       gallery_images: galleryImages,
       category_id: categoryId,
-      author_id: authorId,
+      author_id: authorId || null,
       status: targetStatus,
       is_featured: isFeatured,
       reading_time: effectiveReadingTime,
@@ -810,13 +806,13 @@ export default function ArticleEditorView({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#5C5A55] block">Editorial Author</label>
+              <label className="text-xs font-semibold text-[#5C5A55] block">Editorial Attribution</label>
               <select
                 value={authorId}
                 onChange={(e) => setAuthorId(e.target.value)}
                 className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-medium text-[#141413]"
               >
-                <option value="">Select Author...</option>
+                <option value="">AMAAN ESTATE Editorial Desk (Organizational Byline)</option>
                 {authors.map((auth) => (
                   <option key={auth.id} value={auth.id}>
                     {auth.name} ({auth.title})

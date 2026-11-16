@@ -461,7 +461,7 @@ export const HOME_LIVING_ARTICLES: SeedEditorialArticle[] = [
   <li>Pair space-saving millwork directly with balanced <a href="/articles/circadian-lighting-acoustic-residential-interior-design">circadian task lighting and acoustic absorption</a> so intimate rooms feel serene rather than boxed-in.</li>
 </ul>
 
-<h2>Case Geometry: Transforming a 46-Square-Meter One-Bedroom Urban Flat</h2>
+<h2>Illustrative Spatial Scenario: Reconfiguring a 46-Square-Meter Urban Apartment</h2>
 
 <p>Tracing how architectural joinery transforms a typical narrow post-war city apartment illustrates why spatial planning beats loose furniture buying cleanly. Consider a 46 m<sup>2</sup> urban dwelling measuring 4.2 meters wide by 11 meters deep featuring windows solely at its front living end. A traditional layout places a swinging bedroom hinge door off a dim central corridor, dropping a freestanding linen wardrobe awkwardly beside the bed and cramming a small kitchen along the back wall—leaving narrow, gloomy circulation tunnels.</p>
 
@@ -836,8 +836,8 @@ export const HOME_LIVING_ARTICLES: SeedEditorialArticle[] = [
 <h2>References and Further Reading</h2>
 <ul>
   <li><a href="https://historicengland.org.uk/" target="_blank" rel="noopener noreferrer">Historic England — Energy Efficiency and Historic Buildings Guidance</a></li>
-  <li><a href="https://www.passivhaus.org.uk/" target="_blank" rel="noopener noreferrer">Passivhaus Trust — EnerPHit Historic Retrofit Standards &amp; Moisture Control</a></li>
-  <li><a href="https://www.stba.org.uk/" target="_blank" rel="noopener noreferrer">Sustainable Traditional Buildings Alliance (STBA) — Responsible Retrofit Guidance Wheel</a></li>
+  <li><a href="https://www.passivhaustrust.org.uk/" target="_blank" rel="noopener noreferrer">Passivhaus Trust — EnerPHit Historic Retrofit Standards &amp; Moisture Control</a></li>
+  <li><a href="https://stbauk.org/" target="_blank" rel="noopener noreferrer">Sustainable Traditional Buildings Alliance (STBA) — Responsible Retrofit Guidance Wheel</a></li>
 </ul>`,
   },
 ];

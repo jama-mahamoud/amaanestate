@@ -32,7 +32,7 @@ insert into public.site_settings (
   'amaanestate.com',
   'AMAAN ESTATE — Global Real Estate Media, Research & Knowledge',
   'Independent international reporting, institutional research, and editorial analysis on real estate investment, architecture, construction, home living, and property markets.',
-  'editorial@amaanestate.com',
+  'info@amaanestate.com',
   '{"twitter":"https://x.com/amaanestate","linkedin":"https://linkedin.com/company/amaanestate","instagram":"https://instagram.com/amaanestate","youtube":""}'::jsonb,
   '',
   false
@@ -99,14 +99,6 @@ insert into public.authors (name, slug, title, bio, email, active) values
     'Senior Real Estate Capital Correspondent',
     'Former institutional real estate analyst focusing on sovereign infrastructure capital, debt refinancing cycles, and cross-border yield spreads.',
     'marcus.thorne@amaanestate.com',
-    true
-  ),
-  (
-    'Dr. Kenji Takahashi',
-    'kenji-takahashi',
-    'Structural & Materials Research Fellow',
-    'Structural engineer and researcher investigating hybrid mass-timber frames, geopolymer concrete, and seismic resilience in high-density cities.',
-    'kenji.takahashi@amaanestate.com',
     true
   ),
   (

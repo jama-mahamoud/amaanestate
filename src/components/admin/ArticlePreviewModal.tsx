@@ -98,7 +98,7 @@ export default function ArticlePreviewModal({ open, onClose, article }: ArticleP
                 <p className="text-lg text-[#4A4843] leading-relaxed">{article.excerpt}</p>
               )}
 
-              {article.author && (
+              {article.author ? (
                 <div className="flex items-center gap-3 pt-3 border-t border-[#E5E0D8]">
                   <img
                     src={resolveEditorialImage(article.author.avatar_url, 'author-portrait')}
@@ -110,6 +110,11 @@ export default function ArticlePreviewModal({ open, onClose, article }: ArticleP
                     <div className="text-sm font-semibold text-[#141413]">{article.author.name}</div>
                     <div className="text-xs text-[#5C5A55]">{article.author.title}</div>
                   </div>
+                </div>
+              ) : (
+                <div className="pt-3 border-t border-[#E5E0D8]">
+                  <div className="text-sm font-semibold text-[#141413]">AMAAN ESTATE Editorial Desk</div>
+                  <div className="text-xs text-[#5C5A55]">Institutional Research &amp; Market Reporting</div>
                 </div>
               )}
             </header>

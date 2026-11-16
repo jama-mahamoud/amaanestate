@@ -72,8 +72,35 @@ export default function EditorialContent({ content }: EditorialContentProps) {
       ],
     });
 
+    let processed = clean;
+
+    // Prevent duplicate H1 tags inside article body HTML by downgrading them to H2
+    processed = processed
+      .replace(/<h1(\b[^>]*)>/gi, '<h2$1>')
+      .replace(/<\/h1>/gi, '</h2>');
+
+    // Strip target="_blank" and rel="nofollow" from internal amaanestate.com or relative links
+    processed = processed.replace(
+      /<a\s+([^>]*?)href=["']([^"']+)["']([^>]*)>/gi,
+      (_match, before: string, href: string, after: string) => {
+        const isInternal =
+          href.startsWith('/') ||
+          /^https?:\/\/(www\.)?amaanestate\.com(\/|$|#|\?)/i.test(href.trim());
+        if (!isInternal) {
+          return `<a ${before}href="${href}"${after}>`;
+        }
+        const cleanedBefore = before
+          .replace(/\s*target=["']_blank["']/gi, '')
+          .replace(/\s*rel=["'][^"']*["']/gi, '');
+        const cleanedAfter = after
+          .replace(/\s*target=["']_blank["']/gi, '')
+          .replace(/\s*rel=["'][^"']*["']/gi, '');
+        return `<a ${cleanedBefore}href="${href}"${cleanedAfter}>`.replace(/\s+>/g, '>');
+      }
+    );
+
     // Resolve relative image URLs safely
-    return clean.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (match, p1, src, p2) => {
+    return processed.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (_match, p1, src, p2) => {
       const resolved = resolveEditorialImage(src);
       return `<img ${p1}src="${resolved}" ${p2}>`;
     });
@@ -130,7 +157,11 @@ export default function EditorialContent({ content }: EditorialContentProps) {
                 </div>
               );
             }
-            const isExternal = Boolean(href && /^https?:\/\//i.test(href));
+            const isExternal = Boolean(
+              href &&
+                /^https?:\/\//i.test(href) &&
+                !/^https?:\/\/(www\.)?amaanestate\.com(\/|$|#|\?)/i.test(href.trim())
+            );
             return (
               <a
                 href={href}

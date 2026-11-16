@@ -78,7 +78,7 @@ export interface Article {
   featured_image_caption?: string | null;
   gallery_images: string[];
   category_id: string;
-  author_id: string;
+  author_id: string | null;
   category?: Category | null;
   author?: Author | null;
   tags?: Tag[];
