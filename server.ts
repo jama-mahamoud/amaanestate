@@ -23,7 +23,9 @@ import {
   registerGlobalMarketsRoutes,
 } from "./server/globalMarketsRoutes";
 import {
+  DEFAULT_MARKET_OG_IMAGE_PATH,
   aggregateCountrySummaries,
+  resolveMarketSocialImageMetadata,
   resolveReportCanonicalUrl,
   slugifyMarketSegment,
 } from "./src/lib/globalMarkets";
@@ -361,6 +363,10 @@ function injectSpaRouteMetadata(
     robotsDirective?: string;
     title?: string;
     description?: string;
+    ogType?: string;
+    image?: string;
+    imageAlt?: string;
+    includeSocialMeta?: boolean;
   }
 ): string {
   let html = templateHtml;
@@ -378,6 +384,12 @@ function injectSpaRouteMetadata(
     .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
     .replace(/<meta\s+[^>]*property=["']og:url["'][^>]*>/gi, "");
 
+  if (options.includeSocialMeta) {
+    html = html
+      .replace(/<meta\s+[^>]*property=["']og:(?:type|title|description|image(?::width|:height|:alt)?)["'][^>]*>/gi, "")
+      .replace(/<meta\s+[^>]*name=["']twitter:(?:card|site|title|description|image(?::alt)?)["'][^>]*>/gi, "");
+  }
+
   const robotsContent =
     options.robotsDirective || (options.noIndex ? "noindex, nofollow" : "index, follow");
   const isNoIndex = options.noIndex || robotsContent.toLowerCase().includes("noindex");
@@ -388,6 +400,28 @@ function injectSpaRouteMetadata(
   if (options.canonicalUrl && !isNoIndex) {
     tags.push(`<link rel="canonical" href="${escapeHtml(options.canonicalUrl)}" />`);
     tags.push(`<meta property="og:url" content="${escapeHtml(options.canonicalUrl)}" />`);
+  }
+
+  if (options.includeSocialMeta) {
+    const socialTitle = options.title || "AmaanEstate | Global Real Estate News, Research & Market Intelligence";
+    const socialDescription =
+      options.description ||
+      "Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.";
+    const socialImage = resolveAbsoluteImageUrl(options.image || DEFAULT_MARKET_OG_IMAGE_PATH, SITE_URL);
+    const socialImageAlt =
+      options.imageAlt || "AmaanEstate — Global Real Estate Media, Research & Market Intelligence";
+
+    tags.push(`<meta property="og:type" content="${escapeHtml(options.ogType || "website")}" />`);
+    tags.push(`<meta property="og:title" content="${escapeHtml(socialTitle)}" />`);
+    tags.push(`<meta property="og:description" content="${escapeHtml(socialDescription)}" />`);
+    tags.push(`<meta property="og:image" content="${escapeHtml(socialImage)}" />`);
+    tags.push(`<meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}" />`);
+    tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
+    tags.push(`<meta name="twitter:site" content="@amaanestate" />`);
+    tags.push(`<meta name="twitter:title" content="${escapeHtml(socialTitle)}" />`);
+    tags.push(`<meta name="twitter:description" content="${escapeHtml(socialDescription)}" />`);
+    tags.push(`<meta name="twitter:image" content="${escapeHtml(socialImage)}" />`);
+    tags.push(`<meta name="twitter:image:alt" content="${escapeHtml(socialImageAlt)}" />`);
   }
 
   return html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`);
@@ -2375,20 +2409,29 @@ app.get("/global-markets/:countrySlug", async (req, res) => {
     );
   }
 
-  const { countrySummary } = countryData;
+  const { countrySummary, primaryReport } = countryData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = `${baseUrl}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`;
   const coverageLabel =
     countrySummary.cityCount > 0
       ? `${countrySummary.reportCount} ${countrySummary.reportCount === 1 ? "report" : "reports"} across ${countrySummary.cityCount} ${countrySummary.cityCount === 1 ? "city" : "cities"}`
       : `${countrySummary.reportCount} verified ${countrySummary.reportCount === 1 ? "report" : "reports"}`;
+  const pageTitle = `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`;
+  const socialMeta = resolveMarketSocialImageMetadata({
+    report: primaryReport,
+    fallbackTitle: `${countrySummary.countryName} Real Estate Market Overview`,
+  });
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
-    title: `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`,
+    title: pageTitle,
     description: stripHtml(
       `Explore ${countrySummary.countryName} real estate market overview (${coverageLabel}), residential price trends, rental indicators, and published market research.`
     ).slice(0, 160),
+    ogType: "website",
+    image: socialMeta.image,
+    imageAlt: socialMeta.imageAlt,
+    includeSocialMeta: true,
   });
   return sendHtmlPage(req, res, 200, html);
 });
@@ -2424,15 +2467,24 @@ app.get("/global-markets/:countrySlug/:reportSlug", async (req, res) => {
   const { report, allCountryReports } = reportData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = resolveReportCanonicalUrl(report, allCountryReports, baseUrl);
+  const pageTitle = report.seo_title || `${report.title} | AmaanEstate`;
+  const socialMeta = resolveMarketSocialImageMetadata({
+    report,
+    fallbackTitle: report.title,
+  });
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
-    title: report.seo_title || `${report.title} | AmaanEstate`,
+    title: pageTitle,
     description: stripHtml(
       report.seo_description ||
         report.market_overview ||
         `Market intelligence, property price trends, and rental insights for ${report.city_name || report.country_name}.`
     ).slice(0, 160),
+    ogType: "article",
+    image: socialMeta.image,
+    imageAlt: socialMeta.imageAlt,
+    includeSocialMeta: true,
   });
   return sendHtmlPage(req, res, 200, html);
 });

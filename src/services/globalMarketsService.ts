@@ -7,6 +7,7 @@ import {
   getMarketPublishReadiness,
   isMeaningfulMarketReport,
   isValidHttpUrl,
+  isValidHttpsUrl,
   normalizeNullableNumber,
   pickPrimaryCountryReport,
   slugifyMarketSegment,
@@ -73,6 +74,8 @@ export interface SaveGlobalMarketInput {
   last_verified_at?: string | null;
   cover_image?: string | null;
   cover_image_alt?: string | null;
+  social_image?: string | null;
+  social_image_alt?: string | null;
   status: PublicationStatus;
   is_featured: boolean;
   seo_title?: string | null;
@@ -121,6 +124,8 @@ export function normalizeGlobalMarketRow(row: any): GlobalMarketReport {
     last_verified_at: row.last_verified_at ? String(row.last_verified_at).slice(0, 10) : null,
     cover_image: row.cover_image ? String(row.cover_image).trim() : null,
     cover_image_alt: row.cover_image_alt ? String(row.cover_image_alt).trim() : null,
+    social_image: row.social_image ? String(row.social_image).trim() : null,
+    social_image_alt: row.social_image_alt ? String(row.social_image_alt).trim() : null,
     status: (row.status as PublicationStatus) || 'draft',
     is_featured: Boolean(row.is_featured),
     seo_title: row.seo_title ? String(row.seo_title).trim() : null,
@@ -457,6 +462,12 @@ function buildPreparedMarketPayload(input: SaveGlobalMarketInput): {
   if (input.data_source_url?.trim() && !isValidHttpUrl(input.data_source_url)) {
     return { ok: false, error: 'Data Source URL must start with http:// or https://.' };
   }
+  if (input.social_image?.trim() && !isValidHttpsUrl(input.social_image)) {
+    return {
+      ok: false,
+      error: 'Social Sharing Image URL must be a valid publicly accessible https:// URL.',
+    };
+  }
   if (input.canonical_url?.trim() && !isValidHttpUrl(input.canonical_url)) {
     return { ok: false, error: 'Canonical URL override must start with http:// or https://.' };
   }
@@ -493,6 +504,7 @@ function buildPreparedMarketPayload(input: SaveGlobalMarketInput): {
     data_source_url: input.data_source_url?.trim() || null,
     data_period: input.data_period.trim(),
     last_verified_at: input.last_verified_at?.trim() || null,
+    social_image: input.social_image?.trim() || null,
     canonical_url: input.canonical_url?.trim() || null,
   };
 
@@ -539,6 +551,8 @@ function buildPreparedMarketPayload(input: SaveGlobalMarketInput): {
       last_verified_at: input.last_verified_at?.trim() || null,
       cover_image: input.cover_image?.trim() || null,
       cover_image_alt: input.cover_image_alt?.trim() || null,
+      social_image: input.social_image?.trim() || null,
+      social_image_alt: input.social_image_alt?.trim() || null,
       status: input.status,
       is_featured: Boolean(input.is_featured),
       seo_title: input.seo_title?.trim() || null,
@@ -553,6 +567,16 @@ function buildPreparedMarketPayload(input: SaveGlobalMarketInput): {
         : {}),
     },
   };
+}
+
+function isMissingSocialImageColumnError(error: any): boolean {
+  if (!error) return false;
+  const code = String(error.code || '');
+  const message = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`;
+  return (
+    (code === 'PGRST204' || code === '42703') &&
+    /social_image(_alt)?/i.test(message)
+  );
 }
 
 export async function saveGlobalMarket(
@@ -612,30 +636,46 @@ export async function saveGlobalMarket(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (input.id) {
-    const { data, error } = await supabase
+  const runPersist = async (payloadToWrite: Record<string, any>) => {
+    if (input.id) {
+      return supabase
+        .from('global_markets')
+        .update(payloadToWrite)
+        .eq('id', input.id)
+        .select('*')
+        .single();
+    }
+    return supabase
       .from('global_markets')
-      .update(rowPayload)
-      .eq('id', input.id)
+      .insert({ ...payloadToWrite, created_by: user?.id || null })
       .select('*')
       .single();
+  };
 
-    if (error || !data) {
-      return { success: false, error: error?.message || 'Unable to update market report.' };
+  let { data, error } = await runPersist(rowPayload);
+
+  if (error && isMissingSocialImageColumnError(error)) {
+    if (!rowPayload.social_image && !rowPayload.social_image_alt) {
+      const legacyPayload = { ...rowPayload };
+      delete legacyPayload.social_image;
+      delete legacyPayload.social_image_alt;
+      ({ data, error } = await runPersist(legacyPayload));
+    } else {
+      return {
+        success: false,
+        error:
+          'Database columns "social_image" / "social_image_alt" are missing. Run supabase/migrations/20261125000000_add_global_markets_social_image.sql in Supabase SQL Editor first.',
+      };
     }
-    notifyGlobalMarketsUpdated();
-    return { success: true, report: normalizeGlobalMarketRow(data) };
   }
 
-  rowPayload.created_by = user?.id || null;
-  const { data, error } = await supabase
-    .from('global_markets')
-    .insert(rowPayload)
-    .select('*')
-    .single();
-
   if (error || !data) {
-    return { success: false, error: error?.message || 'Unable to create market report.' };
+    return {
+      success: false,
+      error:
+        error?.message ||
+        (input.id ? 'Unable to update market report.' : 'Unable to create market report.'),
+    };
   }
   notifyGlobalMarketsUpdated();
   return { success: true, report: normalizeGlobalMarketRow(data) };

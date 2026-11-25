@@ -130,6 +130,66 @@ export function isValidHttpUrl(rawUrl?: string | null): boolean {
   }
 }
 
+export function isValidHttpsUrl(rawUrl?: string | null): boolean {
+  const cleaned = (rawUrl || '').trim();
+  if (!cleaned) return false;
+  try {
+    const parsed = new URL(cleaned);
+    return parsed.protocol === 'https:' && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+export const DEFAULT_MARKET_OG_IMAGE_PATH = '/images/articles/sovereign-capital-logistics-corridors.jpg';
+export const DEFAULT_MARKET_OG_IMAGE_ALT =
+  'AmaanEstate — Global Real Estate Media, Research & Market Intelligence';
+
+export function resolveMarketSocialImageMetadata(params: {
+  report?: Pick<
+    GlobalMarketReport,
+    'social_image' | 'social_image_alt' | 'cover_image' | 'cover_image_alt' | 'title'
+  > | null;
+  fallbackTitle?: string;
+}): {
+  image?: string;
+  imageAlt?: string;
+  source: 'social_image' | 'cover_image' | 'default';
+} {
+  const report = params.report;
+  const fallbackTitle = (params.fallbackTitle || report?.title || '').trim();
+  const dedicatedSocialUrl = (report?.social_image || '').trim();
+  const coverImageUrl = (report?.cover_image || '').trim();
+
+  if (dedicatedSocialUrl && isValidHttpsUrl(dedicatedSocialUrl)) {
+    return {
+      image: dedicatedSocialUrl,
+      imageAlt:
+        (report?.social_image_alt || '').trim() ||
+        fallbackTitle ||
+        DEFAULT_MARKET_OG_IMAGE_ALT,
+      source: 'social_image',
+    };
+  }
+
+  if (coverImageUrl) {
+    return {
+      image: coverImageUrl,
+      imageAlt:
+        (report?.cover_image_alt || '').trim() ||
+        fallbackTitle ||
+        DEFAULT_MARKET_OG_IMAGE_ALT,
+      source: 'cover_image',
+    };
+  }
+
+  return {
+    image: undefined,
+    imageAlt: undefined,
+    source: 'default',
+  };
+}
+
 export function normalizeNullableNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
   const num = Number(value);
@@ -272,6 +332,10 @@ export function getMarketPublishReadiness(
 
   if (sourceUrl && !isValidHttpUrl(sourceUrl)) {
     issues.push('Data source URL must be a valid http:// or https:// link.');
+  }
+
+  if (report.social_image && report.social_image.trim() && !isValidHttpsUrl(report.social_image)) {
+    issues.push('Social Sharing Image URL must be a valid public https:// URL.');
   }
 
   if (report.canonical_url && report.canonical_url.trim() && !isValidHttpUrl(report.canonical_url)) {
@@ -441,6 +505,10 @@ export function aggregateCountrySummaries(
       latestDataPeriod: latestDataPeriod || primary.data_period || null,
       coverImage,
       coverImageAlt,
+      socialImage: primary.social_image ? primary.social_image.trim() : null,
+      socialImageAlt: primary.social_image_alt ? primary.social_image_alt.trim() : null,
+      primaryCoverImage: primary.cover_image ? primary.cover_image.trim() : null,
+      primaryCoverImageAlt: primary.cover_image_alt ? primary.cover_image_alt.trim() : null,
       primaryReportSlug: primary.slug,
       primaryTitle: primary.title,
       primaryOverview: primary.market_overview || primary.market_analysis || primary.investment_insights,

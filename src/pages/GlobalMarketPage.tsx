@@ -23,6 +23,7 @@ import {
 import {
   formatMarketCurrency,
   formatMarketDateLabel,
+  resolveMarketSocialImageMetadata,
   resolveReportCanonicalUrl,
 } from '../lib/globalMarkets';
 import { resolveEditorialImage } from '../lib/editorialImages';
@@ -57,6 +58,7 @@ export default function GlobalMarketPage() {
   const [loading, setLoading] = useState(true);
   const [countrySummary, setCountrySummary] = useState<GlobalMarketCountrySummary | null>(null);
   const [allCountryReports, setAllCountryReports] = useState<GlobalMarketReport[]>([]);
+  const [primaryReport, setPrimaryReport] = useState<GlobalMarketReport | null>(null);
   const [activeReport, setActiveReport] = useState<GlobalMarketReport | null>(null);
   const [relatedReports, setRelatedReports] = useState<GlobalMarketReport[]>([]);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
@@ -83,6 +85,7 @@ export default function GlobalMarketPage() {
           if (!res) {
             setCountrySummary(null);
             setAllCountryReports([]);
+            setPrimaryReport(null);
             setActiveReport(null);
             setRelatedReports([]);
             setRelatedArticles([]);
@@ -90,6 +93,7 @@ export default function GlobalMarketPage() {
           }
           setCountrySummary(res.countrySummary);
           setAllCountryReports([res.report, ...res.siblingReports]);
+          setPrimaryReport(null);
           setActiveReport(res.report);
           setRelatedReports(res.siblingReports);
 
@@ -110,6 +114,7 @@ export default function GlobalMarketPage() {
           if (!res) {
             setCountrySummary(null);
             setAllCountryReports([]);
+            setPrimaryReport(null);
             setActiveReport(null);
             setRelatedReports([]);
             setRelatedArticles([]);
@@ -117,6 +122,7 @@ export default function GlobalMarketPage() {
           }
           setCountrySummary(res.countrySummary);
           setAllCountryReports(res.allReports);
+          setPrimaryReport(res.primaryReport);
           setActiveReport(null);
           setRelatedReports(res.allReports);
 
@@ -133,6 +139,7 @@ export default function GlobalMarketPage() {
         if (!active) return;
         setCountrySummary(null);
         setAllCountryReports([]);
+        setPrimaryReport(null);
         setActiveReport(null);
         setRelatedReports([]);
       } finally {
@@ -194,13 +201,30 @@ export default function GlobalMarketPage() {
       )
     : 'Real estate market intelligence, residential price trends, and rental research on AmaanEstate.';
 
-  const seoImage = isReportView
-    ? activeReport?.cover_image || undefined
-    : countrySummary?.coverImage || undefined;
-  const seoImageAlt = isReportView
-    ? activeReport?.cover_image_alt || activeReport?.title
-    : countrySummary?.coverImageAlt ||
-      (countrySummary ? `${countrySummary.countryName} Real Estate Market Overview` : undefined);
+  const socialImageResolution = isReportView
+    ? resolveMarketSocialImageMetadata({
+        report: activeReport,
+        fallbackTitle: activeReport?.title,
+      })
+    : resolveMarketSocialImageMetadata({
+        report:
+          primaryReport ||
+          (countrySummary
+            ? {
+                social_image: countrySummary.socialImage,
+                social_image_alt: countrySummary.socialImageAlt,
+                cover_image: countrySummary.primaryCoverImage,
+                cover_image_alt: countrySummary.primaryCoverImageAlt,
+                title: countrySummary.primaryTitle,
+              }
+            : null),
+        fallbackTitle: countrySummary
+          ? `${countrySummary.countryName} Real Estate Market Overview`
+          : undefined,
+      });
+
+  const seoImage = socialImageResolution.image;
+  const seoImageAlt = socialImageResolution.imageAlt;
 
   useSEO({
     title: seoTitle,

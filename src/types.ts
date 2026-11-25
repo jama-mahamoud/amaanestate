@@ -517,6 +517,8 @@ export interface GlobalMarketReport {
   last_verified_at?: string | null;
   cover_image?: string | null;
   cover_image_alt?: string | null;
+  social_image?: string | null;
+  social_image_alt?: string | null;
   status: PublicationStatus;
   is_featured: boolean;
   seo_title?: string | null;
@@ -540,6 +542,10 @@ export interface GlobalMarketCountrySummary {
   latestDataPeriod?: string | null;
   coverImage?: string | null;
   coverImageAlt?: string | null;
+  socialImage?: string | null;
+  socialImageAlt?: string | null;
+  primaryCoverImage?: string | null;
+  primaryCoverImageAlt?: string | null;
   primaryReportSlug?: string | null;
   primaryTitle: string;
   primaryOverview: string;

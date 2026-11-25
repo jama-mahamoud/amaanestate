@@ -34,6 +34,7 @@ import {
   formatMarketDateLabel,
   formatMarketTrend,
   getMarketPublishReadiness,
+  isValidHttpsUrl,
   slugifyMarketSegment,
 } from '../../lib/globalMarkets';
 import { AUTHORIZED_PUBLIC_DATA_SOURCES } from '../../lib/marketDataSources';
@@ -82,6 +83,8 @@ const EMPTY_FORM: SaveGlobalMarketInput = {
   last_verified_at: new Date().toISOString().slice(0, 10),
   cover_image: '',
   cover_image_alt: '',
+  social_image: '',
+  social_image_alt: '',
   status: 'draft',
   is_featured: false,
   seo_title: '',
@@ -107,6 +110,7 @@ export default function AdminGlobalMarketsSection({
   const [saving, setSaving] = useState(false);
 
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [socialPreviewError, setSocialPreviewError] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GlobalMarketReport | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -192,6 +196,7 @@ export default function AdminGlobalMarketsSection({
         data_source_url: form.data_source_url,
         data_period: form.data_period,
         last_verified_at: form.last_verified_at,
+        social_image: form.social_image,
         canonical_url: form.canonical_url,
       }),
     [form]
@@ -222,6 +227,7 @@ export default function AdminGlobalMarketsSection({
       ...EMPTY_FORM,
       last_verified_at: new Date().toISOString().slice(0, 10),
     });
+    setSocialPreviewError(false);
     setSlugTouched(false);
     setEditorOpen(true);
   };
@@ -253,6 +259,8 @@ export default function AdminGlobalMarketsSection({
       last_verified_at: report.last_verified_at || '',
       cover_image: report.cover_image || '',
       cover_image_alt: report.cover_image_alt || '',
+      social_image: report.social_image || '',
+      social_image_alt: report.social_image_alt || '',
       status: report.status,
       is_featured: report.is_featured,
       seo_title: report.seo_title || '',
@@ -260,6 +268,7 @@ export default function AdminGlobalMarketsSection({
       canonical_url: report.canonical_url || '',
       published_at: report.published_at || null,
     });
+    setSocialPreviewError(false);
     setSlugTouched(true);
     setEditorOpen(true);
   };
@@ -1479,10 +1488,114 @@ export default function AdminGlobalMarketsSection({
                 </div>
               </div>
 
-              {/* Section 5: SEO & URL Slugs */}
+              {/* Section 5: Social Media Sharing Image (URL Input Only) */}
               <div className="space-y-4">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
-                  5. Search Engine Optimization &amp; Canonical URL
+                  5. Social Media Sharing Image
+                </h3>
+                <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-semibold text-[#141413]">
+                        Open Graph &amp; Social Link Preview URL
+                      </p>
+                      <p className="text-[11px] text-[#5C5A55] mt-0.5">
+                        Paste a publicly accessible HTTPS image URL. Recommended image dimensions: 1200 &times; 630 pixels (1.91:1).
+                      </p>
+                    </div>
+                    {(form.social_image || form.social_image_alt) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSocialPreviewError(false);
+                          setForm((prev) => ({
+                            ...prev,
+                            social_image: '',
+                            social_image_alt: '',
+                          }));
+                        }}
+                        className="min-h-[36px] px-2.5 py-1 text-xs font-semibold text-[#991B1B] hover:underline cursor-pointer"
+                      >
+                        Clear URL
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                    {form.social_image?.trim() && isValidHttpsUrl(form.social_image) && !socialPreviewError ? (
+                      <img
+                        src={form.social_image.trim()}
+                        alt={
+                          form.social_image_alt?.trim() ||
+                          form.title ||
+                          'Social sharing image preview'
+                        }
+                        referrerPolicy="no-referrer"
+                        onError={() => setSocialPreviewError(true)}
+                        className="w-full aspect-[1.91/1] object-cover rounded border border-[#E5E0D8] bg-[#EBE6DF]"
+                      />
+                    ) : (
+                      <div className="w-full aspect-[1.91/1] rounded border border-dashed border-[#D6CEBE] bg-white px-3 flex items-center justify-center text-center text-[11px] text-[#7A7770]">
+                        {form.social_image?.trim()
+                          ? !isValidHttpsUrl(form.social_image)
+                            ? 'Enter a valid https:// image URL to preview'
+                            : 'Preview could not be loaded from URL'
+                          : 'Defaults to Cover Image or site OG image'}
+                      </div>
+                    )}
+
+                    <div className="sm:col-span-2 space-y-2.5">
+                      <div>
+                        <label
+                          htmlFor="gm-social-image-url"
+                          className="block text-[11px] font-semibold text-[#5C5A55] mb-1"
+                        >
+                          Social Sharing Image URL (Optional)
+                        </label>
+                        <input
+                          id="gm-social-image-url"
+                          type="url"
+                          value={form.social_image || ''}
+                          onChange={(e) => {
+                            setSocialPreviewError(false);
+                            setForm((prev) => ({ ...prev, social_image: e.target.value }));
+                          }}
+                          placeholder="https://example.com/images/global-market-share-1200x630.jpg"
+                          className="w-full h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs font-mono"
+                        />
+                        {form.social_image?.trim() && !isValidHttpsUrl(form.social_image) && (
+                          <p className="mt-1 text-[11px] text-[#991B1B]">
+                            Enter an absolute HTTPS URL starting with https://
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="gm-social-image-alt"
+                          className="block text-[11px] font-semibold text-[#5C5A55] mb-1"
+                        >
+                          Social Sharing Image Alt Text (Optional)
+                        </label>
+                        <input
+                          id="gm-social-image-alt"
+                          type="text"
+                          value={form.social_image_alt || ''}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, social_image_alt: e.target.value }))
+                          }
+                          placeholder="Descriptive alt text for Facebook, LinkedIn, WhatsApp & X link previews"
+                          className="w-full h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 6: SEO & URL Slugs */}
+              <div className="space-y-4">
+                <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
+                  6. Search Engine Optimization &amp; Canonical URL
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
