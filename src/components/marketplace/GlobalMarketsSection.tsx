@@ -9,10 +9,7 @@ import {
   GLOBAL_MARKETS_UPDATED_EVENT,
   getPublishedMarketCountries,
 } from '../../services/globalMarketsService';
-import {
-  formatMarketDateLabel,
-  getHomepageCountryTargetHref,
-} from '../../lib/globalMarkets';
+import { getHomepageCountryTargetHref } from '../../lib/globalMarkets';
 import CountryMapCover from './CountryMapCover';
 import MarketTrendIndicator from './MarketTrendIndicator';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
@@ -21,7 +18,7 @@ function serializeCountrySummaries(list: GlobalMarketCountrySummary[]): string {
   return list
     .map(
       (c) =>
-        `${c.countrySlug}:${c.countryCode}:${c.reportCount}:${c.cityCount}:${c.primaryReportSlug ?? ''}:${c.propertyPriceTrendPct ?? ''}:${c.propertyPriceTrendDir ?? ''}:${c.latestUpdatedAt ?? ''}`
+        `${c.countrySlug}:${c.countryCode}:${c.reportCount}:${c.cityCount}:${c.primaryReportSlug ?? ''}:${c.propertyPriceTrendPct ?? ''}:${c.propertyPriceTrendDir ?? ''}:${c.rentalPriceTrendPct ?? ''}:${c.rentalPriceTrendDir ?? ''}:${c.latestDataPeriod ?? ''}:${c.latestUpdatedAt ?? ''}`
     )
     .join('|');
 }
@@ -233,20 +230,23 @@ export default function GlobalMarketsSection() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap gap-3.5 sm:gap-4 lg:overflow-hidden py-0.5">
-            {Array.from({ length: 4 }).map((_, idx) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-nowrap gap-3 sm:gap-3.5 lg:overflow-hidden py-0.5">
+            {Array.from({ length: 5 }).map((_, idx) => (
               <div
                 key={idx}
-                className="w-full lg:shrink-0 lg:w-[264px] bg-white border border-[#E5E0D8] rounded-md overflow-hidden animate-pulse"
+                className="w-full lg:shrink-0 lg:w-[240px] bg-white border border-[#E5E0D8] rounded-md overflow-hidden animate-pulse"
               >
                 <div className="aspect-[16/9] w-full bg-[#0A182B]" />
-                <div className="p-3.5 sm:p-4 space-y-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-3.5 rounded-[2px] bg-[#EBE6DF] shrink-0" />
-                    <div className="h-4 w-28 rounded bg-[#EBE6DF]" />
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-3 rounded-[2px] bg-[#EBE6DF] shrink-0" />
+                    <div className="h-4 w-24 rounded bg-[#EBE6DF]" />
                   </div>
-                  <div className="h-3 w-24 rounded bg-[#EBE6DF]" />
-                  <div className="h-7 w-full rounded bg-[#FAF8F5]" />
+                  <div className="h-3 w-20 rounded bg-[#EBE6DF]" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-11 rounded bg-[#FAF8F5]" />
+                    <div className="h-11 rounded bg-[#FAF8F5]" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -256,7 +256,7 @@ export default function GlobalMarketsSection() {
             ref={scrollRef}
             role="list"
             aria-label="International real estate market intelligence by country"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap items-stretch gap-3.5 sm:gap-4 lg:overflow-x-auto lg:snap-x lg:snap-mandatory lg:scroll-smooth lg:no-scrollbar py-0.5"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-nowrap items-stretch gap-3 sm:gap-3.5 lg:overflow-x-auto lg:snap-x lg:snap-mandatory lg:scroll-smooth lg:no-scrollbar py-0.5"
           >
             <AnimatePresence initial={true}>
               {countries.map((item, index) => {
@@ -268,13 +268,6 @@ export default function GlobalMarketsSection() {
                 const reportCountLabel = `${item.reportCount} ${
                   item.reportCount === 1 ? 'Report' : 'Reports'
                 }`;
-
-                const updatedLabel = formatMarketDateLabel(item.latestUpdatedAt);
-                const updateDisplay = updatedLabel
-                  ? `Verified ${updatedLabel}`
-                  : item.latestDataPeriod
-                  ? `Period: ${item.latestDataPeriod}`
-                  : 'Verified Research';
 
                 return (
                   <motion.div
@@ -293,7 +286,7 @@ export default function GlobalMarketsSection() {
                       },
                       layout: { duration: 0.32, ease: [0.16, 1, 0.3, 1] },
                     }}
-                    className="w-full lg:w-[264px] lg:shrink-0 lg:snap-start min-w-0"
+                    className="w-full lg:w-[240px] lg:shrink-0 lg:snap-start min-w-0"
                   >
                     <Link
                       to={targetHref}
@@ -304,50 +297,61 @@ export default function GlobalMarketsSection() {
                         countryName={item.countryName}
                       />
 
-                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-3 min-w-0">
-                        <div className="space-y-2.5 min-w-0">
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
+                      <div className="p-3 flex-1 flex flex-col justify-between gap-2 min-w-0">
+                        <div className="space-y-2 min-w-0">
+                          <div className="space-y-0.5 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               {hasValidIsoCode ? (
                                 <span
-                                  className={`fi fi-${isoCode} w-5 h-[14px] rounded-[2px] ring-1 ring-black/15 shrink-0`}
+                                  className={`fi fi-${isoCode} w-4 h-3 rounded-[2px] ring-1 ring-black/15 shrink-0`}
                                   aria-hidden="true"
                                 />
                               ) : (
                                 <Globe2
-                                  size={16}
+                                  size={14}
                                   className="text-[#8C4A27] shrink-0"
                                   aria-hidden="true"
                                 />
                               )}
-                              <h3 className="font-serif font-semibold text-base leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors truncate">
+                              <h3 className="font-serif font-semibold text-[15px] leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors truncate">
                                 {item.countryName}
                               </h3>
                             </div>
 
-                            <p className="text-[11px] text-[#5C5A55] tabular-nums">
+                            <p className="text-[11px] leading-tight text-[#5C5A55] tabular-nums truncate">
                               {reportCountLabel}
                               {item.cityCount > 0
                                 ? ` · ${item.cityCount} ${item.cityCount === 1 ? 'City' : 'Cities'}`
                                 : ''}
+                              {item.latestDataPeriod ? ` · ${item.latestDataPeriod}` : ''}
                             </p>
                           </div>
 
-                          <div className="pt-2 border-t border-[#F0ECE1]">
-                            <MarketTrendIndicator
-                              pct={item.propertyPriceTrendPct}
-                              dir={item.propertyPriceTrendDir}
-                              label="Residential Price Trend"
-                              variant="card"
-                            />
+                          <div className="pt-2 border-t border-[#F0ECE1] grid grid-cols-2 gap-2">
+                            <div className="bg-[#FAF8F5]/80 border border-[#F0ECE1] rounded px-2 py-1.5 min-w-0">
+                              <MarketTrendIndicator
+                                pct={item.propertyPriceTrendPct}
+                                dir={item.propertyPriceTrendDir}
+                                label="Residential Price Trend"
+                                variant="card"
+                              />
+                            </div>
+                            <div className="bg-[#FAF8F5]/80 border border-[#F0ECE1] rounded px-2 py-1.5 min-w-0">
+                              <MarketTrendIndicator
+                                pct={item.rentalPriceTrendPct}
+                                dir={item.rentalPriceTrendDir}
+                                label="Rental Market Trend"
+                                variant="card"
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        <div className="pt-2.5 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs min-h-[26px]">
+                        <div className="pt-1.5 border-t border-[#F0ECE1] flex items-center justify-between gap-2 min-h-[20px]">
                           <span className="text-[10px] text-[#7A7770] truncate">
-                            {updateDisplay}
+                            Market Outlook
                           </span>
-                          <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0 whitespace-nowrap text-xs">
+                          <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0 whitespace-nowrap text-[11px]">
                             View Report &rarr;
                           </span>
                         </div>

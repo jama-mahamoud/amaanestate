@@ -139,22 +139,22 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
-      {/* Clean Single-Row Editorial Header */}
+      {/* Clean Responsive Editorial Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E5E0D8]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-[72px] flex items-center justify-between gap-2 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-[72px] lg:h-auto xl:h-[72px] flex items-center justify-between lg:flex-wrap xl:flex-nowrap gap-x-2 sm:gap-x-6 xl:gap-x-5 2xl:gap-x-6 gap-y-0">
           {/* Zone 1: Official AmaanEstate Logo */}
           <Link
             to="/"
             aria-label="AmaanEstate — Global Real Estate Media, Research & Market Intelligence"
-            className="inline-flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
+            className="order-1 inline-flex items-center shrink-0 lg:py-1.5 xl:py-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
           >
-            <BrandLogo variant="header" />
+            <BrandLogo variant="header" className="lg:h-[56px] xl:h-[64px]" />
           </Link>
 
-          {/* Zone 2: Clean Typographic Navigation */}
+          {/* Zone 2: Clean Typographic Navigation (two-tier rail on 1024px-1279px, single-row inline on 1280px+) */}
           <nav
             aria-label="Primary navigation"
-            className="hidden xl:flex items-center gap-4 2xl:gap-6 text-[13px] 2xl:text-sm font-medium text-[#5C5A55]"
+            className="hidden lg:flex lg:order-3 xl:order-2 lg:basis-full xl:basis-auto lg:w-full xl:w-auto items-center lg:justify-center xl:justify-start lg:gap-5 xl:gap-4 2xl:gap-5 lg:border-t lg:border-[#E5E0D8]/80 xl:border-t-0 lg:py-2 xl:py-0 text-[13px] font-medium text-[#5C5A55]"
           >
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -175,12 +175,12 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Zone 3: Search Action + Auth Login / Account Action + Mobile/Tablet Drawer Trigger */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="order-2 xl:order-3 flex items-center gap-1.5 sm:gap-2.5 shrink-0 lg:py-1.5 xl:py-0">
             <Link
               to="/search"
               aria-label="Search articles"
               title="Search editorial archive"
-              className="hidden sm:inline-flex items-center justify-center gap-1.5 min-h-[44px] xl:min-h-0 px-3 xl:px-2.5 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-3 xl:px-2.5 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
             >
               <Search size={14} />
               <span className="xl:hidden">Search</span>
@@ -193,7 +193,7 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => setUserMenuOpen((o) => !o)}
                   aria-expanded={userMenuOpen}
                   aria-label="Account menu"
-                  className="inline-flex items-center justify-center gap-1.5 min-h-[44px] xl:min-h-0 px-2.5 sm:px-3 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-2.5 sm:px-3 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <User size={14} />
                   <span className="max-w-[76px] sm:max-w-[96px] truncate">{displayName}</span>
@@ -243,7 +243,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 to="/login"
                 aria-label="Login or create account"
-                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] xl:min-h-0 px-3 sm:px-3.5 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-3 sm:px-3.5 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0"
               >
                 <User size={14} />
                 <span>Login</span>
@@ -255,7 +255,7 @@ export default function Layout({ children }: LayoutProps) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
-              className="xl:hidden min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-[#141413] hover:bg-[#EBE6DF] rounded transition-colors cursor-pointer"
+              className="lg:hidden min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-[#141413] hover:bg-[#EBE6DF] rounded transition-colors cursor-pointer"
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -264,7 +264,7 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Mobile / Tablet Navigation Panel */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-4 space-y-3 max-h-[calc(100dvh-3.5rem)] sm:max-h-[calc(100dvh-4.5rem)] overflow-y-auto shadow-lg">
+          <div className="lg:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-4 space-y-3 max-h-[calc(100dvh-3.5rem)] sm:max-h-[calc(100dvh-4.5rem)] overflow-y-auto shadow-lg">
             <nav aria-label="Mobile navigation" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 sm:gap-2">
               {NAV_LINKS.map((link) => (
                 <NavLink

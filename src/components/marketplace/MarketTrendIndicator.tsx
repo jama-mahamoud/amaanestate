@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React from 'react';
 import { MarketTrendDirection } from '../../types';
 import { formatMarketTrend, resolveMarketTrendDirection } from '../../lib/globalMarkets';
 
@@ -11,16 +11,15 @@ export interface MarketTrendIndicatorProps {
   className?: string;
 }
 
-// Smooth S-shaped snake-like curved financial trend paths inside a 96x32 canvas
-const UP_PATH = 'M 6 25 C 22 25, 34 19, 48 16 C 62 13, 76 10, 90 7';
-const UP_AREA_PATH = `${UP_PATH} L 90 28 L 6 28 Z`;
-const UP_ARROW_PATH = 'M 82 7.5 Q 86 7.2 90 7 Q 87.5 10.5 86 13.5';
+// Compact zigzag arrow paths inside a 20x14 canvas:
+// short horizontal start -> diagonal move -> small zigzag counter-step -> diagonal continuation -> simple arrowhead
+const UP_ZIGZAG_ARROW_STEM = 'M 1.5 11.5 H 4.5 L 9 5.5 L 12 8.5 L 18 2.5';
+const UP_ZIGZAG_ARROW_HEAD = 'M 14.2 2.5 H 18 V 6.3';
 
-const DOWN_PATH = 'M 6 7 C 22 7, 34 13, 48 16 C 62 19, 76 22, 90 25';
-const DOWN_AREA_PATH = `${DOWN_PATH} L 90 28 L 6 28 Z`;
-const DOWN_ARROW_PATH = 'M 82 24.5 Q 86 24.8 90 25 Q 87.5 21.5 86 18.5';
+const DOWN_ZIGZAG_ARROW_STEM = 'M 1.5 2.5 H 4.5 L 9 8.5 L 12 5.5 L 18 11.5';
+const DOWN_ZIGZAG_ARROW_HEAD = 'M 14.2 11.5 H 18 V 7.7';
 
-const FLAT_PATH = 'M 6 16 C 24 14, 42 18, 60 16 C 72 15, 82 16, 90 16';
+const FLAT_TREND_LINE = 'M 2 7 H 18';
 
 export function CurvedTrendSparkline({
   pct,
@@ -33,121 +32,73 @@ export function CurvedTrendSparkline({
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
-  const uid = useId().replace(/:/g, '');
   const state = resolveMarketTrendDirection(pct, dir);
 
   const sizeClass =
-    size === 'lg'
-      ? 'w-24 sm:w-28 h-10'
-      : size === 'sm'
-      ? 'w-12 h-5'
-      : 'w-[58px] sm:w-[68px] h-[22px] sm:h-[26px]';
+    size === 'lg' ? 'w-[22px] h-[15px]' : 'w-[19px] h-[13px]';
 
-  const strokeGradId = `ae-trend-stroke-${uid}`;
-  const areaGradId = `ae-trend-area-${uid}`;
-
-  if (state === 'up') {
-    return (
-      <svg
-        viewBox="0 0 96 32"
-        fill="none"
-        aria-hidden="true"
-        className={`${sizeClass} shrink-0 overflow-visible ${className}`}
-        style={{ filter: 'drop-shadow(0 1px 3px rgba(22, 163, 74, 0.2))' }}
-      >
-        <defs>
-          <linearGradient id={strokeGradId} x1="6" y1="25" x2="90" y2="7" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#15803D" />
-            <stop offset="100%" stopColor="#22C55E" />
-          </linearGradient>
-          <linearGradient id={areaGradId} x1="0" y1="7" x2="0" y2="28" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#16A34A" stopOpacity="0.14" />
-            <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        <path d={UP_AREA_PATH} fill={`url(#${areaGradId})`} />
-
-        {/* Primary S-curved snake line */}
-        <path
-          d={UP_PATH}
-          stroke={`url(#${strokeGradId})`}
-          strokeWidth="2.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Small refined arrowhead */}
-        <path
-          d={UP_ARROW_PATH}
-          stroke="#16A34A"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
+  if (state === 'none') {
+    return null;
   }
 
-  if (state === 'down') {
-    return (
-      <svg
-        viewBox="0 0 96 32"
-        fill="none"
-        aria-hidden="true"
-        className={`${sizeClass} shrink-0 overflow-visible ${className}`}
-        style={{ filter: 'drop-shadow(0 1px 3px rgba(220, 38, 38, 0.2))' }}
-      >
-        <defs>
-          <linearGradient id={strokeGradId} x1="6" y1="7" x2="90" y2="25" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#B91C1C" />
-            <stop offset="100%" stopColor="#EF4444" />
-          </linearGradient>
-          <linearGradient id={areaGradId} x1="0" y1="7" x2="0" y2="28" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#DC2626" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#DC2626" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+  const strokeColor =
+    state === 'up'
+      ? '#16A34A'
+      : state === 'down'
+      ? '#DC2626'
+      : '#64748B';
 
-        <path d={DOWN_AREA_PATH} fill={`url(#${areaGradId})`} />
-
-        {/* Primary S-curved snake line */}
-        <path
-          d={DOWN_PATH}
-          stroke={`url(#${strokeGradId})`}
-          strokeWidth="2.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Small refined arrowhead */}
-        <path
-          d={DOWN_ARROW_PATH}
-          stroke="#DC2626"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
-
-  // Stable / Flat
   return (
     <svg
-      viewBox="0 0 96 32"
+      viewBox="0 0 20 14"
       fill="none"
       aria-hidden="true"
       className={`${sizeClass} shrink-0 overflow-visible ${className}`}
     >
-      <path
-        d={FLAT_PATH}
-        stroke="#64748B"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeOpacity="0.8"
-      />
+      {state === 'up' ? (
+        <>
+          <path
+            d={UP_ZIGZAG_ARROW_STEM}
+            stroke={strokeColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={UP_ZIGZAG_ARROW_HEAD}
+            stroke={strokeColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      ) : state === 'down' ? (
+        <>
+          <path
+            d={DOWN_ZIGZAG_ARROW_STEM}
+            stroke={strokeColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={DOWN_ZIGZAG_ARROW_HEAD}
+            stroke={strokeColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      ) : (
+        <path
+          d={FLAT_TREND_LINE}
+          stroke={strokeColor}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeOpacity="0.75"
+        />
+      )}
     </svg>
   );
 }
@@ -171,7 +122,9 @@ export default function MarketTrendIndicator({
       ? 'text-[#15803D]'
       : state === 'down'
       ? 'text-[#B91C1C]'
-      : 'text-[#475569]';
+      : state === 'flat'
+      ? 'text-[#475569]'
+      : 'text-[#7A7770]';
 
   const directionSrLabel =
     state === 'up'
@@ -191,7 +144,7 @@ export default function MarketTrendIndicator({
       >
         {label && <p className="text-xs font-semibold text-[#5C5A55]">{label}</p>}
         <div
-          className="flex items-center justify-between gap-3 pt-0.5"
+          className="flex items-center gap-2 pt-0.5"
           aria-label={directionSrLabel}
         >
           <span
@@ -220,25 +173,29 @@ export default function MarketTrendIndicator({
   }
 
   return (
-    <div className={`min-w-0 ${className}`}>
+    <div className={`min-w-0 flex flex-col justify-between h-full gap-1 ${className}`}>
       {label && (
-        <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
+        <span className="block text-[9.5px] leading-[1.2] font-medium uppercase tracking-[0.03em] text-[#7A7770]">
           {label}
         </span>
       )}
       <div
-        className="mt-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1"
+        className="flex items-center gap-1.5 min-w-0"
         aria-label={label ? `${label}: ${directionSrLabel}` : directionSrLabel}
       >
         <span
-          className={`font-mono font-semibold text-sm tabular-nums break-words [overflow-wrap:anywhere] ${valueColorClass}`}
+          className={`leading-tight tabular-nums whitespace-nowrap ${
+            state === 'none'
+              ? 'font-sans font-medium text-xs'
+              : 'font-mono font-semibold text-[13px]'
+          } ${valueColorClass}`}
         >
           {displayText}
         </span>
         <CurvedTrendSparkline pct={pct} dir={dir} size="md" />
       </div>
       {subLabel && (
-        <span className="block text-[10px] text-[#7A7770] mt-0.5 truncate">{subLabel}</span>
+        <span className="block text-[10px] text-[#7A7770] truncate">{subLabel}</span>
       )}
     </div>
   );

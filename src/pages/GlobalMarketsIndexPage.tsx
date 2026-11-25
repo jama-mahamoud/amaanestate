@@ -4,10 +4,7 @@ import { Globe2 } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketCountrySummary } from '../types';
 import { getPublishedMarketCountries } from '../services/globalMarketsService';
-import {
-  formatMarketCurrency,
-  formatMarketDateLabel,
-} from '../lib/globalMarkets';
+import { formatMarketCurrency } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 
@@ -107,19 +104,14 @@ export default function GlobalMarketsIndexPage() {
           {countries.map((item) => {
             const iso = (item.countryCode || '').trim().toLowerCase();
             const hasFlag = /^[a-z]{2}$/.test(iso);
-            const hasRentalTrend =
-              item.rentalPriceTrendPct !== null && item.rentalPriceTrendPct !== undefined
-                ? true
-                : Boolean(item.rentalPriceTrendDir);
             const avgSale = formatMarketCurrency(item.avgSalePrice, item.currency);
             const avgRent = formatMarketCurrency(item.avgMonthlyRent, item.currency, '/mo');
-            const updated = formatMarketDateLabel(item.latestUpdatedAt);
 
             return (
               <Link
                 key={item.countrySlug}
                 to={`/global-markets/${encodeURIComponent(item.countrySlug)}`}
-                className="group bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded-md p-4 sm:p-6 min-w-0 flex flex-col justify-between space-y-4 sm:space-y-5 transition-colors"
+                className="group bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded-md p-4 sm:p-5 min-w-0 flex flex-col justify-between space-y-3.5 transition-colors"
               >
                 <div className="space-y-3 min-w-0">
                   <div className="flex items-center justify-between gap-3">
@@ -152,21 +144,23 @@ export default function GlobalMarketsIndexPage() {
                     </p>
                   )}
 
-                  <div className="pt-3 border-t border-[#F0ECE1] grid grid-cols-2 gap-3 text-xs">
-                    <MarketTrendIndicator
-                      pct={item.propertyPriceTrendPct}
-                      dir={item.propertyPriceTrendDir}
-                      label="Price Trend"
-                      variant="card"
-                    />
-                    {(hasRentalTrend || avgRent) && (
+                  <div className="pt-3 border-t border-[#F0ECE1] grid grid-cols-2 gap-2.5 text-xs">
+                    <div className="bg-[#FAF8F5]/80 border border-[#F0ECE1] rounded px-2.5 py-2 min-w-0">
+                      <MarketTrendIndicator
+                        pct={item.propertyPriceTrendPct}
+                        dir={item.propertyPriceTrendDir}
+                        label="Residential Price Trend"
+                        variant="card"
+                      />
+                    </div>
+                    <div className="bg-[#FAF8F5]/80 border border-[#F0ECE1] rounded px-2.5 py-2 min-w-0">
                       <MarketTrendIndicator
                         pct={item.rentalPriceTrendPct}
                         dir={item.rentalPriceTrendDir}
-                        label="Rental Trend"
+                        label="Rental Market Trend"
                         variant="card"
                       />
-                    )}
+                    </div>
                     {avgSale && (
                       <div className="min-w-0">
                         <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
@@ -190,9 +184,9 @@ export default function GlobalMarketsIndexPage() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[#7A7770] truncate">
-                    {updated ? `Verified ${updated}` : 'Verified Research'}
+                <div className="pt-2.5 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs">
+                  <span className="text-[11px] text-[#7A7770] truncate">
+                    Market Outlook
                   </span>
                   <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0">
                     Explore Market &rarr;
