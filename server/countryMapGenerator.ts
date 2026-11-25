@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import countries from "i18n-iso-countries";
@@ -17,14 +18,37 @@ const DISK_CACHE_DIR = path.join(os.tmpdir(), "amaanestate-country-maps-v3");
 let cachedHighResFeatures: Feature<Geometry>[] | null = null;
 let cachedContextFeatures: Feature<Geometry>[] | null = null;
 
-function resolveAtlasFile(filename: string): string | null {
+function getRuntimeRequire(): NodeRequire | null {
+  try {
+    if (typeof import.meta !== "undefined" && import.meta.url) {
+      return createRequire(import.meta.url);
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    // @ts-ignore
+    if (typeof __filename !== "undefined" && __filename) {
+      // @ts-ignore
+      return createRequire(__filename);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function resolveAtlasFile(filename: "countries-50m.json" | "countries-110m.json"): string | null {
   const cwdCandidate = path.join(process.cwd(), "node_modules", "world-atlas", filename);
   if (fs.existsSync(cwdCandidate)) {
     return cwdCandidate;
   }
-  if (typeof require === "function") {
+  const req = getRuntimeRequire();
+  if (req) {
     try {
-      return require.resolve(`world-atlas/${filename}`);
+      return filename === "countries-50m.json"
+        ? req.resolve("world-atlas/countries-50m.json")
+        : req.resolve("world-atlas/countries-110m.json");
     } catch {
       return null;
     }
@@ -32,7 +56,7 @@ function resolveAtlasFile(filename: string): string | null {
   return null;
 }
 
-function loadTopologyFeatures(filename: string): Feature<Geometry>[] {
+function loadTopologyFeatures(filename: "countries-50m.json" | "countries-110m.json"): Feature<Geometry>[] {
   const resolvedPath = resolveAtlasFile(filename);
   if (!resolvedPath) {
     throw new Error(`Natural Earth world-atlas file not found: ${filename}`);

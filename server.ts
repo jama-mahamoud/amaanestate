@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
-import { createServer as createViteServer, ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
 import { SEED_ARTICLE_BY_SLUG, ALL_SEED_EDITORIAL_ARTICLES } from "./src/data/allArticles";
 import { normalizeCountryInfo, getCountryQueryVariants } from "./src/lib/countries";
 import {
@@ -2482,55 +2482,59 @@ app.use(async (req, res, next) => {
   }
 
   const cleanPath = req.path.length > 1 ? req.path.replace(/\/+$/, "") : req.path;
-
-  // Check SEO Redirect Manager rules before route matching or 404
-  const customRedirect = await lookupActiveRedirect(cleanPath);
-  if (customRedirect) {
-    return res.redirect(customRedirect.status_code, customRedirect.target_path);
-  }
-
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const templateHtml = getIndexTemplateHtml();
 
-  if (PUBLIC_INDEXABLE_SPA_ROUTES.has(cleanPath)) {
-    const meta = PUBLIC_INDEXABLE_SPA_ROUTES.get(cleanPath) || {};
-    const canonicalUrl = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
-    const html = injectSpaRouteMetadata(templateHtml, {
-      canonicalUrl,
-      title: meta.title,
-      description: meta.description,
-    });
-    return sendHtmlPage(req, res, 200, html);
-  }
+  try {
+    // Check SEO Redirect Manager rules before route matching or 404
+    const customRedirect = await lookupActiveRedirect(cleanPath);
+    if (customRedirect) {
+      return res.redirect(customRedirect.status_code, customRedirect.target_path);
+    }
 
-  if (NOINDEX_FOLLOW_SPA_ROUTES.has(cleanPath)) {
-    const meta = NOINDEX_FOLLOW_SPA_ROUTES.get(cleanPath) || {};
-    const html = injectSpaRouteMetadata(templateHtml, {
-      noIndex: true,
-      robotsDirective: "noindex, follow",
-      title: meta.title,
-      description: meta.description,
-    });
-    return sendHtmlPage(req, res, 200, html);
-  }
+    if (PUBLIC_INDEXABLE_SPA_ROUTES.has(cleanPath)) {
+      const meta = PUBLIC_INDEXABLE_SPA_ROUTES.get(cleanPath) || {};
+      const canonicalUrl = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
+      const html = injectSpaRouteMetadata(templateHtml, {
+        canonicalUrl,
+        title: meta.title,
+        description: meta.description,
+      });
+      return sendHtmlPage(req, res, 200, html);
+    }
 
-  if (NOINDEX_SPA_ROUTES.has(cleanPath)) {
-    const html = injectSpaRouteMetadata(templateHtml, {
-      noIndex: true,
-    });
-    return sendHtmlPage(req, res, 200, html);
-  }
+    if (NOINDEX_FOLLOW_SPA_ROUTES.has(cleanPath)) {
+      const meta = NOINDEX_FOLLOW_SPA_ROUTES.get(cleanPath) || {};
+      const html = injectSpaRouteMetadata(templateHtml, {
+        noIndex: true,
+        robotsDirective: "noindex, follow",
+        title: meta.title,
+        description: meta.description,
+      });
+      return sendHtmlPage(req, res, 200, html);
+    }
 
-  // Any other unknown route returns a proper HTTP 404 without homepage canonical
-  setNoCacheSeoHeaders(res);
-  return sendHtmlPage(
-    req,
-    res,
-    404,
-    injectNotFoundMetadata(templateHtml, {
-      title: "Page Not Found (404) | AmaanEstate",
-    })
-  );
+    if (NOINDEX_SPA_ROUTES.has(cleanPath)) {
+      const html = injectSpaRouteMetadata(templateHtml, {
+        noIndex: true,
+      });
+      return sendHtmlPage(req, res, 200, html);
+    }
+
+    // Any other unknown route returns a proper HTTP 404 without homepage canonical
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "Page Not Found (404) | AmaanEstate",
+      })
+    );
+  } catch (err) {
+    console.error("[SPA Route] Unexpected error serving", cleanPath, err);
+    return sendHtmlPage(req, res, 200, templateHtml);
+  }
 });
 
 async function startServer() {
@@ -2539,6 +2543,8 @@ async function startServer() {
   app.use(express.static(path.join(process.cwd(), "public")));
 
   if (process.env.NODE_ENV !== "production") {
+    const vitePkg = "vite";
+    const { createServer: createViteServer } = (await import(vitePkg)) as typeof import("vite");
     const vite = await createViteServer({
       server: {
         middlewareMode: true,

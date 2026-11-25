@@ -244,7 +244,10 @@ export async function lookupActiveRedirect(
   }
 
   const match = redirectCache.items.find(
-    (r) => r.is_active && r.source_path.toLowerCase() === clean.toLowerCase()
+    (r) =>
+      r.is_active &&
+      typeof r.source_path === "string" &&
+      r.source_path.toLowerCase() === clean.toLowerCase()
   );
   if (!match) return null;
 
@@ -277,7 +280,7 @@ export async function getActiveRedirectSourceSet(): Promise<Set<string>> {
   }
   return new Set(
     redirectCache.items
-      .filter((r) => r.is_active)
+      .filter((r) => r.is_active && typeof r.source_path === "string")
       .map((r) => r.source_path.toLowerCase())
   );
 }
