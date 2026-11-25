@@ -1,6 +1,9 @@
 import {
+  GlobalMarketComparisonCity,
+  GlobalMarketComparisonReport,
   GlobalMarketCountrySummary,
   GlobalMarketReport,
+  MarketDataPeriodType,
   MarketTrendDirection,
 } from '../types';
 import { countryCodeToFlag, normalizeCountryInfo } from './countries';
@@ -537,4 +540,235 @@ export function aggregateCountrySummaries(
     if (b.reportCount !== a.reportCount) return b.reportCount - a.reportCount;
     return a.countryName.localeCompare(b.countryName);
   });
+}
+
+// ============================================================================
+// Two-City Property Market Comparison Helpers
+// ============================================================================
+
+export function formatMarketGranularityLabel(granularity?: MarketDataPeriodType | null): string {
+  if (granularity === 'month') return 'Monthly';
+  if (granularity === 'year') return 'Annual';
+  return 'Quarterly';
+}
+
+export function buildComparisonSlug(
+  cityAName?: string | null,
+  cityBName?: string | null,
+  title?: string | null
+): string {
+  const slugA = slugifyMarketSegment(cityAName);
+  const slugB = slugifyMarketSegment(cityBName);
+  if (slugA && slugB) {
+    return `${slugA}-vs-${slugB}-property-market`;
+  }
+  const titleSlug = slugifyMarketSegment(title);
+  if (titleSlug && titleSlug !== 'comparisons') {
+    return titleSlug;
+  }
+  return '';
+}
+
+export function resolveComparisonCanonicalUrl(
+  comparison: Pick<GlobalMarketComparisonReport, 'slug' | 'canonical_url'>,
+  origin = 'https://www.amaanestate.com'
+): string {
+  const cleanOrigin = (origin || 'https://www.amaanestate.com').trim().replace(/\/+$/, '');
+  const cleanSlug = slugifyMarketSegment(comparison.slug);
+  const selfCanonicalUrl = `${cleanOrigin}/global-markets/comparisons/${encodeURIComponent(cleanSlug)}`;
+
+  const override = (comparison.canonical_url || '').trim();
+  if (!override || !isValidHttpUrl(override)) {
+    return selfCanonicalUrl;
+  }
+
+  try {
+    const parsedOverride = new URL(override);
+    const originHost = new URL(cleanOrigin).hostname.replace(/^www\./, '').toLowerCase();
+    const overrideHost = parsedOverride.hostname.replace(/^www\./, '').toLowerCase();
+    const isSameSite = overrideHost === 'amaanestate.com' || overrideHost === originHost;
+
+    if (isSameSite) {
+      const cleanPath = parsedOverride.pathname.replace(/\/+$/, '');
+      if (cleanPath.startsWith('/global-markets')) {
+        const expectedPath = `/global-markets/comparisons/${cleanSlug}`;
+        if (cleanPath !== expectedPath) {
+          return selfCanonicalUrl;
+        }
+      }
+    }
+    return parsedOverride.toString();
+  } catch {
+    return selfCanonicalUrl;
+  }
+}
+
+export function resolveComparisonSocialImageMetadata(params: {
+  comparison?: Pick<
+    GlobalMarketComparisonReport,
+    'title' | 'social_image' | 'social_image_alt' | 'city_a' | 'city_b'
+  > | null;
+}): {
+  image?: string;
+  imageAlt?: string;
+  source: 'social_image' | 'city_a' | 'city_b' | 'default';
+} {
+  const comp = params.comparison;
+  if (!comp) {
+    return { image: undefined, imageAlt: undefined, source: 'default' };
+  }
+
+  const dedicated = (comp.social_image || '').trim();
+  if (dedicated && isValidHttpsUrl(dedicated)) {
+    return {
+      image: dedicated,
+      imageAlt: (comp.social_image_alt || '').trim() || comp.title || DEFAULT_MARKET_OG_IMAGE_ALT,
+      source: 'social_image',
+    };
+  }
+
+  const cityAImg = (comp.city_a?.image_url || '').trim();
+  if (cityAImg && isValidHttpsUrl(cityAImg)) {
+    return {
+      image: cityAImg,
+      imageAlt:
+        (comp.city_a?.image_alt || '').trim() ||
+        `${comp.city_a?.city_name || 'City A'} residential market — ${comp.title}`,
+      source: 'city_a',
+    };
+  }
+
+  const cityBImg = (comp.city_b?.image_url || '').trim();
+  if (cityBImg && isValidHttpsUrl(cityBImg)) {
+    return {
+      image: cityBImg,
+      imageAlt:
+        (comp.city_b?.image_alt || '').trim() ||
+        `${comp.city_b?.city_name || 'City B'} residential market — ${comp.title}`,
+      source: 'city_b',
+    };
+  }
+
+  return { image: undefined, imageAlt: undefined, source: 'default' };
+}
+
+function validateComparisonCityPublish(
+  city: Partial<GlobalMarketComparisonCity> | undefined,
+  slotLabel: 'City A' | 'City B',
+  issues: string[]
+) {
+  if (!city) {
+    issues.push(`${slotLabel} details are required.`);
+    return;
+  }
+
+  const cityName = (city.city_name || '').trim();
+  const countryName = (city.country_name || '').trim();
+  const imageUrl = (city.image_url || '').trim();
+  const sourceName = (city.data_source_name || '').trim();
+  const sourceUrl = (city.data_source_url || '').trim();
+  const currency = (city.currency || '').trim();
+  const overview = (city.market_overview || '').trim();
+  const analysis = (city.market_analysis || '').trim();
+  const insights = (city.investment_insights || '').trim();
+
+  if (!cityName) {
+    issues.push(`${slotLabel}: City Name is required.`);
+  }
+  if (!countryName) {
+    issues.push(`${slotLabel}: Country Name is required.`);
+  }
+  if (!currency || !/^[A-Za-z]{3,8}$/.test(currency)) {
+    issues.push(`${slotLabel}: Valid Currency ISO code is required (e.g., GBP, AED, USD).`);
+  }
+  if (imageUrl && !isValidHttpsUrl(imageUrl)) {
+    issues.push(`${slotLabel}: City Image URL must be a valid public https:// URL.`);
+  }
+  if (!sourceName) {
+    issues.push(`${slotLabel}: Data Source Name is required before publishing.`);
+  }
+  if (sourceUrl && !isValidHttpUrl(sourceUrl)) {
+    issues.push(`${slotLabel}: Data Source URL must be a valid http:// or https:// link.`);
+  }
+  if (overview.length + analysis.length + insights.length < 40) {
+    issues.push(
+      `${slotLabel}: Provide substantive market overview, analysis, or investment insights (at least 40 characters combined) before publishing.`
+    );
+  }
+}
+
+export function getComparisonPublishReadiness(
+  comparison: Partial<GlobalMarketComparisonReport>
+): MarketReadinessResult {
+  const issues: string[] = [];
+  const warnings: string[] = [];
+
+  const title = (comparison.title || '').trim();
+  const slug = slugifyMarketSegment(comparison.slug);
+  const reportingPeriod = (comparison.reporting_period || '').trim();
+  const lastVerifiedRaw = (comparison.last_verified_at || '').trim();
+  const hasValidVerifiedDate =
+    Boolean(lastVerifiedRaw) && !Number.isNaN(Date.parse(lastVerifiedRaw));
+
+  if (!title) {
+    issues.push('Comparison Title is required.');
+  }
+  if (!slug || slug === 'comparisons') {
+    issues.push('A valid Comparison URL slug is required.');
+  }
+  if (!reportingPeriod) {
+    issues.push('Reporting Period is required before publishing.');
+  }
+  if (!hasValidVerifiedDate) {
+    issues.push('Last Verified Date is required before publishing.');
+  }
+
+  if (
+    comparison.social_image &&
+    comparison.social_image.trim() &&
+    !isValidHttpsUrl(comparison.social_image)
+  ) {
+    issues.push('Social Sharing Image URL must be a valid public https:// URL.');
+  }
+
+  if (
+    comparison.canonical_url &&
+    comparison.canonical_url.trim() &&
+    !isValidHttpUrl(comparison.canonical_url)
+  ) {
+    issues.push('Canonical URL override must be a valid http:// or https:// URL.');
+  }
+
+  validateComparisonCityPublish(comparison.city_a, 'City A', issues);
+  validateComparisonCityPublish(comparison.city_b, 'City B', issues);
+
+  if (!(comparison.short_intro || '').trim()) {
+    warnings.push('Add a short introduction to summarize the comparison thesis for readers.');
+  }
+
+  return {
+    isReadyToPublish: issues.length === 0,
+    issues,
+    warnings,
+  };
+}
+
+export function isMeaningfulComparison(
+  comparison: Partial<GlobalMarketComparisonReport> | null | undefined
+): boolean {
+  if (!comparison) return false;
+  if (!(comparison.title || '').trim() || !(comparison.slug || '').trim()) return false;
+  if (!(comparison.reporting_period || '').trim()) return false;
+  const lastVerifiedRaw = (comparison.last_verified_at || '').trim();
+  if (!lastVerifiedRaw || Number.isNaN(Date.parse(lastVerifiedRaw))) return false;
+  if (!comparison.city_a || !comparison.city_b) return false;
+  if (
+    !(comparison.city_a.city_name || '').trim() ||
+    !(comparison.city_a.country_name || '').trim() ||
+    !(comparison.city_b.city_name || '').trim() ||
+    !(comparison.city_b.country_name || '').trim()
+  ) {
+    return false;
+  }
+  return true;
 }

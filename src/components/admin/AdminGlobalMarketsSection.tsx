@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Archive,
+  ArrowLeftRight,
   CheckCircle2,
   Database,
   Edit3,
@@ -13,12 +14,11 @@ import {
   Send,
   Star,
   Trash2,
-  TrendingDown,
-  TrendingUp,
   X,
 } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
 import {
+  GlobalMarketComparisonReport,
   GlobalMarketReport,
   MarketDataPeriodType,
   MarketDataSourceType,
@@ -28,34 +28,94 @@ import {
 } from '../../types';
 import { normalizeCountryInfo } from '../../lib/countries';
 import {
+  buildComparisonSlug,
   buildMarketReportSlug,
   deriveCountrySlug,
   formatMarketCurrency,
   formatMarketDateLabel,
+  formatMarketGranularityLabel,
   formatMarketTrend,
+  getComparisonPublishReadiness,
   getMarketPublishReadiness,
   isValidHttpsUrl,
+  resolveComparisonSocialImageMetadata,
   slugifyMarketSegment,
 } from '../../lib/globalMarkets';
 import { AUTHORIZED_PUBLIC_DATA_SOURCES } from '../../lib/marketDataSources';
 import {
+  SaveComparisonCityInput,
+  SaveGlobalMarketComparisonInput,
   SaveGlobalMarketInput,
   deleteGlobalMarket,
+  deleteGlobalMarketComparison,
   saveGlobalMarket,
+  saveGlobalMarketComparison,
   stageDraftFromPublicSource,
+  updateGlobalMarketComparisonStatus,
   updateGlobalMarketStatus,
 } from '../../services/globalMarketsService';
 import { resolveEditorialImage } from '../../lib/editorialImages';
+import ComparisonCityEditorSection from './ComparisonCityEditorSection';
 import MediaPickerModal from './MediaPickerModal';
 import ConfirmDialog from './ConfirmDialog';
 import { toast } from 'sonner';
 
 interface AdminGlobalMarketsSectionProps {
   reports: GlobalMarketReport[];
+  comparisons?: GlobalMarketComparisonReport[];
   media: MediaItem[];
   schemaPending: boolean;
+  comparisonsSchemaPending?: boolean;
   onMediaAdded: (item: MediaItem) => void;
   onRefresh: () => Promise<void>;
+}
+
+type AdminEditorMode = 'country' | 'comparison';
+type AdminDeleteTarget =
+  | { kind: 'country'; report: GlobalMarketReport }
+  | { kind: 'comparison'; comparison: GlobalMarketComparisonReport };
+
+function makeEmptyComparisonCity(): SaveComparisonCityInput {
+  return {
+    city_name: '',
+    country_name: '',
+    country_code: '',
+    image_url: '',
+    image_alt: '',
+    avg_sale_price: null,
+    avg_monthly_rent: null,
+    currency: 'USD',
+    property_price_trend_pct: null,
+    property_price_trend_dir: null,
+    rental_price_trend_pct: null,
+    rental_price_trend_dir: null,
+    data_source_name: '',
+    data_source_url: '',
+    data_period: '',
+    market_overview: '',
+    market_analysis: '',
+    investment_insights: '',
+  };
+}
+
+function makeEmptyComparisonForm(): SaveGlobalMarketComparisonInput {
+  return {
+    title: '',
+    slug: '',
+    short_intro: '',
+    status: 'draft',
+    is_featured: false,
+    reporting_period: '',
+    reporting_granularity: 'quarter',
+    last_verified_at: new Date().toISOString().slice(0, 10),
+    social_image: '',
+    social_image_alt: '',
+    seo_title: '',
+    seo_description: '',
+    canonical_url: '',
+    city_a: makeEmptyComparisonCity(),
+    city_b: makeEmptyComparisonCity(),
+  };
 }
 
 const EMPTY_FORM: SaveGlobalMarketInput = {
@@ -94,24 +154,33 @@ const EMPTY_FORM: SaveGlobalMarketInput = {
 
 export default function AdminGlobalMarketsSection({
   reports,
+  comparisons = [],
   media,
   schemaPending,
+  comparisonsSchemaPending = false,
   onMediaAdded,
   onRefresh,
 }: AdminGlobalMarketsSectionProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | PublicationStatus>('all');
+  const [reportTypeFilter, setReportTypeFilter] = useState<'all' | 'country_report' | 'comparison'>('all');
   const [levelFilter, setLevelFilter] = useState<'all' | 'country' | 'city'>('all');
   const [countryFilter, setCountryFilter] = useState<string>('all');
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<AdminEditorMode>('country');
   const [form, setForm] = useState<SaveGlobalMarketInput>(EMPTY_FORM);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [compForm, setCompForm] = useState<SaveGlobalMarketComparisonInput>(() =>
+    makeEmptyComparisonForm()
+  );
+  const [compSlugTouched, setCompSlugTouched] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [socialPreviewError, setSocialPreviewError] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<GlobalMarketReport | null>(null);
+  const [compSocialPreviewError, setCompSocialPreviewError] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminDeleteTarget | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // Free Public Sources Draft Staging Modal
@@ -130,10 +199,19 @@ export default function AdminGlobalMarketsSection({
         map.set(r.country_slug, r.country_name);
       }
     }
+    for (const c of comparisons) {
+      for (const city of [c.city_a, c.city_b]) {
+        const slug = deriveCountrySlug(city.country_name);
+        if (slug && city.country_name && !map.has(slug)) {
+          map.set(slug, city.country_name);
+        }
+      }
+    }
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [reports]);
+  }, [reports, comparisons]);
 
   const filteredReports = useMemo(() => {
+    if (reportTypeFilter === 'comparison') return [];
     return reports.filter((r) => {
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
       if (levelFilter !== 'all' && r.market_level !== levelFilter) return false;
@@ -150,21 +228,55 @@ export default function AdminGlobalMarketsSection({
       }
       return true;
     });
-  }, [reports, statusFilter, levelFilter, countryFilter, searchTerm]);
+  }, [reports, reportTypeFilter, statusFilter, levelFilter, countryFilter, searchTerm]);
+
+  const filteredComparisons = useMemo(() => {
+    if (reportTypeFilter === 'country_report') return [];
+    if (levelFilter === 'country') return [];
+    return comparisons.filter((c) => {
+      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (countryFilter !== 'all') {
+        const slugA = deriveCountrySlug(c.city_a.country_name);
+        const slugB = deriveCountrySlug(c.city_b.country_name);
+        if (slugA !== countryFilter && slugB !== countryFilter) return false;
+      }
+      if (searchTerm.trim()) {
+        const q = searchTerm.trim().toLowerCase();
+        return (
+          c.title.toLowerCase().includes(q) ||
+          c.short_intro.toLowerCase().includes(q) ||
+          c.reporting_period.toLowerCase().includes(q) ||
+          c.city_a.city_name.toLowerCase().includes(q) ||
+          c.city_a.country_name.toLowerCase().includes(q) ||
+          c.city_a.data_source_name.toLowerCase().includes(q) ||
+          c.city_b.city_name.toLowerCase().includes(q) ||
+          c.city_b.country_name.toLowerCase().includes(q) ||
+          c.city_b.data_source_name.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [comparisons, reportTypeFilter, levelFilter, statusFilter, countryFilter, searchTerm]);
 
   const stats = useMemo(() => {
-    const published = reports.filter((r) => r.status === 'published');
-    const drafts = reports.filter((r) => r.status === 'draft');
-    const featured = reports.filter((r) => r.status === 'published' && r.is_featured);
-    const countries = new Set(published.map((r) => r.country_slug).filter(Boolean));
+    const publishedReports = reports.filter((r) => r.status === 'published');
+    const publishedComparisons = comparisons.filter((c) => c.status === 'published');
+    const drafts =
+      reports.filter((r) => r.status === 'draft').length +
+      comparisons.filter((c) => c.status === 'draft').length;
+    const featured =
+      reports.filter((r) => r.status === 'published' && r.is_featured).length +
+      comparisons.filter((c) => c.status === 'published' && c.is_featured).length;
+    const countries = new Set(publishedReports.map((r) => r.country_slug).filter(Boolean));
     return {
-      total: reports.length,
-      published: published.length,
-      drafts: drafts.length,
-      featured: featured.length,
+      total: reports.length + comparisons.length,
+      published: publishedReports.length + publishedComparisons.length,
+      comparisonsPublished: publishedComparisons.length,
+      drafts,
+      featured,
       countries: countries.size,
     };
-  }, [reports]);
+  }, [reports, comparisons]);
 
   const readiness = useMemo(
     () =>
@@ -202,6 +314,69 @@ export default function AdminGlobalMarketsSection({
     [form]
   );
 
+  const compReadiness = useMemo(() => {
+    const resolvedSlug =
+      slugifyMarketSegment(compForm.slug) ||
+      buildComparisonSlug(compForm.city_a.city_name, compForm.city_b.city_name, compForm.title);
+
+    return getComparisonPublishReadiness({
+      title: compForm.title,
+      slug: resolvedSlug,
+      short_intro: compForm.short_intro,
+      reporting_period: compForm.reporting_period,
+      reporting_granularity: compForm.reporting_granularity,
+      last_verified_at: compForm.last_verified_at,
+      social_image: compForm.social_image,
+      canonical_url: compForm.canonical_url,
+      city_a: {
+        ...compForm.city_a,
+        country_code: compForm.city_a.country_code || '',
+        city_slot: 'A',
+        avg_sale_price:
+          compForm.city_a.avg_sale_price === '' || compForm.city_a.avg_sale_price === null
+            ? null
+            : Number(compForm.city_a.avg_sale_price),
+        avg_monthly_rent:
+          compForm.city_a.avg_monthly_rent === '' || compForm.city_a.avg_monthly_rent === null
+            ? null
+            : Number(compForm.city_a.avg_monthly_rent),
+        property_price_trend_pct:
+          compForm.city_a.property_price_trend_pct === '' ||
+          compForm.city_a.property_price_trend_pct === null
+            ? null
+            : Number(compForm.city_a.property_price_trend_pct),
+        rental_price_trend_pct:
+          compForm.city_a.rental_price_trend_pct === '' ||
+          compForm.city_a.rental_price_trend_pct === null
+            ? null
+            : Number(compForm.city_a.rental_price_trend_pct),
+      },
+      city_b: {
+        ...compForm.city_b,
+        country_code: compForm.city_b.country_code || '',
+        city_slot: 'B',
+        avg_sale_price:
+          compForm.city_b.avg_sale_price === '' || compForm.city_b.avg_sale_price === null
+            ? null
+            : Number(compForm.city_b.avg_sale_price),
+        avg_monthly_rent:
+          compForm.city_b.avg_monthly_rent === '' || compForm.city_b.avg_monthly_rent === null
+            ? null
+            : Number(compForm.city_b.avg_monthly_rent),
+        property_price_trend_pct:
+          compForm.city_b.property_price_trend_pct === '' ||
+          compForm.city_b.property_price_trend_pct === null
+            ? null
+            : Number(compForm.city_b.property_price_trend_pct),
+        rental_price_trend_pct:
+          compForm.city_b.rental_price_trend_pct === '' ||
+          compForm.city_b.rental_price_trend_pct === null
+            ? null
+            : Number(compForm.city_b.rental_price_trend_pct),
+      },
+    });
+  }, [compForm]);
+
   if (schemaPending) {
     return (
       <div className="bg-white border border-[#E5E0D8] rounded p-8 space-y-4">
@@ -222,13 +397,17 @@ export default function AdminGlobalMarketsSection({
     );
   }
 
-  const openCreateModal = () => {
+  const openCreateModal = (initialMode: AdminEditorMode = 'country') => {
     setForm({
       ...EMPTY_FORM,
       last_verified_at: new Date().toISOString().slice(0, 10),
     });
+    setCompForm(makeEmptyComparisonForm());
     setSocialPreviewError(false);
+    setCompSocialPreviewError(false);
     setSlugTouched(false);
+    setCompSlugTouched(false);
+    setEditorMode(initialMode);
     setEditorOpen(true);
   };
 
@@ -268,8 +447,80 @@ export default function AdminGlobalMarketsSection({
       canonical_url: report.canonical_url || '',
       published_at: report.published_at || null,
     });
+    setCompForm(makeEmptyComparisonForm());
     setSocialPreviewError(false);
+    setCompSocialPreviewError(false);
     setSlugTouched(true);
+    setEditorMode('country');
+    setEditorOpen(true);
+  };
+
+  const openEditComparisonModal = (comparison: GlobalMarketComparisonReport) => {
+    setForm({
+      ...EMPTY_FORM,
+      last_verified_at: new Date().toISOString().slice(0, 10),
+    });
+    setCompForm({
+      id: comparison.id,
+      title: comparison.title,
+      slug: comparison.slug,
+      short_intro: comparison.short_intro || '',
+      status: comparison.status,
+      is_featured: comparison.is_featured,
+      reporting_period: comparison.reporting_period || '',
+      reporting_granularity: comparison.reporting_granularity || 'quarter',
+      last_verified_at: comparison.last_verified_at || '',
+      social_image: comparison.social_image || '',
+      social_image_alt: comparison.social_image_alt || '',
+      seo_title: comparison.seo_title || '',
+      seo_description: comparison.seo_description || '',
+      canonical_url: comparison.canonical_url || '',
+      published_at: comparison.published_at || null,
+      city_a: {
+        city_name: comparison.city_a.city_name,
+        country_name: comparison.city_a.country_name,
+        country_code: comparison.city_a.country_code,
+        image_url: comparison.city_a.image_url || '',
+        image_alt: comparison.city_a.image_alt || '',
+        avg_sale_price: comparison.city_a.avg_sale_price ?? null,
+        avg_monthly_rent: comparison.city_a.avg_monthly_rent ?? null,
+        currency: comparison.city_a.currency || 'USD',
+        property_price_trend_pct: comparison.city_a.property_price_trend_pct ?? null,
+        property_price_trend_dir: comparison.city_a.property_price_trend_dir || null,
+        rental_price_trend_pct: comparison.city_a.rental_price_trend_pct ?? null,
+        rental_price_trend_dir: comparison.city_a.rental_price_trend_dir || null,
+        data_source_name: comparison.city_a.data_source_name || '',
+        data_source_url: comparison.city_a.data_source_url || '',
+        data_period: comparison.city_a.data_period || '',
+        market_overview: comparison.city_a.market_overview || '',
+        market_analysis: comparison.city_a.market_analysis || '',
+        investment_insights: comparison.city_a.investment_insights || '',
+      },
+      city_b: {
+        city_name: comparison.city_b.city_name,
+        country_name: comparison.city_b.country_name,
+        country_code: comparison.city_b.country_code,
+        image_url: comparison.city_b.image_url || '',
+        image_alt: comparison.city_b.image_alt || '',
+        avg_sale_price: comparison.city_b.avg_sale_price ?? null,
+        avg_monthly_rent: comparison.city_b.avg_monthly_rent ?? null,
+        currency: comparison.city_b.currency || 'USD',
+        property_price_trend_pct: comparison.city_b.property_price_trend_pct ?? null,
+        property_price_trend_dir: comparison.city_b.property_price_trend_dir || null,
+        rental_price_trend_pct: comparison.city_b.rental_price_trend_pct ?? null,
+        rental_price_trend_dir: comparison.city_b.rental_price_trend_dir || null,
+        data_source_name: comparison.city_b.data_source_name || '',
+        data_source_url: comparison.city_b.data_source_url || '',
+        data_period: comparison.city_b.data_period || '',
+        market_overview: comparison.city_b.market_overview || '',
+        market_analysis: comparison.city_b.market_analysis || '',
+        investment_insights: comparison.city_b.investment_insights || '',
+      },
+    });
+    setSocialPreviewError(false);
+    setCompSocialPreviewError(false);
+    setCompSlugTouched(true);
+    setEditorMode('comparison');
     setEditorOpen(true);
   };
 
@@ -306,6 +557,28 @@ export default function AdminGlobalMarketsSection({
     }));
   };
 
+  const updateCityA = (updater: (prev: SaveComparisonCityInput) => SaveComparisonCityInput) => {
+    setCompForm((prev) => {
+      const nextA = updater(prev.city_a);
+      const nextSlug =
+        !compSlugTouched && !prev.id
+          ? buildComparisonSlug(nextA.city_name, prev.city_b.city_name, prev.title)
+          : prev.slug;
+      return { ...prev, city_a: nextA, slug: nextSlug };
+    });
+  };
+
+  const updateCityB = (updater: (prev: SaveComparisonCityInput) => SaveComparisonCityInput) => {
+    setCompForm((prev) => {
+      const nextB = updater(prev.city_b);
+      const nextSlug =
+        !compSlugTouched && !prev.id
+          ? buildComparisonSlug(prev.city_a.city_name, nextB.city_name, prev.title)
+          : prev.slug;
+      return { ...prev, city_b: nextB, slug: nextSlug };
+    });
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -326,6 +599,26 @@ export default function AdminGlobalMarketsSection({
     await onRefresh();
   };
 
+  const handleSaveComparison = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const res = await saveGlobalMarketComparison(compForm);
+    setSaving(false);
+
+    if (!res.success) {
+      toast.error(res.error || 'Unable to save two-city comparison report.');
+      return;
+    }
+
+    toast.success(
+      compForm.id
+        ? 'Two-city market comparison updated.'
+        : `Two-city comparison saved as ${compForm.status}.`
+    );
+    setEditorOpen(false);
+    await onRefresh();
+  };
+
   const handleStatusChange = async (report: GlobalMarketReport, nextStatus: PublicationStatus) => {
     const res = await updateGlobalMarketStatus(report, nextStatus);
     if (!res.success) {
@@ -336,17 +629,39 @@ export default function AdminGlobalMarketsSection({
     await onRefresh();
   };
 
+  const handleComparisonStatusChange = async (
+    comparison: GlobalMarketComparisonReport,
+    nextStatus: PublicationStatus
+  ) => {
+    const res = await updateGlobalMarketComparisonStatus(comparison, nextStatus);
+    if (!res.success) {
+      toast.error(res.error || `Unable to move comparison to ${nextStatus}.`);
+      return;
+    }
+    toast.success(`"${comparison.title}" marked as ${nextStatus}.`);
+    await onRefresh();
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await deleteGlobalMarket(deleteTarget.id);
-    setDeleting(false);
-
-    if (!res.success) {
-      toast.error(res.error || 'Unable to delete market report.');
-      return;
+    if (deleteTarget.kind === 'country') {
+      const res = await deleteGlobalMarket(deleteTarget.report.id);
+      setDeleting(false);
+      if (!res.success) {
+        toast.error(res.error || 'Unable to delete market report.');
+        return;
+      }
+      toast.success(`Deleted "${deleteTarget.report.title}".`);
+    } else {
+      const res = await deleteGlobalMarketComparison(deleteTarget.comparison.id);
+      setDeleting(false);
+      if (!res.success) {
+        toast.error(res.error || 'Unable to delete two-city comparison.');
+        return;
+      }
+      toast.success(`Deleted "${deleteTarget.comparison.title}".`);
     }
-    toast.success(`Deleted "${deleteTarget.title}".`);
     setDeleteTarget(null);
     await onRefresh();
   };
@@ -379,6 +694,7 @@ export default function AdminGlobalMarketsSection({
       is_featured: false,
     });
     setSlugTouched(false);
+    setEditorMode('country');
     setEditorOpen(true);
     if (res.note) {
       toast.success(res.note);
@@ -393,8 +709,38 @@ export default function AdminGlobalMarketsSection({
     'market-report';
   const previewPublicUrl = `/global-markets/${previewCountrySlug}/${previewReportSlug}`;
 
+  const previewComparisonSlug =
+    slugifyMarketSegment(compForm.slug) ||
+    buildComparisonSlug(compForm.city_a.city_name, compForm.city_b.city_name, compForm.title) ||
+    'city-a-vs-city-b-property-market';
+  const previewComparisonUrl = `/global-markets/comparisons/${previewComparisonSlug}`;
+
   const cleanIsoPreview = (form.country_code || '').trim().toLowerCase();
   const hasIsoFlag = /^[a-z]{2}$/.test(cleanIsoPreview);
+
+  const isEditingExisting =
+    editorMode === 'country' ? Boolean(form.id) : Boolean(compForm.id);
+  const compSocialResolved = useMemo(
+    () =>
+      resolveComparisonSocialImageMetadata({
+        comparison: {
+          title: compForm.title,
+          social_image: compForm.social_image,
+          social_image_alt: compForm.social_image_alt,
+          city_a: {
+            city_name: compForm.city_a.city_name,
+            image_url: compForm.city_a.image_url || null,
+            image_alt: compForm.city_a.image_alt || null,
+          } as GlobalMarketComparisonReport['city_a'],
+          city_b: {
+            city_name: compForm.city_b.city_name,
+            image_url: compForm.city_b.image_url || null,
+            image_alt: compForm.city_b.image_alt || null,
+          } as GlobalMarketComparisonReport['city_b'],
+        },
+      }),
+    [compForm]
+  );
 
   return (
     <div className="space-y-6">
@@ -423,7 +769,7 @@ export default function AdminGlobalMarketsSection({
           </button>
           <button
             type="button"
-            onClick={openCreateModal}
+            onClick={() => openCreateModal('country')}
             className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold rounded inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
           >
             <Plus size={15} />
@@ -431,6 +777,24 @@ export default function AdminGlobalMarketsSection({
           </button>
         </div>
       </div>
+
+      {comparisonsSchemaPending && (
+        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded p-4 flex items-start gap-3 text-xs text-[#92400E]">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5 text-[#D97706]" />
+          <div className="space-y-1">
+            <p className="font-semibold text-[#78350F]">
+              Two-City Comparison Database Tables Not Yet Migrated
+            </p>
+            <p>
+              Run{' '}
+              <code className="font-mono bg-white/80 px-1.5 py-0.5 rounded border border-[#FDE68A]">
+                supabase/migrations/20261125010000_create_global_market_comparisons.sql
+              </code>{' '}
+              in your Supabase SQL Editor to enable saving and publishing Two-City Property Market Comparisons. Existing Country Market Reports remain unaffected.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Metrics Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -444,10 +808,15 @@ export default function AdminGlobalMarketsSection({
         </div>
         <div className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-4 space-y-1 min-w-0">
           <p className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
-            Published Reports
+            Published Reports &amp; Comparisons
           </p>
           <p className="text-xl sm:text-2xl font-serif font-semibold tabular-nums text-[#141413]">
             {stats.published}
+            {stats.comparisonsPublished > 0 && (
+              <span className="ml-2 text-xs font-sans font-normal text-[#5C5A55]">
+                ({stats.comparisonsPublished} comparisons)
+              </span>
+            )}
           </p>
         </div>
         <div className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-4 space-y-1 min-w-0">
@@ -469,7 +838,7 @@ export default function AdminGlobalMarketsSection({
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="relative min-w-0">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7770]" />
           <input
@@ -480,6 +849,17 @@ export default function AdminGlobalMarketsSection({
             className="w-full min-w-0 h-10 pl-9 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413]"
           />
         </div>
+        <select
+          value={reportTypeFilter}
+          onChange={(e) =>
+            setReportTypeFilter(e.target.value as 'all' | 'country_report' | 'comparison')
+          }
+          className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413]"
+        >
+          <option value="all">All Report Types</option>
+          <option value="country_report">Country Market Reports</option>
+          <option value="comparison">Two-City Comparisons</option>
+        </select>
         <select
           value={countryFilter}
           onChange={(e) => setCountryFilter(e.target.value)}
@@ -515,21 +895,30 @@ export default function AdminGlobalMarketsSection({
 
       {/* Table */}
       <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-        {filteredReports.length === 0 ? (
+        {filteredReports.length === 0 && filteredComparisons.length === 0 ? (
           <div className="p-10 text-center space-y-3">
             <Globe2 size={28} className="mx-auto text-[#8C4A27]" strokeWidth={1.5} />
             <p className="text-sm text-[#5C5A55]">
-              {reports.length === 0
+              {reports.length === 0 && comparisons.length === 0
                 ? 'No global market intelligence reports created yet.'
-                : 'No market reports match your active filters.'}
+                : 'No market reports or comparisons match your active filters.'}
             </p>
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
-            >
-              Create First Market Report
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => openCreateModal('country')}
+                className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+              >
+                Create Country Market Report
+              </button>
+              <button
+                type="button"
+                onClick={() => openCreateModal('comparison')}
+                className="px-4 py-2 bg-[#FAF8F5] border border-[#D6CEBE] text-[#1E3A5F] text-xs font-semibold rounded cursor-pointer"
+              >
+                Create Two-City Comparison
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -677,8 +1066,139 @@ export default function AdminGlobalMarketsSection({
                       )}
                       <button
                         type="button"
-                        onClick={() => setDeleteTarget(report)}
+                        onClick={() => setDeleteTarget({ kind: 'country', report })}
                         aria-label={`Delete ${report.title}`}
+                        className="min-h-[40px] min-w-[40px] px-2.5 py-1.5 bg-[#FEF2F2] text-[#991B1B] text-xs font-semibold rounded inline-flex items-center justify-center cursor-pointer ml-auto"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredComparisons.map((comp) => {
+                const isoA = (comp.city_a.country_code || '').trim().toLowerCase();
+                const isoB = (comp.city_b.country_code || '').trim().toLowerCase();
+                const saleA = formatMarketCurrency(comp.city_a.avg_sale_price, comp.city_a.currency);
+                const saleB = formatMarketCurrency(comp.city_b.avg_sale_price, comp.city_b.currency);
+                const publicHref = `/global-markets/comparisons/${encodeURIComponent(comp.slug)}`;
+
+                return (
+                  <div key={`comp-${comp.id}`} className="p-4 space-y-3 bg-[#FCFBF8]">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ArrowLeftRight size={14} className="text-[#8C4A27] shrink-0" />
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[#141413] text-xs flex flex-wrap items-center gap-1.5">
+                            {/^[a-z]{2}$/.test(isoA) && (
+                              <span className={`fi fi-${isoA} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                            )}
+                            <span>{comp.city_a.city_name || 'City A'}</span>
+                            <span className="text-[#8C4A27]">vs</span>
+                            {/^[a-z]{2}$/.test(isoB) && (
+                              <span className={`fi fi-${isoB} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                            )}
+                            <span>{comp.city_b.city_name || 'City B'}</span>
+                          </div>
+                          <div className="text-[11px] text-[#5C5A55]">
+                            Two-City Comparison · {comp.city_a.country_name} / {comp.city_b.country_name}
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-xs font-semibold capitalize shrink-0 ${
+                          comp.status === 'published'
+                            ? 'text-[#14532D]'
+                            : comp.status === 'draft'
+                            ? 'text-[#8C4A27]'
+                            : 'text-[#5C5A55]'
+                        }`}
+                      >
+                        {comp.status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 min-w-0">
+                      <div className="font-medium text-sm text-[#141413] flex items-start gap-1.5">
+                        {comp.is_featured && (
+                          <Star
+                            size={13}
+                            className="text-[#8C4A27] fill-[#8C4A27] shrink-0 mt-0.5"
+                            aria-label="Featured comparison"
+                          />
+                        )}
+                        <span className="break-words [overflow-wrap:anywhere]">{comp.title}</span>
+                      </div>
+                      <div className="text-[11px] font-mono text-[#7A7770] break-all">
+                        {publicHref}
+                      </div>
+                    </div>
+
+                    <div className="text-xs font-mono tabular-nums text-[#141413] space-y-0.5">
+                      <div>
+                        {comp.city_a.city_name}: {saleA || 'Data unavailable'} ({comp.city_a.currency})
+                      </div>
+                      <div>
+                        {comp.city_b.city_name}: {saleB || 'Data unavailable'} ({comp.city_b.currency})
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-[#4A4843] space-y-0.5">
+                      <div className="font-semibold text-[#141413]">
+                        {comp.reporting_period || 'Period unset'} ·{' '}
+                        {formatMarketGranularityLabel(comp.reporting_granularity)}
+                      </div>
+                      {comp.last_verified_at && (
+                        <div className="text-[10px] font-mono text-[#7A7770]">
+                          Verified {formatMarketDateLabel(comp.last_verified_at)}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => openEditComparisonModal(comp)}
+                        className="min-h-[40px] px-3 py-1.5 bg-[#FAF8F5] border border-[#D6CEBE] text-[#1E3A5F] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Edit3 size={14} />
+                        <span>Edit</span>
+                      </button>
+                      {comp.status !== 'published' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleComparisonStatusChange(comp, 'published')}
+                          className="min-h-[40px] px-3 py-1.5 bg-[#ECFDF5] border border-[#BBF7D0] text-[#14532D] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Send size={14} />
+                          <span>Publish</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleComparisonStatusChange(comp, 'archived')}
+                          className="min-h-[40px] px-3 py-1.5 bg-[#EFECE6] text-[#4A4843] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Archive size={14} />
+                          <span>Archive</span>
+                        </button>
+                      )}
+                      {comp.status === 'published' && (
+                        <a
+                          href={publicHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[40px] px-3 py-1.5 bg-[#FAF8F5] border border-[#D6CEBE] text-[#5C5A55] hover:text-[#1E3A5F] text-xs font-semibold rounded inline-flex items-center gap-1.5"
+                        >
+                          <ExternalLink size={14} />
+                          <span>View</span>
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget({ kind: 'comparison', comparison: comp })}
+                        aria-label={`Delete ${comp.title}`}
                         className="min-h-[40px] min-w-[40px] px-2.5 py-1.5 bg-[#FEF2F2] text-[#991B1B] text-xs font-semibold rounded inline-flex items-center justify-center cursor-pointer ml-auto"
                       >
                         <Trash2 size={14} />
@@ -854,9 +1374,165 @@ export default function AdminGlobalMarketsSection({
                             </button>
                             <button
                               type="button"
-                              onClick={() => setDeleteTarget(report)}
+                              onClick={() => setDeleteTarget({ kind: 'country', report })}
                               className="p-1.5 text-[#991B1B] hover:text-[#7F1D1D] cursor-pointer"
                               title="Delete report"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {filteredComparisons.map((comp) => {
+                    const isoA = (comp.city_a.country_code || '').trim().toLowerCase();
+                    const isoB = (comp.city_b.country_code || '').trim().toLowerCase();
+                    const saleA = formatMarketCurrency(comp.city_a.avg_sale_price, comp.city_a.currency);
+                    const saleB = formatMarketCurrency(comp.city_b.avg_sale_price, comp.city_b.currency);
+                    const trendA = formatMarketTrend(
+                      comp.city_a.property_price_trend_pct,
+                      comp.city_a.property_price_trend_dir
+                    );
+                    const trendB = formatMarketTrend(
+                      comp.city_b.property_price_trend_pct,
+                      comp.city_b.property_price_trend_dir
+                    );
+                    const publicHref = `/global-markets/comparisons/${encodeURIComponent(comp.slug)}`;
+
+                    return (
+                      <tr key={`comp-${comp.id}`} className="hover:bg-[#FAF8F5] bg-[#FCFBF8]">
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <ArrowLeftRight size={14} className="text-[#8C4A27] shrink-0" />
+                            <div>
+                              <div className="font-semibold text-[#141413] text-xs flex items-center gap-1.5">
+                                {/^[a-z]{2}$/.test(isoA) && (
+                                  <span className={`fi fi-${isoA} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                                )}
+                                <span>{comp.city_a.city_name || 'City A'}</span>
+                                <span className="text-[#8C4A27]">vs</span>
+                                {/^[a-z]{2}$/.test(isoB) && (
+                                  <span className={`fi fi-${isoB} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                                )}
+                                <span>{comp.city_b.city_name || 'City B'}</span>
+                              </div>
+                              <div className="text-[11px] text-[#5C5A55]">
+                                Two-City Comparison · {comp.city_a.country_name} / {comp.city_b.country_name}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 max-w-xs">
+                          <div className="font-medium text-[#141413] flex items-center gap-1.5">
+                            {comp.is_featured && (
+                              <span title="Featured comparison" className="inline-flex shrink-0">
+                                <Star
+                                  size={13}
+                                  className="text-[#8C4A27] fill-[#8C4A27]"
+                                  aria-label="Featured comparison"
+                                />
+                              </span>
+                            )}
+                            <span className="truncate">{comp.title}</span>
+                          </div>
+                          <div className="text-[11px] font-mono text-[#7A7770] truncate">
+                            {publicHref}
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-xs font-mono tabular-nums text-[#141413]">
+                          <div className="space-y-0.5">
+                            <div>
+                              A ({comp.city_a.city_name}): {saleA || 'N/A'}
+                              {trendA ? ` (${trendA})` : ''}
+                            </div>
+                            <div>
+                              B ({comp.city_b.city_name}): {saleB || 'N/A'}
+                              {trendB ? ` (${trendB})` : ''}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-xs text-[#4A4843]">
+                          <div className="font-semibold text-[#141413]">
+                            {comp.reporting_period || 'Period unset'} ·{' '}
+                            {formatMarketGranularityLabel(comp.reporting_granularity)}
+                          </div>
+                          <div className="text-[11px] text-[#5C5A55] truncate max-w-[200px]">
+                            {[comp.city_a.data_source_name, comp.city_b.data_source_name]
+                              .filter(Boolean)
+                              .join(' · ') || 'No source specified'}
+                          </div>
+                          {comp.last_verified_at && (
+                            <div className="text-[10px] font-mono text-[#7A7770]">
+                              Verified {formatMarketDateLabel(comp.last_verified_at)}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-4 text-xs">
+                          <span
+                            className={`font-semibold capitalize ${
+                              comp.status === 'published'
+                                ? 'text-[#14532D]'
+                                : comp.status === 'draft'
+                                ? 'text-[#8C4A27]'
+                                : 'text-[#5C5A55]'
+                            }`}
+                          >
+                            {comp.status}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5">
+                            {comp.status === 'published' && (
+                              <a
+                                href={publicHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 text-[#5C5A55] hover:text-[#1E3A5F]"
+                                title="View public comparison page"
+                              >
+                                <ExternalLink size={14} />
+                              </a>
+                            )}
+                            {comp.status !== 'published' && (
+                              <button
+                                type="button"
+                                onClick={() => handleComparisonStatusChange(comp, 'published')}
+                                className="p-1.5 text-[#14532D] hover:bg-[#ECFDF5] rounded cursor-pointer"
+                                title="Publish comparison"
+                              >
+                                <Send size={14} />
+                              </button>
+                            )}
+                            {comp.status === 'published' && (
+                              <button
+                                type="button"
+                                onClick={() => handleComparisonStatusChange(comp, 'archived')}
+                                className="p-1.5 text-[#5C5A55] hover:bg-[#EFECE6] rounded cursor-pointer"
+                                title="Archive comparison"
+                              >
+                                <Archive size={14} />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => openEditComparisonModal(comp)}
+                              className="p-1.5 text-[#1E3A5F] hover:text-[#141413] cursor-pointer"
+                              title="Edit comparison"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget({ kind: 'comparison', comparison: comp })}
+                              className="p-1.5 text-[#991B1B] hover:text-[#7F1D1D] cursor-pointer"
+                              title="Delete comparison"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -872,12 +1548,18 @@ export default function AdminGlobalMarketsSection({
         )}
       </div>
 
-      {/* Create / Edit Global Market Report Modal */}
+      {/* Create / Edit Global Market Report or Two-City Comparison Modal */}
       {editorOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={form.id ? 'Edit Market Report' : 'Create Market Report'}
+          aria-label={
+            isEditingExisting
+              ? editorMode === 'comparison'
+                ? 'Edit Two-City Comparison'
+                : 'Edit Market Report'
+              : 'Create Market Intelligence Report'
+          }
           className="fixed inset-0 z-50 bg-black/50 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
         >
           <div className="bg-white border border-[#E5E0D8] rounded-none sm:rounded w-full max-w-4xl min-w-0 min-h-[100dvh] sm:min-h-0 sm:max-h-[92vh] overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 my-0 sm:my-6">
@@ -887,10 +1569,15 @@ export default function AdminGlobalMarketsSection({
                   Global Markets Editor
                 </p>
                 <h2 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">
-                  {form.id ? 'Edit Market Intelligence Report' : 'Create Market Intelligence Report'}
+                  {isEditingExisting
+                    ? editorMode === 'comparison'
+                      ? 'Edit Two-City Property Market Comparison'
+                      : 'Edit Market Intelligence Report'
+                    : 'Create Market Intelligence Report'}
                 </h2>
                 <p className="text-xs font-mono text-[#5C5A55] mt-1 break-all">
-                  Public URL: https://www.amaanestate.com{previewPublicUrl}
+                  Public URL: https://www.amaanestate.com
+                  {editorMode === 'comparison' ? previewComparisonUrl : previewPublicUrl}
                 </p>
               </div>
               <button
@@ -903,38 +1590,94 @@ export default function AdminGlobalMarketsSection({
               </button>
             </div>
 
-            {/* Publish Readiness / Anti-Thin-Page Banner */}
-            <div
-              className={`rounded border px-4 py-3 text-xs space-y-1 ${
-                readiness.isReadyToPublish
-                  ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#14532D]'
-                  : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
-              }`}
-            >
-              <div className="font-semibold flex items-center gap-1.5">
-                {readiness.isReadyToPublish ? (
-                  <>
-                    <CheckCircle2 size={14} />
-                    <span>Meets publication &amp; anti-thin-content standards.</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle size={14} />
-                    <span>Required before publishing (Draft saves freely):</span>
-                  </>
-                )}
-              </div>
-              {readiness.issues.map((issue) => (
-                <p key={issue}>• {issue}</p>
-              ))}
-              {readiness.warnings.map((w) => (
-                <p key={w} className="text-[#78350F]">
-                  • Note: {w}
+            {/* Report Type Selector (on Create) */}
+            {!isEditingExisting && (
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55]">
+                  Report Type
                 </p>
-              ))}
-            </div>
+                <div
+                  role="radiogroup"
+                  aria-label="Select market intelligence report type"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={editorMode === 'country'}
+                    onClick={() => setEditorMode('country')}
+                    className={`p-3.5 rounded border text-left transition-colors cursor-pointer ${
+                      editorMode === 'country'
+                        ? 'bg-[#F3F6FA] border-[#1E3A5F] ring-1 ring-[#1E3A5F]'
+                        : 'bg-white border-[#E5E0D8] hover:border-[#1E3A5F]/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#141413]">
+                      <Globe2 size={15} className="text-[#1E3A5F] shrink-0" />
+                      <span>Country Market Report</span>
+                    </div>
+                    <p className="text-[11px] text-[#5C5A55] mt-1">
+                      Single country or city property market report under /global-markets/country/report.
+                    </p>
+                  </button>
 
-            <form onSubmit={handleSave} className="space-y-6 min-w-0">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={editorMode === 'comparison'}
+                    onClick={() => setEditorMode('comparison')}
+                    className={`p-3.5 rounded border text-left transition-colors cursor-pointer ${
+                      editorMode === 'comparison'
+                        ? 'bg-[#F3F6FA] border-[#1E3A5F] ring-1 ring-[#1E3A5F]'
+                        : 'bg-white border-[#E5E0D8] hover:border-[#1E3A5F]/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#141413]">
+                      <ArrowLeftRight size={15} className="text-[#8C4A27] shrink-0" />
+                      <span>Two-City Comparison</span>
+                    </div>
+                    <p className="text-[11px] text-[#5C5A55] mt-1">
+                      Side-by-side comparison of City A and City B with independent metrics, currencies &amp; sources.
+                    </p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {editorMode === 'country' ? (
+              <>
+                {/* Publish Readiness / Anti-Thin-Page Banner */}
+                <div
+                  className={`rounded border px-4 py-3 text-xs space-y-1 ${
+                    readiness.isReadyToPublish
+                      ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#14532D]'
+                      : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
+                  }`}
+                >
+                  <div className="font-semibold flex items-center gap-1.5">
+                    {readiness.isReadyToPublish ? (
+                      <>
+                        <CheckCircle2 size={14} />
+                        <span>Meets publication &amp; anti-thin-content standards.</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={14} />
+                        <span>Required before publishing (Draft saves freely):</span>
+                      </>
+                    )}
+                  </div>
+                  {readiness.issues.map((issue) => (
+                    <p key={issue}>• {issue}</p>
+                  ))}
+                  {readiness.warnings.map((w) => (
+                    <p key={w} className="text-[#78350F]">
+                      • Note: {w}
+                    </p>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSave} className="space-y-6 min-w-0">
               {/* Section 1: Geography & Identity */}
               <div className="space-y-4">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
@@ -1698,6 +2441,444 @@ export default function AdminGlobalMarketsSection({
                 </button>
               </div>
             </form>
+              </>
+            ) : (
+              <>
+                {/* Two-City Comparison Readiness Banner */}
+                <div
+                  className={`rounded border px-4 py-3 text-xs space-y-1 ${
+                    compReadiness.isReadyToPublish
+                      ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#14532D]'
+                      : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
+                  }`}
+                >
+                  <div className="font-semibold flex items-center gap-1.5">
+                    {compReadiness.isReadyToPublish ? (
+                      <>
+                        <CheckCircle2 size={14} />
+                        <span>Comparison meets publication standards for City A and City B.</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={14} />
+                        <span>Required before publishing comparison (Draft saves freely):</span>
+                      </>
+                    )}
+                  </div>
+                  {compReadiness.issues.map((issue) => (
+                    <p key={issue}>• {issue}</p>
+                  ))}
+                  {compReadiness.warnings.map((w) => (
+                    <p key={w} className="text-[#78350F]">
+                      • Note: {w}
+                    </p>
+                  ))}
+                </div>
+
+                {/* Dedicated Two-City Comparison Form */}
+                <form onSubmit={handleSaveComparison} className="space-y-6 min-w-0">
+                  {/* Section 1: Comparison Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
+                      1. Comparison Information
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="comp-title"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Comparison Title *
+                        </label>
+                        <input
+                          id="comp-title"
+                          type="text"
+                          required
+                          value={compForm.title}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCompForm((prev) => ({
+                              ...prev,
+                              title: val,
+                              slug:
+                                !compSlugTouched && !prev.id
+                                  ? buildComparisonSlug(
+                                      prev.city_a.city_name,
+                                      prev.city_b.city_name,
+                                      val
+                                    )
+                                  : prev.slug,
+                            }));
+                          }}
+                          placeholder="e.g., Dubai vs London Residential Property Market Comparison (2026)"
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="comp-status"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Publication Status
+                        </label>
+                        <select
+                          id="comp-status"
+                          value={compForm.status}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({
+                              ...prev,
+                              status: e.target.value as PublicationStatus,
+                            }))
+                          }
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm bg-white"
+                        >
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <label
+                          htmlFor="comp-short-intro"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Short Introduction
+                        </label>
+                        <textarea
+                          id="comp-short-intro"
+                          rows={2}
+                          value={compForm.short_intro}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, short_intro: e.target.value }))
+                          }
+                          placeholder="Concise introduction framing why these two residential markets are compared and what investors should notice..."
+                          className="w-full p-3 border border-[#D6CEBE] rounded text-sm leading-relaxed"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="comp-reporting-period"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Reporting Period
+                        </label>
+                        <input
+                          id="comp-reporting-period"
+                          type="text"
+                          value={compForm.reporting_period}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, reporting_period: e.target.value }))
+                          }
+                          placeholder="e.g., Q3 2026 or 2026"
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="comp-granularity"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Reporting Granularity
+                        </label>
+                        <select
+                          id="comp-granularity"
+                          value={compForm.reporting_granularity}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({
+                              ...prev,
+                              reporting_granularity: e.target.value as MarketDataPeriodType,
+                            }))
+                          }
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm bg-white"
+                        >
+                          <option value="month">Monthly</option>
+                          <option value="quarter">Quarterly</option>
+                          <option value="year">Annual</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="comp-last-verified"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Last Verified Date
+                        </label>
+                        <input
+                          id="comp-last-verified"
+                          type="date"
+                          value={compForm.last_verified_at || ''}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, last_verified_at: e.target.value }))
+                          }
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-3 flex items-center gap-2 pt-1">
+                        <input
+                          id="comp-featured"
+                          type="checkbox"
+                          checked={compForm.is_featured}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, is_featured: e.target.checked }))
+                          }
+                          className="w-4 h-4"
+                        />
+                        <label htmlFor="comp-featured" className="text-xs font-semibold text-[#141413]">
+                          Featured Comparison (prioritized in Global Markets featured comparison shelf)
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: City A (Completely Independent) */}
+                  <ComparisonCityEditorSection
+                    slot="A"
+                    city={compForm.city_a}
+                    onChange={updateCityA}
+                  />
+
+                  {/* Section 3: City B (Completely Independent) */}
+                  <ComparisonCityEditorSection
+                    slot="B"
+                    city={compForm.city_b}
+                    onChange={updateCityB}
+                  />
+
+                  {/* Section 4: Social Media Sharing Image (URL Input Only) */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
+                      4. Social Media Sharing Image
+                    </h3>
+                    <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold text-[#141413]">
+                            Open Graph &amp; Social Link Preview URL
+                          </p>
+                          <p className="text-[11px] text-[#5C5A55] mt-0.5">
+                            Paste a publicly accessible HTTPS image URL (recommended 1200 &times; 630). Falls back to City A image, City B image, or site OG default if blank.
+                          </p>
+                        </div>
+                        {(compForm.social_image || compForm.social_image_alt) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCompSocialPreviewError(false);
+                              setCompForm((prev) => ({
+                                ...prev,
+                                social_image: '',
+                                social_image_alt: '',
+                              }));
+                            }}
+                            className="min-h-[36px] px-2.5 py-1 text-xs font-semibold text-[#991B1B] hover:underline cursor-pointer"
+                          >
+                            Clear URL
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                        {compForm.social_image?.trim() &&
+                        isValidHttpsUrl(compForm.social_image) &&
+                        !compSocialPreviewError ? (
+                          <img
+                            src={compForm.social_image.trim()}
+                            alt={
+                              compForm.social_image_alt?.trim() ||
+                              compForm.title ||
+                              'Social sharing image preview'
+                            }
+                            referrerPolicy="no-referrer"
+                            onError={() => setCompSocialPreviewError(true)}
+                            className="w-full aspect-[1.91/1] object-cover rounded border border-[#E5E0D8] bg-[#EBE6DF]"
+                          />
+                        ) : (
+                          <div className="w-full aspect-[1.91/1] rounded border border-dashed border-[#D6CEBE] bg-white px-3 flex items-center justify-center text-center text-[11px] text-[#7A7770]">
+                            {compForm.social_image?.trim()
+                              ? !isValidHttpsUrl(compForm.social_image)
+                                ? 'Enter a valid https:// image URL to preview'
+                                : 'Preview could not be loaded from URL'
+                              : compSocialResolved.source === 'city_a'
+                              ? `Fallback: ${compForm.city_a.city_name || 'City A'} image`
+                              : compSocialResolved.source === 'city_b'
+                              ? `Fallback: ${compForm.city_b.city_name || 'City B'} image`
+                              : 'Defaults to site-wide OG image'}
+                          </div>
+                        )}
+
+                        <div className="sm:col-span-2 space-y-2.5">
+                          <div>
+                            <label
+                              htmlFor="comp-social-image-url"
+                              className="block text-[11px] font-semibold text-[#5C5A55] mb-1"
+                            >
+                              Social Sharing Image URL (Optional)
+                            </label>
+                            <input
+                              id="comp-social-image-url"
+                              type="url"
+                              value={compForm.social_image || ''}
+                              onChange={(e) => {
+                                setCompSocialPreviewError(false);
+                                setCompForm((prev) => ({
+                                  ...prev,
+                                  social_image: e.target.value,
+                                }));
+                              }}
+                              placeholder="https://example.com/images/city-comparison-1200x630.jpg"
+                              className="w-full h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs font-mono"
+                            />
+                            {compForm.social_image?.trim() &&
+                              !isValidHttpsUrl(compForm.social_image) && (
+                                <p className="mt-1 text-[11px] text-[#991B1B]">
+                                  Enter an absolute HTTPS URL starting with https://
+                                </p>
+                              )}
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="comp-social-image-alt"
+                              className="block text-[11px] font-semibold text-[#5C5A55] mb-1"
+                            >
+                              Social Sharing Image Alt Text (Optional)
+                            </label>
+                            <input
+                              id="comp-social-image-alt"
+                              type="text"
+                              value={compForm.social_image_alt || ''}
+                              onChange={(e) =>
+                                setCompForm((prev) => ({
+                                  ...prev,
+                                  social_image_alt: e.target.value,
+                                }))
+                              }
+                              placeholder="Descriptive alt text for social link previews"
+                              className="w-full h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 5: SEO & Canonical URL */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55] border-b border-[#E5E0D8] pb-2">
+                      5. Search Engine Optimization &amp; Canonical URL
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="comp-slug"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Comparison Slug
+                        </label>
+                        <input
+                          id="comp-slug"
+                          type="text"
+                          value={compForm.slug || ''}
+                          onChange={(e) => {
+                            setCompSlugTouched(true);
+                            setCompForm((prev) => ({
+                              ...prev,
+                              slug: slugifyMarketSegment(e.target.value),
+                            }));
+                          }}
+                          placeholder="dubai-vs-london-property-market"
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="comp-seo-title"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          SEO Title (Optional Override)
+                        </label>
+                        <input
+                          id="comp-seo-title"
+                          type="text"
+                          value={compForm.seo_title || ''}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, seo_title: e.target.value }))
+                          }
+                          placeholder="Defaults to Comparison Title | AmaanEstate"
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="comp-canonical-url"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Canonical URL (Optional Override)
+                        </label>
+                        <input
+                          id="comp-canonical-url"
+                          type="url"
+                          value={compForm.canonical_url || ''}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, canonical_url: e.target.value }))
+                          }
+                          placeholder={`https://www.amaanestate.com${previewComparisonUrl}`}
+                          className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-xs font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="comp-seo-description"
+                          className="block text-xs font-semibold text-[#4A4843] mb-1"
+                        >
+                          Meta Description (Optional Override)
+                        </label>
+                        <textarea
+                          id="comp-seo-description"
+                          rows={2}
+                          value={compForm.seo_description || ''}
+                          onChange={(e) =>
+                            setCompForm((prev) => ({ ...prev, seo_description: e.target.value }))
+                          }
+                          placeholder="140-160 character summary for search snippets..."
+                          className="w-full p-3 border border-[#D6CEBE] rounded text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#E5E0D8] pt-4 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditorOpen(false)}
+                      className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#FAF8F5] border border-[#D6CEBE] text-xs font-semibold rounded cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+                    >
+                      {saving
+                        ? 'Saving...'
+                        : compForm.id
+                        ? 'Update Comparison'
+                        : 'Save Comparison'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1859,10 +3040,16 @@ export default function AdminGlobalMarketsSection({
       {/* Delete Confirmation */}
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete Market Report"
+        title={
+          deleteTarget?.kind === 'comparison'
+            ? 'Delete Two-City Comparison'
+            : 'Delete Market Report'
+        }
         description={
           deleteTarget
-            ? `Permanently delete "${deleteTarget.title}" (${deleteTarget.country_name})? This action cannot be undone.`
+            ? deleteTarget.kind === 'comparison'
+              ? `Permanently delete "${deleteTarget.comparison.title}" (${deleteTarget.comparison.city_a.city_name} vs ${deleteTarget.comparison.city_b.city_name})? This action cannot be undone.`
+              : `Permanently delete "${deleteTarget.report.title}" (${deleteTarget.report.country_name})? This action cannot be undone.`
             : ''
         }
         loading={deleting}

@@ -2,24 +2,39 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe2 } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
-import { GlobalMarketCountrySummary } from '../types';
-import { getPublishedMarketCountries } from '../services/globalMarketsService';
+import { GlobalMarketComparisonReport, GlobalMarketCountrySummary } from '../types';
+import {
+  getPublishedMarketComparisons,
+  getPublishedMarketCountries,
+} from '../services/globalMarketsService';
 import { formatMarketCurrency } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import ComparisonMarketCard from '../components/marketplace/ComparisonMarketCard';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 
 export default function GlobalMarketsIndexPage() {
   const [countries, setCountries] = useState<GlobalMarketCountrySummary[]>([]);
+  const [comparisons, setComparisons] = useState<GlobalMarketComparisonReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    getPublishedMarketCountries()
-      .then((res) => {
-        if (active) setCountries(res.countries);
+    Promise.all([
+      getPublishedMarketCountries(),
+      getPublishedMarketComparisons().catch(() => ({
+        comparisons: [] as GlobalMarketComparisonReport[],
+        schemaPending: false,
+      })),
+    ])
+      .then(([countriesRes, comparisonsRes]) => {
+        if (!active) return;
+        setCountries(countriesRes.countries);
+        setComparisons(comparisonsRes.comparisons);
       })
       .catch(() => {
-        if (active) setCountries([]);
+        if (!active) return;
+        setCountries([]);
+        setComparisons([]);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -34,7 +49,7 @@ export default function GlobalMarketsIndexPage() {
     description:
       'Explore verified residential property price trends, rental market indicators, and investment insights across international real estate markets.',
     url: `${getCanonicalOrigin()}/global-markets`,
-    noIndex: !loading && countries.length === 0,
+    noIndex: !loading && countries.length === 0 && comparisons.length === 0,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -81,7 +96,7 @@ export default function GlobalMarketsIndexPage() {
             />
           ))}
         </div>
-      ) : countries.length === 0 ? (
+      ) : countries.length === 0 && comparisons.length === 0 ? (
         <div className="bg-white border border-[#E5E0D8] rounded-md p-6 sm:p-10 text-center space-y-3">
           <Globe2 size={30} className="mx-auto text-[#8C4A27]" strokeWidth={1.5} />
           <h2 className="text-xl font-serif font-semibold text-[#141413]">
@@ -100,7 +115,9 @@ export default function GlobalMarketsIndexPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="space-y-10 sm:space-y-12">
+          {countries.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {countries.map((item) => {
             const iso = (item.countryCode || '').trim().toLowerCase();
             const hasFlag = /^[a-z]{2}$/.test(iso);
@@ -195,6 +212,37 @@ export default function GlobalMarketsIndexPage() {
               </Link>
             );
           })}
+            </div>
+          )}
+
+          {comparisons.length > 0 && (
+            <section
+              id="city-comparisons"
+              aria-labelledby="city-comparisons-heading"
+              className="pt-8 border-t border-[#E5E0D8] space-y-5"
+            >
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
+                  Head-to-Head Analysis
+                </p>
+                <h2
+                  id="city-comparisons-heading"
+                  className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413]"
+                >
+                  City Market Comparisons
+                </h2>
+                <p className="text-sm text-[#4A4843] max-w-2xl">
+                  Side-by-side institutional research pairing two residential markets with independent sale benchmarks, rental trends, local currencies, and official statistical sources.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {comparisons.map((comparison) => (
+                  <ComparisonMarketCard key={comparison.id} comparison={comparison} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>

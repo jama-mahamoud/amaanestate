@@ -34,6 +34,7 @@ const RentPage = lazyRetry(() => import('./pages/RentPage'));
 const PropertyDetailsPage = lazyRetry(() => import('./pages/PropertyDetailsPage'));
 const GlobalMarketsIndexPage = lazyRetry(() => import('./pages/GlobalMarketsIndexPage'));
 const GlobalMarketPage = lazyRetry(() => import('./pages/GlobalMarketPage'));
+const GlobalMarketComparisonPage = lazyRetry(() => import('./pages/GlobalMarketComparisonPage'));
 const CategoryPage = lazyRetry(() => import('./pages/CategoryPage'));
 const SearchPage = lazyRetry(() => import('./pages/SearchPage'));
 const ArticleDetailsPage = lazyRetry(() => import('./pages/ArticleDetailsPage'));
@@ -116,6 +117,7 @@ export default function App() {
           <Route path="/rent" element={<Layout><RentPage /></Layout>} />
           <Route path="/properties/:slug" element={<Layout><PropertyDetailsPage /></Layout>} />
           <Route path="/global-markets" element={<Layout><GlobalMarketsIndexPage /></Layout>} />
+          <Route path="/global-markets/comparisons/:comparisonSlug" element={<Layout><GlobalMarketComparisonPage /></Layout>} />
           <Route path="/global-markets/:countrySlug" element={<Layout><GlobalMarketPage /></Layout>} />
           <Route path="/global-markets/:countrySlug/:reportSlug" element={<Layout><GlobalMarketPage /></Layout>} />
           <Route path="/investment" element={<Layout><CategoryPage forcedSlug="investment" /></Layout>} />

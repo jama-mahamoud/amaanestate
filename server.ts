@@ -17,7 +17,9 @@ import {
   registerSeoRoutes,
 } from "./server/seoRoutes";
 import {
+  fetchEligibleComparisonsForSitemap,
   fetchEligibleGlobalMarketsForSitemap,
+  fetchGlobalMarketComparisonForSeo,
   fetchGlobalMarketCountryForSeo,
   fetchGlobalMarketReportForSeo,
   registerGlobalMarketsRoutes,
@@ -25,6 +27,8 @@ import {
 import {
   DEFAULT_MARKET_OG_IMAGE_PATH,
   aggregateCountrySummaries,
+  resolveComparisonCanonicalUrl,
+  resolveComparisonSocialImageMetadata,
   resolveMarketSocialImageMetadata,
   resolveReportCanonicalUrl,
   slugifyMarketSegment,
@@ -741,13 +745,15 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
   let articles: SitemapArticleRow[] = [];
   let properties: Array<{ slug: string; published_at?: string | null; updated_at?: string | null; created_at?: string | null }> = [];
   let globalMarkets: Awaited<ReturnType<typeof fetchEligibleGlobalMarketsForSitemap>> = [];
+  let marketComparisons: Awaited<ReturnType<typeof fetchEligibleComparisonsForSitemap>> = [];
 
   if (supabaseConfig) {
-    [categories, articles, properties, globalMarkets] = await Promise.all([
+    [categories, articles, properties, globalMarkets, marketComparisons] = await Promise.all([
       fetchCategoriesFromSupabase(supabaseConfig),
       fetchEligibleArticlesFromSupabase(supabaseConfig),
       fetchEligiblePropertiesForSitemap(supabaseConfig),
       fetchEligibleGlobalMarketsForSitemap(),
+      fetchEligibleComparisonsForSitemap(),
     ]);
   } else {
     // Local fallback ONLY when Supabase credentials are not configured
@@ -867,13 +873,14 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
     addUrl(`/properties/${encodeURIComponent(prop.slug)}`, propLastMod);
   }
 
-  // 6. All Eligible Published Global Market Intelligence Countries & Reports (Country-Level + City-Level)
-  if (globalMarkets.length > 0) {
+  // 6. All Eligible Published Global Market Intelligence Countries, Reports & Comparisons
+  if (globalMarkets.length > 0 || marketComparisons.length > 0) {
     const countrySummaries = aggregateCountrySummaries(globalMarkets);
     const latestMarketTs = maxIsoTimestamp(
-      ...globalMarkets.map((m) => toIsoTimestamp(m.updated_at || m.published_at || m.created_at))
+      ...globalMarkets.map((m) => toIsoTimestamp(m.updated_at || m.published_at || m.created_at)),
+      ...marketComparisons.map((c) => toIsoTimestamp(c.updated_at || c.published_at || c.created_at))
     );
-    if (countrySummaries.length > 0) {
+    if (countrySummaries.length > 0 || marketComparisons.length > 0) {
       addUrl("/global-markets", latestMarketTs);
     }
     for (const country of countrySummaries) {
@@ -890,6 +897,17 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
       addUrl(
         `/global-markets/${encodeURIComponent(cleanCountrySlug)}/${encodeURIComponent(cleanReportSlug)}`,
         marketLastMod
+      );
+    }
+    for (const comparison of marketComparisons) {
+      const cleanCompSlug = slugifyMarketSegment(comparison.slug);
+      if (!cleanCompSlug || cleanCompSlug === "comparisons") continue;
+      const compLastMod = toIsoTimestamp(
+        comparison.updated_at || comparison.published_at || comparison.created_at
+      );
+      addUrl(
+        `/global-markets/comparisons/${encodeURIComponent(cleanCompSlug)}`,
+        compLastMod
       );
     }
   }
@@ -2372,8 +2390,11 @@ app.get("/global-markets", async (req, res) => {
 
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const templateHtml = getIndexTemplateHtml();
-  const markets = await fetchEligibleGlobalMarketsForSitemap();
-  const hasPublished = aggregateCountrySummaries(markets).length > 0;
+  const [markets, comparisons] = await Promise.all([
+    fetchEligibleGlobalMarketsForSitemap(),
+    fetchEligibleComparisonsForSitemap(),
+  ]);
+  const hasPublished = aggregateCountrySummaries(markets).length > 0 || comparisons.length > 0;
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl: `${baseUrl}/global-markets`,
@@ -2381,6 +2402,59 @@ app.get("/global-markets", async (req, res) => {
     title: "Global Real Estate Markets & Housing Intelligence | AmaanEstate",
     description:
       "Explore verified international residential property price trends, rental market indicators, and city-level real estate investment intelligence.",
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
+app.get("/global-markets/comparisons", (_req, res) => {
+  return res.redirect(302, "/global-markets");
+});
+
+app.get("/global-markets/comparisons/:comparisonSlug", async (req, res) => {
+  const customRedirect = await lookupActiveRedirect(req.path);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
+  const comparisonSlug = slugifyMarketSegment(req.params.comparisonSlug);
+  const templateHtml = getIndexTemplateHtml();
+  const comparison =
+    comparisonSlug && comparisonSlug !== "comparisons"
+      ? await fetchGlobalMarketComparisonForSeo(comparisonSlug)
+      : null;
+
+  if (!comparison) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "City Market Comparison Not Found (404) | AmaanEstate",
+        description:
+          "The requested two-city residential market comparison is unavailable or not yet published on AmaanEstate.",
+      })
+    );
+  }
+
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const canonicalUrl = resolveComparisonCanonicalUrl(comparison, baseUrl);
+  const pageTitle = comparison.seo_title || `${comparison.title} | AmaanEstate`;
+  const description = stripHtml(
+    comparison.seo_description ||
+      comparison.short_intro ||
+      `Side-by-side residential property market comparison between ${comparison.city_a.city_name} and ${comparison.city_b.city_name} (${comparison.reporting_period}).`
+  ).slice(0, 160);
+  const socialMeta = resolveComparisonSocialImageMetadata({ comparison });
+
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl,
+    title: pageTitle,
+    description,
+    ogType: "article",
+    image: socialMeta.image,
+    imageAlt: socialMeta.imageAlt,
+    includeSocialMeta: true,
   });
   return sendHtmlPage(req, res, 200, html);
 });

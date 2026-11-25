@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Globe2 } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import 'flag-icons/css/flag-icons.min.css';
-import { GlobalMarketCountrySummary } from '../../types';
+import { GlobalMarketComparisonReport, GlobalMarketCountrySummary } from '../../types';
 import {
   GLOBAL_MARKETS_CHANNEL,
   GLOBAL_MARKETS_UPDATED_EVENT,
+  getPublishedMarketComparisons,
   getPublishedMarketCountries,
 } from '../../services/globalMarketsService';
 import { getHomepageCountryTargetHref } from '../../lib/globalMarkets';
 import CountryMapCover from './CountryMapCover';
+import ComparisonMarketCard from './ComparisonMarketCard';
 import MarketTrendIndicator from './MarketTrendIndicator';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 
@@ -25,6 +27,7 @@ function serializeCountrySummaries(list: GlobalMarketCountrySummary[]): string {
 
 export default function GlobalMarketsSection() {
   const [countries, setCountries] = useState<GlobalMarketCountrySummary[]>([]);
+  const [featuredComparisons, setFeaturedComparisons] = useState<GlobalMarketComparisonReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -51,18 +54,30 @@ export default function GlobalMarketsSection() {
       setLoading(true);
     }
     try {
-      const res = await getPublishedMarketCountries();
-      const nextList = Array.isArray(res.countries) ? res.countries : [];
+      const [countriesRes, comparisonsRes] = await Promise.all([
+        getPublishedMarketCountries(),
+        getPublishedMarketComparisons({ featuredOnly: true }).catch(() => ({
+          comparisons: [] as GlobalMarketComparisonReport[],
+          schemaPending: false,
+        })),
+      ]);
+      const nextList = Array.isArray(countriesRes.countries) ? countriesRes.countries : [];
       const nextSig = serializeCountrySummaries(nextList);
 
       if (nextSig !== lastSignatureRef.current) {
         lastSignatureRef.current = nextSig;
         setCountries(nextList);
       }
+
+      const nextComparisons = Array.isArray(comparisonsRes.comparisons)
+        ? comparisonsRes.comparisons
+        : [];
+      setFeaturedComparisons(nextComparisons);
     } catch {
       if (isInitial) {
         lastSignatureRef.current = '';
         setCountries([]);
+        setFeaturedComparisons([]);
       }
     } finally {
       if (isInitial) {
@@ -121,6 +136,13 @@ export default function GlobalMarketsSection() {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'global_markets' },
+          () => {
+            fetchCountries(false);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'global_market_comparisons' },
           () => {
             fetchCountries(false);
           }
@@ -195,7 +217,7 @@ export default function GlobalMarketsSection() {
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            {countries.length > 0 && (
+            {(countries.length > 0 || featuredComparisons.length > 0) && (
               <Link
                 to="/global-markets"
                 className="inline-flex items-center min-h-[36px] text-xs font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap"
@@ -362,10 +384,37 @@ export default function GlobalMarketsSection() {
               })}
             </AnimatePresence>
           </div>
-        ) : (
+        ) : featuredComparisons.length === 0 ? (
           <p className="text-sm text-[#5C5A55] py-2">
             International real estate market intelligence reports are being prepared for publication.
           </p>
+        ) : null}
+
+        {!loading && featuredComparisons.length > 0 && (
+          <div className="pt-4 sm:pt-5 border-t border-[#E5E0D8] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+              <div className="space-y-0.5">
+                <p className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
+                  Head-to-Head Research
+                </p>
+                <h3 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">
+                  Featured City Market Comparisons
+                </h3>
+              </div>
+              <Link
+                to="/global-markets#city-comparisons"
+                className="text-xs font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap"
+              >
+                Explore All Comparisons &rarr;
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {featuredComparisons.map((comparison) => (
+                <ComparisonMarketCard key={comparison.id} comparison={comparison} />
+              ))}
+            </div>
+          </div>
         )}
       </section>
     </MotionConfig>

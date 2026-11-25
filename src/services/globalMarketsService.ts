@@ -2,9 +2,12 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getCountryQueryVariants, normalizeCountryInfo } from '../lib/countries';
 import {
   aggregateCountrySummaries,
+  buildComparisonSlug,
   buildMarketReportSlug,
   deriveCountrySlug,
+  getComparisonPublishReadiness,
   getMarketPublishReadiness,
+  isMeaningfulComparison,
   isMeaningfulMarketReport,
   isValidHttpUrl,
   isValidHttpsUrl,
@@ -18,6 +21,9 @@ import { loadDemoDb, saveDemoDb } from './demoContent';
 import { isPgrst205Error } from './propertyService';
 import {
   Article,
+  ComparisonCitySlot,
+  GlobalMarketComparisonCity,
+  GlobalMarketComparisonReport,
   GlobalMarketCountrySummary,
   GlobalMarketReport,
   MarketDataPeriodType,
@@ -831,4 +837,680 @@ export async function stageDraftFromPublicSource(params: {
     },
     note: `Draft staged using ${sourceMeta.shortName} attribution. Enter verified statistics directly from the official release before publishing.`,
   };
+}
+
+// ============================================================================
+// Two-City Property Market Comparison Service
+// ============================================================================
+
+export interface SaveComparisonCityInput {
+  city_name: string;
+  country_name: string;
+  country_code?: string;
+  image_url?: string | null;
+  image_alt?: string | null;
+  avg_sale_price?: number | string | null;
+  avg_monthly_rent?: number | string | null;
+  currency: string;
+  property_price_trend_pct?: number | string | null;
+  property_price_trend_dir?: MarketTrendDirection | null;
+  rental_price_trend_pct?: number | string | null;
+  rental_price_trend_dir?: MarketTrendDirection | null;
+  data_source_name: string;
+  data_source_url?: string | null;
+  data_period: string;
+  market_overview: string;
+  market_analysis: string;
+  investment_insights: string;
+}
+
+export interface SaveGlobalMarketComparisonInput {
+  id?: string;
+  title: string;
+  slug?: string;
+  short_intro: string;
+  status: PublicationStatus;
+  is_featured: boolean;
+  reporting_period: string;
+  reporting_granularity: MarketDataPeriodType;
+  last_verified_at?: string | null;
+  social_image?: string | null;
+  social_image_alt?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  canonical_url?: string | null;
+  published_at?: string | null;
+  city_a: SaveComparisonCityInput;
+  city_b: SaveComparisonCityInput;
+}
+
+function emptyComparisonCity(slot: ComparisonCitySlot): GlobalMarketComparisonCity {
+  return {
+    city_slot: slot,
+    city_name: '',
+    country_name: '',
+    country_code: '',
+    image_url: null,
+    image_alt: null,
+    avg_sale_price: null,
+    avg_monthly_rent: null,
+    currency: 'USD',
+    property_price_trend_pct: null,
+    property_price_trend_dir: null,
+    rental_price_trend_pct: null,
+    rental_price_trend_dir: null,
+    data_source_name: '',
+    data_source_url: null,
+    data_period: '',
+    market_overview: '',
+    market_analysis: '',
+    investment_insights: '',
+  };
+}
+
+export function normalizeComparisonCityRow(
+  row: any,
+  slot: ComparisonCitySlot
+): GlobalMarketComparisonCity {
+  if (!row || typeof row !== 'object') {
+    return emptyComparisonCity(slot);
+  }
+  const normalizedCountry = normalizeCountryInfo(row.country_name);
+  const countryName = normalizedCountry?.name || String(row.country_name || '').trim();
+  const countryCode = String(row.country_code || normalizedCountry?.code || '')
+    .trim()
+    .toUpperCase();
+
+  return {
+    id: row.id,
+    comparison_id: row.comparison_id,
+    city_slot: slot,
+    city_name: String(row.city_name || '').trim(),
+    country_name: countryName,
+    country_code: countryCode,
+    image_url: row.image_url ? String(row.image_url).trim() : null,
+    image_alt: row.image_alt ? String(row.image_alt).trim() : null,
+    avg_sale_price: normalizeNullableNumber(row.avg_sale_price),
+    avg_monthly_rent: normalizeNullableNumber(row.avg_monthly_rent),
+    currency: String(row.currency || 'USD').trim().toUpperCase(),
+    property_price_trend_pct: normalizeNullableNumber(row.property_price_trend_pct),
+    property_price_trend_dir:
+      (row.property_price_trend_dir as MarketTrendDirection | null) || null,
+    rental_price_trend_pct: normalizeNullableNumber(row.rental_price_trend_pct),
+    rental_price_trend_dir:
+      (row.rental_price_trend_dir as MarketTrendDirection | null) || null,
+    data_source_name: String(row.data_source_name || '').trim(),
+    data_source_url: row.data_source_url ? String(row.data_source_url).trim() : null,
+    data_period: String(row.data_period || '').trim(),
+    market_overview: String(row.market_overview || '').replace(/\r\n?/g, '\n'),
+    market_analysis: String(row.market_analysis || '').replace(/\r\n?/g, '\n'),
+    investment_insights: String(row.investment_insights || '').replace(/\r\n?/g, '\n'),
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+export function normalizeGlobalMarketComparisonRow(row: any): GlobalMarketComparisonReport {
+  const citiesList: any[] = Array.isArray(row.global_market_comparison_cities)
+    ? row.global_market_comparison_cities
+    : [];
+  const rawA =
+    row.city_a ||
+    citiesList.find((c) => String(c.city_slot || '').toUpperCase() === 'A');
+  const rawB =
+    row.city_b ||
+    citiesList.find((c) => String(c.city_slot || '').toUpperCase() === 'B');
+
+  return {
+    id: row.id,
+    title: String(row.title || '').trim(),
+    slug: String(row.slug || '').trim(),
+    short_intro: String(row.short_intro || '').replace(/\r\n?/g, '\n'),
+    status: (row.status as PublicationStatus) || 'draft',
+    is_featured: Boolean(row.is_featured),
+    reporting_period: String(row.reporting_period || '').trim(),
+    reporting_granularity:
+      (row.reporting_granularity as MarketDataPeriodType) || 'quarter',
+    last_verified_at: row.last_verified_at ? String(row.last_verified_at).slice(0, 10) : null,
+    social_image: row.social_image ? String(row.social_image).trim() : null,
+    social_image_alt: row.social_image_alt ? String(row.social_image_alt).trim() : null,
+    seo_title: row.seo_title ? String(row.seo_title).trim() : null,
+    seo_description: row.seo_description ? String(row.seo_description).trim() : null,
+    canonical_url: row.canonical_url ? String(row.canonical_url).trim() : null,
+    published_at: row.published_at || null,
+    created_by: row.created_by || null,
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || undefined,
+    city_a: normalizeComparisonCityRow(rawA, 'A'),
+    city_b: normalizeComparisonCityRow(rawB, 'B'),
+  };
+}
+
+export async function getPublishedMarketComparisons(options?: {
+  featuredOnly?: boolean;
+}): Promise<{
+  comparisons: GlobalMarketComparisonReport[];
+  schemaPending: boolean;
+}> {
+  const featuredOnly = Boolean(options?.featuredOnly);
+
+  if (isSupabaseConfigured) {
+    try {
+      const qs = featuredOnly ? '?featured=true' : '';
+      const response = await fetch(`/api/global-markets/comparisons${qs}`, {
+        cache: 'no-store',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok) {
+        return {
+          comparisons: Array.isArray(payload.comparisons)
+            ? payload.comparisons.map(normalizeGlobalMarketComparisonRow)
+            : [],
+          schemaPending: Boolean(payload.schemaPending),
+        };
+      }
+    } catch {
+      // Fallback below
+    }
+
+    if (supabase) {
+      let query = supabase
+        .from('global_market_comparisons')
+        .select('*, global_market_comparison_cities(*)')
+        .eq('status', 'published')
+        .order('is_featured', { ascending: false })
+        .order('last_verified_at', { ascending: false, nullsFirst: false });
+
+      if (featuredOnly) {
+        query = query.eq('is_featured', true);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        if (isPgrst205Error(error)) {
+          return { comparisons: [], schemaPending: true };
+        }
+        return { comparisons: [], schemaPending: false };
+      }
+
+      const list = (data || [])
+        .map(normalizeGlobalMarketComparisonRow)
+        .filter(isMeaningfulComparison);
+      return { comparisons: list, schemaPending: false };
+    }
+  }
+
+  const db = loadDemoDb();
+  const list = (db.globalMarketComparisons || [])
+    .map(normalizeGlobalMarketComparisonRow)
+    .filter(
+      (c) =>
+        c.status === 'published' &&
+        isMeaningfulComparison(c) &&
+        (!featuredOnly || c.is_featured)
+    );
+  return { comparisons: list, schemaPending: false };
+}
+
+export async function getGlobalMarketComparisonBySlug(
+  slug: string
+): Promise<GlobalMarketComparisonReport | null> {
+  const cleanSlug = slugifyMarketSegment(slug);
+  if (!cleanSlug || cleanSlug === 'comparisons') return null;
+
+  if (isSupabaseConfigured) {
+    try {
+      const response = await fetch(
+        `/api/global-markets/comparisons/${encodeURIComponent(cleanSlug)}`,
+        { cache: 'no-store' }
+      );
+      if (response.status === 404) return null;
+      if (response.ok) {
+        const payload = await response.json().catch(() => null);
+        if (payload?.comparison) {
+          const normalized = normalizeGlobalMarketComparisonRow(payload.comparison);
+          return isMeaningfulComparison(normalized) ? normalized : null;
+        }
+      }
+    } catch {
+      // Fallback below
+    }
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('global_market_comparisons')
+        .select('*, global_market_comparison_cities(*)')
+        .eq('slug', cleanSlug)
+        .eq('status', 'published')
+        .maybeSingle();
+
+      if (error || !data) return null;
+      const normalized = normalizeGlobalMarketComparisonRow(data);
+      return isMeaningfulComparison(normalized) ? normalized : null;
+    }
+  }
+
+  const db = loadDemoDb();
+  const match = (db.globalMarketComparisons || [])
+    .map(normalizeGlobalMarketComparisonRow)
+    .find(
+      (c) =>
+        slugifyMarketSegment(c.slug) === cleanSlug &&
+        c.status === 'published' &&
+        isMeaningfulComparison(c)
+    );
+  return match || null;
+}
+
+export async function getAdminGlobalMarketComparisons(): Promise<{
+  comparisons: GlobalMarketComparisonReport[];
+  schemaPending: boolean;
+}> {
+  if (!isSupabaseConfigured || !supabase) {
+    const db = loadDemoDb();
+    return {
+      comparisons: (db.globalMarketComparisons || []).map(normalizeGlobalMarketComparisonRow),
+      schemaPending: false,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('global_market_comparisons')
+    .select('*, global_market_comparison_cities(*)')
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    if (isPgrst205Error(error)) {
+      return { comparisons: [], schemaPending: true };
+    }
+    return { comparisons: [], schemaPending: false };
+  }
+
+  return {
+    comparisons: (data || []).map(normalizeGlobalMarketComparisonRow),
+    schemaPending: false,
+  };
+}
+
+function prepareComparisonCityPayload(
+  city: SaveComparisonCityInput,
+  slot: ComparisonCitySlot
+): { ok: boolean; error?: string; payload?: Omit<GlobalMarketComparisonCity, 'id' | 'comparison_id'> } {
+  const slotLabel = slot === 'A' ? 'City A' : 'City B';
+  const cityName = (city.city_name || '').trim();
+  const normalizedCountry = normalizeCountryInfo(city.country_name);
+  const countryName = (normalizedCountry?.name || city.country_name || '').trim();
+  const countryCode = (
+    (city.country_code || '').trim() ||
+    normalizedCountry?.code ||
+    ''
+  )
+    .toUpperCase()
+    .slice(0, 2);
+
+  if (!cityName) {
+    return { ok: false, error: `${slotLabel}: City Name is required.` };
+  }
+  if (!countryName) {
+    return { ok: false, error: `${slotLabel}: Country Name is required.` };
+  }
+  if (countryCode && !/^[A-Z]{2}$/.test(countryCode)) {
+    return { ok: false, error: `${slotLabel}: Country ISO Code must be 2 letters (e.g., GB, AE).` };
+  }
+
+  const imageUrl = (city.image_url || '').trim() || null;
+  if (imageUrl && !isValidHttpsUrl(imageUrl)) {
+    return {
+      ok: false,
+      error: `${slotLabel}: City Image URL must be a valid publicly accessible https:// URL.`,
+    };
+  }
+
+  const sourceUrl = (city.data_source_url || '').trim() || null;
+  if (sourceUrl && !isValidHttpUrl(sourceUrl)) {
+    return {
+      ok: false,
+      error: `${slotLabel}: Data Source URL must start with http:// or https://.`,
+    };
+  }
+
+  const avgSale = normalizeNullableNumber(city.avg_sale_price);
+  const avgRent = normalizeNullableNumber(city.avg_monthly_rent);
+  const propPct = normalizeNullableNumber(city.property_price_trend_pct);
+  const rentPct = normalizeNullableNumber(city.rental_price_trend_pct);
+
+  if (avgSale !== null && avgSale < 0) {
+    return { ok: false, error: `${slotLabel}: Average sale price cannot be negative.` };
+  }
+  if (avgRent !== null && avgRent < 0) {
+    return { ok: false, error: `${slotLabel}: Average monthly rent cannot be negative.` };
+  }
+
+  const currency = (city.currency || 'USD').trim().toUpperCase().slice(0, 8) || 'USD';
+  if (!/^[A-Z]{3,8}$/.test(currency)) {
+    return { ok: false, error: `${slotLabel}: Currency must be a valid ISO code (e.g., GBP, AED, USD).` };
+  }
+
+  const propDir: MarketTrendDirection | null =
+    propPct !== null || city.property_price_trend_dir === 'flat'
+      ? city.property_price_trend_dir || (propPct! > 0 ? 'up' : propPct! < 0 ? 'down' : 'flat')
+      : null;
+
+  const rentDir: MarketTrendDirection | null =
+    rentPct !== null || city.rental_price_trend_dir === 'flat'
+      ? city.rental_price_trend_dir || (rentPct! > 0 ? 'up' : rentPct! < 0 ? 'down' : 'flat')
+      : null;
+
+  return {
+    ok: true,
+    payload: {
+      city_slot: slot,
+      city_name: cityName,
+      country_name: countryName,
+      country_code: countryCode,
+      image_url: imageUrl,
+      image_alt: (city.image_alt || '').trim() || null,
+      avg_sale_price: avgSale,
+      avg_monthly_rent: avgRent,
+      currency,
+      property_price_trend_pct: propPct,
+      property_price_trend_dir: propDir,
+      rental_price_trend_pct: rentPct,
+      rental_price_trend_dir: rentDir,
+      data_source_name: (city.data_source_name || '').trim(),
+      data_source_url: sourceUrl,
+      data_period: (city.data_period || '').trim(),
+      market_overview: (city.market_overview || '').replace(/\r\n?/g, '\n').trim(),
+      market_analysis: (city.market_analysis || '').replace(/\r\n?/g, '\n').trim(),
+      investment_insights: (city.investment_insights || '').replace(/\r\n?/g, '\n').trim(),
+    },
+  };
+}
+
+export function buildPreparedComparisonPayload(input: SaveGlobalMarketComparisonInput): {
+  ok: boolean;
+  error?: string;
+  comparisonPayload?: Record<string, any>;
+  cityAPayload?: Omit<GlobalMarketComparisonCity, 'id' | 'comparison_id'>;
+  cityBPayload?: Omit<GlobalMarketComparisonCity, 'id' | 'comparison_id'>;
+} {
+  const title = (input.title || '').trim();
+  if (!title) {
+    return { ok: false, error: 'Comparison Title is required.' };
+  }
+
+  const prepA = prepareComparisonCityPayload(input.city_a, 'A');
+  if (!prepA.ok || !prepA.payload) {
+    return { ok: false, error: prepA.error };
+  }
+
+  const prepB = prepareComparisonCityPayload(input.city_b, 'B');
+  if (!prepB.ok || !prepB.payload) {
+    return { ok: false, error: prepB.error };
+  }
+
+  const slug =
+    slugifyMarketSegment(input.slug) ||
+    buildComparisonSlug(prepA.payload.city_name, prepB.payload.city_name, title) ||
+    `comparison-${Date.now()}`;
+
+  if (slug === 'comparisons') {
+    return { ok: false, error: 'Comparison URL slug cannot be "comparisons".' };
+  }
+
+  const socialImage = (input.social_image || '').trim() || null;
+  if (socialImage && !isValidHttpsUrl(socialImage)) {
+    return {
+      ok: false,
+      error: 'Social Sharing Image URL must be a valid publicly accessible https:// URL.',
+    };
+  }
+
+  const canonicalUrl = (input.canonical_url || '').trim() || null;
+  if (canonicalUrl && !isValidHttpUrl(canonicalUrl)) {
+    return { ok: false, error: 'Canonical URL override must start with http:// or https://.' };
+  }
+
+  const comparisonPayload: Record<string, any> = {
+    title,
+    slug,
+    short_intro: (input.short_intro || '').replace(/\r\n?/g, '\n').trim(),
+    status: input.status || 'draft',
+    is_featured: Boolean(input.is_featured),
+    reporting_period: (input.reporting_period || '').trim(),
+    reporting_granularity: input.reporting_granularity || 'quarter',
+    last_verified_at: input.last_verified_at?.trim() || null,
+    social_image: socialImage,
+    social_image_alt: (input.social_image_alt || '').trim() || null,
+    seo_title: (input.seo_title || '').trim() || null,
+    seo_description: (input.seo_description || '').trim() || null,
+    canonical_url: canonicalUrl,
+    ...(input.published_at
+      ? { published_at: input.published_at }
+      : input.status === 'published'
+      ? { published_at: new Date().toISOString() }
+      : !input.id
+      ? { published_at: null }
+      : {}),
+  };
+
+  if (comparisonPayload.status === 'published') {
+    const readiness = getComparisonPublishReadiness({
+      ...(comparisonPayload as any),
+      city_a: prepA.payload,
+      city_b: prepB.payload,
+    });
+    if (!readiness.isReadyToPublish) {
+      return { ok: false, error: readiness.issues[0] };
+    }
+  }
+
+  return {
+    ok: true,
+    comparisonPayload,
+    cityAPayload: prepA.payload,
+    cityBPayload: prepB.payload,
+  };
+}
+
+export async function saveGlobalMarketComparison(
+  input: SaveGlobalMarketComparisonInput
+): Promise<{
+  success: boolean;
+  comparison?: GlobalMarketComparisonReport;
+  error?: string;
+}> {
+  const prepared = buildPreparedComparisonPayload(input);
+  if (
+    !prepared.ok ||
+    !prepared.comparisonPayload ||
+    !prepared.cityAPayload ||
+    !prepared.cityBPayload
+  ) {
+    return { success: false, error: prepared.error || 'Invalid comparison report data.' };
+  }
+
+  const { comparisonPayload, cityAPayload, cityBPayload } = prepared;
+
+  if (!isSupabaseConfigured || !supabase) {
+    const db = loadDemoDb();
+    const list = db.globalMarketComparisons || [];
+    const existingIdx = input.id ? list.findIndex((c) => c.id === input.id) : -1;
+
+    const collision = list.find(
+      (c) => c.id !== input.id && c.slug === comparisonPayload.slug
+    );
+    if (collision) {
+      return {
+        success: false,
+        error: `A city comparison with slug "${comparisonPayload.slug}" already exists.`,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const compId = input.id || `gmc-${Date.now()}`;
+    const existingPublishedAt =
+      existingIdx >= 0 ? list[existingIdx].published_at || null : null;
+
+    const saved: GlobalMarketComparisonReport = {
+      id: compId,
+      ...(comparisonPayload as any),
+      published_at:
+        existingPublishedAt ||
+        (comparisonPayload.status === 'published' ? now : null),
+      created_at: existingIdx >= 0 ? list[existingIdx].created_at : now,
+      updated_at: now,
+      city_a: { ...cityAPayload, comparison_id: compId },
+      city_b: { ...cityBPayload, comparison_id: compId },
+    };
+
+    if (existingIdx >= 0) {
+      list[existingIdx] = saved;
+    } else {
+      list.unshift(saved);
+    }
+    db.globalMarketComparisons = list;
+    saveDemoDb(db);
+    notifyGlobalMarketsUpdated();
+    return { success: true, comparison: saved };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let savedParent: any = null;
+  const isNew = !input.id;
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from('global_market_comparisons')
+      .update(comparisonPayload)
+      .eq('id', input.id)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      if (isPgrst205Error(error)) {
+        return {
+          success: false,
+          error:
+            'Two-City Comparison tables are missing in Supabase. Run supabase/migrations/20261125010000_create_global_market_comparisons.sql first.',
+        };
+      }
+      return { success: false, error: error?.message || 'Unable to update comparison report.' };
+    }
+    savedParent = data;
+  } else {
+    const { data, error } = await supabase
+      .from('global_market_comparisons')
+      .insert({ ...comparisonPayload, created_by: user?.id || null })
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      if (isPgrst205Error(error)) {
+        return {
+          success: false,
+          error:
+            'Two-City Comparison tables are missing in Supabase. Run supabase/migrations/20261125010000_create_global_market_comparisons.sql first.',
+        };
+      }
+      return { success: false, error: error?.message || 'Unable to create comparison report.' };
+    }
+    savedParent = data;
+  }
+
+  const cityRows = [
+    { ...cityAPayload, comparison_id: savedParent.id, city_slot: 'A' },
+    { ...cityBPayload, comparison_id: savedParent.id, city_slot: 'B' },
+  ];
+
+  const { data: savedCities, error: citiesError } = await supabase
+    .from('global_market_comparison_cities')
+    .upsert(cityRows, { onConflict: 'comparison_id,city_slot' })
+    .select('*');
+
+  if (citiesError || !savedCities || savedCities.length < 2) {
+    if (isNew && savedParent?.id) {
+      await supabase.from('global_market_comparisons').delete().eq('id', savedParent.id);
+    }
+    return {
+      success: false,
+      error: citiesError?.message || 'Unable to save City A and City B records.',
+    };
+  }
+
+  notifyGlobalMarketsUpdated();
+  return {
+    success: true,
+    comparison: normalizeGlobalMarketComparisonRow({
+      ...savedParent,
+      global_market_comparison_cities: savedCities,
+    }),
+  };
+}
+
+export async function updateGlobalMarketComparisonStatus(
+  comparison: GlobalMarketComparisonReport,
+  nextStatus: PublicationStatus
+): Promise<{ success: boolean; error?: string }> {
+  if (nextStatus === 'published') {
+    const readiness = getComparisonPublishReadiness(comparison);
+    if (!readiness.isReadyToPublish) {
+      return { success: false, error: readiness.issues[0] };
+    }
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    const db = loadDemoDb();
+    const list = db.globalMarketComparisons || [];
+    const idx = list.findIndex((c) => c.id === comparison.id);
+    if (idx >= 0) {
+      list[idx].status = nextStatus;
+      list[idx].updated_at = new Date().toISOString();
+      if (nextStatus === 'published' && !list[idx].published_at) {
+        list[idx].published_at = new Date().toISOString();
+      }
+      db.globalMarketComparisons = list;
+      saveDemoDb(db);
+      notifyGlobalMarketsUpdated();
+    }
+    return { success: true };
+  }
+
+  const updateData: Record<string, any> = { status: nextStatus };
+  if (nextStatus === 'published' && !comparison.published_at) {
+    updateData.published_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from('global_market_comparisons')
+    .update(updateData)
+    .eq('id', comparison.id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  notifyGlobalMarketsUpdated();
+  return { success: true };
+}
+
+export async function deleteGlobalMarketComparison(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured || !supabase) {
+    const db = loadDemoDb();
+    db.globalMarketComparisons = (db.globalMarketComparisons || []).filter((c) => c.id !== id);
+    saveDemoDb(db);
+    notifyGlobalMarketsUpdated();
+    return { success: true };
+  }
+
+  const { error } = await supabase.from('global_market_comparisons').delete().eq('id', id);
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  notifyGlobalMarketsUpdated();
+  return { success: true };
 }

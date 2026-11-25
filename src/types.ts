@@ -558,3 +558,54 @@ export interface GlobalMarketCountrySummary {
   rentalPriceTrendDir?: MarketTrendDirection | null;
   isFeatured: boolean;
 }
+
+export type ComparisonCitySlot = 'A' | 'B';
+
+export interface GlobalMarketComparisonCity {
+  id?: string;
+  comparison_id?: string;
+  city_slot: ComparisonCitySlot;
+  city_name: string;
+  country_name: string;
+  country_code: string;
+  image_url?: string | null;
+  image_alt?: string | null;
+  avg_sale_price?: number | null;
+  avg_monthly_rent?: number | null;
+  currency: string;
+  property_price_trend_pct?: number | null;
+  property_price_trend_dir?: MarketTrendDirection | null;
+  rental_price_trend_pct?: number | null;
+  rental_price_trend_dir?: MarketTrendDirection | null;
+  data_source_name: string;
+  data_source_url?: string | null;
+  data_period: string;
+  market_overview: string;
+  market_analysis: string;
+  investment_insights: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface GlobalMarketComparisonReport {
+  id: string;
+  title: string;
+  slug: string;
+  short_intro: string;
+  status: PublicationStatus;
+  is_featured: boolean;
+  reporting_period: string;
+  reporting_granularity: MarketDataPeriodType;
+  last_verified_at?: string | null;
+  social_image?: string | null;
+  social_image_alt?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  canonical_url?: string | null;
+  published_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at?: string;
+  city_a: GlobalMarketComparisonCity;
+  city_b: GlobalMarketComparisonCity;
+}

@@ -7,6 +7,7 @@ export interface MarketTrendIndicatorProps {
   dir?: MarketTrendDirection | null;
   label?: string;
   subLabel?: string | null;
+  emptyLabel?: string;
   variant?: 'card' | 'metric' | 'summary';
   className?: string;
 }
@@ -108,6 +109,7 @@ export default function MarketTrendIndicator({
   dir,
   label,
   subLabel,
+  emptyLabel,
   variant = 'card',
   className = '',
 }: MarketTrendIndicatorProps) {
@@ -115,7 +117,10 @@ export default function MarketTrendIndicator({
   const formattedValue = formatMarketTrend(pct, dir);
 
   const displayText =
-    formattedValue || (state === 'flat' ? 'Stable' : variant === 'metric' ? 'No trend data' : 'No data');
+    formattedValue ||
+    (state === 'flat'
+      ? 'Stable'
+      : emptyLabel || (variant === 'metric' ? 'No trend data' : 'No data'));
 
   const valueColorClass =
     state === 'up'

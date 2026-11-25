@@ -3,6 +3,7 @@ import {
   Author,
   Category,
   ContactMessage,
+  GlobalMarketComparisonReport,
   GlobalMarketReport,
   MediaItem,
   NewsletterSubscriber,
@@ -35,6 +36,7 @@ export interface DemoDatabase {
   properties: Property[];
   propertyEnquiries: PropertyEnquiry[];
   globalMarkets: GlobalMarketReport[];
+  globalMarketComparisons?: GlobalMarketComparisonReport[];
 }
 
 const DEMO_STORAGE_KEY = 'amaan_estate_demo_db_v2';

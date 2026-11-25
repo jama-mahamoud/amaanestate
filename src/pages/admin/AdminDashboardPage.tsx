@@ -34,6 +34,7 @@ import {
   Category,
   ContactMessage,
   DashboardMetrics,
+  GlobalMarketComparisonReport,
   GlobalMarketReport,
   MediaItem,
   NewsletterSubscriber,
@@ -60,7 +61,10 @@ import {
 } from '../../services/adminService';
 import { getSiteSettings } from '../../services/editorialService';
 import { getAdminEnquiries, getAdminProperties } from '../../services/propertyService';
-import { getAdminGlobalMarkets } from '../../services/globalMarketsService';
+import {
+  getAdminGlobalMarketComparisons,
+  getAdminGlobalMarkets,
+} from '../../services/globalMarketsService';
 import { supabase } from '../../lib/supabase';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 import {
@@ -161,6 +165,10 @@ export default function AdminDashboardPage() {
   const [marketplaceSchemaPending, setMarketplaceSchemaPending] = useState(false);
   const [globalMarkets, setGlobalMarkets] = useState<GlobalMarketReport[]>([]);
   const [globalMarketsSchemaPending, setGlobalMarketsSchemaPending] = useState(false);
+  const [globalMarketComparisons, setGlobalMarketComparisons] = useState<
+    GlobalMarketComparisonReport[]
+  >([]);
+  const [comparisonsSchemaPending, setComparisonsSchemaPending] = useState(false);
 
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
@@ -175,22 +183,40 @@ export default function AdminDashboardPage() {
   const loadAllData = useCallback(async () => {
     setLoadError(null);
     try {
-      const [m, arts, cats, auths, tgs, med, subs, msgs, setts, usersData, propsRes, enqRes, marketsRes] =
-        await Promise.all([
-          getDashboardMetrics(),
-          getAdminArticles(),
-          getAdminCategories(),
-          getAdminAuthors(),
-          getTags(),
-          getMediaLibrary(),
-          getSubscribers(),
-          getContactMessages(),
-          getSiteSettings(),
-          getUsersAndRoles(),
-          getAdminProperties().catch(() => ({ properties: [], schemaPending: true })),
-          getAdminEnquiries().catch(() => ({ enquiries: [], schemaPending: true })),
-          getAdminGlobalMarkets().catch(() => ({ reports: [], schemaPending: true })),
-        ]);
+      const [
+        m,
+        arts,
+        cats,
+        auths,
+        tgs,
+        med,
+        subs,
+        msgs,
+        setts,
+        usersData,
+        propsRes,
+        enqRes,
+        marketsRes,
+        comparisonsRes,
+      ] = await Promise.all([
+        getDashboardMetrics(),
+        getAdminArticles(),
+        getAdminCategories(),
+        getAdminAuthors(),
+        getTags(),
+        getMediaLibrary(),
+        getSubscribers(),
+        getContactMessages(),
+        getSiteSettings(),
+        getUsersAndRoles(),
+        getAdminProperties().catch(() => ({ properties: [], schemaPending: true })),
+        getAdminEnquiries().catch(() => ({ enquiries: [], schemaPending: true })),
+        getAdminGlobalMarkets().catch(() => ({ reports: [], schemaPending: true })),
+        getAdminGlobalMarketComparisons().catch(() => ({
+          comparisons: [],
+          schemaPending: true,
+        })),
+      ]);
       setMetrics(m);
       setArticles(arts);
       setCategories(cats);
@@ -207,6 +233,8 @@ export default function AdminDashboardPage() {
       setMarketplaceSchemaPending(propsRes.schemaPending || enqRes.schemaPending);
       setGlobalMarkets(marketsRes.reports);
       setGlobalMarketsSchemaPending(marketsRes.schemaPending);
+      setGlobalMarketComparisons(comparisonsRes.comparisons);
+      setComparisonsSchemaPending(comparisonsRes.schemaPending);
     } catch (err: any) {
       setLoadError(err?.message || 'Unable to synchronize editorial data from Supabase.');
     } finally {
@@ -664,8 +692,10 @@ export default function AdminDashboardPage() {
               {activeTab === 'global-markets' && (
                 <AdminGlobalMarketsSection
                   reports={globalMarkets}
+                  comparisons={globalMarketComparisons}
                   media={media}
                   schemaPending={globalMarketsSchemaPending}
+                  comparisonsSchemaPending={comparisonsSchemaPending}
                   onMediaAdded={(item) => setMedia((prev) => [item, ...prev])}
                   onRefresh={loadAllData}
                 />
