@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe2, TrendingDown, TrendingUp } from 'lucide-react';
+import { Globe2 } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketCountrySummary } from '../types';
 import { getPublishedMarketCountries } from '../services/globalMarketsService';
 import {
   formatMarketCurrency,
   formatMarketDateLabel,
-  formatMarketTrend,
 } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 
 export default function GlobalMarketsIndexPage() {
   const [countries, setCountries] = useState<GlobalMarketCountrySummary[]>([]);
@@ -107,14 +107,10 @@ export default function GlobalMarketsIndexPage() {
           {countries.map((item) => {
             const iso = (item.countryCode || '').trim().toLowerCase();
             const hasFlag = /^[a-z]{2}$/.test(iso);
-            const priceTrend = formatMarketTrend(
-              item.propertyPriceTrendPct,
-              item.propertyPriceTrendDir
-            );
-            const rentalTrend = formatMarketTrend(
-              item.rentalPriceTrendPct,
-              item.rentalPriceTrendDir
-            );
+            const hasRentalTrend =
+              item.rentalPriceTrendPct !== null && item.rentalPriceTrendPct !== undefined
+                ? true
+                : Boolean(item.rentalPriceTrendDir);
             const avgSale = formatMarketCurrency(item.avgSalePrice, item.currency);
             const avgRent = formatMarketCurrency(item.avgMonthlyRent, item.currency, '/mo');
             const updated = formatMarketDateLabel(item.latestUpdatedAt);
@@ -156,62 +152,42 @@ export default function GlobalMarketsIndexPage() {
                     </p>
                   )}
 
-                  {(priceTrend || rentalTrend || avgSale || avgRent) && (
-                    <div className="pt-3 border-t border-[#F0ECE1] grid grid-cols-2 gap-3 text-xs">
-                      {priceTrend && (
-                        <div className="min-w-0">
-                          <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                            Price Trend
-                          </span>
-                          <span className="font-mono font-semibold tabular-nums text-[#141413] inline-flex items-center gap-1 break-words [overflow-wrap:anywhere]">
-                            {item.propertyPriceTrendDir === 'up' && (
-                              <TrendingUp size={12} className="text-[#14532D] shrink-0" />
-                            )}
-                            {item.propertyPriceTrendDir === 'down' && (
-                              <TrendingDown size={12} className="text-[#991B1B] shrink-0" />
-                            )}
-                            <span>{priceTrend}</span>
-                          </span>
-                        </div>
-                      )}
-                      {rentalTrend && (
-                        <div className="min-w-0">
-                          <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                            Rental Trend
-                          </span>
-                          <span className="font-mono font-semibold tabular-nums text-[#141413] inline-flex items-center gap-1 break-words [overflow-wrap:anywhere]">
-                            {item.rentalPriceTrendDir === 'up' && (
-                              <TrendingUp size={12} className="text-[#14532D] shrink-0" />
-                            )}
-                            {item.rentalPriceTrendDir === 'down' && (
-                              <TrendingDown size={12} className="text-[#991B1B] shrink-0" />
-                            )}
-                            <span>{rentalTrend}</span>
-                          </span>
-                        </div>
-                      )}
-                      {avgSale && (
-                        <div className="min-w-0">
-                          <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                            Avg. Sale Price
-                          </span>
-                          <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
-                            {avgSale}
-                          </span>
-                        </div>
-                      )}
-                      {avgRent && (
-                        <div className="min-w-0">
-                          <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                            Avg. Monthly Rent
-                          </span>
-                          <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
-                            {avgRent}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <div className="pt-3 border-t border-[#F0ECE1] grid grid-cols-2 gap-3 text-xs">
+                    <MarketTrendIndicator
+                      pct={item.propertyPriceTrendPct}
+                      dir={item.propertyPriceTrendDir}
+                      label="Price Trend"
+                      variant="card"
+                    />
+                    {(hasRentalTrend || avgRent) && (
+                      <MarketTrendIndicator
+                        pct={item.rentalPriceTrendPct}
+                        dir={item.rentalPriceTrendDir}
+                        label="Rental Trend"
+                        variant="card"
+                      />
+                    )}
+                    {avgSale && (
+                      <div className="min-w-0">
+                        <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
+                          Avg. Sale Price
+                        </span>
+                        <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                          {avgSale}
+                        </span>
+                      </div>
+                    )}
+                    {avgRent && (
+                      <div className="min-w-0">
+                        <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
+                          Avg. Monthly Rent
+                        </span>
+                        <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                          {avgRent}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs">

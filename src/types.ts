@@ -540,6 +540,7 @@ export interface GlobalMarketCountrySummary {
   latestDataPeriod?: string | null;
   coverImage?: string | null;
   coverImageAlt?: string | null;
+  primaryReportSlug?: string | null;
   primaryTitle: string;
   primaryOverview: string;
   avgSalePrice?: number | null;

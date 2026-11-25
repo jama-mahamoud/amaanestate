@@ -9,6 +9,7 @@ import {
 } from "../src/lib/globalMarkets";
 import { getAuthorizedDataSourceById } from "../src/lib/marketDataSources";
 import type { GlobalMarketReport, MarketDataSourceType } from "../src/types";
+import { getCountryMapSvg } from "./countryMapGenerator";
 
 interface SupabaseRuntimeConfig {
   url: string;
@@ -180,7 +181,7 @@ export async function fetchGlobalMarketReportForSeo(countrySlug: string, reportS
   try {
     const { reports } = await fetchPublishedGlobalMarketsFromSupabase(cleanCountrySlug);
     const found = reports.find((r) => slugifyMarketSegment(r.slug) === cleanReportSlug);
-    return found || null;
+    return found ? { report: found, allCountryReports: reports } : null;
   } catch (err) {
     console.error("[GlobalMarkets SEO] Report lookup error:", err);
     return null;
@@ -294,6 +295,29 @@ async function tryFetchBisLatestYoY(isoCode: string): Promise<{
 }
 
 export function registerGlobalMarketsRoutes(app: express.Express) {
+  app.get("/api/global-markets/map/:isoParam", (req, res) => {
+    const raw = String(req.params.isoParam || "")
+      .replace(/\.svg$/i, "")
+      .trim()
+      .toUpperCase();
+    if (!/^[A-Z]{2}$/.test(raw)) {
+      return res.status(400).type("text/plain").send("Invalid ISO 3166-1 alpha-2 country code.");
+    }
+    try {
+      const svg = getCountryMapSvg(raw);
+      if (!svg) {
+        return res.status(404).type("text/plain").send("Country map geometry unavailable.");
+      }
+      res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=31536000, stale-while-revalidate=86400");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      return res.status(200).send(svg);
+    } catch (err) {
+      console.error("[GlobalMarkets Map] Generation error:", err);
+      return res.status(500).type("text/plain").send("Unable to generate country map.");
+    }
+  });
+
   app.get("/api/global-markets/countries", async (req, res) => {
     setNoCacheHeaders(res);
     try {

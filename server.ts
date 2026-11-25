@@ -22,7 +22,11 @@ import {
   fetchGlobalMarketReportForSeo,
   registerGlobalMarketsRoutes,
 } from "./server/globalMarketsRoutes";
-import { aggregateCountrySummaries, slugifyMarketSegment } from "./src/lib/globalMarkets";
+import {
+  aggregateCountrySummaries,
+  resolveReportCanonicalUrl,
+  slugifyMarketSegment,
+} from "./src/lib/globalMarkets";
 
 dotenv.config();
 
@@ -829,7 +833,7 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
     addUrl(`/properties/${encodeURIComponent(prop.slug)}`, propLastMod);
   }
 
-  // 6. All Eligible Published Global Market Intelligence Countries & City Reports
+  // 6. All Eligible Published Global Market Intelligence Countries & Reports (Country-Level + City-Level)
   if (globalMarkets.length > 0) {
     const countrySummaries = aggregateCountrySummaries(globalMarkets);
     const latestMarketTs = maxIsoTimestamp(
@@ -843,15 +847,16 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
       addUrl(`/global-markets/${encodeURIComponent(country.countrySlug)}`, countryLastMod);
     }
     for (const market of globalMarkets) {
-      if (market.market_level === "city" || (market.city_name && market.city_name.trim())) {
-        const marketLastMod = toIsoTimestamp(
-          market.updated_at || market.published_at || market.created_at
-        );
-        addUrl(
-          `/global-markets/${encodeURIComponent(market.country_slug)}/${encodeURIComponent(market.slug)}`,
-          marketLastMod
-        );
-      }
+      const cleanCountrySlug = slugifyMarketSegment(market.country_slug);
+      const cleanReportSlug = slugifyMarketSegment(market.slug);
+      if (!cleanCountrySlug || !cleanReportSlug) continue;
+      const marketLastMod = toIsoTimestamp(
+        market.updated_at || market.published_at || market.created_at
+      );
+      addUrl(
+        `/global-markets/${encodeURIComponent(cleanCountrySlug)}/${encodeURIComponent(cleanReportSlug)}`,
+        marketLastMod
+      );
     }
   }
 
@@ -2370,22 +2375,19 @@ app.get("/global-markets/:countrySlug", async (req, res) => {
     );
   }
 
-  const { countrySummary, primaryReport } = countryData;
+  const { countrySummary } = countryData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
-  const canonicalUrl =
-    primaryReport.canonical_url && /^https?:\/\//i.test(primaryReport.canonical_url)
-      ? primaryReport.canonical_url
-      : `${baseUrl}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`;
+  const canonicalUrl = `${baseUrl}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`;
+  const coverageLabel =
+    countrySummary.cityCount > 0
+      ? `${countrySummary.reportCount} ${countrySummary.reportCount === 1 ? "report" : "reports"} across ${countrySummary.cityCount} ${countrySummary.cityCount === 1 ? "city" : "cities"}`
+      : `${countrySummary.reportCount} verified ${countrySummary.reportCount === 1 ? "report" : "reports"}`;
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
-    title:
-      primaryReport.seo_title ||
-      `${countrySummary.countryName} Real Estate Market Trends & Analysis | AmaanEstate`,
+    title: `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`,
     description: stripHtml(
-      primaryReport.seo_description ||
-        primaryReport.market_overview ||
-        `Residential property price trends, rental market analysis, and investment insights for ${countrySummary.countryName}.`
+      `Explore ${countrySummary.countryName} real estate market overview (${coverageLabel}), residential price trends, rental indicators, and published market research.`
     ).slice(0, 160),
   });
   return sendHtmlPage(req, res, 200, html);
@@ -2400,12 +2402,12 @@ app.get("/global-markets/:countrySlug/:reportSlug", async (req, res) => {
   const countrySlug = slugifyMarketSegment(req.params.countrySlug);
   const reportSlug = slugifyMarketSegment(req.params.reportSlug);
   const templateHtml = getIndexTemplateHtml();
-  const report =
+  const reportData =
     countrySlug && reportSlug
       ? await fetchGlobalMarketReportForSeo(countrySlug, reportSlug)
       : null;
 
-  if (!report) {
+  if (!reportData) {
     setNoCacheSeoHeaders(res);
     return sendHtmlPage(
       req,
@@ -2419,11 +2421,9 @@ app.get("/global-markets/:countrySlug/:reportSlug", async (req, res) => {
     );
   }
 
+  const { report, allCountryReports } = reportData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
-  const canonicalUrl =
-    report.canonical_url && /^https?:\/\//i.test(report.canonical_url)
-      ? report.canonical_url
-      : `${baseUrl}/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`;
+  const canonicalUrl = resolveReportCanonicalUrl(report, allCountryReports, baseUrl);
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,

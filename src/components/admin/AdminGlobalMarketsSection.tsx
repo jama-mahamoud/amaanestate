@@ -28,6 +28,7 @@ import {
 } from '../../types';
 import { normalizeCountryInfo } from '../../lib/countries';
 import {
+  buildMarketReportSlug,
   deriveCountrySlug,
   formatMarketCurrency,
   formatMarketDateLabel,
@@ -278,9 +279,10 @@ export default function AdminGlobalMarketsSection({
     setForm((prev) => ({
       ...prev,
       title: value,
-      slug: slugTouched
-        ? prev.slug
-        : slugifyMarketSegment(prev.city_name?.trim() ? `${prev.city_name}-${value}` : value),
+      slug:
+        !slugTouched && !prev.id
+          ? buildMarketReportSlug(value, prev.city_name, prev.country_slug)
+          : prev.slug,
     }));
   };
 
@@ -290,13 +292,7 @@ export default function AdminGlobalMarketsSection({
       city_name: value,
       slug:
         !slugTouched && !prev.id
-          ? slugifyMarketSegment(
-              value.trim()
-                ? prev.title.trim()
-                  ? `${value.trim()}-${prev.title}`
-                  : value
-                : prev.title || prev.country_slug
-            )
+          ? buildMarketReportSlug(prev.title, value, prev.country_slug)
           : prev.slug,
     }));
   };
@@ -383,10 +379,10 @@ export default function AdminGlobalMarketsSection({
   const previewCountrySlug =
     slugifyMarketSegment(form.country_slug) || deriveCountrySlug(form.country_name) || 'country';
   const previewReportSlug =
-    slugifyMarketSegment(form.slug || form.title) || 'market-report';
-  const previewPublicUrl = form.city_name?.trim()
-    ? `/global-markets/${previewCountrySlug}/${previewReportSlug}`
-    : `/global-markets/${previewCountrySlug}`;
+    slugifyMarketSegment(form.slug) ||
+    buildMarketReportSlug(form.title, form.city_name, previewCountrySlug) ||
+    'market-report';
+  const previewPublicUrl = `/global-markets/${previewCountrySlug}/${previewReportSlug}`;
 
   const cleanIsoPreview = (form.country_code || '').trim().toLowerCase();
   const hasIsoFlag = /^[a-z]{2}$/.test(cleanIsoPreview);
@@ -547,10 +543,7 @@ export default function AdminGlobalMarketsSection({
                   report.rental_price_trend_pct,
                   report.rental_price_trend_dir
                 );
-                const publicHref =
-                  report.market_level === 'city' && report.city_name
-                    ? `/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`
-                    : `/global-markets/${encodeURIComponent(report.country_slug)}`;
+                const publicHref = `/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`;
 
                 return (
                   <div key={report.id} className="p-4 space-y-3">
@@ -718,10 +711,7 @@ export default function AdminGlobalMarketsSection({
                       report.rental_price_trend_pct,
                       report.rental_price_trend_dir
                     );
-                    const publicHref =
-                      report.market_level === 'city' && report.city_name
-                        ? `/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`
-                        : `/global-markets/${encodeURIComponent(report.country_slug)}`;
+                    const publicHref = `/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`;
 
                     return (
                       <tr key={report.id} className="hover:bg-[#FAF8F5]">
@@ -1557,6 +1547,9 @@ export default function AdminGlobalMarketsSection({
                       placeholder={`https://www.amaanestate.com${previewPublicUrl}`}
                       className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-xs font-mono"
                     />
+                    <p className="mt-1 text-[11px] text-[#7A7770]">
+                      Leave blank to self-canonicalize to the report URL above. Setting this does not change the report slug.
+                    </p>
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-[#4A4843] mb-1">

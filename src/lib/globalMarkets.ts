@@ -19,9 +19,104 @@ export function slugifyMarketSegment(raw?: string | null): string {
   return value;
 }
 
+export function buildMarketReportSlug(
+  title?: string | null,
+  cityName?: string | null,
+  fallback?: string | null
+): string {
+  const titleSlug = slugifyMarketSegment(title);
+  const citySlug = slugifyMarketSegment(cityName);
+
+  if (!citySlug) {
+    return titleSlug || slugifyMarketSegment(fallback);
+  }
+  if (!titleSlug) {
+    return citySlug || slugifyMarketSegment(fallback);
+  }
+  if (titleSlug === citySlug || titleSlug.startsWith(`${citySlug}-`)) {
+    return titleSlug;
+  }
+  return `${citySlug}-${titleSlug}`;
+}
+
 export function deriveCountrySlug(countryName?: string | null): string {
   const normalized = normalizeCountryInfo(countryName);
   return slugifyMarketSegment(normalized?.name || countryName || '');
+}
+
+export function resolveReportCanonicalUrl(
+  report: Pick<GlobalMarketReport, 'country_slug' | 'slug' | 'canonical_url'>,
+  knownReports: Array<Pick<GlobalMarketReport, 'country_slug' | 'slug'>> = [],
+  origin = 'https://www.amaanestate.com'
+): string {
+  const cleanOrigin = (origin || 'https://www.amaanestate.com').trim().replace(/\/+$/, '');
+  const cleanCountrySlug = slugifyMarketSegment(report.country_slug);
+  const cleanReportSlug = slugifyMarketSegment(report.slug);
+  const selfCanonicalUrl = `${cleanOrigin}/global-markets/${encodeURIComponent(cleanCountrySlug)}/${encodeURIComponent(cleanReportSlug)}`;
+
+  const override = (report.canonical_url || '').trim();
+  if (!override || !isValidHttpUrl(override)) {
+    return selfCanonicalUrl;
+  }
+
+  try {
+    const parsedOverride = new URL(override);
+    const originHost = new URL(cleanOrigin).hostname.replace(/^www\./, '').toLowerCase();
+    const overrideHost = parsedOverride.hostname.replace(/^www\./, '').toLowerCase();
+    const isSameSite = overrideHost === 'amaanestate.com' || overrideHost === originHost;
+
+    if (isSameSite) {
+      const cleanPath = parsedOverride.pathname.replace(/\/+$/, '');
+      if (cleanPath.startsWith('/global-markets')) {
+        const segments = cleanPath
+          .slice('/global-markets'.length)
+          .split('/')
+          .filter(Boolean);
+
+        // A report detail page should not canonicalize to a broken 404 internal report URL
+        // or collapse onto a country overview hub.
+        if (segments.length !== 2) {
+          return selfCanonicalUrl;
+        }
+
+        const targetCountry = slugifyMarketSegment(decodeURIComponent(segments[0]));
+        const targetSlug = slugifyMarketSegment(decodeURIComponent(segments[1]));
+        const isSelfTarget =
+          targetCountry === cleanCountrySlug && targetSlug === cleanReportSlug;
+
+        if (!isSelfTarget) {
+          const existsInKnownReports = knownReports.some(
+            (candidate) =>
+              slugifyMarketSegment(candidate.country_slug) === targetCountry &&
+              slugifyMarketSegment(candidate.slug) === targetSlug
+          );
+          if (!existsInKnownReports) {
+            return selfCanonicalUrl;
+          }
+        }
+      }
+    }
+
+    return parsedOverride.toString();
+  } catch {
+    return selfCanonicalUrl;
+  }
+}
+
+export function getCountryMapImageUrl(countryCode?: string | null): string | null {
+  const clean = (countryCode || '').trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(clean)) return null;
+  return `/api/global-markets/map/${clean}.svg`;
+}
+
+export function getHomepageCountryTargetHref(
+  country: Pick<GlobalMarketCountrySummary, 'countrySlug' | 'reportCount' | 'primaryReportSlug'>
+): string {
+  const encodedCountry = encodeURIComponent(country.countrySlug);
+  if (country.reportCount === 1 && country.primaryReportSlug) {
+    return `/global-markets/${encodedCountry}/${encodeURIComponent(country.primaryReportSlug)}`;
+  }
+  return `/global-markets/${encodedCountry}`;
 }
 
 export function isValidHttpUrl(rawUrl?: string | null): boolean {
@@ -69,12 +164,34 @@ export function formatMarketCurrency(
   }
 }
 
+export type ResolvedMarketTrendState = 'up' | 'down' | 'flat' | 'none';
+
+export function resolveMarketTrendDirection(
+  pct?: number | null,
+  dir?: MarketTrendDirection | null
+): ResolvedMarketTrendState {
+  const hasPct = pct !== null && pct !== undefined && Number.isFinite(Number(pct));
+  const num = hasPct ? Number(pct) : null;
+
+  if (num !== null) {
+    if (dir === 'down' || (dir !== 'up' && num < 0)) return 'down';
+    if (dir === 'up' || (dir !== 'flat' && num > 0)) return 'up';
+    if (dir === 'flat' || num === 0) return 'flat';
+  }
+
+  if (dir === 'up' || dir === 'down' || dir === 'flat') {
+    return dir;
+  }
+
+  return 'none';
+}
+
 export function formatMarketTrend(
   pct?: number | null,
   dir?: MarketTrendDirection | null
 ): string | null {
   if (pct === null || pct === undefined || !Number.isFinite(Number(pct))) {
-    if (dir === 'flat') return '0.0% (Stable)';
+    if (dir === 'flat') return 'Stable';
     return null;
   }
   const num = Number(pct);
@@ -159,6 +276,30 @@ export function getMarketPublishReadiness(
 
   if (report.canonical_url && report.canonical_url.trim() && !isValidHttpUrl(report.canonical_url)) {
     issues.push('Canonical URL override must be a valid http:// or https:// URL.');
+  } else if (report.canonical_url && report.canonical_url.trim()) {
+    try {
+      const parsedCanonical = new URL(report.canonical_url.trim());
+      const host = parsedCanonical.hostname.replace(/^www\./, '').toLowerCase();
+      const reportCountrySlug = slugifyMarketSegment(report.country_slug || countryName);
+      const reportSlug = slugifyMarketSegment(report.slug);
+      const expectedPath =
+        reportCountrySlug && reportSlug
+          ? `/global-markets/${reportCountrySlug}/${reportSlug}`
+          : '';
+      const actualPath = parsedCanonical.pathname.replace(/\/+$/, '');
+      if (
+        host === 'amaanestate.com' &&
+        actualPath.startsWith('/global-markets') &&
+        expectedPath &&
+        actualPath !== expectedPath
+      ) {
+        warnings.push(
+          `Canonical URL points to "${actualPath}", which differs from this report's live route "${expectedPath}". Leave Canonical URL blank to self-canonicalize.`
+        );
+      }
+    } catch {
+      // Handled by URL check above
+    }
   }
 
   if (!dataPeriod) {
@@ -278,10 +419,14 @@ export function aggregateCountrySummaries(
       (r) => normalizeNullableNumber(r.avg_monthly_rent) !== null
     );
     const priceTrendSource = pickMetricReport(
-      (r) => normalizeNullableNumber(r.property_price_trend_pct) !== null
+      (r) =>
+        normalizeNullableNumber(r.property_price_trend_pct) !== null ||
+        Boolean(r.property_price_trend_dir)
     );
     const rentalTrendSource = pickMetricReport(
-      (r) => normalizeNullableNumber(r.rental_price_trend_pct) !== null
+      (r) =>
+        normalizeNullableNumber(r.rental_price_trend_pct) !== null ||
+        Boolean(r.rental_price_trend_dir)
     );
 
     summaries.push({
@@ -296,6 +441,7 @@ export function aggregateCountrySummaries(
       latestDataPeriod: latestDataPeriod || primary.data_period || null,
       coverImage,
       coverImageAlt,
+      primaryReportSlug: primary.slug,
       primaryTitle: primary.title,
       primaryOverview: primary.market_overview || primary.market_analysis || primary.investment_insights,
       avgSalePrice: saleMetricSource ? normalizeNullableNumber(saleMetricSource.avg_sale_price) : null,

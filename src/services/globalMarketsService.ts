@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getCountryQueryVariants, normalizeCountryInfo } from '../lib/countries';
 import {
   aggregateCountrySummaries,
+  buildMarketReportSlug,
   deriveCountrySlug,
   getMarketPublishReadiness,
   isMeaningfulMarketReport,
@@ -441,7 +442,10 @@ function buildPreparedMarketPayload(input: SaveGlobalMarketInput): {
   const title = input.title.trim();
 
   const defaultSlugBase = cityName ? `${cityName}-market-report` : `${countrySlug}-overview`;
-  const slug = slugifyMarketSegment(input.slug || title || defaultSlugBase) || `market-${Date.now()}`;
+  const slug =
+    slugifyMarketSegment(input.slug) ||
+    buildMarketReportSlug(title, cityName, defaultSlugBase) ||
+    `market-${Date.now()}`;
 
   if (!countryName || !countrySlug) {
     return { ok: false, error: 'A valid Country Name is required.' };

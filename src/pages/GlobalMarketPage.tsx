@@ -7,17 +7,13 @@ import {
   FileText,
   Globe2,
   MapPin,
-  Minus,
   ShieldCheck,
-  TrendingDown,
-  TrendingUp,
 } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
 import {
   Article,
   GlobalMarketCountrySummary,
   GlobalMarketReport,
-  MarketTrendDirection,
 } from '../types';
 import {
   getGlobalMarketCountryPageData,
@@ -27,11 +23,12 @@ import {
 import {
   formatMarketCurrency,
   formatMarketDateLabel,
-  formatMarketTrend,
+  resolveReportCanonicalUrl,
 } from '../lib/globalMarkets';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import ArticleCard from '../components/editorial/ArticleCard';
+import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 import NotFoundPage from './NotFoundPage';
 
 function renderParagraphs(text?: string | null) {
@@ -51,13 +48,6 @@ function renderParagraphs(text?: string | null) {
     ));
 }
 
-function TrendIcon({ dir }: { dir?: MarketTrendDirection | null }) {
-  if (dir === 'up') return <TrendingUp size={16} className="text-[#14532D]" aria-hidden="true" />;
-  if (dir === 'down')
-    return <TrendingDown size={16} className="text-[#991B1B]" aria-hidden="true" />;
-  return <Minus size={16} className="text-[#5C5A55]" aria-hidden="true" />;
-}
-
 export default function GlobalMarketPage() {
   const { countrySlug, reportSlug } = useParams<{
     countrySlug: string;
@@ -66,6 +56,7 @@ export default function GlobalMarketPage() {
 
   const [loading, setLoading] = useState(true);
   const [countrySummary, setCountrySummary] = useState<GlobalMarketCountrySummary | null>(null);
+  const [allCountryReports, setAllCountryReports] = useState<GlobalMarketReport[]>([]);
   const [activeReport, setActiveReport] = useState<GlobalMarketReport | null>(null);
   const [relatedReports, setRelatedReports] = useState<GlobalMarketReport[]>([]);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
@@ -91,12 +82,14 @@ export default function GlobalMarketPage() {
           if (!active) return;
           if (!res) {
             setCountrySummary(null);
+            setAllCountryReports([]);
             setActiveReport(null);
             setRelatedReports([]);
             setRelatedArticles([]);
             return;
           }
           setCountrySummary(res.countrySummary);
+          setAllCountryReports([res.report, ...res.siblingReports]);
           setActiveReport(res.report);
           setRelatedReports(res.siblingReports);
 
@@ -116,14 +109,16 @@ export default function GlobalMarketPage() {
           if (!active) return;
           if (!res) {
             setCountrySummary(null);
+            setAllCountryReports([]);
             setActiveReport(null);
             setRelatedReports([]);
             setRelatedArticles([]);
             return;
           }
           setCountrySummary(res.countrySummary);
-          setActiveReport(res.primaryReport);
-          setRelatedReports(res.allReports.filter((r) => r.id !== res.primaryReport.id));
+          setAllCountryReports(res.allReports);
+          setActiveReport(null);
+          setRelatedReports(res.allReports);
 
           const news = await getRelatedArticlesForMarket(
             res.countrySummary.countryName,
@@ -137,7 +132,9 @@ export default function GlobalMarketPage() {
       } catch {
         if (!active) return;
         setCountrySummary(null);
+        setAllCountryReports([]);
         setActiveReport(null);
+        setRelatedReports([]);
       } finally {
         if (active) setLoading(false);
       }
@@ -148,44 +145,73 @@ export default function GlobalMarketPage() {
     };
   }, [countrySlug, reportSlug]);
 
-  const notFound = !loading && (!countrySummary || !activeReport);
+  const notFound =
+    !loading &&
+    (!countrySummary || (isReportView ? !activeReport : allCountryReports.length === 0));
 
   const origin = getCanonicalOrigin();
-  const pageUrl = activeReport
-    ? activeReport.canonical_url ||
-      (isReportView
-        ? `${origin}/global-markets/${encodeURIComponent(activeReport.country_slug)}/${encodeURIComponent(activeReport.slug)}`
-        : `${origin}/global-markets/${encodeURIComponent(activeReport.country_slug)}`)
+  const countryHubUrl = countrySummary
+    ? `${origin}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`
     : undefined;
 
-  const seoTitle = activeReport
-    ? activeReport.seo_title ||
-      (isReportView
-        ? `${activeReport.title} | AmaanEstate`
-        : `${countrySummary?.countryName} Real Estate Market Trends & Analysis | AmaanEstate`)
+  const pageUrl = isReportView
+    ? activeReport
+      ? resolveReportCanonicalUrl(activeReport, allCountryReports, origin)
+      : undefined
+    : countryHubUrl;
+
+  const seoTitle = isReportView
+    ? activeReport
+      ? activeReport.seo_title || `${activeReport.title} | AmaanEstate`
+      : loading
+      ? 'Loading Global Market Intelligence | AmaanEstate'
+      : 'Market Report Not Found (404) | AmaanEstate'
+    : countrySummary
+    ? `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`
     : loading
     ? 'Loading Global Market Intelligence | AmaanEstate'
     : 'Market Report Not Found (404) | AmaanEstate';
 
-  const seoDescription = activeReport
-    ? (
-        activeReport.seo_description ||
-        activeReport.market_overview ||
-        activeReport.market_analysis ||
-        `Verified residential property price trends, rental market analysis, and investment insights for ${activeReport.city_name || activeReport.country_name}.`
-      ).slice(0, 160)
+  const countryCoverageSummary = countrySummary
+    ? countrySummary.cityCount > 0
+      ? `${countrySummary.reportCount} ${countrySummary.reportCount === 1 ? 'report' : 'reports'} across ${countrySummary.cityCount} ${countrySummary.cityCount === 1 ? 'city' : 'cities'}`
+      : `${countrySummary.reportCount} verified ${countrySummary.reportCount === 1 ? 'report' : 'reports'}`
+    : '';
+
+  const seoDescription = isReportView
+    ? activeReport
+      ? (
+          activeReport.seo_description ||
+          activeReport.market_overview ||
+          activeReport.market_analysis ||
+          `Verified residential property price trends, rental market analysis, and investment insights for ${activeReport.city_name || activeReport.country_name}.`
+        ).slice(0, 160)
+      : 'Real estate market intelligence, residential price trends, and rental research on AmaanEstate.'
+    : countrySummary
+    ? `Explore ${countrySummary.countryName} real estate market overview (${countryCoverageSummary}), residential price trends, rental indicators, and published market research.`.slice(
+        0,
+        160
+      )
     : 'Real estate market intelligence, residential price trends, and rental research on AmaanEstate.';
+
+  const seoImage = isReportView
+    ? activeReport?.cover_image || undefined
+    : countrySummary?.coverImage || undefined;
+  const seoImageAlt = isReportView
+    ? activeReport?.cover_image_alt || activeReport?.title
+    : countrySummary?.coverImageAlt ||
+      (countrySummary ? `${countrySummary.countryName} Real Estate Market Overview` : undefined);
 
   useSEO({
     title: seoTitle,
     description: seoDescription,
-    image: activeReport?.cover_image || undefined,
-    imageAlt: activeReport?.cover_image_alt || activeReport?.title,
+    image: seoImage,
+    imageAlt: seoImageAlt,
     url: pageUrl,
     noIndex: notFound,
     omitCanonical: notFound,
     structuredData:
-      activeReport && countrySummary
+      countrySummary && !notFound && (isReportView ? Boolean(activeReport) : true)
         ? [
             {
               '@context': 'https://schema.org',
@@ -193,19 +219,24 @@ export default function GlobalMarketPage() {
               name: seoTitle,
               description: seoDescription,
               url: pageUrl,
-              dateModified:
-                activeReport.last_verified_at ||
-                activeReport.updated_at ||
-                activeReport.published_at ||
-                activeReport.created_at,
+              dateModified: isReportView
+                ? activeReport?.last_verified_at ||
+                  activeReport?.updated_at ||
+                  activeReport?.published_at ||
+                  activeReport?.created_at
+                : countrySummary.latestUpdatedAt || undefined,
               about: {
                 '@type': 'Place',
-                name: activeReport.city_name
-                  ? `${activeReport.city_name}, ${countrySummary.countryName}`
-                  : countrySummary.countryName,
+                name:
+                  isReportView && activeReport?.city_name
+                    ? `${activeReport.city_name}, ${countrySummary.countryName}`
+                    : countrySummary.countryName,
                 address: {
                   '@type': 'PostalAddress',
-                  addressLocality: activeReport.city_name || undefined,
+                  addressLocality:
+                    isReportView && activeReport?.city_name
+                      ? activeReport.city_name
+                      : undefined,
                   addressCountry: countrySummary.countryCode || countrySummary.countryName,
                 },
               },
@@ -230,9 +261,9 @@ export default function GlobalMarketPage() {
                   '@type': 'ListItem',
                   position: 3,
                   name: countrySummary.countryName,
-                  item: `${origin}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`,
+                  item: countryHubUrl,
                 },
-                ...(isReportView
+                ...(isReportView && activeReport
                   ? [
                       {
                         '@type': 'ListItem',
@@ -263,7 +294,7 @@ export default function GlobalMarketPage() {
     );
   }
 
-  if (notFound || !countrySummary || !activeReport) {
+  if (notFound || !countrySummary || (isReportView && !activeReport)) {
     return (
       <NotFoundPage
         title="Market Report Not Found (404) | AmaanEstate"
@@ -276,6 +307,348 @@ export default function GlobalMarketPage() {
   const isoCode = (countrySummary.countryCode || '').trim().toLowerCase();
   const hasIsoFlag = /^[a-z]{2}$/.test(isoCode);
 
+  if (!isReportView) {
+    const countryAvgSaleFormatted = formatMarketCurrency(
+      countrySummary.avgSalePrice,
+      countrySummary.currency
+    );
+    const countryAvgRentFormatted = formatMarketCurrency(
+      countrySummary.avgMonthlyRent,
+      countrySummary.currency,
+      ' / mo'
+    );
+    const countryVerifiedLabel = formatMarketDateLabel(countrySummary.latestUpdatedAt);
+    const hasCountryPriceTrend =
+      (countrySummary.propertyPriceTrendPct !== null &&
+        countrySummary.propertyPriceTrendPct !== undefined) ||
+      Boolean(countrySummary.propertyPriceTrendDir);
+    const hasCountryRentalTrend =
+      (countrySummary.rentalPriceTrendPct !== null &&
+        countrySummary.rentalPriceTrendPct !== undefined) ||
+      Boolean(countrySummary.rentalPriceTrendDir);
+
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14 space-y-8 sm:space-y-12">
+        {/* Country Overview Hub Header */}
+        <header className="space-y-3 sm:space-y-4 border-b border-[#E5E0D8] pb-6 sm:pb-8">
+          <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-2">
+            <Link to="/" className="hover:text-[#141413]">
+              Home
+            </Link>
+            <span aria-hidden="true">/</span>
+            <Link to="/global-markets" className="hover:text-[#141413]">
+              Global Markets
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span className="text-[#141413] font-medium">{countrySummary.countryName}</span>
+          </nav>
+
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
+            {hasIsoFlag ? (
+              <span
+                className={`fi fi-${isoCode} w-7 h-[21px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
+                aria-hidden="true"
+              />
+            ) : (
+              <Globe2 size={20} className="text-[#8C4A27] shrink-0" aria-hidden="true" />
+            )}
+            <span className="text-xs uppercase tracking-[0.16em] sm:tracking-[0.2em] font-semibold text-[#8C4A27]">
+              {countrySummary.countryName} · Country Market Overview
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-semibold text-[#141413] max-w-4xl leading-[1.15] break-words">
+            {countrySummary.countryName} Real Estate Market Overview
+          </h1>
+
+          <p className="text-sm sm:text-base text-[#4A4843] max-w-3xl leading-relaxed">
+            Aggregated residential market indicators and verified research coverage for{' '}
+            {countrySummary.countryName}
+            {countrySummary.cities.length > 0
+              ? `, including ${countrySummary.cities.join(', ')}`
+              : ''}
+            . Select a published report below for complete data sources, price dynamics, and investment analysis.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#5C5A55]">
+            <span className="inline-flex items-center gap-1.5">
+              <FileText size={13} className="text-[#1E3A5F]" aria-hidden="true" />
+              <span>
+                <strong className="text-[#141413]">{countrySummary.reportCount}</strong>{' '}
+                {countrySummary.reportCount === 1 ? 'Published Report' : 'Published Reports'}
+              </span>
+            </span>
+
+            {countrySummary.cityCount > 0 && (
+              <>
+                <span aria-hidden="true" className="text-[#D6CEBE]">
+                  ·
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={13} className="text-[#1E3A5F]" aria-hidden="true" />
+                  <span>
+                    {countrySummary.cityCount}{' '}
+                    {countrySummary.cityCount === 1 ? 'City Covered' : 'Cities Covered'}
+                  </span>
+                </span>
+              </>
+            )}
+
+            {countrySummary.latestDataPeriod && (
+              <>
+                <span aria-hidden="true" className="text-[#D6CEBE]">
+                  ·
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#8C4A27]" aria-hidden="true" />
+                  <span>
+                    Latest Period:{' '}
+                    <strong className="text-[#141413]">{countrySummary.latestDataPeriod}</strong>
+                  </span>
+                </span>
+              </>
+            )}
+
+            {countryVerifiedLabel && (
+              <>
+                <span aria-hidden="true" className="text-[#D6CEBE]">
+                  ·
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck size={13} className="text-[#14532D]" aria-hidden="true" />
+                  <span>
+                    Verified: <strong className="text-[#141413]">{countryVerifiedLabel}</strong>
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Aggregated Country Indicators */}
+        <section aria-labelledby="country-indicators-heading" className="space-y-3 sm:space-y-4">
+          <h2
+            id="country-indicators-heading"
+            className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55]"
+          >
+            Aggregated Country Indicators ({countrySummary.currency})
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {countryAvgSaleFormatted && (
+              <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-5 min-w-0 space-y-1.5 sm:space-y-2">
+                <p className="text-xs font-semibold text-[#5C5A55]">Average Property Sale Price</p>
+                <p className="text-xl sm:text-2xl font-serif font-semibold font-mono tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                  {countryAvgSaleFormatted}
+                </p>
+                <p className="text-[11px] text-[#7A7770]">
+                  {countrySummary.latestDataPeriod || countrySummary.currency}
+                </p>
+              </div>
+            )}
+
+            <MarketTrendIndicator
+              variant="metric"
+              label="Residential Price Trend"
+              pct={countrySummary.propertyPriceTrendPct}
+              dir={countrySummary.propertyPriceTrendDir}
+              subLabel={
+                hasCountryPriceTrend
+                  ? countrySummary.latestDataPeriod || 'Reported Change'
+                  : 'No verified trend reported'
+              }
+            />
+
+            {countryAvgRentFormatted && (
+              <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-5 min-w-0 space-y-1.5 sm:space-y-2">
+                <p className="text-xs font-semibold text-[#5C5A55]">Average Monthly Rent</p>
+                <p className="text-xl sm:text-2xl font-serif font-semibold font-mono tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                  {countryAvgRentFormatted}
+                </p>
+                <p className="text-[11px] text-[#7A7770]">
+                  {countrySummary.latestDataPeriod || countrySummary.currency}
+                </p>
+              </div>
+            )}
+
+            <MarketTrendIndicator
+              variant="metric"
+              label="Rental Market Trend"
+              pct={countrySummary.rentalPriceTrendPct}
+              dir={countrySummary.rentalPriceTrendDir}
+              subLabel={
+                hasCountryRentalTrend
+                  ? countrySummary.latestDataPeriod || 'Reported Change'
+                  : 'No verified trend reported'
+              }
+            />
+          </div>
+        </section>
+
+        {/* Published Market Intelligence Reports Hub */}
+        <section aria-labelledby="country-reports-heading" className="space-y-4 sm:space-y-5 pt-4 border-t border-[#E5E0D8]">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
+                {countrySummary.countryName} Research Index
+              </p>
+              <h2
+                id="country-reports-heading"
+                className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]"
+              >
+                Published Market Intelligence Reports
+              </h2>
+            </div>
+            <Link
+              to="/global-markets"
+              className="inline-flex items-center gap-1.5 min-h-[36px] text-xs font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap"
+            >
+              <ArrowLeft size={14} />
+              <span>All Global Markets</span>
+            </Link>
+          </div>
+
+          <div
+            className={
+              allCountryReports.length === 1
+                ? 'grid grid-cols-1 max-w-2xl gap-4 sm:gap-6'
+                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
+            }
+          >
+            {allCountryReports.map((sub) => {
+              const subHref = `/global-markets/${encodeURIComponent(sub.country_slug)}/${encodeURIComponent(sub.slug)}`;
+              const subSale = formatMarketCurrency(sub.avg_sale_price, sub.currency);
+              const subRent = formatMarketCurrency(sub.avg_monthly_rent, sub.currency, '/mo');
+              const subVerified = formatMarketDateLabel(
+                sub.last_verified_at || sub.updated_at || sub.published_at
+              );
+              const subHasPriceTrend =
+                (sub.property_price_trend_pct !== null &&
+                  sub.property_price_trend_pct !== undefined) ||
+                Boolean(sub.property_price_trend_dir);
+              const subHasRentTrend =
+                (sub.rental_price_trend_pct !== null &&
+                  sub.rental_price_trend_pct !== undefined) ||
+                Boolean(sub.rental_price_trend_dir);
+              const summarySnippet = (
+                sub.seo_description ||
+                sub.market_overview ||
+                sub.market_analysis ||
+                ''
+              ).trim();
+
+              return (
+                <Link
+                  key={sub.id}
+                  to={subHref}
+                  className="group bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded-md overflow-hidden min-w-0 flex flex-col justify-between transition-colors"
+                >
+                  {sub.cover_image && (
+                    <div className="aspect-[16/10] bg-[#EBE6DF] overflow-hidden border-b border-[#E5E0D8]">
+                      <img
+                        src={resolveEditorialImage(sub.cover_image)}
+                        alt={sub.cover_image_alt || sub.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 min-w-0">
+                    <div className="space-y-2.5 min-w-0">
+                      <p className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
+                        {sub.city_name ? `${sub.city_name} · City Report` : 'Country-Level Report'}
+                        {sub.data_period ? ` · ${sub.data_period}` : ''}
+                      </p>
+                      <h3 className="text-lg font-serif font-semibold text-[#141413] group-hover:text-[#1E3A5F] transition-colors break-words">
+                        {sub.title}
+                      </h3>
+                      {summarySnippet && (
+                        <p className="text-xs sm:text-sm text-[#4A4843] leading-relaxed line-clamp-3">
+                          {summarySnippet}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-[#F0ECE1] space-y-2.5">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono tabular-nums text-[#141413]">
+                        <MarketTrendIndicator
+                          variant="summary"
+                          label="Price"
+                          pct={sub.property_price_trend_pct}
+                          dir={sub.property_price_trend_dir}
+                        />
+                        {subHasRentTrend && (
+                          <MarketTrendIndicator
+                            variant="summary"
+                            label="Rent"
+                            pct={sub.rental_price_trend_pct}
+                            dir={sub.rental_price_trend_dir}
+                          />
+                        )}
+                        {subSale && <span>Avg {subSale}</span>}
+                        {subRent && <span>Rent {subRent}</span>}
+                        {!subHasPriceTrend && !subHasRentTrend && !subSale && !subRent && (
+                          <span className="text-[#7A7770] font-sans">Qualitative analysis</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-[11px] text-[#7A7770] truncate">
+                          {sub.data_source_name}
+                          {subVerified ? ` · ${subVerified}` : ''}
+                        </span>
+                        <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0">
+                          Read Full Report &rarr;
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Latest Related Real Estate News (Editorial Articles Only — Never Listings) */}
+        {relatedArticles.length > 0 && (
+          <section aria-labelledby="related-news-heading" className="space-y-4 sm:space-y-5 pt-4 border-t border-[#E5E0D8]">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
+                  Editorial Coverage
+                </p>
+                <h2
+                  id="related-news-heading"
+                  className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]"
+                >
+                  {isDirectNewsMatch
+                    ? `Latest Real Estate News on ${countrySummary.countryName}`
+                    : 'Latest Global Real Estate News'}
+                </h2>
+              </div>
+              <Link
+                to="/news"
+                className="inline-flex items-center min-h-[36px] text-xs font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap"
+              >
+                All Global News &rarr;
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+              {relatedArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  if (!activeReport) {
+    return null;
+  }
+
   const avgSaleFormatted = formatMarketCurrency(
     activeReport.avg_sale_price,
     activeReport.currency
@@ -285,61 +658,22 @@ export default function GlobalMarketPage() {
     activeReport.currency,
     ' / mo'
   );
-  const priceTrendFormatted = formatMarketTrend(
-    activeReport.property_price_trend_pct,
-    activeReport.property_price_trend_dir
-  );
-  const rentalTrendFormatted = formatMarketTrend(
-    activeReport.rental_price_trend_pct,
-    activeReport.rental_price_trend_dir
-  );
   const verifiedDateLabel = formatMarketDateLabel(
     activeReport.last_verified_at || activeReport.updated_at || activeReport.published_at
   );
 
-  const metricCards = [
-    avgSaleFormatted
-      ? {
-          label: 'Average Property Sale Price',
-          value: avgSaleFormatted,
-          sub: activeReport.data_period || activeReport.currency,
-          icon: null,
-        }
-      : null,
-    priceTrendFormatted
-      ? {
-          label: 'Residential Price Trend',
-          value: priceTrendFormatted,
-          sub: activeReport.data_period || 'Reported Change',
-          icon: <TrendIcon dir={activeReport.property_price_trend_dir} />,
-        }
-      : null,
-    avgRentFormatted
-      ? {
-          label: 'Average Monthly Rent',
-          value: avgRentFormatted,
-          sub: activeReport.data_period || activeReport.currency,
-          icon: null,
-        }
-      : null,
-    rentalTrendFormatted
-      ? {
-          label: 'Rental Market Trend',
-          value: rentalTrendFormatted,
-          sub: activeReport.data_period || 'Reported Change',
-          icon: <TrendIcon dir={activeReport.rental_price_trend_dir} />,
-        }
-      : null,
-  ].filter(Boolean) as Array<{
-    label: string;
-    value: string;
-    sub: string;
-    icon: React.ReactNode;
-  }>;
+  const hasPriceTrendData =
+    (activeReport.property_price_trend_pct !== null &&
+      activeReport.property_price_trend_pct !== undefined) ||
+    Boolean(activeReport.property_price_trend_dir);
+  const hasRentalTrendData =
+    (activeReport.rental_price_trend_pct !== null &&
+      activeReport.rental_price_trend_pct !== undefined) ||
+    Boolean(activeReport.rental_price_trend_dir);
 
   return (
     <article className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14 space-y-8 sm:space-y-12">
-      {/* Breadcrumb & Back Navigation */}
+      {/* Breadcrumb & Report Header */}
       <div className="space-y-3 sm:space-y-4 border-b border-[#E5E0D8] pb-6 sm:pb-8">
         <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-2">
           <Link to="/" className="hover:text-[#141413]">
@@ -350,22 +684,16 @@ export default function GlobalMarketPage() {
             Global Markets
           </Link>
           <span aria-hidden="true">/</span>
-          {isReportView ? (
-            <>
-              <Link
-                to={`/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`}
-                className="hover:text-[#141413]"
-              >
-                {countrySummary.countryName}
-              </Link>
-              <span aria-hidden="true">/</span>
-              <span className="text-[#141413] font-medium break-words">
-                {activeReport.city_name || activeReport.title}
-              </span>
-            </>
-          ) : (
-            <span className="text-[#141413] font-medium">{countrySummary.countryName}</span>
-          )}
+          <Link
+            to={`/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`}
+            className="hover:text-[#141413]"
+          >
+            {countrySummary.countryName}
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span className="text-[#141413] font-medium break-words">
+            {activeReport.city_name || activeReport.title}
+          </span>
         </nav>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
@@ -410,20 +738,6 @@ export default function GlobalMarketPage() {
               </span>
             </>
           )}
-          {!isReportView && countrySummary.cityCount > 0 && (
-            <>
-              <span aria-hidden="true" className="text-[#D6CEBE]">
-                ·
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin size={13} className="text-[#1E3A5F]" aria-hidden="true" />
-                <span>
-                  {countrySummary.cityCount}{' '}
-                  {countrySummary.cityCount === 1 ? 'City Covered' : 'Cities Covered'}
-                </span>
-              </span>
-            </>
-          )}
         </div>
       </div>
 
@@ -440,32 +754,64 @@ export default function GlobalMarketPage() {
         </figure>
       )}
 
-      {/* Key Market Indicators Strip (only rendered when verified metrics exist) */}
-      {metricCards.length > 0 && (
-        <section aria-labelledby="market-indicators-heading" className="space-y-3 sm:space-y-4">
-          <h2
-            id="market-indicators-heading"
-            className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55]"
-          >
-            Verified Market Indicators ({activeReport.currency})
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-            {metricCards.map((card) => (
-              <div
-                key={card.label}
-                className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-5 min-w-0 space-y-1.5 sm:space-y-2"
-              >
-                <p className="text-xs font-semibold text-[#5C5A55]">{card.label}</p>
-                <p className="text-xl sm:text-2xl font-serif font-semibold font-mono tabular-nums text-[#141413] flex flex-wrap items-center gap-2 break-words [overflow-wrap:anywhere]">
-                  {card.icon}
-                  <span>{card.value}</span>
-                </p>
-                <p className="text-[11px] text-[#7A7770]">{card.sub}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Key Market Indicators Strip */}
+      <section aria-labelledby="market-indicators-heading" className="space-y-3 sm:space-y-4">
+        <h2
+          id="market-indicators-heading"
+          className="text-xs uppercase tracking-widest font-semibold text-[#5C5A55]"
+        >
+          Verified Market Indicators ({activeReport.currency})
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          {avgSaleFormatted && (
+            <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-5 min-w-0 space-y-1.5 sm:space-y-2">
+              <p className="text-xs font-semibold text-[#5C5A55]">Average Property Sale Price</p>
+              <p className="text-xl sm:text-2xl font-serif font-semibold font-mono tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                {avgSaleFormatted}
+              </p>
+              <p className="text-[11px] text-[#7A7770]">
+                {activeReport.data_period || activeReport.currency}
+              </p>
+            </div>
+          )}
+
+          <MarketTrendIndicator
+            variant="metric"
+            label="Residential Price Trend"
+            pct={activeReport.property_price_trend_pct}
+            dir={activeReport.property_price_trend_dir}
+            subLabel={
+              hasPriceTrendData
+                ? activeReport.data_period || 'Reported Change'
+                : 'No verified trend reported'
+            }
+          />
+
+          {avgRentFormatted && (
+            <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-5 min-w-0 space-y-1.5 sm:space-y-2">
+              <p className="text-xs font-semibold text-[#5C5A55]">Average Monthly Rent</p>
+              <p className="text-xl sm:text-2xl font-serif font-semibold font-mono tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                {avgRentFormatted}
+              </p>
+              <p className="text-[11px] text-[#7A7770]">
+                {activeReport.data_period || activeReport.currency}
+              </p>
+            </div>
+          )}
+
+          <MarketTrendIndicator
+            variant="metric"
+            label="Rental Market Trend"
+            pct={activeReport.rental_price_trend_pct}
+            dir={activeReport.rental_price_trend_dir}
+            subLabel={
+              hasRentalTrendData
+                ? activeReport.data_period || 'Reported Change'
+                : 'No verified trend reported'
+            }
+          />
+        </div>
+      </section>
 
       {/* Main Research Body + Sidebar Attribution */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
@@ -572,19 +918,17 @@ export default function GlobalMarketPage() {
             )}
           </div>
 
-          {isReportView && (
-            <Link
-              to={`/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`}
-              className="inline-flex items-center gap-2 min-h-[44px] px-1 text-xs font-semibold text-[#1E3A5F] hover:underline"
-            >
-              <ArrowLeft size={14} />
-              <span>Back to {countrySummary.countryName} Overview</span>
-            </Link>
-          )}
+          <Link
+            to={`/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`}
+            className="inline-flex items-center gap-2 min-h-[44px] px-1 text-xs font-semibold text-[#1E3A5F] hover:underline"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to {countrySummary.countryName} Overview</span>
+          </Link>
         </aside>
       </div>
 
-      {/* City-Level & Additional Market Reports in this Country */}
+      {/* Related Reports in this Country */}
       {relatedReports.length > 0 && (
         <section aria-labelledby="city-reports-heading" className="space-y-4 sm:space-y-5 pt-4 border-t border-[#E5E0D8]">
           <div className="space-y-1">
@@ -595,9 +939,7 @@ export default function GlobalMarketPage() {
               id="city-reports-heading"
               className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]"
             >
-              {isReportView
-                ? `More Market Reports in ${countrySummary.countryName}`
-                : 'City-Level & Sub-Market Reports'}
+              More Market Reports in {countrySummary.countryName}
             </h2>
           </div>
 
@@ -606,14 +948,14 @@ export default function GlobalMarketPage() {
               const subHref = `/global-markets/${encodeURIComponent(sub.country_slug)}/${encodeURIComponent(sub.slug)}`;
               const subSale = formatMarketCurrency(sub.avg_sale_price, sub.currency);
               const subRent = formatMarketCurrency(sub.avg_monthly_rent, sub.currency, '/mo');
-              const subPriceTrend = formatMarketTrend(
-                sub.property_price_trend_pct,
-                sub.property_price_trend_dir
-              );
-              const subRentTrend = formatMarketTrend(
-                sub.rental_price_trend_pct,
-                sub.rental_price_trend_dir
-              );
+              const subHasPriceTrend =
+                (sub.property_price_trend_pct !== null &&
+                  sub.property_price_trend_pct !== undefined) ||
+                Boolean(sub.property_price_trend_dir);
+              const subHasRentTrend =
+                (sub.rental_price_trend_pct !== null &&
+                  sub.rental_price_trend_pct !== undefined) ||
+                Boolean(sub.rental_price_trend_dir);
 
               return (
                 <Link
@@ -637,14 +979,27 @@ export default function GlobalMarketPage() {
                   </div>
 
                   <div className="pt-3 border-t border-[#F0ECE1] space-y-2">
-                    {(subSale || subRent || subPriceTrend || subRentTrend) && (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono tabular-nums text-[#141413]">
-                        {subPriceTrend && <span>Price {subPriceTrend}</span>}
-                        {subRentTrend && <span>Rent {subRentTrend}</span>}
-                        {subSale && <span>Avg {subSale}</span>}
-                        {subRent && <span>Rent {subRent}</span>}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono tabular-nums text-[#141413]">
+                      <MarketTrendIndicator
+                        variant="summary"
+                        label="Price"
+                        pct={sub.property_price_trend_pct}
+                        dir={sub.property_price_trend_dir}
+                      />
+                      {subHasRentTrend && (
+                        <MarketTrendIndicator
+                          variant="summary"
+                          label="Rent"
+                          pct={sub.rental_price_trend_pct}
+                          dir={sub.rental_price_trend_dir}
+                        />
+                      )}
+                      {subSale && <span>Avg {subSale}</span>}
+                      {subRent && <span>Rent {subRent}</span>}
+                      {!subHasPriceTrend && !subHasRentTrend && !subSale && !subRent && (
+                        <span className="text-[#7A7770] font-sans">Qualitative analysis</span>
+                      )}
+                    </div>
                     <div className="text-xs font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27]">
                       Read Report &rarr;
                     </div>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe2, TrendingDown, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe2 } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketCountrySummary } from '../../types';
@@ -10,17 +10,18 @@ import {
   getPublishedMarketCountries,
 } from '../../services/globalMarketsService';
 import {
-  formatMarketCurrency,
   formatMarketDateLabel,
-  formatMarketTrend,
+  getHomepageCountryTargetHref,
 } from '../../lib/globalMarkets';
+import CountryMapCover from './CountryMapCover';
+import MarketTrendIndicator from './MarketTrendIndicator';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 
 function serializeCountrySummaries(list: GlobalMarketCountrySummary[]): string {
   return list
     .map(
       (c) =>
-        `${c.countrySlug}:${c.reportCount}:${c.cityCount}:${c.avgSalePrice ?? ''}:${c.avgMonthlyRent ?? ''}:${c.propertyPriceTrendPct ?? ''}:${c.rentalPriceTrendPct ?? ''}:${c.latestUpdatedAt ?? ''}`
+        `${c.countrySlug}:${c.countryCode}:${c.reportCount}:${c.cityCount}:${c.primaryReportSlug ?? ''}:${c.propertyPriceTrendPct ?? ''}:${c.propertyPriceTrendDir ?? ''}:${c.latestUpdatedAt ?? ''}`
     )
     .join('|');
 }
@@ -181,7 +182,7 @@ export default function GlobalMarketsSection() {
     <MotionConfig reducedMotion="user">
       <section
         aria-labelledby="explore-markets-heading"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5"
       >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5E0D8] pb-4">
           <div className="space-y-1">
@@ -236,14 +237,17 @@ export default function GlobalMarketsSection() {
             {Array.from({ length: 4 }).map((_, idx) => (
               <div
                 key={idx}
-                className="w-full lg:shrink-0 lg:w-[288px] h-[140px] bg-white border border-[#E5E0D8] rounded-md p-4 space-y-3 animate-pulse"
+                className="w-full lg:shrink-0 lg:w-[264px] bg-white border border-[#E5E0D8] rounded-md overflow-hidden animate-pulse"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-5 rounded bg-[#EBE6DF] shrink-0" />
-                  <div className="h-4 w-32 rounded bg-[#EBE6DF]" />
+                <div className="aspect-[16/9] w-full bg-[#0A182B]" />
+                <div className="p-3.5 sm:p-4 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-3.5 rounded-[2px] bg-[#EBE6DF] shrink-0" />
+                    <div className="h-4 w-28 rounded bg-[#EBE6DF]" />
+                  </div>
+                  <div className="h-3 w-24 rounded bg-[#EBE6DF]" />
+                  <div className="h-7 w-full rounded bg-[#FAF8F5]" />
                 </div>
-                <div className="h-3 w-40 rounded bg-[#EBE6DF]" />
-                <div className="h-3 w-28 rounded bg-[#EBE6DF]" />
               </div>
             ))}
           </div>
@@ -259,169 +263,94 @@ export default function GlobalMarketsSection() {
                 const isoCode = (item.countryCode || '').trim().toLowerCase();
                 const hasValidIsoCode = /^[a-z]{2}$/.test(isoCode);
                 const isFirstReveal = !mountedKeysRef.current.has(item.countrySlug);
+                const targetHref = getHomepageCountryTargetHref(item);
 
-                const priceTrendText = formatMarketTrend(
-                  item.propertyPriceTrendPct,
-                  item.propertyPriceTrendDir
-                );
-                const rentalTrendText = formatMarketTrend(
-                  item.rentalPriceTrendPct,
-                  item.rentalPriceTrendDir
-                );
-                const avgSaleText = formatMarketCurrency(item.avgSalePrice, item.currency);
-                const avgRentText = formatMarketCurrency(
-                  item.avgMonthlyRent,
-                  item.currency,
-                  '/mo'
-                );
-
-                const coverageParts: string[] = [
-                  `${item.reportCount} ${item.reportCount === 1 ? 'Report' : 'Reports'}`,
-                ];
-                if (item.cityCount > 0) {
-                  coverageParts.push(
-                    `${item.cityCount} ${item.cityCount === 1 ? 'City' : 'Cities'}`
-                  );
-                }
+                const reportCountLabel = `${item.reportCount} ${
+                  item.reportCount === 1 ? 'Report' : 'Reports'
+                }`;
 
                 const updatedLabel = formatMarketDateLabel(item.latestUpdatedAt);
                 const updateDisplay = updatedLabel
-                  ? `Updated ${updatedLabel}`
+                  ? `Verified ${updatedLabel}`
                   : item.latestDataPeriod
                   ? `Period: ${item.latestDataPeriod}`
-                  : null;
+                  : 'Verified Research';
 
                 return (
                   <motion.div
                     key={item.countrySlug}
                     role="listitem"
                     layout="position"
-                    initial={isFirstReveal ? { opacity: 0, x: 32 } : false}
+                    initial={isFirstReveal ? { opacity: 0, x: 28 } : false}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
+                    exit={{ opacity: 0, x: -16 }}
                     transition={{
                       opacity: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
                       x: {
-                        duration: 0.38,
+                        duration: 0.36,
                         ease: [0.16, 1, 0.3, 1],
-                        delay: isInitialRenderRef.current ? Math.min(index * 0.045, 0.22) : 0,
+                        delay: isInitialRenderRef.current ? Math.min(index * 0.04, 0.2) : 0,
                       },
-                      layout: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
+                      layout: { duration: 0.32, ease: [0.16, 1, 0.3, 1] },
                     }}
-                    className="w-full lg:w-[288px] lg:shrink-0 lg:snap-start min-w-0"
+                    className="w-full lg:w-[264px] lg:shrink-0 lg:snap-start min-w-0"
                   >
                     <Link
-                      to={`/global-markets/${encodeURIComponent(item.countrySlug)}`}
-                      className="group flex flex-col justify-between w-full h-full min-w-0 p-4 sm:p-5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] hover:bg-[#FCFBF8] rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF8F5]"
+                      to={targetHref}
+                      className="group flex flex-col justify-between w-full h-full min-w-0 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] hover:bg-[#FCFBF8] rounded-md overflow-hidden transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF8F5]"
                     >
-                      <div className="space-y-3 min-w-0">
-                        <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            {hasValidIsoCode ? (
-                              <span
-                                className={`fi fi-${isoCode} w-6 h-[18px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <Globe2
-                                size={18}
-                                className="text-[#8C4A27] shrink-0"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span className="font-serif font-semibold text-base leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors break-words">
-                              {item.countryName}
-                            </span>
+                      <CountryMapCover
+                        countryCode={item.countryCode}
+                        countryName={item.countryName}
+                      />
+
+                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-3 min-w-0">
+                        <div className="space-y-2.5 min-w-0">
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {hasValidIsoCode ? (
+                                <span
+                                  className={`fi fi-${isoCode} w-5 h-[14px] rounded-[2px] ring-1 ring-black/15 shrink-0`}
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Globe2
+                                  size={16}
+                                  className="text-[#8C4A27] shrink-0"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <h3 className="font-serif font-semibold text-base leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors truncate">
+                                {item.countryName}
+                              </h3>
+                            </div>
+
+                            <p className="text-[11px] text-[#5C5A55] tabular-nums">
+                              {reportCountLabel}
+                              {item.cityCount > 0
+                                ? ` · ${item.cityCount} ${item.cityCount === 1 ? 'City' : 'Cities'}`
+                                : ''}
+                            </p>
+                          </div>
+
+                          <div className="pt-2 border-t border-[#F0ECE1]">
+                            <MarketTrendIndicator
+                              pct={item.propertyPriceTrendPct}
+                              dir={item.propertyPriceTrendDir}
+                              label="Residential Price Trend"
+                              variant="card"
+                            />
                           </div>
                         </div>
 
-                        <p className="text-xs text-[#5C5A55] tabular-nums">
-                          {coverageParts.join(' · ')}
-                        </p>
-
-                        {/* Available Real Market Indicators (never invented, omitted when null) */}
-                        {(priceTrendText || rentalTrendText || avgSaleText || avgRentText) && (
-                          <div className="pt-2 border-t border-[#F0ECE1] grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                            {priceTrendText && (
-                              <div className="min-w-0">
-                                <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                                  Price Trend
-                                </span>
-                                <span
-                                  className={`font-mono font-semibold tabular-nums inline-flex items-center gap-1 break-words [overflow-wrap:anywhere] ${
-                                    item.propertyPriceTrendDir === 'down'
-                                      ? 'text-[#991B1B]'
-                                      : item.propertyPriceTrendDir === 'up'
-                                      ? 'text-[#14532D]'
-                                      : 'text-[#141413]'
-                                  }`}
-                                >
-                                  {item.propertyPriceTrendDir === 'up' && (
-                                    <TrendingUp size={11} aria-hidden="true" className="shrink-0" />
-                                  )}
-                                  {item.propertyPriceTrendDir === 'down' && (
-                                    <TrendingDown size={11} aria-hidden="true" className="shrink-0" />
-                                  )}
-                                  <span>{priceTrendText}</span>
-                                </span>
-                              </div>
-                            )}
-
-                            {rentalTrendText && (
-                              <div className="min-w-0">
-                                <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                                  Rental Trend
-                                </span>
-                                <span
-                                  className={`font-mono font-semibold tabular-nums inline-flex items-center gap-1 break-words [overflow-wrap:anywhere] ${
-                                    item.rentalPriceTrendDir === 'down'
-                                      ? 'text-[#991B1B]'
-                                      : item.rentalPriceTrendDir === 'up'
-                                      ? 'text-[#14532D]'
-                                      : 'text-[#141413]'
-                                  }`}
-                                >
-                                  {item.rentalPriceTrendDir === 'up' && (
-                                    <TrendingUp size={11} aria-hidden="true" className="shrink-0" />
-                                  )}
-                                  {item.rentalPriceTrendDir === 'down' && (
-                                    <TrendingDown size={11} aria-hidden="true" className="shrink-0" />
-                                  )}
-                                  <span>{rentalTrendText}</span>
-                                </span>
-                              </div>
-                            )}
-
-                            {avgSaleText && (
-                              <div className="min-w-0">
-                                <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                                  Avg. Sale Price
-                                </span>
-                                <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
-                                  {avgSaleText}
-                                </span>
-                              </div>
-                            )}
-
-                            {avgRentText && (
-                              <div className="min-w-0">
-                                <span className="block text-[10px] uppercase tracking-wider text-[#7A7770]">
-                                  Avg. Rent
-                                </span>
-                                <span className="font-mono font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
-                                  {avgRentText}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-3 mt-3 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-[11px] text-[#7A7770] min-h-[28px]">
-                        <span className="truncate">{updateDisplay || 'Market Intelligence'}</span>
-                        <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0">
-                          View Report &rarr;
-                        </span>
+                        <div className="pt-2.5 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs min-h-[26px]">
+                          <span className="text-[10px] text-[#7A7770] truncate">
+                            {updateDisplay}
+                          </span>
+                          <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0 whitespace-nowrap text-xs">
+                            View Report &rarr;
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   </motion.div>
