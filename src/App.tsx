@@ -15,6 +15,8 @@ const Home = React.lazy(() => import('./pages/Home'));
 const BuyPage = React.lazy(() => import('./pages/BuyPage'));
 const RentPage = React.lazy(() => import('./pages/RentPage'));
 const PropertyDetailsPage = React.lazy(() => import('./pages/PropertyDetailsPage'));
+const GlobalMarketsIndexPage = React.lazy(() => import('./pages/GlobalMarketsIndexPage'));
+const GlobalMarketPage = React.lazy(() => import('./pages/GlobalMarketPage'));
 const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const ArticleDetailsPage = React.lazy(() => import('./pages/ArticleDetailsPage'));
@@ -96,6 +98,9 @@ export default function App() {
           <Route path="/buy" element={<Layout><BuyPage /></Layout>} />
           <Route path="/rent" element={<Layout><RentPage /></Layout>} />
           <Route path="/properties/:slug" element={<Layout><PropertyDetailsPage /></Layout>} />
+          <Route path="/global-markets" element={<Layout><GlobalMarketsIndexPage /></Layout>} />
+          <Route path="/global-markets/:countrySlug" element={<Layout><GlobalMarketPage /></Layout>} />
+          <Route path="/global-markets/:countrySlug/:reportSlug" element={<Layout><GlobalMarketPage /></Layout>} />
           <Route path="/investment" element={<Layout><CategoryPage forcedSlug="investment" /></Layout>} />
           <Route path="/architecture" element={<Layout><CategoryPage forcedSlug="architecture" /></Layout>} />
           <Route path="/construction" element={<Layout><CategoryPage forcedSlug="construction" /></Layout>} />

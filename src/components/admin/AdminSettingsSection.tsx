@@ -73,15 +73,15 @@ export function SeoSettingsSection({
   };
 
   return (
-    <form onSubmit={handleSave} className="bg-white border border-[#E5E0D8] rounded p-6 max-w-3xl space-y-5">
+    <form onSubmit={handleSave} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 max-w-3xl space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D8] pb-4">
-        <div>
-          <h1 className="text-xl font-serif font-semibold text-[#141413]">SEO &amp; Website Settings</h1>
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">SEO &amp; Website Settings</h1>
           <p className="text-xs text-[#5C5A55]">
             Search metadata defaults, OpenGraph fallback image, domain, and AdSense publishing controls.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs font-semibold text-[#1E3A5F]">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-[#1E3A5F] shrink-0">
           <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:underline">
             /sitemap.xml <ExternalLink size={12} />
           </a>
@@ -92,24 +92,24 @@ export function SeoSettingsSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 min-w-0">
           <label className="text-xs font-semibold text-[#5C5A55] block">Publication Name</label>
           <input
             type="text"
             required
             value={form.site_name}
             onChange={(e) => setForm({ ...form, site_name: e.target.value })}
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 min-w-0">
           <label className="text-xs font-semibold text-[#5C5A55] block">Primary Domain</label>
           <input
             type="text"
             required
             value={form.domain}
             onChange={(e) => setForm({ ...form, domain: e.target.value })}
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-mono"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm font-mono"
           />
         </div>
       </div>
@@ -120,7 +120,7 @@ export function SeoSettingsSection({
           type="text"
           value={form.tagline}
           onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-          className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+          className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
         />
       </div>
 
@@ -130,7 +130,7 @@ export function SeoSettingsSection({
           type="text"
           value={form.default_seo_title}
           onChange={(e) => setForm({ ...form, default_seo_title: e.target.value })}
-          className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+          className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
         />
       </div>
 
@@ -140,23 +140,23 @@ export function SeoSettingsSection({
           rows={3}
           value={form.default_seo_description}
           onChange={(e) => setForm({ ...form, default_seo_description: e.target.value })}
-          className="w-full p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+          className="w-full min-w-0 p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
         />
       </div>
 
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-[#5C5A55] block">Default OpenGraph Share Image</label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={form.default_og_image || ''}
             onChange={(e) => setForm({ ...form, default_og_image: e.target.value })}
-            className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+            className="flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
           />
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
           >
             <ImageIcon size={13} /> Select Image
           </button>
@@ -166,17 +166,17 @@ export function SeoSettingsSection({
       <div className="pt-4 border-t border-[#E5E0D8] space-y-4">
         <h2 className="text-sm font-serif font-semibold text-[#141413]">Google AdSense Integration</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">AdSense Client ID</label>
             <input
               type="text"
               value={form.adsense_client_id || ''}
               onChange={(e) => setForm({ ...form, adsense_client_id: e.target.value })}
               placeholder="ca-pub-xxxxxxxxxxxxxxxx"
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
             />
           </div>
-          <label className="flex items-center gap-2 text-xs font-semibold text-[#141413] pt-4 cursor-pointer">
+          <label className="flex items-center gap-2 text-xs font-semibold text-[#141413] pt-1 sm:pt-4 cursor-pointer">
             <input
               type="checkbox"
               checked={Boolean(form.adsense_enabled)}
@@ -191,7 +191,7 @@ export function SeoSettingsSection({
       <button
         type="submit"
         disabled={saving}
-        className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+        className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save SEO & Website Settings'}
       </button>
@@ -344,9 +344,9 @@ export function SocialMediaLinksManager() {
   };
 
   return (
-    <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
+    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D8] pb-4">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-serif font-semibold text-[#141413]">
             Social Media Links Management
           </h2>
@@ -357,7 +357,7 @@ export function SocialMediaLinksManager() {
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
+          className="w-full sm:w-auto min-h-[40px] px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
         >
           + Add Platform
         </button>
@@ -458,8 +458,8 @@ export function SocialMediaLinksManager() {
 
       {/* Modal for Add / Edit */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E5E0D8] rounded-lg max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-[#E5E0D8] rounded-lg max-w-md w-full p-4 sm:p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
             <h3 className="text-lg font-serif font-semibold text-[#141413]">
               {editingLink ? 'Edit Social Media Channel' : 'Add Social Media Channel'}
             </h3>
@@ -535,18 +535,18 @@ export function SocialMediaLinksManager() {
                 <span className="font-semibold text-[#141413]">Active &amp; Visible in Footer</span>
               </label>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E0D8]">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2 pt-3 border-t border-[#E5E0D8]">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] rounded font-semibold cursor-pointer"
+                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] rounded font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded font-semibold cursor-pointer disabled:opacity-50"
+                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded font-semibold cursor-pointer disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Channel'}
                 </button>
@@ -600,9 +600,9 @@ export function EditorialSettingsSection({
 
   return (
     <div className="space-y-8 max-w-4xl">
-      <form onSubmit={handleSaveEditorial} className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
+      <form onSubmit={handleSaveEditorial} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-5">
         <div>
-          <h1 className="text-xl font-serif font-semibold text-[#141413]">Editorial Desk Settings</h1>
+          <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">Editorial Desk Settings</h1>
           <p className="text-xs text-[#5C5A55]">
             Newsroom contact address and verified publication configuration.
           </p>
@@ -615,14 +615,14 @@ export function EditorialSettingsSection({
             required
             value={editorialEmail}
             onChange={(e) => setEditorialEmail(e.target.value)}
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Editorial Email'}
         </button>
@@ -633,7 +633,7 @@ export function EditorialSettingsSection({
 
       {/* Users & RBAC Roles */}
       <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#E5E0D8]">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#E5E0D8]">
           <h2 className="text-lg font-serif font-semibold text-[#141413]">
             Team Access &amp; Editorial Roles ({users.length})
           </h2>
@@ -643,7 +643,50 @@ export function EditorialSettingsSection({
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-[#E5E0D8]">
+          {users.map((u) => (
+            <div key={u.id} className="p-4 space-y-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm text-[#141413]">
+                    {u.full_name || 'Unnamed User'}
+                    {currentProfile?.id === u.id && (
+                      <span className="ml-2 text-[11px] text-[#8C4A27] font-semibold">(You)</span>
+                    )}
+                  </div>
+                  <div className="text-xs font-mono text-[#5C5A55] break-all">{u.email}</div>
+                </div>
+                <span className="text-xs font-semibold capitalize text-[#1E3A5F] shrink-0">
+                  {u.role?.name || 'reader'}
+                </span>
+              </div>
+              <select
+                value={u.role_id || u.role?.id || ''}
+                disabled={currentProfile?.role?.name !== 'admin'}
+                onChange={async (e) => {
+                  const res = await updateUserRole(u.id, e.target.value);
+                  if (res.success) {
+                    toast.success('User role updated.');
+                    onRefresh();
+                  } else {
+                    toast.error(res.error || 'Only admins can update user roles.');
+                  }
+                }}
+                className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold capitalize disabled:opacity-50"
+              >
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase tracking-wider text-[#5C5A55]">
               <tr>
@@ -770,19 +813,19 @@ export function MyAccountSection({
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
           <img
             src={resolveEditorialImage(avatarUrl, 'author-portrait')}
             alt={fullName || profile?.email || 'Admin profile'}
             referrerPolicy="no-referrer"
-            className="w-14 h-14 rounded-full object-cover bg-[#EBE6DF]"
+            className="w-14 h-14 rounded-full object-cover bg-[#EBE6DF] shrink-0"
           />
-          <div>
-            <h1 className="text-xl font-serif font-semibold text-[#141413]">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413] break-words">
               {profile?.full_name || 'Editorial Administrator'}
             </h1>
-            <p className="text-xs font-mono text-[#5C5A55]">
+            <p className="text-xs font-mono text-[#5C5A55] break-all">
               {profile?.email} · <span className="capitalize text-[#8C4A27] font-semibold">{profile?.role?.name || 'admin'}</span>
             </p>
           </div>
@@ -790,13 +833,13 @@ export function MyAccountSection({
         <button
           type="button"
           onClick={onSignOut}
-          className="px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold text-[#141413] rounded inline-flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+          className="w-full sm:w-auto min-h-[40px] px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold text-[#141413] rounded inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
         >
           <LogOut size={14} /> Sign Out
         </button>
       </div>
 
-      <form onSubmit={handleSaveProfile} className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleSaveProfile} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
         <h2 className="text-lg font-serif font-semibold text-[#141413]">Profile Details</h2>
 
         <div className="space-y-1.5">
@@ -806,23 +849,23 @@ export function MyAccountSection({
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-[#5C5A55] block">Avatar Image</label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+              className="flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
             />
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className="px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold cursor-pointer whitespace-nowrap"
+              className="w-full sm:w-auto px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
             >
               Choose Image
             </button>
@@ -835,23 +878,23 @@ export function MyAccountSection({
             rows={3}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="w-full p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
         <button
           type="submit"
           disabled={savingProfile}
-          className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
         >
           {savingProfile ? 'Saving...' : 'Save Profile'}
         </button>
       </form>
 
-      <form onSubmit={handleUpdatePassword} className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleUpdatePassword} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
         <h2 className="text-lg font-serif font-semibold text-[#141413]">Security &amp; Password</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">New Password</label>
             <input
               type="password"
@@ -860,10 +903,10 @@ export function MyAccountSection({
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">Confirm New Password</label>
             <input
               type="password"
@@ -872,14 +915,14 @@ export function MyAccountSection({
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter password"
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
         </div>
         <button
           type="submit"
           disabled={savingPassword}
-          className="px-5 py-2.5 bg-[#8C4A27] hover:bg-[#733B1E] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#8C4A27] hover:bg-[#733B1E] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
         >
           {savingPassword ? 'Updating...' : 'Update Password'}
         </button>

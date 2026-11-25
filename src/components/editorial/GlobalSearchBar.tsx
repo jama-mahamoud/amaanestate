@@ -73,7 +73,7 @@ export default function GlobalSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search real estate research, markets, architecture..."
             aria-label="Keyword search"
-            className={`w-full pl-11 pr-3 bg-transparent text-[#141413] placeholder:text-[#6E6B64] focus:outline-none ${
+            className={`w-full min-w-0 pl-11 pr-3 bg-transparent text-[#141413] placeholder:text-[#6E6B64] focus:outline-none ${
               isHero ? 'h-12 text-[15px]' : 'h-11 text-sm'
             }`}
           />
@@ -82,12 +82,12 @@ export default function GlobalSearchBar({
         <div className="hidden md:block w-px h-7 bg-[#E5E0D8] shrink-0" aria-hidden="true" />
 
         {/* 2. Category Dropdown */}
-        <div className="md:w-52 shrink-0">
+        <div className="md:w-52 min-w-0 shrink-0">
           <select
             value={categorySlug}
             onChange={(e) => setCategorySlug(e.target.value)}
             aria-label="Filter by category"
-            className={`w-full px-3 bg-[#FAF8F5] md:bg-transparent border border-[#E5E0D8] md:border-0 rounded-[4px] text-sm font-medium text-[#141413] focus:outline-none cursor-pointer ${
+            className={`w-full min-w-0 px-3 bg-[#FAF8F5] md:bg-transparent border border-[#E5E0D8] md:border-0 rounded-[4px] text-sm font-medium text-[#141413] focus:outline-none cursor-pointer ${
               isHero ? 'h-12' : 'h-11'
             }`}
           >
@@ -103,7 +103,7 @@ export default function GlobalSearchBar({
         {/* 3. Search Button */}
         <button
           type="submit"
-          className={`bg-[#1E3A5F] hover:bg-[#142944] text-white text-sm font-semibold rounded-[4px] transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 flex items-center justify-center gap-2 ${
+          className={`w-full md:w-auto bg-[#1E3A5F] hover:bg-[#142944] text-white text-sm font-semibold rounded-[4px] transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 flex items-center justify-center gap-2 ${
             isHero ? 'h-12 px-7' : 'h-11 px-6'
           }`}
         >

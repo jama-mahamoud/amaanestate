@@ -42,6 +42,14 @@
       "destination": "/api/index"
     },
     {
+      "source": "/global-markets",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/global-markets/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/category/(.*)",
       "destination": "/api/index"
     },

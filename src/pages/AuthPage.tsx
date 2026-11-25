@@ -150,13 +150,13 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white border border-[#E5E0D8] rounded p-7 sm:p-8 space-y-6">
+    <div className="min-h-[80vh] flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md bg-white border border-[#E5E0D8] rounded p-5 sm:p-8 space-y-5 sm:space-y-6">
         <div className="space-y-3 border-b border-[#E5E0D8] pb-5">
           <Link to="/" className="inline-block">
             <BrandLogo variant="auth" />
           </Link>
-          <h1 className="text-2xl font-serif font-semibold text-[#141413]">
+          <h1 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
             {mode === 'register'
               ? 'Create Your Account'
               : mode === 'forgot'
@@ -178,7 +178,7 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
             <button
               type="button"
               onClick={() => switchMode('signin')}
-              className={`py-2 rounded text-xs font-semibold transition-colors cursor-pointer ${
+              className={`min-h-[40px] py-2 rounded text-xs font-semibold transition-colors cursor-pointer ${
                 mode === 'signin'
                   ? 'bg-[#1E3A5F] text-white'
                   : 'text-[#5C5A55] hover:text-[#141413]'
@@ -189,7 +189,7 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
             <button
               type="button"
               onClick={() => switchMode('register')}
-              className={`py-2 rounded text-xs font-semibold transition-colors cursor-pointer ${
+              className={`min-h-[40px] py-2 rounded text-xs font-semibold transition-colors cursor-pointer ${
                 mode === 'register'
                   ? 'bg-[#1E3A5F] text-white'
                   : 'text-[#5C5A55] hover:text-[#141413]'
@@ -453,7 +453,7 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
             <button
               type="button"
               onClick={handleDemoPreview}
-              className="w-full h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] text-xs font-semibold rounded transition-colors cursor-pointer"
+              className="w-full min-h-[44px] bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] text-xs font-semibold rounded transition-colors cursor-pointer"
             >
               Enter Demonstration Workspace
             </button>
@@ -461,7 +461,7 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
         )}
 
         <div className="text-center pt-2 border-t border-[#E5E0D8]">
-          <Link to="/" className="text-xs text-[#5C5A55] hover:text-[#141413] underline">
+          <Link to="/" className="inline-flex items-center min-h-[36px] text-xs text-[#5C5A55] hover:text-[#141413] underline">
             &larr; Return to AMAAN ESTATE
           </Link>
         </div>

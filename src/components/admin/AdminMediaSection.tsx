@@ -116,18 +116,18 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
     <div className="space-y-6">
       {/* Intake Panel: Upload vs External Image URL */}
       <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#E5E0D8] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-serif font-semibold text-[#141413]">Editorial Media Library</h1>
+        <div className="px-4 sm:px-6 py-4 border-b border-[#E5E0D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">Editorial Media Library</h1>
             <p className="text-xs text-[#5C5A55]">
               Upload JPG, PNG, WebP, or AVIF assets to Supabase Storage or register verified external image URLs.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActivePanel('upload')}
-              className={`px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              className={`min-h-[40px] px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activePanel === 'upload'
                   ? 'bg-[#1E3A5F] text-white'
                   : 'bg-[#FAF8F5] border border-[#D6CEBE] text-[#141413]'
@@ -138,7 +138,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
             <button
               type="button"
               onClick={() => setActivePanel('external')}
-              className={`px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              className={`min-h-[40px] px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activePanel === 'external'
                   ? 'bg-[#1E3A5F] text-white'
                   : 'bg-[#FAF8F5] border border-[#D6CEBE] text-[#141413]'
@@ -149,10 +149,10 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activePanel === 'upload' ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-              <div className="lg:col-span-6 space-y-3">
+              <div className="lg:col-span-6 space-y-3 min-w-0">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#5C5A55] block">Image Title (Optional)</label>
                   <input
@@ -160,7 +160,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
                     placeholder="e.g., Mogadishu Port Logistics Yard"
-                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                    className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                   />
                 </div>
                 <div className="space-y-1">
@@ -170,12 +170,12 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                     value={uploadAlt}
                     onChange={(e) => setUploadAlt(e.target.value)}
                     placeholder="Concise description for SEO and screen readers"
-                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                    className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                   />
                 </div>
               </div>
 
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-6 min-w-0">
                 <input
                   ref={fileRef}
                   type="file"
@@ -187,7 +187,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                   type="button"
                   disabled={uploading}
                   onClick={() => fileRef.current?.click()}
-                  className="w-full py-8 px-4 border-2 border-dashed border-[#D6CEBE] hover:border-[#1E3A5F] rounded bg-[#FAF8F5] flex flex-col items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-6 sm:py-8 px-4 border-2 border-dashed border-[#D6CEBE] hover:border-[#1E3A5F] rounded bg-[#FAF8F5] flex flex-col items-center justify-center gap-2 cursor-pointer text-center"
                 >
                   <Upload size={22} className="text-[#1E3A5F]" />
                   <span className="text-sm font-semibold text-[#141413]">
@@ -254,7 +254,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                 <button
                   type="submit"
                   disabled={savingExternal || previewState !== 'valid'}
-                  className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-50 text-white text-xs font-semibold rounded cursor-pointer"
+                  className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-50 text-white text-xs font-semibold rounded cursor-pointer"
                 >
                   {savingExternal ? 'Saving URL...' : 'Save External Image to Library'}
                 </button>
@@ -297,15 +297,15 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white border border-[#E5E0D8] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
+      <div className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md min-w-0">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7770]" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search media by title, alt text, or URL..."
-            className="w-full h-9 pl-10 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+            className="w-full min-w-0 h-10 sm:h-9 pl-10 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
           />
         </div>
         <div className="text-xs text-[#5C5A55] tabular-nums">
@@ -361,7 +361,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
           No media assets found. Upload an image above or register an external HTTPS image URL.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map((item) => {
             const isExternal = item.storage_path.startsWith('external/');
             return (
@@ -375,7 +375,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                   />
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <div className="text-sm font-semibold text-[#141413] truncate">{item.file_name}</div>
                     <div className="text-xs text-[#5C5A55] truncate">
                       {item.alt_text || 'No alt text recorded'}
@@ -392,11 +392,11 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                         navigator.clipboard.writeText(item.public_url);
                         toast.success('Image URL copied.');
                       }}
-                      className="text-xs font-semibold text-[#1E3A5F] inline-flex items-center gap-1 cursor-pointer"
+                      className="min-h-[36px] text-xs font-semibold text-[#1E3A5F] inline-flex items-center gap-1 cursor-pointer"
                     >
                       <Copy size={12} /> Copy URL
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -404,7 +404,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                           setEditTitle(item.file_name);
                           setEditAlt(item.alt_text || '');
                         }}
-                        className="p-1 text-[#5C5A55] hover:text-[#141413] cursor-pointer"
+                        className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1 text-[#5C5A55] hover:text-[#141413] cursor-pointer rounded"
                         title="Edit Metadata"
                       >
                         <Edit3 size={13} />
@@ -412,7 +412,7 @@ export default function AdminMediaSection({ media, onRefresh }: AdminMediaSectio
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(item)}
-                        className="p-1 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                        className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 size={13} />

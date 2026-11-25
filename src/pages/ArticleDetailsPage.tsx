@@ -256,17 +256,17 @@ export default function ArticleDetailsPage() {
   return (
     <div>
       {/* Thin Reading Progress Indicator */}
-      <div className="fixed top-16 left-0 right-0 h-0.5 bg-transparent z-30 pointer-events-none">
+      <div className="fixed top-14 sm:top-[72px] left-0 right-0 h-0.5 bg-transparent z-30 pointer-events-none">
         <div
           className="h-full bg-[#1E3A5F] transition-transform duration-150 origin-left"
           style={{ transform: `scaleX(${scrollProgress / 100})` }}
         />
       </div>
 
-      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-7 sm:space-y-10">
         {/* Breadcrumb & Back */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+          <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
             <Link to="/" className="hover:text-[#141413]">Home</Link>
             <span aria-hidden="true">/</span>
             {article.category && (
@@ -277,7 +277,7 @@ export default function ArticleDetailsPage() {
                 <span aria-hidden="true">/</span>
               </>
             )}
-            <span className="text-[#141413] font-medium truncate max-w-[240px] sm:max-w-sm">
+            <span className="text-[#141413] font-medium truncate max-w-[200px] sm:max-w-sm">
               {article.title}
             </span>
           </nav>
@@ -285,7 +285,7 @@ export default function ArticleDetailsPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5C5A55] hover:text-[#141413] cursor-pointer"
+            className="inline-flex items-center gap-1.5 min-h-[40px] px-2 -mr-2 sm:mr-0 text-xs font-semibold text-[#5C5A55] hover:text-[#141413] cursor-pointer shrink-0"
           >
             <ArrowLeft size={14} />
             <span>Back</span>
@@ -293,7 +293,7 @@ export default function ArticleDetailsPage() {
         </div>
 
         {/* Editorial Headline & Byline Header */}
-        <header className="max-w-3xl mx-auto space-y-5 text-left">
+        <header className="max-w-3xl mx-auto space-y-4 sm:space-y-5 text-left">
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest font-semibold text-[#5C5A55]">
             {article.category && (
               <Link to={`/${article.category.slug}`} className="text-[#8C4A27] hover:underline">
@@ -306,28 +306,28 @@ export default function ArticleDetailsPage() {
             <span className="tabular-nums">{article.reading_time} min read</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-semibold leading-[1.12] text-[#141413]">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-semibold leading-[1.15] sm:leading-[1.12] text-[#141413] break-words [overflow-wrap:anywhere]">
             {article.title}
           </h1>
 
-          <p className="text-lg text-[#4A4843] leading-relaxed font-normal">
+          <p className="text-base sm:text-lg text-[#4A4843] leading-relaxed font-normal">
             {article.excerpt}
           </p>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[#E5E0D8]">
             {article.author ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <img
                   src={authorAvatar}
                   alt={article.author.name}
                   referrerPolicy="no-referrer"
-                  className="w-10 h-10 rounded-full object-cover bg-[#EBE6DF]"
+                  className="w-10 h-10 rounded-full object-cover bg-[#EBE6DF] shrink-0"
                 />
-                <div>
-                  <div className="text-sm font-semibold text-[#141413]">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-[#141413] truncate">
                     {article.author.name}
                   </div>
-                  <div className="text-xs text-[#5C5A55]">
+                  <div className="text-xs text-[#5C5A55] truncate">
                     {article.author.title}
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export default function ArticleDetailsPage() {
             )}
 
             {/* Social Sharing */}
-            <div className="flex items-center gap-2 text-xs font-medium">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
               <span className="text-[#7A7770] inline-flex items-center gap-1 mr-1">
                 <Share2 size={13} /> Share:
               </span>
@@ -352,7 +352,7 @@ export default function ArticleDetailsPage() {
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(articleUrl)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-2.5 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413]"
+                className="inline-flex items-center justify-center min-h-[40px] px-3 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413]"
               >
                 X
               </a>
@@ -360,14 +360,14 @@ export default function ArticleDetailsPage() {
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-2.5 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413]"
+                className="inline-flex items-center justify-center min-h-[40px] px-3 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413]"
               >
                 LinkedIn
               </a>
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="px-2.5 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413] inline-flex items-center gap-1 cursor-pointer"
+                className="inline-flex items-center justify-center min-h-[40px] px-3 py-1.5 bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded text-[#141413] gap-1.5 cursor-pointer"
               >
                 {copied ? <Check size={12} /> : <Copy size={12} />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -437,15 +437,15 @@ export default function ArticleDetailsPage() {
           {article.author && (
             <section
               aria-label="About the author"
-              className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col sm:flex-row gap-5 items-start"
+              className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start"
             >
               <img
                 src={authorAvatar}
                 alt={article.author.name}
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-full object-cover bg-[#EBE6DF] shrink-0"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover bg-[#EBE6DF] shrink-0"
               />
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
                   About the Author
                 </p>
@@ -463,21 +463,21 @@ export default function ArticleDetailsPage() {
 
         {/* Recommended / Related Reading */}
         {related.length > 0 && (
-          <section aria-labelledby="related-heading" className="pt-10 border-t border-[#E5E0D8] space-y-6">
-            <div className="flex items-baseline justify-between">
-              <h2 id="related-heading" className="text-2xl font-serif font-semibold text-[#141413]">
+          <section aria-labelledby="related-heading" className="pt-8 sm:pt-10 border-t border-[#E5E0D8] space-y-5 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+              <h2 id="related-heading" className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
                 Recommended Reading
               </h2>
               {article.category && (
                 <Link
                   to={`/${article.category.slug}`}
-                  className="text-xs font-semibold text-[#1E3A5F] hover:underline"
+                  className="inline-flex items-center min-h-[36px] text-xs font-semibold text-[#1E3A5F] hover:underline"
                 >
                   More in {article.category.name} &rarr;
                 </Link>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
               {related.map((item) => (
                 <ArticleCard key={item.id} article={item} />
               ))}

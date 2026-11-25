@@ -396,10 +396,10 @@ export default function ArticleSeoPanel({
   return (
     <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
       {/* Header Bar with Live Score */}
-      <div className="px-6 py-4 bg-[#FAF8F5] border-b border-[#E5E0D8] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-[#1E3A5F]" />
+      <div className="px-4 sm:px-6 py-4 bg-[#FAF8F5] border-b border-[#E5E0D8] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <ShieldCheck size={16} className="text-[#1E3A5F] shrink-0" />
             <h2 className="text-base font-serif font-semibold text-[#141413]">
               AmaanEstate Rank Math SEO Suite
             </h2>
@@ -413,8 +413,8 @@ export default function ArticleSeoPanel({
           </p>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="w-36">
+        <div className="flex items-center gap-4 shrink-0 w-full md:w-auto">
+          <div className="w-full md:w-36">
             <div className="flex items-baseline justify-between mb-1">
               <span className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                 SEO Score
@@ -434,7 +434,7 @@ export default function ArticleSeoPanel({
       </div>
 
       {/* Sub-navigation Tabs */}
-      <div className="px-6 border-b border-[#E5E0D8] flex items-center gap-1 overflow-x-auto bg-white">
+      <div className="px-3 sm:px-6 border-b border-[#E5E0D8] flex items-center gap-1 overflow-x-auto bg-white">
         {[
           { id: 'assistant', label: 'SEO Assistant & Keywords' },
           { id: 'ai', label: 'AI SEO Actions' },
@@ -456,7 +456,7 @@ export default function ArticleSeoPanel({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as SeoPanelTab)}
-              className={`px-3.5 py-3 text-xs font-semibold border-b-2 whitespace-nowrap cursor-pointer transition-colors ${
+              className={`px-3 sm:px-3.5 min-h-[44px] py-3 text-xs font-semibold border-b-2 whitespace-nowrap cursor-pointer transition-colors ${
                 active
                   ? 'border-[#1E3A5F] text-[#1E3A5F]'
                   : 'border-transparent text-[#5C5A55] hover:text-[#141413]'
@@ -468,7 +468,7 @@ export default function ArticleSeoPanel({
         })}
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* TAB 1: Live Assistant, Keywords, Intent & SERP Preview */}
         {activeTab === 'assistant' && (
           <div className="space-y-6">
@@ -541,7 +541,7 @@ export default function ArticleSeoPanel({
               <label className="text-xs font-semibold text-[#5C5A55] block">
                 Supporting Secondary Keywords
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={supportingInput}
@@ -553,12 +553,12 @@ export default function ArticleSeoPanel({
                     }
                   }}
                   placeholder="Add secondary keyword phrase and press Enter..."
-                  className="flex-1 h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                  className="w-full sm:flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
                 />
                 <button
                   type="button"
                   onClick={handleAddSupportingKeyword}
-                  className="px-3 h-9 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer"
+                  className="w-full sm:w-auto px-4 min-h-[40px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer shrink-0"
                 >
                   Add
                 </button>
@@ -584,8 +584,8 @@ export default function ArticleSeoPanel({
 
             {/* Core Metadata Fields */}
             <div className="grid grid-cols-1 gap-4 pt-4 border-t border-[#E5E0D8]">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+              <div className="space-y-1.5 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <label className="text-xs font-semibold text-[#5C5A55]">SEO Meta Title</label>
                   <span
                     className={`text-[11px] font-mono tabular-nums ${
@@ -604,12 +604,12 @@ export default function ArticleSeoPanel({
                   value={seoTitle}
                   onChange={(e) => onChangeSeoTitle(e.target.value)}
                   placeholder={title || 'Defaults to article headline'}
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                  className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+              <div className="space-y-1.5 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <label className="text-xs font-semibold text-[#5C5A55]">SEO Meta Description</label>
                   <span
                     className={`text-[11px] font-mono tabular-nums ${
@@ -628,13 +628,13 @@ export default function ArticleSeoPanel({
                   value={seoDescription}
                   onChange={(e) => onChangeSeoDescription(e.target.value)}
                   placeholder={excerpt || 'Defaults to short description'}
-                  className="w-full p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                  className="w-full min-w-0 p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-1.5 min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <label className="text-xs font-semibold text-[#5C5A55]">
                       SEO Keywords (Synced to Article Tags)
                     </label>
@@ -651,26 +651,26 @@ export default function ArticleSeoPanel({
                     value={seoKeywords}
                     onChange={(e) => onChangeSeoKeywords(e.target.value)}
                     placeholder="Urban Economics, Capital Markets, Logistics"
-                    className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                    className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                   />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 min-w-0">
                   <label className="text-xs font-semibold text-[#5C5A55] block">
                     OpenGraph Social Image Override
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       value={ogImage}
                       onChange={(e) => onChangeOgImage(e.target.value)}
                       placeholder="Defaults to Featured Cover Image"
-                      className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                      className="w-full sm:flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                     />
                     <button
                       type="button"
                       onClick={onOpenOgPicker}
-                      className="px-3 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer whitespace-nowrap"
+                      className="w-full sm:w-auto px-4 min-h-[40px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer whitespace-nowrap shrink-0"
                     >
                       Choose
                     </button>
@@ -680,8 +680,8 @@ export default function ArticleSeoPanel({
             </div>
 
             {/* SERP Preview */}
-            <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded space-y-2.5">
-              <div className="flex items-center justify-between">
+            <div className="p-3.5 sm:p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
                   Google Search Snippet Preview
                 </span>
@@ -689,7 +689,7 @@ export default function ArticleSeoPanel({
                   <button
                     type="button"
                     onClick={() => setSerpDevice('desktop')}
-                    className={`px-2.5 py-1 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
+                    className={`px-2.5 py-1.5 min-h-[34px] text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
                       serpDevice === 'desktop' ? 'bg-[#1E3A5F] text-white' : 'text-[#5C5A55]'
                     }`}
                   >
@@ -698,7 +698,7 @@ export default function ArticleSeoPanel({
                   <button
                     type="button"
                     onClick={() => setSerpDevice('mobile')}
-                    className={`px-2.5 py-1 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
+                    className={`px-2.5 py-1.5 min-h-[34px] text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
                       serpDevice === 'mobile' ? 'bg-[#1E3A5F] text-white' : 'text-[#5C5A55]'
                     }`}
                   >
@@ -707,14 +707,14 @@ export default function ArticleSeoPanel({
                 </div>
               </div>
 
-              <div className={`bg-white border border-[#E5E0D8] rounded p-3.5 ${serpDevice === 'mobile' ? 'max-w-sm' : 'w-full'}`}>
-                <div className="text-[11px] text-[#3C4043] font-mono truncate">{previewCanonical}</div>
-                <div className="text-base font-semibold text-[#1a0dab] leading-snug mt-0.5 line-clamp-2">
+              <div className={`bg-white border border-[#E5E0D8] rounded p-3.5 min-w-0 ${serpDevice === 'mobile' ? 'max-w-sm' : 'w-full'}`}>
+                <div className="text-[11px] text-[#3C4043] font-mono break-all sm:truncate">{previewCanonical}</div>
+                <div className="text-base font-semibold text-[#1a0dab] leading-snug mt-0.5 line-clamp-2 break-words">
                   {effectivePreviewTitle.length > 60
                     ? `${effectivePreviewTitle.slice(0, 58)}...`
                     : effectivePreviewTitle}
                 </div>
-                <p className="text-xs text-[#4D5156] mt-1 leading-relaxed line-clamp-2">
+                <p className="text-xs text-[#4D5156] mt-1 leading-relaxed line-clamp-2 break-words">
                   {effectivePreviewDesc.length > 160
                     ? `${effectivePreviewDesc.slice(0, 157)}...`
                     : effectivePreviewDesc}
@@ -742,7 +742,7 @@ export default function ArticleSeoPanel({
                       key={cat.id}
                       type="button"
                       onClick={() => setCheckCategoryFilter(cat.id)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-semibold cursor-pointer ${
+                      className={`px-2.5 py-1.5 min-h-[34px] rounded text-[11px] font-semibold cursor-pointer ${
                         checkCategoryFilter === cat.id
                           ? 'bg-[#1E3A5F] text-white'
                           : 'bg-[#FAF8F5] text-[#5C5A55] hover:text-[#141413]'
@@ -756,7 +756,7 @@ export default function ArticleSeoPanel({
 
               <div className="divide-y divide-[#E5E0D8] border border-[#E5E0D8] rounded">
                 {filteredChecks.map((chk) => (
-                  <div key={chk.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                  <div key={chk.id} className="px-3.5 sm:px-4 py-3 flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2.5 min-w-0">
                       {chk.status === 'passed' ? (
                         <CheckCircle2 size={15} className="text-[#16A34A] shrink-0 mt-0.5" />
@@ -766,10 +766,10 @@ export default function ArticleSeoPanel({
                         <AlertCircle size={15} className="text-[#DC2626] shrink-0 mt-0.5" />
                       )}
                       <div className="min-w-0 space-y-0.5">
-                        <div className="text-xs font-semibold text-[#141413]">{chk.title}</div>
-                        <div className="text-xs text-[#5C5A55]">{chk.detail}</div>
+                        <div className="text-xs font-semibold text-[#141413] break-words">{chk.title}</div>
+                        <div className="text-xs text-[#5C5A55] break-words [overflow-wrap:anywhere]">{chk.detail}</div>
                         {chk.recommendation && (
-                          <div className="text-[11px] text-[#8C4A27] font-medium">
+                          <div className="text-[11px] text-[#8C4A27] font-medium break-words">
                             Action: {chk.recommendation}
                           </div>
                         )}
@@ -863,14 +863,14 @@ export default function ArticleSeoPanel({
             </div>
 
             {aiSuggestions && !reviewOpen && (
-              <div className="flex items-center justify-between p-3.5 bg-[#FAF8F5] border border-[#E5E0D8] rounded">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#FAF8F5] border border-[#E5E0D8] rounded">
                 <span className="text-xs text-[#5C5A55]">
                   Latest AI SEO suggestions are ready for review.
                 </span>
                 <button
                   type="button"
                   onClick={() => setReviewOpen(true)}
-                  className="px-3 py-1.5 bg-[#1E3A5F] text-white rounded text-xs font-semibold cursor-pointer"
+                  className="w-full sm:w-auto px-3 py-1.5 min-h-[40px] bg-[#1E3A5F] text-white rounded text-xs font-semibold cursor-pointer"
                 >
                   Open Review Modal
                 </button>
@@ -885,10 +885,10 @@ export default function ArticleSeoPanel({
             {brokenLinks.length > 0 && (
               <div className="p-4 bg-[#FEF2F2] border border-[#FECACA] rounded space-y-2">
                 <div className="text-xs font-semibold text-[#991B1B] flex items-center gap-1.5">
-                  <AlertCircle size={14} />
+                  <AlertCircle size={14} className="shrink-0" />
                   <span>{brokenLinks.length} Broken or Legacy Internal Link(s) Detected</span>
                 </div>
-                <ul className="space-y-1 text-xs text-[#7F1D1D] font-mono">
+                <ul className="space-y-1 text-xs text-[#7F1D1D] font-mono break-all">
                   {brokenLinks.map((b, i) => (
                     <li key={`${b.href}-${i}`}>
                       • {b.href} {b.anchorText ? `("${b.anchorText}")` : ''}
@@ -898,8 +898,8 @@ export default function ArticleSeoPanel({
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <div className="min-w-0">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5C5A55]">
                   Recommended Published Articles &amp; Active Properties
                 </h3>
@@ -907,7 +907,7 @@ export default function ArticleSeoPanel({
                   Matched strictly from real AmaanEstate inventory by topic, country, and keyword overlap.
                 </p>
               </div>
-              <span className="text-xs font-mono tabular-nums text-[#5C5A55]">
+              <span className="text-xs font-mono tabular-nums text-[#5C5A55] shrink-0">
                 {analysis.metrics.internalLinksCount} currently linked
               </span>
             </div>
@@ -919,37 +919,37 @@ export default function ArticleSeoPanel({
             ) : (
               <div className="divide-y divide-[#E5E0D8] border border-[#E5E0D8] rounded">
                 {internalRecommendations.map((rec) => (
-                  <div key={`${rec.type}-${rec.id}`} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div key={`${rec.type}-${rec.id}`} className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#E5E0D8] text-[#1E3A5F]">
                           {rec.type}
                         </span>
-                        <span className="text-xs font-semibold text-[#141413] truncate">{rec.title}</span>
+                        <span className="text-xs font-semibold text-[#141413] break-words">{rec.title}</span>
                         {rec.alreadyLinked && (
                           <span className="text-[10px] font-semibold text-[#16A34A] inline-flex items-center gap-1">
                             <Check size={11} /> Linked
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] font-mono text-[#7A7770] truncate">{rec.url}</div>
-                      <div className="text-xs text-[#5C5A55]">
+                      <div className="text-[11px] font-mono text-[#7A7770] break-all">{rec.url}</div>
+                      <div className="text-xs text-[#5C5A55] break-words">
                         {rec.reason} · Suggested anchor: <em>“{rec.suggestedAnchorText}”</em>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleCopyInternalLink(rec.url, rec.suggestedAnchorText)}
-                        className="px-2.5 py-1.5 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 min-h-[38px] bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1 cursor-pointer"
                       >
                         <Copy size={12} /> Copy HTML
                       </button>
                       <button
                         type="button"
                         onClick={() => handleInsertInternalLink(rec.url, rec.suggestedAnchorText)}
-                        className="px-2.5 py-1.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 min-h-[38px] bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
                       >
                         <Plus size={12} /> Insert Link
                       </button>
@@ -1076,8 +1076,8 @@ export default function ArticleSeoPanel({
         {/* TAB 5: Pre-Publish Readiness Checklist */}
         {activeTab === 'checklist' && (
           <div className="space-y-5">
-            <div className="p-4 rounded border border-[#E5E0D8] bg-[#FAF8F5] flex items-center justify-between gap-4">
-              <div>
+            <div className="p-4 rounded border border-[#E5E0D8] bg-[#FAF8F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="min-w-0">
                 <div className="text-sm font-semibold text-[#141413]">
                   {analysis.checklist.readyToPublish
                     ? 'Ready for Publication'
@@ -1088,7 +1088,7 @@ export default function ArticleSeoPanel({
                 </p>
               </div>
               <span
-                className={`px-3 py-1 rounded text-xs font-semibold ${
+                className={`self-start sm:self-center shrink-0 px-3 py-1 rounded text-xs font-semibold ${
                   analysis.checklist.readyToPublish
                     ? 'bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]'
                     : 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]'
@@ -1137,27 +1137,28 @@ export default function ArticleSeoPanel({
 
       {/* Review-Before-Apply AI SEO Modal */}
       {reviewOpen && aiSuggestions && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E5E0D8] rounded max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden shadow-xl">
-            <div className="px-6 py-4 border-b border-[#E5E0D8] flex items-center justify-between bg-[#FAF8F5]">
-              <div>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-0 sm:p-4">
+          <div className="bg-white border border-[#E5E0D8] rounded-none sm:rounded max-w-3xl w-full h-[100dvh] sm:h-auto sm:max-h-[88vh] flex flex-col overflow-hidden shadow-xl">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-3 bg-[#FAF8F5]">
+              <div className="min-w-0">
                 <div className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
                   Review AI SEO Suggestions
                 </div>
-                <h3 className="text-base font-serif font-semibold text-[#141413]">
+                <h3 className="text-sm sm:text-base font-serif font-semibold text-[#141413]">
                   Select updates to apply — nothing is overwritten without approval
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setReviewOpen(false)}
-                className="p-1.5 text-[#5C5A55] hover:text-[#141413] cursor-pointer"
+                aria-label="Close review modal"
+                className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-[#5C5A55] hover:text-[#141413] cursor-pointer shrink-0"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-5 text-xs">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs">
               {aiSuggestions.summary && (
                 <div className="p-3.5 bg-[#FAF8F5] border border-[#E5E0D8] rounded text-[#141413] leading-relaxed">
                   <strong>Editorial SEO Summary:</strong> {aiSuggestions.summary}
@@ -1258,16 +1259,16 @@ export default function ArticleSeoPanel({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {aiSuggestions.suggestedSlug && (
-                  <label className="flex items-start gap-2 p-3 border border-[#E5E0D8] rounded cursor-pointer">
+                  <label className="flex items-start gap-2 p-3 border border-[#E5E0D8] rounded cursor-pointer min-w-0">
                     <input
                       type="checkbox"
                       checked={applySlug}
                       onChange={(e) => setApplySlug(e.target.checked)}
-                      className="mt-0.5 accent-[#1E3A5F]"
+                      className="mt-0.5 accent-[#1E3A5F] shrink-0"
                     />
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold text-[#141413]">URL Slug</div>
-                      <div className="font-mono text-[#1E3A5F]">/articles/{aiSuggestions.suggestedSlug}</div>
+                      <div className="font-mono text-[#1E3A5F] break-all">/articles/{aiSuggestions.suggestedSlug}</div>
                     </div>
                   </label>
                 )}
@@ -1382,10 +1383,10 @@ export default function ArticleSeoPanel({
                           }
                           className="mt-0.5 accent-[#1E3A5F]"
                         />
-                        <div>
-                          <div className="font-semibold text-[#1E3A5F]">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[#1E3A5F] break-words">
                             {link.anchorText}{' '}
-                            <span className="font-mono text-[#7A7770] font-normal">({link.url})</span>
+                            <span className="font-mono text-[#7A7770] font-normal break-all">({link.url})</span>
                           </div>
                           <div className="text-[#5C5A55]">{link.reason}</div>
                         </div>
@@ -1421,11 +1422,11 @@ export default function ArticleSeoPanel({
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-[#E5E0D8] bg-[#FAF8F5] flex items-center justify-end gap-3">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[#E5E0D8] bg-[#FAF8F5] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setReviewOpen(false)}
-                className="px-4 py-2 bg-white border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-white border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] cursor-pointer"
               >
                 Cancel
               </button>
@@ -1433,7 +1434,7 @@ export default function ArticleSeoPanel({
                 type="button"
                 disabled={applyingAi}
                 onClick={handleApplyReviewedChanges}
-                className="px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto min-h-[44px] px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <Check size={14} />
                 <span>{applyingAi ? 'Applying...' : 'Apply Selected Changes'}</span>

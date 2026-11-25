@@ -24,12 +24,12 @@ export default function CookiePolicyPage() {
   });
 
   return (
-    <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 space-y-10">
-      <header className="space-y-3 border-b border-[#E5E0D8] pb-8">
+    <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-8 sm:space-y-10 break-words [overflow-wrap:anywhere]">
+      <header className="space-y-3 border-b border-[#E5E0D8] pb-6 sm:pb-8">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
           Privacy &amp; Transparency
         </p>
-        <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-[#141413]">
+        <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-[#141413]">
           Cookie Policy &amp; Tracking Technologies
         </h1>
         <p className="text-sm text-[#5C5A55]">
@@ -37,7 +37,7 @@ export default function CookiePolicyPage() {
         </p>
       </header>
 
-      <div className="space-y-8 text-[15px] sm:text-base text-[#292825] leading-relaxed">
+      <div className="space-y-7 sm:space-y-8 text-[15px] sm:text-base text-[#292825] leading-relaxed">
         <section className="space-y-3">
           <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
             1. What Cookies &amp; Browser Storage Are
@@ -95,12 +95,12 @@ export default function CookiePolicyPage() {
                 active, local browser storage may hold temporary editorial, navigation, or social
                 link preferences inside your browser so site components render properly. Search
                 filters on our{' '}
-                <Link to="/buy" className="text-[#1E3A5F] underline">
-                  Buy
+                <Link to="/search" className="text-[#1E3A5F] underline">
+                  Search
                 </Link>{' '}
                 and{' '}
-                <Link to="/rent" className="text-[#1E3A5F] underline">
-                  Rent
+                <Link to="/global-markets" className="text-[#1E3A5F] underline">
+                  Global Markets
                 </Link>{' '}
                 pages are stored in URL query parameters rather than tracking cookies.
               </p>

@@ -3,6 +3,7 @@ import {
   Author,
   Category,
   ContactMessage,
+  GlobalMarketReport,
   MediaItem,
   NewsletterSubscriber,
   Profile,
@@ -33,6 +34,7 @@ export interface DemoDatabase {
   siteSettings: SiteSettings;
   properties: Property[];
   propertyEnquiries: PropertyEnquiry[];
+  globalMarkets: GlobalMarketReport[];
 }
 
 const DEMO_STORAGE_KEY = 'amaan_estate_demo_db_v2';
@@ -286,11 +288,11 @@ const initialProfiles: Profile[] = [
 const initialSiteSettings: SiteSettings = {
   id: 1,
   site_name: 'AmaanEstate',
-  tagline: 'Global Real Estate Media, Research & Marketplace',
+  tagline: 'Global Real Estate Media, Research & Market Intelligence',
   domain: 'amaanestate.com',
-  default_seo_title: 'AmaanEstate | Global Real Estate News, Research & Property Marketplace',
+  default_seo_title: 'AmaanEstate | Global Real Estate News, Research & Market Intelligence',
   default_seo_description:
-    'Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.',
+    'Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.',
   default_og_image: 'hero-pavilion',
   editorial_email: 'info@amaanestate.com',
   social_links: {
@@ -312,7 +314,7 @@ export const INITIAL_SHOWCASE_PROPERTIES: Property[] = [
     transaction_type: 'sale',
     property_type: 'apartment',
     listing_status: 'available',
-    publication_status: 'published',
+    publication_status: 'archived',
     price: 4850000,
     currency: 'USD',
     rental_period: null,
@@ -342,7 +344,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
       'Acoustic double-glazed curtain walls',
       '24-hour concierge and valet services',
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_email: null,
     agent_phone: null,
@@ -372,7 +374,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
     transaction_type: 'sale',
     property_type: 'townhouse',
     listing_status: 'available',
-    publication_status: 'published',
+    publication_status: 'archived',
     price: 6400000,
     currency: 'GBP',
     rental_period: null,
@@ -401,7 +403,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
       'Bespoke bronze metalwork and balustrades',
       'Wine cellar and dedicated garden office',
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_email: null,
     agent_phone: null,
@@ -431,7 +433,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
     transaction_type: 'sale',
     property_type: 'house',
     listing_status: 'available',
-    publication_status: 'published',
+    publication_status: 'archived',
     price: 4950000,
     currency: 'CAD',
     rental_period: null,
@@ -460,7 +462,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
       'Custom Finnish cedar sauna and wellness suite',
       'Double car garage with EV charging infrastructure',
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_email: null,
     agent_phone: null,
@@ -490,7 +492,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
     transaction_type: 'rent',
     property_type: 'villa',
     listing_status: 'available',
-    publication_status: 'published',
+    publication_status: 'archived',
     price: 6500,
     currency: 'USD',
     rental_period: 'month',
@@ -519,7 +521,7 @@ Note: This presentation is an illustrative architectural sample for platform dem
       'High-speed fiber connectivity and dedicated workspace',
       'Full estate housekeeping and grounds maintenance',
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_email: null,
     agent_phone: null,
@@ -560,6 +562,7 @@ export function createInitialDemoDb(): DemoDatabase {
     siteSettings: initialSiteSettings,
     properties: INITIAL_SHOWCASE_PROPERTIES,
     propertyEnquiries: INITIAL_PROPERTY_ENQUIRIES,
+    globalMarkets: [],
   };
 }
 
@@ -584,6 +587,9 @@ export function loadDemoDb(): DemoDatabase {
       propertyEnquiries: Array.isArray(parsed.propertyEnquiries)
         ? parsed.propertyEnquiries
         : INITIAL_PROPERTY_ENQUIRIES,
+      globalMarkets: Array.isArray(parsed.globalMarkets)
+        ? parsed.globalMarkets
+        : [],
     };
   } catch {
     return createInitialDemoDb();

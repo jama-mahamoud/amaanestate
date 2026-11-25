@@ -456,12 +456,12 @@ export default function ArticleEditorView({
   return (
     <div className="space-y-6">
       {/* Workspace Action Bar */}
-      <div className="bg-white border border-[#E5E0D8] rounded px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white border border-[#E5E0D8] rounded px-4 sm:px-5 py-3.5 sm:py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="px-3 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="min-h-[40px] px-3 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
           >
             <ArrowLeft size={14} />
             <span>Back to Articles</span>
@@ -477,10 +477,10 @@ export default function ArticleEditorView({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <div
             title={`SEO Score: ${seoAnalysis.score}/100 (${seoAnalysis.grade})`}
-            className={`px-3 py-1.5 rounded border text-xs font-mono font-semibold tabular-nums ${
+            className={`min-h-[38px] inline-flex items-center px-3 py-1.5 rounded border text-xs font-mono font-semibold tabular-nums ${
               seoAnalysis.score >= 80
                 ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#16A34A]'
                 : seoAnalysis.score >= 55
@@ -495,7 +495,7 @@ export default function ArticleEditorView({
               href={`/articles/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[38px] px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 whitespace-nowrap"
             >
               <ExternalLink size={13} />
               <span>View Live</span>
@@ -504,7 +504,7 @@ export default function ArticleEditorView({
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
-            className="px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="min-h-[38px] px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
           >
             <Eye size={14} />
             <span>Preview</span>
@@ -513,7 +513,7 @@ export default function ArticleEditorView({
             type="button"
             disabled={saving}
             onClick={() => handleSave('draft')}
-            className="px-4 py-2 bg-white hover:bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
+            className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
           >
             <Save size={14} />
             <span>Save Draft</span>
@@ -523,7 +523,7 @@ export default function ArticleEditorView({
               type="button"
               disabled={saving}
               onClick={() => handleSave('scheduled')}
-              className="px-4 py-2 bg-[#8C4A27] hover:bg-[#733B1E] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
+              className="min-h-[38px] px-4 py-2 bg-[#8C4A27] hover:bg-[#733B1E] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
             >
               <Calendar size={14} />
               <span>Save Schedule</span>
@@ -533,7 +533,7 @@ export default function ArticleEditorView({
             type="button"
             disabled={saving}
             onClick={() => handleSave('published')}
-            className="px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
+            className="min-h-[40px] px-4 sm:px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
           >
             <Send size={14} />
             <span>{saving ? 'Saving...' : status === 'published' ? 'Update Published' : 'Publish Article'}</span>
@@ -544,8 +544,8 @@ export default function ArticleEditorView({
       {/* Main Editor Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Left: Title, Slug, Excerpt, Professional WYSIWYG Editor, Gallery, SEO */}
-        <div className="xl:col-span-8 space-y-6">
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
+        <div className="xl:col-span-8 space-y-6 min-w-0">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-5">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#5C5A55] block">Article Headline</label>
               <input
@@ -553,12 +553,12 @@ export default function ArticleEditorView({
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g., Capital Flows into Coastal Logistics Corridors in 2026"
-                className="w-full h-12 px-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-lg font-serif font-semibold text-[#141413]"
+                className="w-full min-w-0 h-11 sm:h-12 px-3.5 sm:px-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-base sm:text-lg font-serif font-semibold text-[#141413]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <label className="text-xs font-semibold text-[#5C5A55]">URL Slug</label>
                 {slugLocked && (
                   <button
@@ -573,8 +573,8 @@ export default function ArticleEditorView({
                   </button>
                 )}
               </div>
-              <div className="flex items-center bg-[#FAF8F5] border border-[#D6CEBE] rounded overflow-hidden">
-                <span className="px-3 text-xs font-mono text-[#7A7770] border-r border-[#D6CEBE] h-10 flex items-center bg-[#EFECE6]/50">
+              <div className="flex items-center bg-[#FAF8F5] border border-[#D6CEBE] rounded overflow-hidden min-w-0">
+                <span className="px-2.5 sm:px-3 text-xs font-mono text-[#7A7770] border-r border-[#D6CEBE] h-10 flex items-center bg-[#EFECE6]/50 shrink-0">
                   /articles/
                 </span>
                 <input
@@ -585,7 +585,7 @@ export default function ArticleEditorView({
                     setSlug(slugify(e.target.value));
                   }}
                   placeholder="article-url-slug"
-                  className="flex-1 h-10 px-3 bg-transparent text-xs font-mono text-[#141413] outline-none"
+                  className="flex-1 min-w-0 h-10 px-2.5 sm:px-3 bg-transparent text-xs font-mono text-[#141413] outline-none"
                 />
               </div>
             </div>
@@ -638,7 +638,7 @@ export default function ArticleEditorView({
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
                   />
-                  <div className="bg-white border border-[#E5E0D8] rounded-md p-6 overflow-y-auto max-h-[600px]">
+                  <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-6 overflow-y-auto max-h-[600px] min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-widest text-[#8C4A27] mb-4">
                       Formatted Story Output Preview
                     </div>
@@ -648,8 +648,8 @@ export default function ArticleEditorView({
               )}
 
               {viewMode === 'preview' && (
-                <div className="bg-white border border-[#E5E0D8] rounded-md p-6 sm:p-10 space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D8]">
+                <div className="bg-white border border-[#E5E0D8] rounded-md p-4 sm:p-10 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E5E0D8]">
                     <span className="text-xs font-semibold uppercase tracking-widest text-[#8C4A27]">
                       Full Article Page Preview
                     </span>
@@ -659,7 +659,7 @@ export default function ArticleEditorView({
                           key={m}
                           type="button"
                           onClick={() => setViewMode(m)}
-                          className={`px-2.5 py-1 rounded text-xs font-semibold capitalize cursor-pointer ${
+                          className={`min-h-[34px] px-2.5 py-1 rounded text-xs font-semibold capitalize cursor-pointer ${
                             viewMode === m ? 'bg-[#1E3A5F] text-white' : 'text-[#5C5A55] hover:text-[#141413]'
                           }`}
                         >
@@ -675,16 +675,16 @@ export default function ArticleEditorView({
           </div>
 
           {/* Additional Gallery Images */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
                 <h2 className="text-base font-serif font-semibold text-[#141413]">Additional Gallery Images</h2>
                 <p className="text-xs text-[#5C5A55]">Attach architectural plates or supplementary figures to the bottom of the story.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setMediaPickerTarget('gallery')}
-                className="px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                className="w-full sm:w-auto min-h-[40px] px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
               >
                 <Plus size={14} />
                 <span>Add Gallery Image</span>
@@ -696,7 +696,7 @@ export default function ArticleEditorView({
                 No additional gallery images attached.
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {galleryImages.map((imgUrl, idx) => (
                   <div key={`${imgUrl}-${idx}`} className="border border-[#E5E0D8] rounded overflow-hidden bg-[#FAF8F5]">
                     <div className="aspect-[16/10] bg-[#EBE6DF] overflow-hidden">
@@ -784,9 +784,9 @@ export default function ArticleEditorView({
         </div>
 
         {/* Right: Publishing, Taxonomy, Cover Image */}
-        <div className="xl:col-span-4 space-y-6">
+        <div className="xl:col-span-4 space-y-6 min-w-0">
           {/* Publishing Controls */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Publication &amp; Classification</h2>
 
             <div className="space-y-1.5">
@@ -936,7 +936,7 @@ export default function ArticleEditorView({
           </div>
 
           {/* Tags Selection */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Editorial Tags</h2>
 
             <div className="flex gap-2">
@@ -951,12 +951,12 @@ export default function ArticleEditorView({
                   }
                 }}
                 placeholder="Create or attach tag..."
-                className="flex-1 h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                className="flex-1 min-w-0 h-10 sm:h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
               />
               <button
                 type="button"
                 onClick={handleAddInlineTag}
-                className="px-3 h-9 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer whitespace-nowrap"
+                className="px-3.5 h-10 sm:h-9 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer whitespace-nowrap shrink-0"
               >
                 Add
               </button>

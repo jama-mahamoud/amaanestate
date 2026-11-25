@@ -11,16 +11,16 @@ export default function EditorialPolicyPage() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-      <header className="space-y-3 border-b border-[#E5E0D8] pb-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8 break-words [overflow-wrap:anywhere]">
+      <header className="space-y-3 border-b border-[#E5E0D8] pb-6 sm:pb-8">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">Governance</p>
-        <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-[#141413]">
+        <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-[#141413]">
           Editorial Policy &amp; Standards
         </h1>
         <p className="text-sm text-[#5C5A55]">Last updated: November 2026</p>
       </header>
 
-      <div className="space-y-6 text-base text-[#292825] leading-relaxed">
+      <div className="space-y-6 text-[15px] sm:text-base text-[#292825] leading-relaxed">
         <section className="space-y-2">
           <h2 className="text-xl font-serif font-semibold text-[#141413]">1. Editorial Independence</h2>
           <p>

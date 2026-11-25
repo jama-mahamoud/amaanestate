@@ -13,9 +13,9 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false);
 
   useSEO({
-    title: 'Contact AmaanEstate | Editorial, Research & Marketplace Desk',
+    title: 'Contact AmaanEstate | Editorial & Market Research Desk',
     description:
-      'Contact AmaanEstate for property marketplace inquiries, real estate news tips, housing research collaborations, partnerships, or reader corrections.',
+      'Contact AmaanEstate for real estate news tips, market intelligence collaborations, architecture submissions, advertising partnerships, or reader corrections.',
     url: `${getCanonicalOrigin()}/contact`,
     structuredData: {
       '@context': 'https://schema.org',
@@ -45,22 +45,22 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-      <header className="space-y-4 border-b border-[#E5E0D8] pb-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 sm:space-y-12">
+      <header className="space-y-3 sm:space-y-4 border-b border-[#E5E0D8] pb-6 sm:pb-8">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
           Contact &amp; Inquiries
         </p>
-        <h1 className="text-3xl sm:text-5xl font-serif font-semibold text-[#141413]">
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-semibold text-[#141413]">
           Reach the AMAAN ESTATE Desk
         </h1>
-        <p className="text-base text-[#4A4843] max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base text-[#4A4843] max-w-2xl leading-relaxed">
           For editorial pitches, architectural press kits, research inquiries, corrections, or sponsorship partnerships, please submit your message below.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-start">
+        <div className="lg:col-span-5 min-w-0 space-y-6">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-5">
             <h2 className="text-xl font-serif font-semibold text-[#141413]">Direct Contact</h2>
             <dl className="space-y-4 text-sm">
               <div>
@@ -70,7 +70,7 @@ export default function ContactPage() {
                 <dd className="mt-1.5">
                   <a
                     href="mailto:info@amaanestate.com"
-                    className="text-[#1E3A5F] hover:text-[#141413] font-medium underline underline-offset-4 transition-colors"
+                    className="inline-flex items-center min-h-[36px] text-[#1E3A5F] hover:text-[#141413] font-medium underline underline-offset-4 transition-colors break-all"
                   >
                     info@amaanestate.com
                   </a>
@@ -90,9 +90,9 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-7 bg-white border border-[#E5E0D8] rounded p-6 sm:p-8">
+        <div className="lg:col-span-7 min-w-0 bg-white border border-[#E5E0D8] rounded p-4 sm:p-8">
           {sent ? (
-            <div className="py-8 space-y-4">
+            <div className="py-6 sm:py-8 space-y-4">
               <h2 className="text-2xl font-serif font-semibold text-[#141413]">Message Received</h2>
               <p className="text-sm text-[#4A4843] leading-relaxed">
                 Thank you for contacting AMAAN ESTATE. Our editorial or partnerships coordinator will review your submission and respond promptly.
@@ -100,7 +100,7 @@ export default function ContactPage() {
               <button
                 type="button"
                 onClick={() => setSent(false)}
-                className="px-5 py-2.5 bg-[#1E3A5F] text-white text-sm font-semibold rounded cursor-pointer"
+                className="min-h-[44px] w-full sm:w-auto px-5 py-2.5 bg-[#1E3A5F] text-white text-sm font-semibold rounded cursor-pointer"
               >
                 Send Another Inquiry
               </button>
@@ -110,7 +110,7 @@ export default function ContactPage() {
               <h2 className="text-xl font-serif font-semibold text-[#141413]">Send a Message</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 min-w-0">
                   <label htmlFor="contact-name" className="text-xs font-semibold uppercase tracking-wider text-[#5C5A55] block">
                     Full Name
                   </label>
@@ -122,11 +122,11 @@ export default function ContactPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                    className="w-full min-w-0 h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
                   />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 min-w-0">
                   <label htmlFor="contact-email" className="text-xs font-semibold uppercase tracking-wider text-[#5C5A55] block">
                     Email Address
                   </label>
@@ -137,7 +137,7 @@ export default function ContactPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@organization.com"
-                    className="w-full h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                    className="w-full min-w-0 h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
                   />
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function ContactPage() {
                   id="contact-subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
+                  className="w-full min-w-0 h-11 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F]"
                 >
                   <option value="Editorial Tip / Press Inquiry">Editorial Tip / Press Inquiry</option>
                   <option value="Architecture Submission">Architecture Submission</option>
@@ -172,14 +172,14 @@ export default function ContactPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Share your inquiry, architectural project notes, or research topic..."
-                  className="w-full p-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F] resize-y"
+                  className="w-full min-w-0 p-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] focus:outline-none focus:border-[#1E3A5F] resize-y"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-60 text-white text-sm font-semibold rounded transition-colors cursor-pointer"
+                className="w-full sm:w-auto h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-60 text-white text-sm font-semibold rounded transition-colors cursor-pointer"
               >
                 {submitting ? 'Delivering...' : 'Submit Message'}
               </button>

@@ -40,8 +40,11 @@ export default function RentPage() {
   useSEO({
     title: 'Rent Real Estate & Properties for Lease | AmaanEstate',
     description:
-      'Browse apartments, houses, villas, and townhouses available for rent internationally on the AmaanEstate global property marketplace.',
+      'Browse apartments, houses, villas, and townhouses available for rent internationally on AmaanEstate.',
     url: `${getCanonicalOrigin()}/rent`,
+    noIndex: true,
+    robotsDirective: 'noindex, follow',
+    omitCanonical: true,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',

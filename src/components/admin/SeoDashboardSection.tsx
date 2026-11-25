@@ -452,24 +452,24 @@ export default function SeoDashboardSection({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
             AmaanEstate Search Intelligence
           </div>
-          <h1 className="text-2xl font-serif font-semibold text-[#141413]">
+          <h1 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
             SEO Command Center &amp; Search Console
           </h1>
           <p className="text-xs text-[#5C5A55] mt-1">
             Real-time editorial SEO scoring, technical site audit, HTTP 301/302 redirect rules, sitemap hygiene, and Google Search Console analytics.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 shrink-0">
           <a
             href="/sitemap.xml"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5"
+            className="px-3.5 py-2 min-h-[40px] bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center justify-center gap-1.5"
           >
             <ExternalLink size={13} />
             <span>sitemap.xml</span>
@@ -478,7 +478,7 @@ export default function SeoDashboardSection({
             type="button"
             disabled={runningAudit}
             onClick={handleRunAudit}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 min-h-[40px] bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <Play size={13} />
             <span>{runningAudit ? 'Auditing...' : 'Run Technical SEO Audit'}</span>
@@ -487,7 +487,7 @@ export default function SeoDashboardSection({
       </div>
 
       {/* Sub-navigation Tabs */}
-      <div className="bg-white border border-[#E5E0D8] rounded px-4 flex items-center gap-2 overflow-x-auto">
+      <div className="bg-white border border-[#E5E0D8] rounded px-2 sm:px-4 flex items-center gap-1 sm:gap-2 overflow-x-auto">
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'performance', label: 'Search Performance (GSC)' },
@@ -501,7 +501,7 @@ export default function SeoDashboardSection({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as SeoDashboardTab)}
-              className={`px-3.5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap cursor-pointer ${
+              className={`px-3 sm:px-3.5 min-h-[44px] py-3 text-xs font-semibold border-b-2 whitespace-nowrap cursor-pointer ${
                 active
                   ? 'border-[#1E3A5F] text-[#1E3A5F]'
                   : 'border-transparent text-[#5C5A55] hover:text-[#141413]'
@@ -516,13 +516,13 @@ export default function SeoDashboardSection({
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                 Avg Article SEO Score
               </div>
               <div
-                className={`text-2xl font-mono font-bold tabular-nums ${
+                className={`text-xl sm:text-2xl font-mono font-bold tabular-nums ${
                   overviewStats.avgScore >= 80
                     ? 'text-[#16A34A]'
                     : overviewStats.avgScore >= 55
@@ -537,11 +537,11 @@ export default function SeoDashboardSection({
               </div>
             </div>
 
-            <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-1">
+            <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                 Sitemap Indexable URLs
               </div>
-              <div className="text-2xl font-mono font-bold tabular-nums text-[#141413]">
+              <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#141413]">
                 {(
                   overviewStats.indexableCount +
                   overviewStats.activePropertiesCount +
@@ -554,21 +554,21 @@ export default function SeoDashboardSection({
               </div>
             </div>
 
-            <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-1">
+            <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                 Orphan &amp; Thin Meta
               </div>
-              <div className="text-2xl font-mono font-bold tabular-nums text-[#D97706]">
+              <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#D97706]">
                 {overviewStats.orphanCount} / {overviewStats.missingMetaCount}
               </div>
               <div className="text-xs text-[#7A7770]">Orphan articles / Weak meta desc</div>
             </div>
 
-            <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-1">
+            <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                 Active Redirect Rules
               </div>
-              <div className="text-2xl font-mono font-bold tabular-nums text-[#1E3A5F]">
+              <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#1E3A5F]">
                 {(redirects.filter((r) => r.is_active).length + builtInLegacy.length).toLocaleString()}
               </div>
               <div className="text-xs text-[#7A7770] font-mono tabular-nums">
@@ -578,10 +578,10 @@ export default function SeoDashboardSection({
           </div>
 
           {/* Search Console Connection Banner */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-[#1E3A5F]" />
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Globe size={16} className="text-[#1E3A5F] shrink-0" />
                 <h2 className="text-base font-serif font-semibold text-[#141413]">
                   Google Search Console Status
                 </h2>
@@ -596,9 +596,9 @@ export default function SeoDashboardSection({
                 </span>
               </div>
               {gscStatus?.connected ? (
-                <p className="text-xs text-[#5C5A55]">
+                <p className="text-xs text-[#5C5A55] break-words">
                   Account: <strong>{gscStatus.googleEmail || 'Authorized Google Account'}</strong> · Active
-                  Property: <code className="font-mono">{gscStatus.selectedSiteUrl || 'Select property'}</code>
+                  Property: <code className="font-mono break-all">{gscStatus.selectedSiteUrl || 'Select property'}</code>
                 </p>
               ) : (
                 <p className="text-xs text-[#5C5A55]">
@@ -606,12 +606,12 @@ export default function SeoDashboardSection({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
               {gscStatus?.connected ? (
                 <button
                   type="button"
                   onClick={() => setActiveTab('performance')}
-                  className="px-4 py-2 bg-[#1E3A5F] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  className="w-full md:w-auto min-h-[42px] px-4 py-2 bg-[#1E3A5F] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>View Search Performance</span>
                   <ArrowRight size={13} />
@@ -621,7 +621,7 @@ export default function SeoDashboardSection({
                   type="button"
                   disabled={connectingGsc}
                   onClick={() => setActiveTab('performance')}
-                  className="px-4 py-2 bg-[#1E3A5F] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  className="w-full md:w-auto min-h-[42px] px-4 py-2 bg-[#1E3A5F] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Setup Search Console</span>
                   <ArrowRight size={13} />
@@ -632,8 +632,8 @@ export default function SeoDashboardSection({
 
           {/* Lowest-Scoring Articles Needing Attention */}
           <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5E0D8] flex items-center justify-between">
-              <div>
+            <div className="px-4 sm:px-6 py-4 border-b border-[#E5E0D8] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="min-w-0">
                 <h2 className="text-base font-serif font-semibold text-[#141413]">
                   Priority Articles to Optimize
                 </h2>
@@ -644,12 +644,65 @@ export default function SeoDashboardSection({
               <button
                 type="button"
                 onClick={() => setActiveTab('content')}
-                className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
+                className="self-start sm:self-auto min-h-[36px] inline-flex items-center text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0"
               >
                 View All Content SEO →
               </button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="md:hidden divide-y divide-[#E5E0D8]">
+              {[...scoredArticles]
+                .sort((a, b) => a.analysis.score - b.analysis.score)
+                .slice(0, 6)
+                .map(({ article, analysis, incomingLinks }) => (
+                  <div key={article.id} className="p-4 space-y-2.5 text-xs">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[#141413] leading-snug">{article.title}</div>
+                        <div className="font-mono text-[11px] text-[#7A7770] break-all">
+                          /articles/{article.slug}
+                        </div>
+                      </div>
+                      <span
+                        className={`font-mono font-bold tabular-nums shrink-0 ${
+                          analysis.score >= 80
+                            ? 'text-[#16A34A]'
+                            : analysis.score >= 55
+                            ? 'text-[#D97706]'
+                            : 'text-[#DC2626]'
+                        }`}
+                      >
+                        {analysis.score}/100
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#5C5A55]">
+                      <span>
+                        Keyword:{' '}
+                        {article.focus_keyword || <span className="text-[#DC2626]">Not set</span>}
+                      </span>
+                      <span className="font-mono tabular-nums">
+                        Int: {analysis.metrics.internalLinksCount}
+                      </span>
+                      <span className="font-mono tabular-nums">
+                        In:{' '}
+                        {incomingLinks === 0 && article.status === 'published' ? (
+                          <span className="text-[#D97706]">0 (Orphan)</span>
+                        ) : (
+                          incomingLinks
+                        )}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onEditArticle(article)}
+                      className="w-full min-h-[38px] px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
+                    >
+                      Optimize
+                    </button>
+                  </div>
+                ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase tracking-wider text-[#5C5A55]">
                   <tr>
@@ -703,7 +756,7 @@ export default function SeoDashboardSection({
                           <button
                             type="button"
                             onClick={() => onEditArticle(article)}
-                            className="px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
+                            className="px-3 py-1.5 min-h-[36px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
                           >
                             Optimize
                           </button>
@@ -721,12 +774,12 @@ export default function SeoDashboardSection({
       {activeTab === 'performance' && (
         <div className="space-y-6">
           {!gscStatus?.connected ? (
-            <div className="bg-white border border-[#E5E0D8] rounded p-8 space-y-5">
+            <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-8 space-y-5">
               <div className="max-w-2xl space-y-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-[11px] font-semibold uppercase tracking-wider text-[#5C5A55]">
                   Google Search Console · Not Connected
                 </span>
-                <h2 className="text-xl font-serif font-semibold text-[#141413]">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">
                   Connect Your Verified Search Console Property
                 </h2>
                 <p className="text-sm text-[#5C5A55] leading-relaxed">
@@ -758,12 +811,12 @@ export default function SeoDashboardSection({
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
                 <button
                   type="button"
                   disabled={connectingGsc}
                   onClick={handleConnectGsc}
-                  className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 min-h-[42px] bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Globe size={14} />
                   <span>{connectingGsc ? 'Authorizing...' : 'Connect Google Search Console'}</span>
@@ -771,7 +824,7 @@ export default function SeoDashboardSection({
                 <button
                   type="button"
                   onClick={loadGscOverview}
-                  className="px-4 py-2.5 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 min-h-[42px] bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <RefreshCw size={13} />
                   <span>Refresh Status</span>
@@ -781,16 +834,16 @@ export default function SeoDashboardSection({
           ) : (
             <>
               {/* GSC Controls Bar */}
-              <div className="bg-white border border-[#E5E0D8] rounded p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div>
+              <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-stretch lg:items-end gap-3 min-w-0 flex-1">
+                  <div className="min-w-0 sm:col-span-2 lg:col-span-1">
                     <label className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] block mb-1">
                       Search Console Property
                     </label>
                     <select
                       value={gscStatus.selectedSiteUrl || ''}
                       onChange={(e) => handleSelectSite(e.target.value)}
-                      className="h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                      className="w-full lg:w-auto max-w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                     >
                       {gscStatus.sites.map((s) => (
                         <option key={s.siteUrl} value={s.siteUrl}>
@@ -810,7 +863,7 @@ export default function SeoDashboardSection({
                           key={r}
                           type="button"
                           onClick={() => setGscDateRange(r)}
-                          className={`px-3 h-9 text-xs font-mono font-semibold cursor-pointer ${
+                          className={`px-3 h-10 text-xs font-mono font-semibold cursor-pointer ${
                             gscDateRange === r ? 'bg-[#1E3A5F] text-white' : 'text-[#5C5A55]'
                           }`}
                         >
@@ -820,7 +873,7 @@ export default function SeoDashboardSection({
                     </div>
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] block mb-1">
                       Query Filter
                     </label>
@@ -829,11 +882,11 @@ export default function SeoDashboardSection({
                       value={gscQueryFilter}
                       onChange={(e) => setGscQueryFilter(e.target.value)}
                       placeholder="Filter by keyword..."
-                      className="h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                      className="w-full lg:w-48 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
                     />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55] block mb-1">
                       Country (ISO-3)
                     </label>
@@ -842,17 +895,17 @@ export default function SeoDashboardSection({
                       value={gscCountryFilter}
                       onChange={(e) => setGscCountryFilter(e.target.value)}
                       placeholder="e.g. usa, gbr, are"
-                      className="h-9 w-28 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                      className="w-full sm:w-28 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 w-full lg:w-auto">
                   <button
                     type="button"
                     disabled={loadingGsc}
                     onClick={loadGscOverview}
-                    className="px-3.5 h-9 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center gap-1.5 cursor-pointer"
+                    className="flex-1 lg:flex-none px-3.5 min-h-[40px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] inline-flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <RefreshCw size={13} className={loadingGsc ? 'animate-spin' : ''} />
                     <span>Sync</span>
@@ -860,7 +913,7 @@ export default function SeoDashboardSection({
                   <button
                     type="button"
                     onClick={handleDisconnectGsc}
-                    className="px-3.5 h-9 bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#991B1B] rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="flex-1 lg:flex-none px-3.5 min-h-[40px] bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#991B1B] rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Unplug size={13} />
                     <span>Disconnect</span>
@@ -877,12 +930,12 @@ export default function SeoDashboardSection({
               {gscAnalytics && !gscAnalytics.error && (
                 <>
                   {/* KPI Cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white border border-[#E5E0D8] rounded p-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5">
                       <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                         Organic Clicks
                       </div>
-                      <div className="text-2xl font-mono font-bold tabular-nums text-[#141413] mt-1">
+                      <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#141413] mt-1">
                         {gscAnalytics.totals.clicks.toLocaleString()}
                       </div>
                       <div className="text-xs text-[#7A7770] font-mono">
@@ -890,11 +943,11 @@ export default function SeoDashboardSection({
                       </div>
                     </div>
 
-                    <div className="bg-white border border-[#E5E0D8] rounded p-5">
+                    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5">
                       <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                         Impressions
                       </div>
-                      <div className="text-2xl font-mono font-bold tabular-nums text-[#141413] mt-1">
+                      <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#141413] mt-1">
                         {gscAnalytics.totals.impressions.toLocaleString()}
                       </div>
                       <div className="text-xs text-[#7A7770] font-mono">
@@ -902,20 +955,20 @@ export default function SeoDashboardSection({
                       </div>
                     </div>
 
-                    <div className="bg-white border border-[#E5E0D8] rounded p-5">
+                    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5">
                       <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                         Average CTR
                       </div>
-                      <div className="text-2xl font-mono font-bold tabular-nums text-[#1E3A5F] mt-1">
+                      <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#1E3A5F] mt-1">
                         {(gscAnalytics.totals.ctr * 100).toFixed(2)}%
                       </div>
                     </div>
 
-                    <div className="bg-white border border-[#E5E0D8] rounded p-5">
+                    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5">
                       <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
                         Average Position
                       </div>
-                      <div className="text-2xl font-mono font-bold tabular-nums text-[#8C4A27] mt-1">
+                      <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-[#8C4A27] mt-1">
                         {gscAnalytics.totals.position.toFixed(1)}
                       </div>
                     </div>
@@ -923,11 +976,11 @@ export default function SeoDashboardSection({
 
                   {/* Time Series Chart */}
                   {gscAnalytics.daily.length > 0 && (
-                    <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+                    <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
                       <h3 className="text-base font-serif font-semibold text-[#141413]">
                         Daily Organic Clicks &amp; Impressions
                       </h3>
-                      <div className="h-72 w-full">
+                      <div className="h-56 sm:h-72 w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={gscAnalytics.daily}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D8" />
@@ -1035,8 +1088,8 @@ export default function SeoDashboardSection({
                           <div className="p-5 text-[#5C5A55]">No low-CTR high-impression pages flagged in this window.</div>
                         ) : (
                           gscAnalytics.highImpressionLowCtr.map((p) => (
-                            <div key={p.page} className="px-5 py-3 flex items-center justify-between gap-3">
-                              <span className="font-mono text-[#141413] truncate">{p.page}</span>
+                            <div key={p.page} className="px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
+                              <span className="font-mono text-[#141413] break-all sm:truncate min-w-0">{p.page}</span>
                               <span className="font-mono tabular-nums text-[#D97706] shrink-0">
                                 {p.impressions.toLocaleString()} impr · {(p.ctr * 100).toFixed(2)}% CTR
                               </span>
@@ -1047,7 +1100,7 @@ export default function SeoDashboardSection({
                     </div>
 
                     <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-                      <div className="px-5 py-3.5 border-b border-[#E5E0D8] font-serif font-semibold text-sm text-[#141413]">
+                      <div className="px-4 sm:px-5 py-3.5 border-b border-[#E5E0D8] font-serif font-semibold text-sm text-[#141413]">
                         Declining Pages (Period-over-Period Click Drop)
                       </div>
                       <div className="divide-y divide-[#E5E0D8] text-xs">
@@ -1055,8 +1108,8 @@ export default function SeoDashboardSection({
                           <div className="p-5 text-[#5C5A55]">No declining click trajectories detected.</div>
                         ) : (
                           gscAnalytics.decliningPages.map((p) => (
-                            <div key={p.page} className="px-5 py-3 flex items-center justify-between gap-3">
-                              <span className="font-mono text-[#141413] truncate">{p.page}</span>
+                            <div key={p.page} className="px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
+                              <span className="font-mono text-[#141413] break-all sm:truncate min-w-0">{p.page}</span>
                               <span className="font-mono tabular-nums text-[#DC2626] shrink-0">
                                 {p.clickDelta} clicks ({p.prevClicks} → {p.clicks})
                               </span>
@@ -1135,7 +1188,7 @@ export default function SeoDashboardSection({
           </div>
 
           {/* URL Inspection Tool */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
             <h2 className="text-base font-serif font-semibold text-[#141413]">
               Google Search Console Live URL Inspection
             </h2>
@@ -1151,19 +1204,19 @@ export default function SeoDashboardSection({
                     value={inspectInputUrl}
                     onChange={(e) => setInspectInputUrl(e.target.value)}
                     placeholder="https://www.amaanestate.com/articles/..."
-                    className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                    className="w-full sm:flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                   />
                   <button
                     type="submit"
                     disabled={inspectingUrl}
-                    className="px-4 h-10 bg-[#1E3A5F] text-white rounded text-xs font-semibold cursor-pointer disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 min-h-[42px] bg-[#1E3A5F] text-white rounded text-xs font-semibold cursor-pointer disabled:opacity-50 shrink-0"
                   >
                     {inspectingUrl ? 'Inspecting...' : 'Inspect URL'}
                   </button>
                 </form>
 
                 {inspectionResult && (
-                  <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded text-xs space-y-2 font-mono">
+                  <div className="p-4 bg-[#FAF8F5] border border-[#E5E0D8] rounded text-xs space-y-2 font-mono break-all">
                     <div>
                       <strong>Verdict:</strong>{' '}
                       {inspectionResult.indexStatusResult?.verdict || 'UNKNOWN'} (
@@ -1190,35 +1243,37 @@ export default function SeoDashboardSection({
           {/* GSC Sitemaps List */}
           {gscStatus?.connected && (
             <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-[#E5E0D8] font-serif font-semibold text-sm text-[#141413]">
+              <div className="px-4 sm:px-5 py-3.5 border-b border-[#E5E0D8] font-serif font-semibold text-sm text-[#141413]">
                 Submitted Search Console Sitemaps
               </div>
               {gscSitemaps.length === 0 ? (
                 <div className="p-5 text-xs text-[#5C5A55]">
                   No sitemaps reported yet for {gscStatus.selectedSiteUrl}. Submit{' '}
-                  <code className="font-mono">https://www.amaanestate.com/sitemap.xml</code> in Search Console.
+                  <code className="font-mono break-all">https://www.amaanestate.com/sitemap.xml</code> in Search Console.
                 </div>
               ) : (
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase text-[#5C5A55]">
-                    <tr>
-                      <th className="px-5 py-2.5">Sitemap Path</th>
-                      <th className="px-4 py-2.5">Last Downloaded</th>
-                      <th className="px-4 py-2.5 text-right">Warnings</th>
-                      <th className="px-5 py-2.5 text-right">Errors</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E5E0D8] font-mono">
-                    {gscSitemaps.map((sm: any) => (
-                      <tr key={sm.path}>
-                        <td className="px-5 py-2.5">{sm.path}</td>
-                        <td className="px-4 py-2.5">{sm.lastDownloaded || '—'}</td>
-                        <td className="px-4 py-2.5 text-right">{sm.warnings || 0}</td>
-                        <td className="px-5 py-2.5 text-right">{sm.errors || 0}</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase text-[#5C5A55]">
+                      <tr>
+                        <th className="px-5 py-2.5">Sitemap Path</th>
+                        <th className="px-4 py-2.5">Last Downloaded</th>
+                        <th className="px-4 py-2.5 text-right">Warnings</th>
+                        <th className="px-5 py-2.5 text-right">Errors</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-[#E5E0D8] font-mono">
+                      {gscSitemaps.map((sm: any) => (
+                        <tr key={sm.path}>
+                          <td className="px-5 py-2.5 break-all">{sm.path}</td>
+                          <td className="px-4 py-2.5 whitespace-nowrap">{sm.lastDownloaded || '—'}</td>
+                          <td className="px-4 py-2.5 text-right">{sm.warnings || 0}</td>
+                          <td className="px-5 py-2.5 text-right">{sm.errors || 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}
@@ -1230,8 +1285,8 @@ export default function SeoDashboardSection({
         <div className="space-y-6">
           {/* Technical Audit Panel */}
           <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5E0D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
+            <div className="px-4 sm:px-6 py-4 border-b border-[#E5E0D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="min-w-0">
                 <h2 className="text-base font-serif font-semibold text-[#141413]">
                   Sitewide Technical &amp; Content SEO Audit
                 </h2>
@@ -1241,13 +1296,13 @@ export default function SeoDashboardSection({
                     : 'Run a full technical crawl check across published articles, active properties, canonicals, internal links, and redirects.'}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 {(['all', 'critical', 'warning', 'passed'] as const).map((sev) => (
                   <button
                     key={sev}
                     type="button"
                     onClick={() => setAuditSeverityFilter(sev)}
-                    className={`px-2.5 py-1.5 rounded text-xs font-semibold capitalize cursor-pointer ${
+                    className={`px-2.5 py-1.5 min-h-[36px] rounded text-xs font-semibold capitalize cursor-pointer ${
                       auditSeverityFilter === sev
                         ? 'bg-[#1E3A5F] text-white'
                         : 'bg-[#FAF8F5] text-[#5C5A55]'
@@ -1260,7 +1315,7 @@ export default function SeoDashboardSection({
             </div>
 
             {!auditRun ? (
-              <div className="p-8 text-center space-y-3">
+              <div className="p-6 sm:p-8 text-center space-y-3">
                 <ShieldCheck size={28} className="mx-auto text-[#1E3A5F]" />
                 <p className="text-xs text-[#5C5A55]">
                   Click <strong>Run Technical SEO Audit</strong> above to analyze every live page and store an audit snapshot.
@@ -1276,7 +1331,7 @@ export default function SeoDashboardSection({
                   return (
                     <div
                       key={issue.id}
-                      className="px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      className="px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
                         {issue.severity === 'critical' ? (
@@ -1287,15 +1342,15 @@ export default function SeoDashboardSection({
                           <CheckCircle2 size={15} className="text-[#16A34A] shrink-0 mt-0.5" />
                         )}
                         <div className="min-w-0 space-y-0.5">
-                          <div className="text-xs font-semibold text-[#141413]">
+                          <div className="text-xs font-semibold text-[#141413] break-words">
                             {issue.title}{' '}
                             <span className="font-mono text-[10px] uppercase text-[#7A7770]">
                               [{issue.category}]
                             </span>
                           </div>
-                          <div className="text-xs text-[#5C5A55]">{issue.description}</div>
+                          <div className="text-xs text-[#5C5A55] break-words [overflow-wrap:anywhere]">{issue.description}</div>
                           {issue.url && (
-                            <div className="text-[11px] font-mono text-[#1E3A5F]">{issue.url}</div>
+                            <div className="text-[11px] font-mono text-[#1E3A5F] break-all">{issue.url}</div>
                           )}
                         </div>
                       </div>
@@ -1303,7 +1358,7 @@ export default function SeoDashboardSection({
                         <button
                           type="button"
                           onClick={() => onEditArticle(linkedArticle)}
-                          className="px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] shrink-0 cursor-pointer"
+                          className="self-start sm:self-center px-3 py-1.5 min-h-[36px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] shrink-0 cursor-pointer"
                         >
                           Edit Article
                         </button>
@@ -1316,9 +1371,9 @@ export default function SeoDashboardSection({
           </div>
 
           {/* Redirect Manager */}
-          <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-5">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-base font-serif font-semibold text-[#141413]">
                   HTTP 301 / 302 Redirect Manager
                 </h2>
@@ -1334,32 +1389,32 @@ export default function SeoDashboardSection({
             </div>
 
             <form onSubmit={handleCreateRedirect} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-              <div className="md:col-span-4 space-y-1">
+              <div className="md:col-span-4 space-y-1 min-w-0">
                 <label className="text-xs font-semibold text-[#5C5A55] block">Source Path</label>
                 <input
                   type="text"
                   value={newSourcePath}
                   onChange={(e) => setNewSourcePath(e.target.value)}
                   placeholder="/news/old-article-slug"
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                  className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                 />
               </div>
-              <div className="md:col-span-4 space-y-1">
+              <div className="md:col-span-4 space-y-1 min-w-0">
                 <label className="text-xs font-semibold text-[#5C5A55] block">Target Path</label>
                 <input
                   type="text"
                   value={newTargetPath}
                   onChange={(e) => setNewTargetPath(e.target.value)}
                   placeholder="/articles/new-canonical-slug"
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                  className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                 />
               </div>
-              <div className="md:col-span-2 space-y-1">
+              <div className="md:col-span-2 space-y-1 min-w-0">
                 <label className="text-xs font-semibold text-[#5C5A55] block">Status</label>
                 <select
                   value={newStatusCode}
                   onChange={(e) => setNewStatusCode(Number(e.target.value) === 302 ? 302 : 301)}
-                  className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+                  className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
                 >
                   <option value={301}>301 Permanent</option>
                   <option value={302}>302 Temporary</option>
@@ -1369,19 +1424,19 @@ export default function SeoDashboardSection({
                 <button
                   type="submit"
                   disabled={savingRedirect}
-                  className="w-full h-10 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="w-full min-h-[42px] bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Plus size={14} />
                   <span>Add Rule</span>
                 </button>
               </div>
-              <div className="md:col-span-12">
+              <div className="md:col-span-12 min-w-0">
                 <input
                   type="text"
                   value={newRedirectNotes}
                   onChange={(e) => setNewRedirectNotes(e.target.value)}
                   placeholder="Optional editorial note (e.g., Consolidated duplicate market report)"
-                  className="w-full h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                  className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
                 />
               </div>
             </form>
@@ -1425,7 +1480,8 @@ export default function SeoDashboardSection({
                           <button
                             type="button"
                             onClick={() => handleDeleteRedirect(r.id)}
-                            className="p-1 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                            aria-label="Delete redirect"
+                            className="p-2 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1446,10 +1502,10 @@ export default function SeoDashboardSection({
                   {builtInLegacy.map((item) => (
                     <div
                       key={item.source_path}
-                      className="px-3 py-2 bg-[#FAF8F5] border border-[#E5E0D8] rounded flex items-center gap-2 truncate"
+                      className="px-3 py-2 bg-[#FAF8F5] border border-[#E5E0D8] rounded flex items-center gap-2 min-w-0"
                     >
                       <Link2 size={12} className="text-[#16A34A] shrink-0" />
-                      <span className="truncate">
+                      <span className="truncate min-w-0">
                         {item.source_path} → {item.target_path}
                       </span>
                     </div>
@@ -1464,16 +1520,16 @@ export default function SeoDashboardSection({
       {/* TAB 5: CONTENT SEO */}
       {activeTab === 'content' && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+          <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4">
             <div className="flex flex-col md:flex-row gap-3 justify-between">
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7770]" />
                 <input
                   type="search"
                   value={contentSearch}
                   onChange={(e) => setContentSearch(e.target.value)}
                   placeholder="Filter articles by headline, slug, or focus keyword..."
-                  className="w-full h-9 pl-9 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                  className="w-full min-w-0 h-10 pl-9 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
                 />
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -1491,7 +1547,7 @@ export default function SeoDashboardSection({
                     key={f.id}
                     type="button"
                     onClick={() => setContentFilter(f.id as ContentFilter)}
-                    className={`px-2.5 py-1.5 rounded text-[11px] font-semibold cursor-pointer ${
+                    className={`px-2.5 py-1.5 min-h-[36px] rounded text-[11px] font-semibold cursor-pointer ${
                       contentFilter === f.id
                         ? 'bg-[#1E3A5F] text-white'
                         : 'bg-[#FAF8F5] text-[#5C5A55] hover:text-[#141413]'
@@ -1503,7 +1559,54 @@ export default function SeoDashboardSection({
               </div>
             </div>
 
-            <div className="overflow-x-auto border border-[#E5E0D8] rounded">
+            <div className="md:hidden divide-y divide-[#E5E0D8] border border-[#E5E0D8] rounded">
+              {filteredContentRows.map(({ article, analysis, incomingLinks }) => (
+                <div key={article.id} className="p-4 space-y-2.5 text-xs">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-[#141413] leading-snug">{article.title}</div>
+                      <div className="font-mono text-[11px] text-[#7A7770] break-all">
+                        /articles/{article.slug}
+                      </div>
+                    </div>
+                    <span
+                      className={`font-mono font-bold tabular-nums shrink-0 ${
+                        analysis.score >= 80
+                          ? 'text-[#16A34A]'
+                          : analysis.score >= 55
+                          ? 'text-[#D97706]'
+                          : 'text-[#DC2626]'
+                      }`}
+                    >
+                      {analysis.score}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#5C5A55]">
+                    <span className="capitalize">{article.status}</span>
+                    <span>
+                      Keyword:{' '}
+                      {article.focus_keyword || <span className="text-[#DC2626]">Missing</span>}
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      {analysis.metrics.wordCount.toLocaleString()} words
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      Int: {analysis.metrics.internalLinksCount} · In: {incomingLinks}
+                    </span>
+                    <span className="font-mono">{article.robots_directive || 'index, follow'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onEditArticle(article)}
+                    className="w-full min-h-[38px] px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
+                  >
+                    Optimize
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto border border-[#E5E0D8] rounded">
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase text-[#5C5A55]">
                   <tr>
@@ -1560,7 +1663,7 @@ export default function SeoDashboardSection({
                         <button
                           type="button"
                           onClick={() => onEditArticle(article)}
-                          className="px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
+                          className="px-3 py-1.5 min-h-[36px] bg-[#EFECE6] hover:bg-[#E5E0D8] rounded font-semibold text-[#141413] cursor-pointer"
                         >
                           Optimize
                         </button>

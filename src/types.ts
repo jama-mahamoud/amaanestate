@@ -476,3 +476,78 @@ export interface PropertyCountryStat {
   imageUrl?: string | null;
 }
 
+export type MarketTrendDirection = 'up' | 'down' | 'flat';
+
+export type MarketDataPeriodType = 'month' | 'quarter' | 'year';
+
+export type MarketDataSourceType =
+  | 'manual'
+  | 'bis'
+  | 'oecd'
+  | 'national_stats'
+  | 'central_bank'
+  | 'other_authorized';
+
+export type MarketLevel = 'country' | 'city';
+
+export interface GlobalMarketReport {
+  id: string;
+  country_name: string;
+  country_code: string;
+  country_slug: string;
+  city_name?: string | null;
+  market_level: MarketLevel;
+  title: string;
+  slug: string;
+  market_overview: string;
+  avg_sale_price?: number | null;
+  avg_monthly_rent?: number | null;
+  currency: string;
+  property_price_trend_pct?: number | null;
+  property_price_trend_dir?: MarketTrendDirection | null;
+  rental_price_trend_pct?: number | null;
+  rental_price_trend_dir?: MarketTrendDirection | null;
+  investment_insights: string;
+  market_analysis: string;
+  data_period: string;
+  data_period_type: MarketDataPeriodType;
+  data_source_name: string;
+  data_source_url?: string | null;
+  data_source_type: MarketDataSourceType;
+  last_verified_at?: string | null;
+  cover_image?: string | null;
+  cover_image_alt?: string | null;
+  status: PublicationStatus;
+  is_featured: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  canonical_url?: string | null;
+  published_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface GlobalMarketCountrySummary {
+  countryName: string;
+  countryCode: string;
+  countrySlug: string;
+  flag: string;
+  reportCount: number;
+  cityCount: number;
+  cities: string[];
+  latestUpdatedAt?: string | null;
+  latestDataPeriod?: string | null;
+  coverImage?: string | null;
+  coverImageAlt?: string | null;
+  primaryTitle: string;
+  primaryOverview: string;
+  avgSalePrice?: number | null;
+  avgMonthlyRent?: number | null;
+  currency: string;
+  propertyPriceTrendPct?: number | null;
+  propertyPriceTrendDir?: MarketTrendDirection | null;
+  rentalPriceTrendPct?: number | null;
+  rentalPriceTrendDir?: MarketTrendDirection | null;
+  isFeatured: boolean;
+}

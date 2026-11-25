@@ -306,7 +306,9 @@ export async function getShowcaseProperties(
   const db = loadDemoDb();
   const filtered = db.properties.filter(
     (p) =>
-      (p.source_name === 'showcase_sample' || p.is_sample) &&
+      p.publication_status === 'published' &&
+      !p.is_sample &&
+      p.source_name !== 'showcase_sample' &&
       (!transactionType || p.transaction_type === transactionType)
   );
 
@@ -365,7 +367,11 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
   const db = loadDemoDb();
   const normalized = cleanSlug.replace(/^sample-/, '');
   const found = db.properties.find(
-    (p) => p.slug === cleanSlug || p.slug === normalized || p.id === cleanSlug
+    (p) =>
+      p.publication_status === 'published' &&
+      !p.is_sample &&
+      p.source_name !== 'showcase_sample' &&
+      (p.slug === cleanSlug || p.slug === normalized || p.id === cleanSlug)
   );
   return found || null;
 }

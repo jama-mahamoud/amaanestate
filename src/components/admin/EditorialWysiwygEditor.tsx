@@ -203,7 +203,7 @@ export default function EditorialWysiwygEditor({
   return (
     <div className="bg-white border border-[#E5E0D8] rounded-md overflow-hidden flex flex-col shadow-sm">
       {/* Editorial WYSIWYG Toolbar */}
-      <div className="bg-[#FAF8F5] border-b border-[#E5E0D8] p-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
+      <div className="bg-[#FAF8F5] border-b border-[#E5E0D8] p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
         <div className="flex flex-wrap items-center gap-1">
           {/* History */}
           <button
@@ -211,7 +211,7 @@ export default function EditorialWysiwygEditor({
             disabled={!editor.can().undo()}
             onClick={() => editor.chain().focus().undo().run()}
             title="Undo (Ctrl+Z)"
-            className="p-1.5 rounded hover:bg-[#EFECE6] text-[#141413] disabled:opacity-30 cursor-pointer"
+            className="min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center p-1.5 rounded hover:bg-[#EFECE6] text-[#141413] disabled:opacity-30 cursor-pointer"
           >
             <Undo size={15} />
           </button>
@@ -220,7 +220,7 @@ export default function EditorialWysiwygEditor({
             disabled={!editor.can().redo()}
             onClick={() => editor.chain().focus().redo().run()}
             title="Redo (Ctrl+Y)"
-            className="p-1.5 rounded hover:bg-[#EFECE6] text-[#141413] disabled:opacity-30 cursor-pointer"
+            className="min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center p-1.5 rounded hover:bg-[#EFECE6] text-[#141413] disabled:opacity-30 cursor-pointer"
           >
             <Redo size={15} />
           </button>
@@ -245,7 +245,7 @@ export default function EditorialWysiwygEditor({
               else if (val === 'h3') editor.chain().focus().toggleHeading({ level: 3 }).run();
               else editor.chain().focus().setParagraph().run();
             }}
-            className="h-8 px-2 bg-white border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] cursor-pointer"
+            className="h-9 sm:h-8 min-w-0 max-w-full px-2 bg-white border border-[#D6CEBE] rounded text-xs font-semibold text-[#141413] cursor-pointer"
           >
             <option value="paragraph">Normal Paragraph</option>
             <option value="h2">Heading 2 (Section)</option>
@@ -362,7 +362,7 @@ export default function EditorialWysiwygEditor({
               <Palette size={15} />
             </button>
             {showColorPopover && (
-              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-40">
+              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-40 max-w-[calc(100vw-2rem)]">
                 <div className="text-[11px] font-semibold text-[#5C5A55] px-1">Text Color</div>
                 {TEXT_COLORS.map((c) => (
                   <button
@@ -405,7 +405,7 @@ export default function EditorialWysiwygEditor({
               <Highlighter size={15} />
             </button>
             {showHighlightPopover && (
-              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-40">
+              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-40 max-w-[calc(100vw-2rem)]">
                 <div className="text-[11px] font-semibold text-[#5C5A55] px-1">Highlight Color</div>
                 {HIGHLIGHT_COLORS.map((c) => (
                   <button
@@ -529,7 +529,7 @@ export default function EditorialWysiwygEditor({
               <TableIcon size={15} />
             </button>
             {showTableMenu && (
-              <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-48 text-xs">
+              <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-1 p-2 bg-white border border-[#E5E0D8] rounded shadow-lg z-30 space-y-1 w-48 max-w-[calc(100vw-2rem)] text-xs">
                 {!isInTable ? (
                   <button
                     type="button"
@@ -641,7 +641,7 @@ export default function EditorialWysiwygEditor({
               key={m}
               type="button"
               onClick={() => onViewModeChange(m)}
-              className={`px-2.5 py-1 rounded text-xs font-semibold capitalize cursor-pointer ${
+              className={`min-h-[34px] sm:min-h-0 px-2.5 py-1 rounded text-xs font-semibold capitalize cursor-pointer ${
                 viewMode === m ? 'bg-[#1E3A5F] text-white' : 'text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
@@ -655,9 +655,9 @@ export default function EditorialWysiwygEditor({
       {showLinkModal && (
         <form
           onSubmit={handleSetLink}
-          className="bg-[#FAF8F5] border-b border-[#E5E0D8] px-4 py-3 flex flex-wrap items-end gap-3"
+          className="bg-[#FAF8F5] border-b border-[#E5E0D8] px-3 sm:px-4 py-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-2.5 sm:gap-3"
         >
-          <div className="flex-1 min-w-[220px]">
+          <div className="flex-1 min-w-0 w-full sm:min-w-[220px]">
             <label className="text-[11px] font-semibold text-[#5C5A55] block mb-1">
               Hyperlink Target URL
             </label>
@@ -667,28 +667,30 @@ export default function EditorialWysiwygEditor({
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
               placeholder="https://amaanestate.com/research/..."
-              className="w-full h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs font-mono"
+              className="w-full min-w-0 h-10 sm:h-9 px-3 bg-white border border-[#D6CEBE] rounded text-xs font-mono"
             />
           </div>
-          <button
-            type="submit"
-            className="h-9 px-4 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
-          >
-            Apply Link
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowLinkModal(false)}
-            className="h-9 px-3 text-xs text-[#5C5A55] cursor-pointer"
-          >
-            Cancel
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              className="min-h-[40px] sm:min-h-0 sm:h-9 px-4 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+            >
+              Apply Link
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLinkModal(false)}
+              className="min-h-[40px] sm:min-h-0 sm:h-9 px-3 text-xs text-[#5C5A55] cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       )}
 
       {/* Editor Main Canvas Container */}
       <div className="flex-1 bg-white">
-        <EditorContent editor={editor} className="min-h-[480px]" />
+        <EditorContent editor={editor} className="min-h-[360px] sm:min-h-[480px]" />
       </div>
     </div>
   );

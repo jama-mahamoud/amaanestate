@@ -79,24 +79,24 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-7 sm:space-y-10">
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex items-center gap-2">
+      <nav aria-label="Breadcrumb" className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-2">
         <Link to="/" className="hover:text-[#141413]">Home</Link>
         <span aria-hidden="true">/</span>
         <span className="text-[#141413] font-medium">{category?.name || activeSlug}</span>
       </nav>
 
       {/* Category Editorial Banner */}
-      <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border-b border-[#E5E0D8] pb-10">
-        <div className="lg:col-span-7 space-y-4">
+      <header className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center border-b border-[#E5E0D8] pb-7 sm:pb-10">
+        <div className="lg:col-span-7 space-y-3 sm:space-y-4">
           <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
             Editorial Desk
           </p>
-          <h1 className="text-3xl sm:text-5xl font-serif font-semibold text-[#141413]">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-semibold text-[#141413]">
             {category?.name || 'Editorial Section'}
           </h1>
-          <p className="text-base text-[#4A4843] leading-relaxed max-w-2xl">
+          <p className="text-sm sm:text-base text-[#4A4843] leading-relaxed max-w-2xl">
             {category?.description || 'In-depth research, criticism, and international reporting.'}
           </p>
         </div>
@@ -114,15 +114,15 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
       </header>
 
       {/* Filter & Sort Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E0D8] pb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#E5E0D8] pb-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <input
             type="search"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder={`Filter ${category?.name || 'section'} articles...`}
             aria-label="Filter section articles"
-            className="h-10 px-3.5 bg-white border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F] w-full sm:w-72"
+            className="h-11 sm:h-10 px-3.5 bg-white border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F] w-full sm:w-72 min-w-0"
           />
         </div>
 
@@ -130,7 +130,7 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
           <button
             type="button"
             onClick={() => setSortBy('latest')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
+            className={`min-h-[36px] px-3.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
               sortBy === 'latest' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55] hover:text-[#141413]'
             }`}
           >
@@ -139,7 +139,7 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
           <button
             type="button"
             onClick={() => setSortBy('popular')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
+            className={`min-h-[36px] px-3.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
               sortBy === 'popular' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55] hover:text-[#141413]'
             }`}
           >
@@ -150,9 +150,9 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
 
       {/* Articles Grid */}
       {loading ? (
-        <div className="py-16 text-sm text-[#5C5A55]">Loading published articles...</div>
+        <div className="py-12 sm:py-16 text-sm text-[#5C5A55]">Loading published articles...</div>
       ) : articles.length === 0 ? (
-        <div className="py-16 text-center bg-white border border-[#E5E0D8] rounded p-8 space-y-3">
+        <div className="py-12 sm:py-16 text-center bg-white border border-[#E5E0D8] rounded p-6 sm:p-8 space-y-3">
           <h2 className="text-xl font-serif font-semibold text-[#141413]">No Matching Articles Found</h2>
           <p className="text-sm text-[#5C5A55]">
             Try clearing your filter or exploring another section across AMAAN ESTATE.
@@ -161,14 +161,14 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
             <button
               type="button"
               onClick={() => setKeyword('')}
-              className="px-4 py-2 text-xs font-semibold bg-[#1E3A5F] text-white rounded cursor-pointer"
+              className="min-h-[44px] px-5 py-2 text-xs font-semibold bg-[#1E3A5F] text-white rounded cursor-pointer"
             >
               Reset Filter
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           {articles.map((art) => (
             <ArticleCard key={art.id} article={art} />
           ))}

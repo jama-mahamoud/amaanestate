@@ -109,14 +109,14 @@ export default function EditorialContent({ content }: EditorialContentProps) {
   if (isHtml) {
     return (
       <div
-        className="prose prose-stone prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:text-[#141413] prose-p:text-[#292825] prose-p:leading-[1.8] prose-a:text-[#1E3A5F] prose-th:text-[#141413] prose-td:text-[#292825] prose-img:rounded prose-img:my-6 prose-blockquote:bg-[#F4F1EA] prose-blockquote:border-y prose-blockquote:border-[#E5E0D8] prose-blockquote:font-serif prose-blockquote:not-italic prose-blockquote:py-4 prose-blockquote:px-6"
+        className="editorial-prose prose prose-stone prose-sm sm:prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:text-[#141413] prose-p:text-[#292825] prose-p:leading-[1.75] sm:prose-p:leading-[1.8] prose-a:text-[#1E3A5F] prose-th:text-[#141413] prose-td:text-[#292825] prose-img:rounded prose-img:my-5 sm:prose-img:my-6 prose-blockquote:bg-[#F4F1EA] prose-blockquote:border-y prose-blockquote:border-[#E5E0D8] prose-blockquote:font-serif prose-blockquote:not-italic prose-blockquote:py-3.5 sm:prose-blockquote:py-4 prose-blockquote:px-4 sm:prose-blockquote:px-6"
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
   }
 
   return (
-    <div className="prose prose-stone prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:text-[#141413] prose-p:text-[#292825] prose-p:leading-[1.8] prose-a:text-[#1E3A5F] prose-th:text-[#141413] prose-td:text-[#292825]">
+    <div className="editorial-prose prose prose-stone prose-sm sm:prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:text-[#141413] prose-p:text-[#292825] prose-p:leading-[1.75] sm:prose-p:leading-[1.8] prose-a:text-[#1E3A5F] prose-th:text-[#141413] prose-td:text-[#292825]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -124,7 +124,7 @@ export default function EditorialContent({ content }: EditorialContentProps) {
             const resolved = resolveEditorialImage(src || '');
             const caption = title || alt || '';
             return (
-              <figure className="my-8">
+              <figure className="my-6 sm:my-8">
                 <div className="overflow-hidden rounded bg-[#EBE6DF]">
                   <img
                     src={resolved}
@@ -146,7 +146,7 @@ export default function EditorialContent({ content }: EditorialContentProps) {
             const embedUrl = href && (label === 'video' || label === 'embed') ? getVideoEmbedUrl(href) : null;
             if (embedUrl) {
               return (
-                <div className="my-8 aspect-video w-full overflow-hidden rounded border border-[#E5E0D8] bg-[#141413]">
+                <div className="my-6 sm:my-8 aspect-video w-full overflow-hidden rounded border border-[#E5E0D8] bg-[#141413]">
                   <iframe
                     src={embedUrl}
                     title="Embedded editorial video"
@@ -175,15 +175,15 @@ export default function EditorialContent({ content }: EditorialContentProps) {
           },
           blockquote({ children }) {
             return (
-              <blockquote className="my-8 px-6 py-5 bg-[#F4F1EA] border-y border-[#E5E0D8] not-italic font-serif text-lg text-[#141413] leading-relaxed">
+              <blockquote className="my-6 sm:my-8 px-4 sm:px-6 py-4 sm:py-5 bg-[#F4F1EA] border-y border-[#E5E0D8] not-italic font-serif text-base sm:text-lg text-[#141413] leading-relaxed">
                 {children}
               </blockquote>
             );
           },
           table({ children }) {
             return (
-              <div className="my-8 overflow-x-auto border border-[#E5E0D8] rounded bg-white">
-                <table className="w-full text-left text-sm border-collapse m-0">{children}</table>
+              <div className="my-6 sm:my-8 overflow-x-auto border border-[#E5E0D8] rounded bg-white">
+                <table className="editorial-table-inner w-full text-left text-xs sm:text-sm border-collapse m-0">{children}</table>
               </div>
             );
           },
@@ -191,10 +191,10 @@ export default function EditorialContent({ content }: EditorialContentProps) {
             return <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8]">{children}</thead>;
           },
           th({ children }) {
-            return <th className="px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-[#5C5A55]">{children}</th>;
+            return <th className="px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-[#5C5A55]">{children}</th>;
           },
           td({ children }) {
-            return <td className="px-4 py-2.5 border-t border-[#E5E0D8] text-sm tabular-nums">{children}</td>;
+            return <td className="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-[#E5E0D8] text-xs sm:text-sm tabular-nums">{children}</td>;
           },
         }}
       >

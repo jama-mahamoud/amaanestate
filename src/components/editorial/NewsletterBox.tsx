@@ -28,15 +28,15 @@ export default function NewsletterBox({ source = 'homepage' }: NewsletterBoxProp
   return (
     <section
       aria-labelledby="newsletter-heading"
-      className="bg-white border border-[#E5E0D8] rounded p-8 sm:p-12"
+      className="bg-white border border-[#E5E0D8] rounded p-5 sm:p-10 lg:p-12"
     >
-      <div className="max-w-3xl mx-auto text-center space-y-5">
+      <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-5">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
           Global Real Estate Briefing
         </p>
         <h2
           id="newsletter-heading"
-          className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413]"
+          className="text-xl sm:text-3xl font-serif font-semibold text-[#141413]"
         >
           Stay Informed. Think Globally.
         </h2>
@@ -52,12 +52,12 @@ export default function NewsletterBox({ source = 'homepage' }: NewsletterBoxProp
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email address"
             aria-label="Email address for newsletter"
-            className="flex-1 h-11 px-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+            className="flex-1 min-w-0 w-full h-11 px-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-60 text-white text-sm font-semibold rounded transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-60 text-white text-sm font-semibold rounded transition-colors cursor-pointer whitespace-nowrap shrink-0 w-full sm:w-auto"
           >
             {submitting ? 'Subscribing...' : 'Subscribe'}
           </button>

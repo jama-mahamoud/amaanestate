@@ -33,12 +33,12 @@ export default function NewsletterPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-8">
-      <header className="space-y-3 border-b border-[#E5E0D8] pb-6">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-6 sm:space-y-8">
+      <header className="space-y-3 border-b border-[#E5E0D8] pb-5 sm:pb-6">
         <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
           Reader Preferences
         </p>
-        <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-[#141413]">
+        <h1 className="text-2xl sm:text-4xl font-serif font-semibold text-[#141413]">
           Newsletter Subscription Management
         </h1>
         <p className="text-sm text-[#5C5A55] leading-relaxed">
@@ -46,15 +46,15 @@ export default function NewsletterPage() {
         </p>
       </header>
 
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 sm:p-8 space-y-6">
-        <div className="flex items-center gap-1 p-1 bg-[#EFECE6] rounded w-fit">
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-8 space-y-5 sm:space-y-6">
+        <div className="grid grid-cols-2 sm:inline-flex items-center gap-1 p-1 bg-[#EFECE6] rounded w-full sm:w-fit">
           <button
             type="button"
             onClick={() => {
               setMode('subscribe');
               setStatusMessage(null);
             }}
-            className={`px-4 py-2 text-xs font-semibold rounded transition-colors cursor-pointer ${
+            className={`min-h-[40px] px-4 py-2 text-xs font-semibold rounded transition-colors cursor-pointer ${
               mode === 'subscribe' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55]'
             }`}
           >
@@ -66,7 +66,7 @@ export default function NewsletterPage() {
               setMode('unsubscribe');
               setStatusMessage(null);
             }}
-            className={`px-4 py-2 text-xs font-semibold rounded transition-colors cursor-pointer ${
+            className={`min-h-[40px] px-4 py-2 text-xs font-semibold rounded transition-colors cursor-pointer ${
               mode === 'unsubscribe' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55]'
             }`}
           >
@@ -93,7 +93,7 @@ export default function NewsletterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-sm font-semibold rounded transition-colors cursor-pointer"
+            className="w-full sm:w-auto h-11 px-6 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-sm font-semibold rounded transition-colors cursor-pointer"
           >
             {loading
               ? 'Processing...'

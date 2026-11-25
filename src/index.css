@@ -66,6 +66,7 @@
     scroll-behavior: smooth;
     background-color: #FAF8F5;
     color: #141413;
+    overflow-x: clip;
   }
 
   * {
@@ -73,12 +74,21 @@
   }
 
   body {
-    @apply bg-[#FAF8F5] text-[#141413] antialiased font-sans overflow-x-hidden;
+    @apply bg-[#FAF8F5] text-[#141413] antialiased font-sans overflow-x-clip;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif tracking-tight text-[#141413];
     text-wrap: balance;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #1E3A5F;
+    outline-offset: 2px;
   }
 }
 
@@ -104,11 +114,71 @@
   }
 }
 
+/* Editorial Prose Mobile Safeguards (HTML & Markdown bodies) */
+.editorial-prose {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.editorial-prose img,
+.editorial-prose video,
+.editorial-prose svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.editorial-prose iframe {
+  max-width: 100%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+}
+
+.editorial-prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.editorial-prose table:not(.editorial-table-inner) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* TipTap WYSIWYG Editor Canvas Styles */
 .ProseMirror {
   outline: none;
   min-height: 480px;
   padding: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .ProseMirror {
+    min-height: 320px;
+    padding: 1rem;
+  }
+  .ProseMirror h1 {
+    font-size: 1.75rem;
+  }
+  .ProseMirror h2 {
+    font-size: 1.4rem;
+  }
+  .ProseMirror h3 {
+    font-size: 1.2rem;
+  }
+  .ProseMirror blockquote {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+  .ProseMirror table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {

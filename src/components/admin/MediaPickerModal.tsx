@@ -112,27 +112,27 @@ export default function MediaPickerModal({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50 bg-black/55 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/55 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     >
-      <div className="bg-white border border-[#E5E0D8] rounded-md w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-xl">
-        <div className="px-6 py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-4">
-          <h2 className="text-lg font-serif font-semibold text-[#141413]">{title}</h2>
+      <div className="bg-white border border-[#E5E0D8] rounded-none sm:rounded-md w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[88vh] flex flex-col overflow-hidden shadow-xl">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-3 sm:gap-4">
+          <h2 className="text-base sm:text-lg font-serif font-semibold text-[#141413] truncate">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close media picker"
-            className="p-1.5 text-[#5C5A55] hover:text-[#141413] rounded cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-[#5C5A55] hover:text-[#141413] rounded cursor-pointer shrink-0"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Mode Switch */}
-        <div className="px-6 py-3 bg-[#FAF8F5] border-b border-[#E5E0D8] flex flex-wrap gap-2">
+        <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-[#FAF8F5] border-b border-[#E5E0D8] flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setMode('library')}
-            className={`px-3.5 py-2 rounded text-xs font-semibold cursor-pointer whitespace-nowrap ${
+            className={`min-h-[40px] px-3.5 py-2 rounded text-xs font-semibold cursor-pointer whitespace-nowrap ${
               mode === 'library' ? 'bg-[#1E3A5F] text-white' : 'bg-white border border-[#E5E0D8] text-[#141413]'
             }`}
           >
@@ -141,7 +141,7 @@ export default function MediaPickerModal({
           <button
             type="button"
             onClick={() => setMode('upload')}
-            className={`px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`min-h-[40px] px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               mode === 'upload' ? 'bg-[#1E3A5F] text-white' : 'bg-white border border-[#E5E0D8] text-[#141413]'
             }`}
           >
@@ -150,7 +150,7 @@ export default function MediaPickerModal({
           <button
             type="button"
             onClick={() => setMode('external')}
-            className={`px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            className={`min-h-[40px] px-3.5 py-2 rounded text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               mode === 'external' ? 'bg-[#1E3A5F] text-white' : 'bg-white border border-[#E5E0D8] text-[#141413]'
             }`}
           >
@@ -158,7 +158,7 @@ export default function MediaPickerModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {mode === 'library' && (
             <div className="space-y-4">
               <div className="relative">
@@ -168,7 +168,7 @@ export default function MediaPickerModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search uploaded or external media by title or alt text..."
-                  className="w-full h-10 pl-10 pr-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+                  className="w-full min-w-0 h-10 pl-10 pr-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
                 />
               </div>
 
@@ -180,13 +180,13 @@ export default function MediaPickerModal({
                   <button
                     type="button"
                     onClick={() => setMode('upload')}
-                    className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+                    className="min-h-[40px] px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
                   >
                     Upload First Image
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   {filteredMedia.map((item) => (
                     <button
                       key={item.id}
@@ -367,7 +367,7 @@ export default function MediaPickerModal({
               <button
                 type="submit"
                 disabled={savingExternal || previewStatus !== 'valid'}
-                className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-50 text-white text-xs font-semibold rounded cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] disabled:opacity-50 text-white text-xs font-semibold rounded cursor-pointer"
               >
                 {savingExternal ? 'Saving...' : 'Save URL & Select Image'}
               </button>

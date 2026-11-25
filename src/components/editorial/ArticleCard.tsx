@@ -26,7 +26,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
 
   if (variant === 'lead') {
     return (
-      <article className="group grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch border-b border-[#E5E0D8] pb-10 sm:pb-12">
+      <article className="group grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-10 items-stretch border-b border-[#E5E0D8] pb-8 sm:pb-12">
         <Link
           to={`/articles/${article.slug}`}
           className="lg:col-span-7 block overflow-hidden bg-[#F4F1EC] rounded-lg aspect-[16/10] lg:aspect-auto lg:min-h-[380px] border border-[#E5E0D8] group-hover:border-[#C8BFB0] transition-colors duration-300"
@@ -46,8 +46,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           )}
         </Link>
 
-        <div className="lg:col-span-5 flex flex-col justify-between py-1 space-y-6">
-          <div className="space-y-4">
+        <div className="lg:col-span-5 min-w-0 flex flex-col justify-between py-1 space-y-5 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             {article.category && (
               <div>
                 <Link
@@ -60,12 +60,12 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             )}
 
             <Link to={`/articles/${article.slug}`} className="block group/title">
-              <h3 className="text-2xl sm:text-3xl lg:text-[2.2rem] font-serif font-semibold leading-[1.18] text-[#141413] group-hover/title:text-[#1E3A5F] transition-colors">
+              <h3 className="text-2xl sm:text-3xl lg:text-[2.2rem] font-serif font-semibold leading-[1.18] text-[#141413] group-hover/title:text-[#1E3A5F] transition-colors break-words [overflow-wrap:anywhere]">
                 {article.title}
               </h3>
             </Link>
 
-            <p className="text-base text-[#4A4843] leading-relaxed line-clamp-4">
+            <p className="text-sm sm:text-base text-[#4A4843] leading-relaxed line-clamp-4">
               {article.excerpt}
             </p>
           </div>
@@ -73,7 +73,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           <div className="pt-4 border-t border-[#E5E0D8]/80 flex items-center justify-between">
             <Link
               to={`/articles/${article.slug}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white bg-[#1E3A5F] hover:bg-[#8C4A27] rounded-md shadow-2xs transition-all duration-200 group/btn"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white bg-[#1E3A5F] hover:bg-[#8C4A27] rounded-md shadow-2xs transition-all duration-200 group/btn"
             >
               <span>Read Article</span>
               <span className="inline-block transition-transform duration-200 group-hover/btn:translate-x-1 font-sans">
@@ -115,7 +115,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
         <div className="pt-1">
           <Link
             to={`/articles/${article.slug}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] transition-colors py-0.5 group/btn"
+            className="inline-flex items-center min-h-[36px] gap-1.5 text-xs font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] transition-colors py-1 group/btn"
           >
             <span>Read Article</span>
             <span className="inline-block transition-transform duration-200 group-hover/btn:translate-x-1 font-sans">
@@ -128,10 +128,10 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
   }
 
   return (
-    <article className="group flex flex-col h-full bg-white border border-[#E5E0D8] hover:border-[#C8BFB0] rounded-lg p-5 sm:p-6 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5">
+    <article className="group flex flex-col h-full min-w-0 bg-white border border-[#E5E0D8] hover:border-[#C8BFB0] rounded-lg p-4 sm:p-6 transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5">
       <Link
         to={`/articles/${article.slug}`}
-        className="block overflow-hidden bg-[#F4F1EC] rounded-md aspect-[16/10] mb-5 border border-[#EBE6DF] group-hover:border-[#DFD7CB] transition-colors"
+        className="block overflow-hidden bg-[#F4F1EC] rounded-md aspect-[16/10] mb-4 sm:mb-5 border border-[#EBE6DF] group-hover:border-[#DFD7CB] transition-colors"
       >
         {!imgFailed ? (
           <img
@@ -149,8 +149,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
         )}
       </Link>
 
-      <div className="flex flex-col flex-1 justify-between space-y-4">
-        <div className="space-y-3">
+      <div className="flex flex-col flex-1 justify-between space-y-4 min-w-0">
+        <div className="space-y-2.5 sm:space-y-3 min-w-0">
           {article.category && (
             <div>
               <Link
@@ -163,7 +163,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           )}
 
           <Link to={`/articles/${article.slug}`} className="block">
-            <h3 className="text-xl font-serif font-semibold leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors line-clamp-2">
+            <h3 className="text-lg sm:text-xl font-serif font-semibold leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors line-clamp-2 break-words [overflow-wrap:anywhere]">
               {article.title}
             </h3>
           </Link>
@@ -173,10 +173,10 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           </p>
         </div>
 
-        <div className="pt-4 border-t border-[#F0ECE1] mt-auto flex items-center justify-between">
+        <div className="pt-3 sm:pt-4 border-t border-[#F0ECE1] mt-auto flex items-center justify-between">
           <Link
             to={`/articles/${article.slug}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] transition-colors py-1 group/btn"
+            className="inline-flex items-center min-h-[40px] gap-1.5 text-xs font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] transition-colors py-1 group/btn"
           >
             <span>Read Article</span>
             <span className="inline-block transition-transform duration-200 group-hover/btn:translate-x-1 font-sans">

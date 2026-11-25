@@ -141,20 +141,20 @@ export default function AccountPage() {
       : 'Member Account';
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8">
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#EFECE6] flex items-center justify-center text-[#1E3A5F] shrink-0">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#EFECE6] flex items-center justify-center text-[#1E3A5F] shrink-0">
             <User size={22} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
               {roleLabel}
             </p>
-            <h1 className="text-2xl font-serif font-semibold text-[#141413]">
+            <h1 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413] break-words">
               {profile?.full_name || profile?.email}
             </h1>
-            <p className="text-xs font-mono text-[#5C5A55]">{profile?.email}</p>
+            <p className="text-xs font-mono text-[#5C5A55] break-all">{profile?.email}</p>
           </div>
         </div>
 
@@ -163,7 +163,7 @@ export default function AccountPage() {
             <>
               <Link
                 to="/admin"
-                className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5"
+                className="min-h-[40px] px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5"
               >
                 <LayoutDashboard size={14} />
                 <span>Open Editorial CMS</span>
@@ -181,7 +181,7 @@ export default function AccountPage() {
                     toast.success('Browser marked as internal traffic (traffic_type = "internal").');
                   }
                 }}
-                className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] text-[#141413] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+                className="min-h-[40px] px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#EFECE6] border border-[#D6CEBE] text-[#141413] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
               >
                 {internalMarkerActive ? (
                   <>
@@ -200,7 +200,7 @@ export default function AccountPage() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[40px] px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-[#141413] text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut size={14} />
             <span>Sign Out</span>
@@ -208,7 +208,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSaveProfile} className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleSaveProfile} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
         <h2 className="text-lg font-serif font-semibold text-[#141413]">Profile Information</h2>
 
         <div className="space-y-1.5">
@@ -218,7 +218,7 @@ export default function AccountPage() {
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full h-11 sm:h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
@@ -236,13 +236,13 @@ export default function AccountPage() {
         <button
           type="submit"
           disabled={savingProfile}
-          className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
         >
           {savingProfile ? 'Saving...' : 'Save Profile'}
         </button>
       </form>
 
-      <form onSubmit={handleUpdatePassword} className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleUpdatePassword} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4">
         <div className="flex items-center gap-2">
           <ShieldCheck size={17} className="text-[#8C4A27]" />
           <h2 className="text-lg font-serif font-semibold text-[#141413]">Security &amp; Password</h2>
@@ -258,7 +258,7 @@ export default function AccountPage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full h-11 sm:h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
           <div className="space-y-1.5">
@@ -270,7 +270,7 @@ export default function AccountPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter password"
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full h-11 sm:h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function AccountPage() {
         <button
           type="submit"
           disabled={savingPassword}
-          className="px-5 py-2.5 bg-[#8C4A27] hover:bg-[#733B1E] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#8C4A27] hover:bg-[#733B1E] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
         >
           {savingPassword ? 'Updating...' : 'Update Password'}
         </button>

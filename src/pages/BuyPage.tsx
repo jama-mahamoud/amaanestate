@@ -38,8 +38,11 @@ export default function BuyPage() {
   useSEO({
     title: 'Buy Real Estate & Properties for Sale | AmaanEstate',
     description:
-      'Explore houses, apartments, villas, townhouses, and land for sale worldwide on the AmaanEstate global property marketplace.',
+      'Explore houses, apartments, villas, townhouses, and land for sale worldwide on AmaanEstate.',
     url: `${getCanonicalOrigin()}/buy`,
+    noIndex: true,
+    robotsDirective: 'noindex, follow',
+    omitCanonical: true,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',

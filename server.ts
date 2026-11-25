@@ -16,6 +16,13 @@ import {
   lookupActiveRedirect,
   registerSeoRoutes,
 } from "./server/seoRoutes";
+import {
+  fetchEligibleGlobalMarketsForSitemap,
+  fetchGlobalMarketCountryForSeo,
+  fetchGlobalMarketReportForSeo,
+  registerGlobalMarketsRoutes,
+} from "./server/globalMarketsRoutes";
+import { aggregateCountrySummaries, slugifyMarketSegment } from "./src/lib/globalMarkets";
 
 dotenv.config();
 
@@ -266,7 +273,7 @@ async function injectArticleOgMetadata(
   const rawDescription =
     article.seo_description ||
     article.excerpt ||
-    "Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.";
+    "Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.";
   const cleanDescription = stripHtml(rawDescription).slice(0, 180);
 
   const rawImage = article.og_image || article.featured_image;
@@ -347,6 +354,7 @@ function injectSpaRouteMetadata(
   options: {
     canonicalUrl?: string;
     noIndex?: boolean;
+    robotsDirective?: string;
     title?: string;
     description?: string;
   }
@@ -366,10 +374,14 @@ function injectSpaRouteMetadata(
     .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
     .replace(/<meta\s+[^>]*property=["']og:url["'][^>]*>/gi, "");
 
+  const robotsContent =
+    options.robotsDirective || (options.noIndex ? "noindex, nofollow" : "index, follow");
+  const isNoIndex = options.noIndex || robotsContent.toLowerCase().includes("noindex");
+
   const tags: string[] = [
-    `<meta name="robots" content="${options.noIndex ? "noindex, nofollow" : "index, follow"}" />`,
+    `<meta name="robots" content="${escapeHtml(robotsContent)}" />`,
   ];
-  if (options.canonicalUrl && !options.noIndex) {
+  if (options.canonicalUrl && !isNoIndex) {
     tags.push(`<link rel="canonical" href="${escapeHtml(options.canonicalUrl)}" />`);
     tags.push(`<meta property="og:url" content="${escapeHtml(options.canonicalUrl)}" />`);
   }
@@ -400,7 +412,7 @@ app.get("/api/health", async (req, res) => {
   const supabaseConfig = getSupabaseConfig();
   const basePayload = {
     status: "healthy",
-    app: "AmaanEstate — Global Real Estate Media, Research & Marketplace",
+    app: "AmaanEstate — Global Real Estate Media, Research & Market Intelligence",
     supabaseConfigured: Boolean(supabaseConfig),
     timestamp: new Date().toISOString(),
   };
@@ -475,6 +487,9 @@ app.get("/api/health", async (req, res) => {
 
 // Register Rank Math-level SEO, AI Optimization, Redirect Manager, Audit & Google Search Console Routes
 registerSeoRoutes(app);
+
+// Register Global Real Estate Market Intelligence API Routes
+registerGlobalMarketsRoutes(app);
 
 // Direct file attachment download for 004_editorial_25_articles.sql
 app.get("/004_editorial_25_articles.sql", (req, res) => {
@@ -639,10 +654,17 @@ async function fetchEligibleArticlesFromSupabase(config: { url: string; anonKey:
   return allRows;
 }
 
+const DEMO_SHOWCASE_PROPERTY_SLUGS = new Set([
+  "the-sky-glass-penthouse-dubai-marina",
+  "the-kensington-modern-townhouse-london",
+  "the-ravine-cedar-residence-toronto",
+  "the-ubud-jungle-reflection-villa-bali",
+]);
+
 async function fetchEligiblePropertiesForSitemap(
   config: { url: string; anonKey: string }
 ): Promise<Array<{ slug: string; published_at?: string | null; updated_at?: string | null; created_at?: string | null }>> {
-  const endpoint = `${config.url}/rest/v1/properties?select=slug,published_at,updated_at,created_at&publication_status=eq.published&listing_status=in.(available,pending,under_contract)&source_name=neq.showcase_sample&order=published_at.desc.nullslast,id.asc&limit=1000`;
+  const endpoint = `${config.url}/rest/v1/properties?select=slug,source_name,raw_payload,published_at,updated_at,created_at&publication_status=eq.published&listing_status=in.(available,pending,under_contract)&or=(source_name.is.null,source_name.neq.showcase_sample)&order=published_at.desc.nullslast,id.asc&limit=1000`;
   const response = await fetch(endpoint, {
     headers: {
       apikey: config.anonKey,
@@ -660,12 +682,19 @@ async function fetchEligiblePropertiesForSitemap(
 
   const rows = (await response.json()) as Array<{
     slug: string;
+    source_name?: string | null;
+    raw_payload?: any;
     published_at?: string | null;
     updated_at?: string | null;
     created_at?: string | null;
   }>;
   if (!Array.isArray(rows)) return [];
-  return rows.filter((row) => isValidPublicSlug(row.slug));
+  return rows.filter(
+    (row) =>
+      isValidPublicSlug(row.slug) &&
+      !DEMO_SHOWCASE_PROPERTY_SLUGS.has(row.slug) &&
+      !isShowcaseOrSampleRow(row)
+  );
 }
 
 export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<SitemapUrlEntry[]> {
@@ -673,12 +702,14 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
   let categories: SitemapCategoryRow[] = [];
   let articles: SitemapArticleRow[] = [];
   let properties: Array<{ slug: string; published_at?: string | null; updated_at?: string | null; created_at?: string | null }> = [];
+  let globalMarkets: Awaited<ReturnType<typeof fetchEligibleGlobalMarketsForSitemap>> = [];
 
   if (supabaseConfig) {
-    [categories, articles, properties] = await Promise.all([
+    [categories, articles, properties, globalMarkets] = await Promise.all([
       fetchCategoriesFromSupabase(supabaseConfig),
       fetchEligibleArticlesFromSupabase(supabaseConfig),
       fetchEligiblePropertiesForSitemap(supabaseConfig),
+      fetchEligibleGlobalMarketsForSitemap(),
     ]);
   } else {
     // Local fallback ONLY when Supabase credentials are not configured
@@ -740,6 +771,7 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
     "buy",
     "rent",
     "properties",
+    "global-markets",
     "about",
     "contact",
     "editorial-policy",
@@ -769,10 +801,8 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
     addUrl(`/${encodeURIComponent(cat.slug)}`, catLastMod);
   }
 
-  // 3. Indexable Static Editorial, Marketplace & Policy Pages
+  // 3. Indexable Static Editorial & Policy Pages
   const publicEditorialPaths = [
-    "/buy",
-    "/rent",
     "/about",
     "/contact",
     "/editorial-policy",
@@ -797,6 +827,32 @@ export async function collectSitemapEntries(baseUrl = SITE_URL): Promise<Sitemap
   for (const prop of properties) {
     const propLastMod = toIsoTimestamp(prop.updated_at || prop.published_at || prop.created_at);
     addUrl(`/properties/${encodeURIComponent(prop.slug)}`, propLastMod);
+  }
+
+  // 6. All Eligible Published Global Market Intelligence Countries & City Reports
+  if (globalMarkets.length > 0) {
+    const countrySummaries = aggregateCountrySummaries(globalMarkets);
+    const latestMarketTs = maxIsoTimestamp(
+      ...globalMarkets.map((m) => toIsoTimestamp(m.updated_at || m.published_at || m.created_at))
+    );
+    if (countrySummaries.length > 0) {
+      addUrl("/global-markets", latestMarketTs);
+    }
+    for (const country of countrySummaries) {
+      const countryLastMod = toIsoTimestamp(country.latestUpdatedAt);
+      addUrl(`/global-markets/${encodeURIComponent(country.countrySlug)}`, countryLastMod);
+    }
+    for (const market of globalMarkets) {
+      if (market.market_level === "city" || (market.city_name && market.city_name.trim())) {
+        const marketLastMod = toIsoTimestamp(
+          market.updated_at || market.published_at || market.created_at
+        );
+        addUrl(
+          `/global-markets/${encodeURIComponent(market.country_slug)}/${encodeURIComponent(market.slug)}`,
+          marketLastMod
+        );
+      }
+    }
   }
 
   return Array.from(dedupedUrls.entries()).map(([loc, lastmod]) => ({ loc, lastmod }));
@@ -844,7 +900,7 @@ const SHOWCASE_PROPERTIES_SEED = [
     transaction_type: "sale",
     property_type: "apartment",
     listing_status: "available",
-    publication_status: "published",
+    publication_status: "archived",
     price: 4850000,
     currency: "USD",
     rental_period: null,
@@ -870,7 +926,7 @@ const SHOWCASE_PROPERTIES_SEED = [
       "Acoustic double-glazed curtain walls",
       "24-hour concierge and valet services",
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_phone: null,
     brokerage_name: null,
@@ -900,7 +956,7 @@ const SHOWCASE_PROPERTIES_SEED = [
     transaction_type: "sale",
     property_type: "townhouse",
     listing_status: "available",
-    publication_status: "published",
+    publication_status: "archived",
     price: 6400000,
     currency: "GBP",
     rental_period: null,
@@ -925,7 +981,7 @@ const SHOWCASE_PROPERTIES_SEED = [
       "Bespoke bronze metalwork and balustrades",
       "Wine cellar and dedicated garden office",
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_phone: null,
     brokerage_name: null,
@@ -955,7 +1011,7 @@ const SHOWCASE_PROPERTIES_SEED = [
     transaction_type: "sale",
     property_type: "house",
     listing_status: "available",
-    publication_status: "published",
+    publication_status: "archived",
     price: 4950000,
     currency: "CAD",
     rental_period: null,
@@ -980,7 +1036,7 @@ const SHOWCASE_PROPERTIES_SEED = [
       "Custom Finnish cedar sauna and wellness suite",
       "Double car garage with EV charging infrastructure",
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_phone: null,
     brokerage_name: null,
@@ -1010,7 +1066,7 @@ const SHOWCASE_PROPERTIES_SEED = [
     transaction_type: "rent",
     property_type: "villa",
     listing_status: "available",
-    publication_status: "published",
+    publication_status: "archived",
     price: 6500,
     currency: "USD",
     rental_period: "month",
@@ -1035,7 +1091,7 @@ const SHOWCASE_PROPERTIES_SEED = [
       "High-speed fiber connectivity and dedicated workspace",
       "Full estate housekeeping and grounds maintenance",
     ],
-    is_featured: true,
+    is_featured: false,
     agent_name: null,
     agent_phone: null,
     brokerage_name: null,
@@ -1155,6 +1211,7 @@ app.get("/api/properties/featured", async (req, res) => {
     params.set("select", "*,property_images(*)");
     params.set("publication_status", "eq.published");
     params.set("listing_status", "in.(available,pending,under_contract)");
+    params.set("or", "(source_name.is.null,source_name.neq.showcase_sample)");
     params.set("is_featured", "eq.true");
     if (transactionType) {
       params.set("transaction_type", `eq.${transactionType}`);
@@ -1178,8 +1235,11 @@ app.get("/api/properties/featured", async (req, res) => {
     }
 
     const rows = (await response.json()) as any[];
+    const genuineRows = Array.isArray(rows)
+      ? rows.filter((row) => !isShowcaseOrSampleRow(row)).map(sanitizePublicProperty)
+      : [];
     return res.status(200).json({
-      properties: Array.isArray(rows) ? rows.map(sanitizePublicProperty) : [],
+      properties: genuineRows,
       schemaPending: false,
     });
   } catch (err) {
@@ -1188,50 +1248,11 @@ app.get("/api/properties/featured", async (req, res) => {
   }
 });
 
-app.get("/api/properties/showcase", async (req, res) => {
-  const transactionType =
-    typeof req.query.transaction_type === "string" ? req.query.transaction_type.trim() : "";
-  const supabaseConfig = getSupabaseConfig();
-
-  if (supabaseConfig) {
-    try {
-      const params = new URLSearchParams();
-      params.set("select", "*,property_images(*)");
-      params.set("publication_status", "eq.published");
-      params.set("source_name", "eq.showcase_sample");
-      if (transactionType) {
-        params.set("transaction_type", `eq.${transactionType}`);
-      }
-      params.set("order", "published_at.desc.nullslast,created_at.desc");
-
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/properties?${params.toString()}`, {
-        headers: {
-          apikey: supabaseConfig.anonKey,
-          Authorization: `Bearer ${supabaseConfig.anonKey}`,
-        },
-      });
-
-      if (response.ok) {
-        const rows = (await response.json()) as any[];
-        if (Array.isArray(rows) && rows.length > 0) {
-          return res.status(200).json({
-            properties: rows.map(sanitizePublicProperty),
-            schemaPending: false,
-          });
-        }
-      }
-    } catch (err) {
-      console.error("[Properties API] Showcase DB lookup fallback:", err);
-    }
-  }
-
-  // Fallback to showcase seed records
-  const filtered = SHOWCASE_PROPERTIES_SEED.filter(
-    (p) => !transactionType || p.transaction_type === transactionType
-  ).map(sanitizePublicProperty);
-
+app.get("/api/properties/showcase", async (_req, res) => {
+  setNoCacheApiHeaders(res);
+  // Demonstration showcase_sample listings have been archived and excluded from public display.
   return res.status(200).json({
-    properties: filtered,
+    properties: [],
     schemaPending: false,
   });
 });
@@ -1638,7 +1659,9 @@ app.get("/api/properties", async (req, res) => {
       "publication_status=eq.published",
       `transaction_type=eq.${encodeURIComponent(transactionType)}`,
     ];
-    const orConditions: string[] = [];
+    const orConditions: string[] = [
+      "or(source_name.is.null,source_name.neq.showcase_sample)",
+    ];
 
     const listingStatus =
       typeof req.query.listing_status === "string" ? req.query.listing_status.trim() : "";
@@ -1762,7 +1785,9 @@ app.get("/api/properties", async (req, res) => {
     }
 
     const rows = (await response.json()) as any[];
-    const items = Array.isArray(rows) ? rows.map(sanitizePublicProperty) : [];
+    const items = Array.isArray(rows)
+      ? rows.filter((row) => !isShowcaseOrSampleRow(row)).map(sanitizePublicProperty)
+      : [];
     const total = parseContentRangeTotal(response.headers.get("content-range"), items.length);
 
     return res.status(200).json({
@@ -1806,7 +1831,7 @@ app.get("/api/properties/:identifier", async (req, res) => {
 
       if (response.ok) {
         const rows = (await response.json()) as any[];
-        if (Array.isArray(rows) && rows.length > 0) {
+        if (Array.isArray(rows) && rows.length > 0 && !isShowcaseOrSampleRow(rows[0])) {
           return res.status(200).json({
             property: sanitizePublicProperty(rows[0]),
           });
@@ -1817,9 +1842,12 @@ app.get("/api/properties/:identifier", async (req, res) => {
     }
   }
 
-  // Showcase seed fallback
+  // Fallback only for published non-sample seed records
   const foundSeed = SHOWCASE_PROPERTIES_SEED.find(
-    (p) => p.slug === rawIdentifier || p.slug === cleanSlug || p.id === rawIdentifier
+    (p) =>
+      p.publication_status === "published" &&
+      !isShowcaseOrSampleRow(p) &&
+      (p.slug === rawIdentifier || p.slug === cleanSlug || p.id === rawIdentifier)
   );
 
   if (foundSeed) {
@@ -2071,7 +2099,7 @@ async function fetchPropertyForSeo(rawSlug: string): Promise<any | null> {
       const filterCondition = isUuid
         ? `id=eq.${encodeURIComponent(rawSlug)}`
         : `or=(slug.eq.${encodeURIComponent(rawSlug)},slug.eq.${encodeURIComponent(cleanSlug)})`;
-      const endpoint = `${supabaseConfig.url}/rest/v1/properties?${filterCondition}&publication_status=eq.published&listing_status=in.(available,pending,under_contract)&select=title,slug,city,country,description,transaction_type,property_type&limit=1`;
+      const endpoint = `${supabaseConfig.url}/rest/v1/properties?${filterCondition}&publication_status=eq.published&listing_status=in.(available,pending,under_contract)&select=title,slug,city,country,description,transaction_type,property_type,source_name,raw_payload&limit=1`;
       const response = await fetch(endpoint, {
         headers: {
           apikey: supabaseConfig.anonKey,
@@ -2080,7 +2108,7 @@ async function fetchPropertyForSeo(rawSlug: string): Promise<any | null> {
       });
       if (response.ok) {
         const rows = (await response.json()) as any[];
-        if (Array.isArray(rows) && rows.length > 0) {
+        if (Array.isArray(rows) && rows.length > 0 && !isShowcaseOrSampleRow(rows[0])) {
           return rows[0];
         }
       }
@@ -2091,7 +2119,10 @@ async function fetchPropertyForSeo(rawSlug: string): Promise<any | null> {
 
   return (
     SHOWCASE_PROPERTIES_SEED.find(
-      (p) => p.slug === rawSlug || p.slug === cleanSlug || p.id === rawSlug
+      (p) =>
+        p.publication_status === "published" &&
+        !isShowcaseOrSampleRow(p) &&
+        (p.slug === rawSlug || p.slug === cleanSlug || p.id === rawSlug)
     ) || null
   );
 }
@@ -2293,17 +2324,128 @@ app.get("/category/:slug", async (req, res) => {
   return sendHtmlPage(req, res, 200, html);
 });
 
+// Global Markets Directory, Country & City Market Intelligence SSR SEO routes
+app.get("/global-markets", async (req, res) => {
+  const customRedirect = await lookupActiveRedirect(req.path);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const templateHtml = getIndexTemplateHtml();
+  const markets = await fetchEligibleGlobalMarketsForSitemap();
+  const hasPublished = aggregateCountrySummaries(markets).length > 0;
+
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl: `${baseUrl}/global-markets`,
+    noIndex: !hasPublished,
+    title: "Global Real Estate Markets & Housing Intelligence | AmaanEstate",
+    description:
+      "Explore verified international residential property price trends, rental market indicators, and city-level real estate investment intelligence.",
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
+app.get("/global-markets/:countrySlug", async (req, res) => {
+  const customRedirect = await lookupActiveRedirect(req.path);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
+  const countrySlug = slugifyMarketSegment(req.params.countrySlug);
+  const templateHtml = getIndexTemplateHtml();
+  const countryData = countrySlug ? await fetchGlobalMarketCountryForSeo(countrySlug) : null;
+
+  if (!countryData) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "Market Report Not Found (404) | AmaanEstate",
+        description:
+          "No published real estate market intelligence is currently available for this country.",
+      })
+    );
+  }
+
+  const { countrySummary, primaryReport } = countryData;
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const canonicalUrl =
+    primaryReport.canonical_url && /^https?:\/\//i.test(primaryReport.canonical_url)
+      ? primaryReport.canonical_url
+      : `${baseUrl}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`;
+
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl,
+    title:
+      primaryReport.seo_title ||
+      `${countrySummary.countryName} Real Estate Market Trends & Analysis | AmaanEstate`,
+    description: stripHtml(
+      primaryReport.seo_description ||
+        primaryReport.market_overview ||
+        `Residential property price trends, rental market analysis, and investment insights for ${countrySummary.countryName}.`
+    ).slice(0, 160),
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
+app.get("/global-markets/:countrySlug/:reportSlug", async (req, res) => {
+  const customRedirect = await lookupActiveRedirect(req.path);
+  if (customRedirect) {
+    return res.redirect(customRedirect.status_code, customRedirect.target_path);
+  }
+
+  const countrySlug = slugifyMarketSegment(req.params.countrySlug);
+  const reportSlug = slugifyMarketSegment(req.params.reportSlug);
+  const templateHtml = getIndexTemplateHtml();
+  const report =
+    countrySlug && reportSlug
+      ? await fetchGlobalMarketReportForSeo(countrySlug, reportSlug)
+      : null;
+
+  if (!report) {
+    setNoCacheSeoHeaders(res);
+    return sendHtmlPage(
+      req,
+      res,
+      404,
+      injectNotFoundMetadata(templateHtml, {
+        title: "Market Report Not Found (404) | AmaanEstate",
+        description:
+          "The requested city or country market intelligence report is unavailable on AmaanEstate.",
+      })
+    );
+  }
+
+  const baseUrl = getCanonicalBaseUrl(req.headers.host);
+  const canonicalUrl =
+    report.canonical_url && /^https?:\/\//i.test(report.canonical_url)
+      ? report.canonical_url
+      : `${baseUrl}/global-markets/${encodeURIComponent(report.country_slug)}/${encodeURIComponent(report.slug)}`;
+
+  const html = injectSpaRouteMetadata(templateHtml, {
+    canonicalUrl,
+    title: report.seo_title || `${report.title} | AmaanEstate`,
+    description: stripHtml(
+      report.seo_description ||
+        report.market_overview ||
+        `Market intelligence, property price trends, and rental insights for ${report.city_name || report.country_name}.`
+    ).slice(0, 160),
+  });
+  return sendHtmlPage(req, res, 200, html);
+});
+
 const PUBLIC_INDEXABLE_SPA_ROUTES = new Map<string, { title?: string; description?: string }>([
   ["/", {}],
-  ["/buy", { title: "Buy Real Estate & Properties for Sale | AmaanEstate" }],
-  ["/rent", { title: "Rent Real Estate & Properties for Lease | AmaanEstate" }],
   ["/investment", { title: "Real Estate Investment | AmaanEstate" }],
   ["/architecture", { title: "Architecture | AmaanEstate" }],
   ["/construction", { title: "Construction | AmaanEstate" }],
   ["/home-living", { title: "Home & Living | AmaanEstate" }],
   ["/news", { title: "Global Real Estate News | AmaanEstate" }],
-  ["/about", { title: "About AmaanEstate | Global Real Estate Media, Research & Marketplace" }],
-  ["/contact", { title: "Contact AmaanEstate" }],
+  ["/about", { title: "About AmaanEstate | Global Real Estate Media, Research & Market Intelligence" }],
+  ["/contact", { title: "Contact AmaanEstate | Editorial & Market Research Desk" }],
   ["/editorial-policy", { title: "Editorial Policy & Standards | AmaanEstate" }],
   ["/corrections-policy", { title: "Corrections & Fact-Checking Policy | AmaanEstate" }],
   ["/privacy-policy", { title: "Privacy Policy | AmaanEstate" }],
@@ -2311,6 +2453,11 @@ const PUBLIC_INDEXABLE_SPA_ROUTES = new Map<string, { title?: string; descriptio
   ["/advertising-disclosure", { title: "Advertising Disclosure | AmaanEstate" }],
   ["/terms", { title: "Terms of Use | AmaanEstate" }],
   ["/newsletter", { title: "Newsletter & Briefings | AmaanEstate" }],
+]);
+
+const NOINDEX_FOLLOW_SPA_ROUTES = new Map<string, { title?: string; description?: string }>([
+  ["/buy", { title: "Buy Real Estate & Properties for Sale | AmaanEstate" }],
+  ["/rent", { title: "Rent Real Estate & Properties for Lease | AmaanEstate" }],
 ]);
 
 const NOINDEX_SPA_ROUTES = new Set<string>([
@@ -2350,6 +2497,17 @@ app.use(async (req, res, next) => {
     const canonicalUrl = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
     const html = injectSpaRouteMetadata(templateHtml, {
       canonicalUrl,
+      title: meta.title,
+      description: meta.description,
+    });
+    return sendHtmlPage(req, res, 200, html);
+  }
+
+  if (NOINDEX_FOLLOW_SPA_ROUTES.has(cleanPath)) {
+    const meta = NOINDEX_FOLLOW_SPA_ROUTES.get(cleanPath) || {};
+    const html = injectSpaRouteMetadata(templateHtml, {
+      noIndex: true,
+      robotsDirective: "noindex, follow",
       title: meta.title,
       description: meta.description,
     });

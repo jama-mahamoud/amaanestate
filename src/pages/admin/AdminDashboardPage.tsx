@@ -9,6 +9,7 @@ import {
   FilePlus2,
   FolderTree,
   Globe,
+  Globe2,
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
@@ -33,6 +34,7 @@ import {
   Category,
   ContactMessage,
   DashboardMetrics,
+  GlobalMarketReport,
   MediaItem,
   NewsletterSubscriber,
   Profile,
@@ -58,6 +60,7 @@ import {
 } from '../../services/adminService';
 import { getSiteSettings } from '../../services/editorialService';
 import { getAdminEnquiries, getAdminProperties } from '../../services/propertyService';
+import { getAdminGlobalMarkets } from '../../services/globalMarketsService';
 import { supabase } from '../../lib/supabase';
 import { resolveEditorialImage } from '../../lib/editorialImages';
 import {
@@ -74,6 +77,7 @@ import AdminArticlesSection from '../../components/admin/AdminArticlesSection';
 import ArticleEditorView from '../../components/admin/ArticleEditorView';
 import AdminPropertiesSection from '../../components/admin/AdminPropertiesSection';
 import AdminEnquiriesSection from '../../components/admin/AdminEnquiriesSection';
+import AdminGlobalMarketsSection from '../../components/admin/AdminGlobalMarketsSection';
 import {
   AuthorsSection,
   CategoriesSection,
@@ -99,6 +103,7 @@ type AdminTab =
   | 'create-article'
   | 'properties'
   | 'enquiries'
+  | 'global-markets'
   | 'categories'
   | 'tags'
   | 'authors'
@@ -154,6 +159,8 @@ export default function AdminDashboardPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertyEnquiries, setPropertyEnquiries] = useState<PropertyEnquiry[]>([]);
   const [marketplaceSchemaPending, setMarketplaceSchemaPending] = useState(false);
+  const [globalMarkets, setGlobalMarkets] = useState<GlobalMarketReport[]>([]);
+  const [globalMarketsSchemaPending, setGlobalMarketsSchemaPending] = useState(false);
 
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
@@ -168,7 +175,7 @@ export default function AdminDashboardPage() {
   const loadAllData = useCallback(async () => {
     setLoadError(null);
     try {
-      const [m, arts, cats, auths, tgs, med, subs, msgs, setts, usersData, propsRes, enqRes] =
+      const [m, arts, cats, auths, tgs, med, subs, msgs, setts, usersData, propsRes, enqRes, marketsRes] =
         await Promise.all([
           getDashboardMetrics(),
           getAdminArticles(),
@@ -182,6 +189,7 @@ export default function AdminDashboardPage() {
           getUsersAndRoles(),
           getAdminProperties().catch(() => ({ properties: [], schemaPending: true })),
           getAdminEnquiries().catch(() => ({ enquiries: [], schemaPending: true })),
+          getAdminGlobalMarkets().catch(() => ({ reports: [], schemaPending: true })),
         ]);
       setMetrics(m);
       setArticles(arts);
@@ -197,6 +205,8 @@ export default function AdminDashboardPage() {
       setProperties(propsRes.properties);
       setPropertyEnquiries(enqRes.enquiries);
       setMarketplaceSchemaPending(propsRes.schemaPending || enqRes.schemaPending);
+      setGlobalMarkets(marketsRes.reports);
+      setGlobalMarketsSchemaPending(marketsRes.schemaPending);
     } catch (err: any) {
       setLoadError(err?.message || 'Unable to synchronize editorial data from Supabase.');
     } finally {
@@ -299,6 +309,12 @@ export default function AdminDashboardPage() {
       icon: <Inbox size={16} />,
       count: newEnquiriesCount > 0 ? newEnquiriesCount : undefined,
     },
+    {
+      id: 'global-markets',
+      label: 'Global Markets',
+      icon: <Globe2 size={16} />,
+      count: globalMarkets.length || undefined,
+    },
     { id: 'articles', label: 'Articles', icon: <BookOpen size={16} /> },
     { id: 'create-article', label: 'Create New Article', icon: <FilePlus2 size={16} /> },
     { id: 'categories', label: 'Categories', icon: <FolderTree size={16} /> },
@@ -348,7 +364,7 @@ export default function AdminDashboardPage() {
             onClick={() => handleSelectNav(item.id)}
             className={`w-full flex items-center ${
               collapsed ? 'justify-center px-2' : 'justify-between px-3'
-            } py-2.5 rounded text-xs font-semibold transition-colors cursor-pointer ${
+            } min-h-[42px] py-2.5 rounded text-xs font-semibold transition-colors cursor-pointer ${
               isActive
                 ? 'bg-[#1E3A5F] text-white'
                 : 'text-[#4A4843] hover:bg-[#EFECE6] hover:text-[#141413]'
@@ -468,13 +484,13 @@ export default function AdminDashboardPage() {
       {/* Main Content Shell */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="bg-white border-b border-[#E5E0D8] px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-30">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="bg-white border-b border-[#E5E0D8] px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open navigation drawer"
-              className="lg:hidden p-2 text-[#141413] hover:bg-[#EFECE6] rounded cursor-pointer"
+              className="lg:hidden min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-[#141413] hover:bg-[#EFECE6] rounded cursor-pointer shrink-0"
             >
               <Menu size={18} />
             </button>
@@ -499,7 +515,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={openCreateArticle}
-                className="px-3.5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                className="min-h-[40px] px-3 sm:px-3.5 py-2 bg-[#1E3A5F] hover:bg-[#162C49] text-white rounded text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
               >
                 <Plus size={14} />
                 <span className="hidden sm:inline">New Article</span>
@@ -532,7 +548,7 @@ export default function AdminDashboardPage() {
               </button>
 
               {accountMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D8] rounded shadow-lg py-1.5 z-40">
+                <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-1.5rem)] bg-white border border-[#E5E0D8] rounded shadow-lg py-1.5 z-40">
                   <div className="px-4 py-2 border-b border-[#E5E0D8]">
                     <div className="text-xs font-semibold text-[#141413] truncate">
                       {profile?.full_name || 'Editorial Administrator'}
@@ -582,7 +598,7 @@ export default function AdminDashboardPage() {
         </header>
 
         {/* Body */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-[1400px] w-full mx-auto space-y-6">
+        <main className="p-3.5 sm:p-6 lg:p-8 max-w-[1400px] w-full mx-auto space-y-6">
           {loadError && (
             <div className="bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] rounded px-4 py-3 text-xs flex items-center justify-between gap-4">
               <span>{loadError}</span>
@@ -641,6 +657,16 @@ export default function AdminDashboardPage() {
                   enquiries={propertyEnquiries}
                   schemaPending={marketplaceSchemaPending}
                   canDelete={isAdmin}
+                  onRefresh={loadAllData}
+                />
+              )}
+
+              {activeTab === 'global-markets' && (
+                <AdminGlobalMarketsSection
+                  reports={globalMarkets}
+                  media={media}
+                  schemaPending={globalMarketsSchemaPending}
+                  onMediaAdded={(item) => setMedia((prev) => [item, ...prev])}
                   onRefresh={loadAllData}
                 />
               )}

@@ -38,11 +38,11 @@ function toAbsoluteUrl(value?: string): string | undefined {
 }
 
 const DEFAULT_SEO_TITLE =
-  'AmaanEstate | Global Real Estate News, Research & Property Marketplace';
+  'AmaanEstate | Global Real Estate News, Research & Market Intelligence';
 const DEFAULT_SEO_DESCRIPTION =
-  'Explore global real estate news, housing market research, property investment insights, market trends and property listings with AmaanEstate.';
+  'Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.';
 const DEFAULT_OG_IMAGE = '/images/articles/sovereign-capital-logistics-corridors.jpg';
-const DEFAULT_OG_IMAGE_ALT = 'AmaanEstate — Global Real Estate Media, Research & Marketplace';
+const DEFAULT_OG_IMAGE_ALT = 'AmaanEstate — Global Real Estate Media, Research & Market Intelligence';
 
 export function useSEO({
   title,

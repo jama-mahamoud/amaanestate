@@ -111,7 +111,7 @@ export function CategoriesSection({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <form onSubmit={handleSubmit} className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4 min-w-0">
         <div>
           <h2 className="text-lg font-serif font-semibold text-[#141413]">
             {form.id ? `Edit Category: ${form.name}` : 'Create Editorial Category'}
@@ -134,12 +134,12 @@ export function CategoriesSection({
                 slug: form.id ? form.slug : toSlug(e.target.value),
               })
             }
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">URL Slug</label>
             <input
               type="text"
@@ -147,17 +147,17 @@ export function CategoriesSection({
               disabled={Boolean(form.id && CORE_CATEGORY_SLUGS.has(form.slug || ''))}
               value={form.slug || ''}
               onChange={(e) => setForm({ ...form, slug: toSlug(e.target.value) })}
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono disabled:opacity-60"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono disabled:opacity-60"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">Display Order</label>
             <input
               type="number"
               min={1}
               value={form.display_order || 1}
               onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm tabular-nums"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm tabular-nums"
             />
           </div>
         </div>
@@ -168,24 +168,24 @@ export function CategoriesSection({
             rows={3}
             value={form.description || ''}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 p-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-[#5C5A55] block">Category Cover Image</label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={form.image_url || ''}
               onChange={(e) => setForm({ ...form, image_url: e.target.value })}
               placeholder="Select from Media Library or enter URL"
-              className="flex-1 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+              className="flex-1 min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
             />
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className="px-3 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="w-full sm:w-auto px-3.5 h-10 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
             >
               <ImageIcon size={13} /> Pick
             </button>
@@ -212,11 +212,11 @@ export function CategoriesSection({
           />
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+            className="min-h-[42px] px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
           >
             {saving ? 'Saving...' : form.id ? 'Update Category' : 'Add Category'}
           </button>
@@ -224,7 +224,7 @@ export function CategoriesSection({
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2.5 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold rounded cursor-pointer"
+              className="min-h-[42px] px-4 py-2.5 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold rounded cursor-pointer"
             >
               Cancel Edit
             </button>
@@ -232,8 +232,8 @@ export function CategoriesSection({
         </div>
       </form>
 
-      <div className="lg:col-span-7 bg-white border border-[#E5E0D8] rounded divide-y divide-[#E5E0D8]">
-        <div className="px-5 py-4 flex items-center justify-between">
+      <div className="lg:col-span-7 bg-white border border-[#E5E0D8] rounded divide-y divide-[#E5E0D8] min-w-0">
+        <div className="px-4 sm:px-5 py-4 flex items-center justify-between">
           <h3 className="text-base font-serif font-semibold text-[#141413]">
             Active Editorial Categories ({categories.length})
           </h3>
@@ -242,8 +242,8 @@ export function CategoriesSection({
           const articleCount = articles.filter((a) => a.category_id === cat.id).length;
           const isCore = CORE_CATEGORY_SLUGS.has(cat.slug);
           return (
-            <div key={cat.id} className="p-4 flex items-start justify-between gap-4 hover:bg-[#FAF8F5]/60">
-              <div className="flex items-start gap-4 min-w-0">
+            <div key={cat.id} className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 hover:bg-[#FAF8F5]/60">
+              <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                 <img
                   src={resolveEditorialImage(cat.image_url, 'hero-pavilion')}
                   alt={cat.name}
@@ -267,11 +267,11 @@ export function CategoriesSection({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
                 <button
                   type="button"
                   onClick={() => setForm(cat)}
-                  className="p-1.5 text-[#1E3A5F] hover:bg-[#EFECE6] rounded cursor-pointer"
+                  className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1.5 text-[#1E3A5F] hover:bg-[#EFECE6] rounded cursor-pointer"
                   title="Edit Category"
                 >
                   <Edit3 size={14} />
@@ -280,7 +280,7 @@ export function CategoriesSection({
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(cat)}
-                    className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                    className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
                     title="Delete Category"
                   >
                     <Trash2 size={14} />
@@ -366,26 +366,26 @@ export function TagsSection({ tags, articles, onRefresh }: TagsSectionProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="text-xl font-serif font-semibold text-[#141413]">Editorial Tags</h1>
           <p className="text-xs text-[#5C5A55]">
             Topic taxonomy linking research reports, architectural case studies, and SEO keywords.
           </p>
         </div>
 
-        <form onSubmit={handleCreate} className="flex gap-2">
+        <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
           <input
             type="text"
             required
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="New topic tag..."
-            className="h-10 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm w-56"
+            className="h-10 px-3.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm w-full sm:w-56 min-w-0"
           />
           <button
             type="submit"
-            className="h-10 px-4 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto h-10 px-4 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
           >
             <Plus size={14} /> Add Tag
           </button>
@@ -394,14 +394,14 @@ export function TagsSection({ tags, articles, onRefresh }: TagsSectionProps) {
 
       <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
         <div className="p-4 border-b border-[#E5E0D8]">
-          <div className="relative max-w-md">
+          <div className="relative max-w-md min-w-0">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7770]" />
             <input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter tags..."
-              className="w-full h-9 pl-10 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+              className="w-full min-w-0 h-10 sm:h-9 pl-10 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
             />
           </div>
         </div>
@@ -410,10 +410,10 @@ export function TagsSection({ tags, articles, onRefresh }: TagsSectionProps) {
           <table className="w-full text-left text-sm">
             <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase tracking-wider text-[#5C5A55]">
               <tr>
-                <th className="px-5 py-3">Tag Name</th>
+                <th className="px-4 sm:px-5 py-3">Tag Name</th>
                 <th className="px-4 py-3">Slug</th>
                 <th className="px-4 py-3 text-right">Articles Used</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th className="px-4 sm:px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E0D8]">
@@ -422,9 +422,9 @@ export function TagsSection({ tags, articles, onRefresh }: TagsSectionProps) {
                 const isEditing = editingId === tag.id;
                 return (
                   <tr key={tag.id} className="hover:bg-[#FAF8F5]/70">
-                    <td className="px-5 py-3 font-medium text-[#141413]">
+                    <td className="px-4 sm:px-5 py-3 font-medium text-[#141413]">
                       {isEditing ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <input
                             type="text"
                             value={editingName}
@@ -579,13 +579,13 @@ export function AuthorsSection({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <form onSubmit={handleSubmit} className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="lg:col-span-5 bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 space-y-4 min-w-0">
         <h2 className="text-lg font-serif font-semibold text-[#141413]">
           {form.id ? `Edit Author: ${form.name}` : 'Add Editorial Author'}
         </h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">Full Name</label>
             <input
               type="text"
@@ -598,17 +598,17 @@ export function AuthorsSection({
                   slug: form.id ? form.slug : toSlug(e.target.value),
                 })
               }
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-[#5C5A55] block">Slug</label>
             <input
               type="text"
               required
               value={form.slug || ''}
               onChange={(e) => setForm({ ...form, slug: toSlug(e.target.value) })}
-              className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
+              className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-mono"
             />
           </div>
         </div>
@@ -620,13 +620,13 @@ export function AuthorsSection({
             value={form.title || ''}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             placeholder="e.g., Senior Built-Environment Editor"
-            className="w-full h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+            className="w-full min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-[#5C5A55] block">Author Portrait</label>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <img
               src={resolveEditorialImage(form.avatar_url, 'author-portrait')}
               alt={form.name || 'Author avatar'}
@@ -636,7 +636,7 @@ export function AuthorsSection({
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className="px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer"
+              className="min-h-[40px] px-3.5 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold text-[#141413] cursor-pointer"
             >
               Choose / Upload Portrait
             </button>
@@ -673,11 +673,11 @@ export function AuthorsSection({
           <span>Active Contributor (visible for article assignment)</span>
         </label>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+            className="min-h-[42px] px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
           >
             {saving ? 'Saving...' : form.id ? 'Update Author' : 'Save Author'}
           </button>
@@ -685,7 +685,7 @@ export function AuthorsSection({
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2.5 bg-[#EFECE6] text-xs font-semibold rounded cursor-pointer"
+              className="min-h-[42px] px-4 py-2.5 bg-[#EFECE6] text-xs font-semibold rounded cursor-pointer"
             >
               Cancel
             </button>
@@ -693,8 +693,8 @@ export function AuthorsSection({
         </div>
       </form>
 
-      <div className="lg:col-span-7 bg-white border border-[#E5E0D8] rounded divide-y divide-[#E5E0D8]">
-        <div className="px-5 py-4">
+      <div className="lg:col-span-7 bg-white border border-[#E5E0D8] rounded divide-y divide-[#E5E0D8] min-w-0">
+        <div className="px-4 sm:px-5 py-4">
           <h3 className="text-base font-serif font-semibold text-[#141413]">
             Editorial Authors ({authors.length})
           </h3>
@@ -702,7 +702,7 @@ export function AuthorsSection({
         {authors.map((auth) => {
           const articleCount = articles.filter((a) => a.author_id === auth.id).length;
           return (
-            <div key={auth.id} className="p-4 flex items-start justify-between gap-4 hover:bg-[#FAF8F5]/60">
+            <div key={auth.id} className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 hover:bg-[#FAF8F5]/60">
               <div className="flex items-start gap-3.5 min-w-0">
                 <img
                   src={resolveEditorialImage(auth.avatar_url, 'author-portrait')}
@@ -724,11 +724,11 @@ export function AuthorsSection({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
                 <button
                   type="button"
                   onClick={() => setForm(auth)}
-                  className="p-1.5 text-[#1E3A5F] hover:bg-[#EFECE6] rounded cursor-pointer"
+                  className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1.5 text-[#1E3A5F] hover:bg-[#EFECE6] rounded cursor-pointer"
                   title="Edit Author"
                 >
                   <Edit3 size={14} />
@@ -736,7 +736,7 @@ export function AuthorsSection({
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(auth)}
-                  className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                  className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
                   title="Delete Author"
                 >
                   <Trash2 size={14} />

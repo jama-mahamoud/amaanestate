@@ -83,14 +83,14 @@ export default function AdminOverviewSection({
   const recentMessages = messages.slice(0, 4);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header Banner */}
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1 min-w-0">
           <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
             Editorial Operations
           </p>
-          <h1 className="text-2xl font-serif font-semibold text-[#141413]">
+          <h1 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
             AMAAN ESTATE Publishing Overview
           </h1>
           <p className="text-sm text-[#5C5A55]">
@@ -100,7 +100,7 @@ export default function AdminOverviewSection({
         <button
           type="button"
           onClick={onCreateArticle}
-          className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 self-start sm:self-auto"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C49] text-white text-xs font-semibold rounded inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
         >
           <Plus size={15} />
           <span>Quick Create Article</span>
@@ -108,13 +108,13 @@ export default function AdminOverviewSection({
       </div>
 
       {/* 8 Real Supabase Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((stat) => (
-          <div key={stat.label} className="bg-white border border-[#E5E0D8] rounded p-5 space-y-1.5">
+          <div key={stat.label} className="bg-white border border-[#E5E0D8] rounded p-3.5 sm:p-5 space-y-1.5 min-w-0">
             <div className="text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
               {stat.label}
             </div>
-            <div className="text-3xl font-serif font-semibold text-[#141413] tabular-nums">
+            <div className="text-2xl sm:text-3xl font-serif font-semibold text-[#141413] tabular-nums">
               {stat.value.toLocaleString()}
             </div>
           </div>
@@ -122,8 +122,8 @@ export default function AdminOverviewSection({
       </div>
 
       {/* Real Data Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+        <div className="lg:col-span-8 bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4 min-w-0">
           <div className="flex items-baseline justify-between border-b border-[#E5E0D8] pb-3">
             <div>
               <h2 className="text-base font-serif font-semibold text-[#141413]">
@@ -132,7 +132,7 @@ export default function AdminOverviewSection({
               <p className="text-xs text-[#5C5A55]">Articles published and cumulative views per section</p>
             </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-56 sm:h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryChartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D8" vertical={false} />
@@ -153,12 +153,12 @@ export default function AdminOverviewSection({
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+        <div className="lg:col-span-4 bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4 min-w-0">
           <div className="border-b border-[#E5E0D8] pb-3">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Publishing Pipeline</h2>
             <p className="text-xs text-[#5C5A55]">Distribution across workflow statuses</p>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-56 sm:h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusChartData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D8" vertical={false} />
@@ -184,15 +184,15 @@ export default function AdminOverviewSection({
       </div>
 
       {/* Activity Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         {/* Recently Published */}
-        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between">
+        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden min-w-0">
+          <div className="px-4 sm:px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-2">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Recently Published Articles</h2>
             <button
               type="button"
               onClick={() => onOpenTab('articles')}
-              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0"
             >
               View All &rarr;
             </button>
@@ -204,7 +204,7 @@ export default function AdminOverviewSection({
               <button
                 type="button"
                 onClick={onCreateArticle}
-                className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+                className="min-h-[40px] px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
               >
                 Create &amp; Publish First Article
               </button>
@@ -212,10 +212,10 @@ export default function AdminOverviewSection({
           ) : (
             <div className="divide-y divide-[#E5E0D8]">
               {recentlyPublished.map((art) => (
-                <div key={art.id} className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-[#FAF8F5]">
+                <div key={art.id} className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-[#FAF8F5]">
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-[#141413] truncate">{art.title}</div>
-                    <div className="text-xs text-[#5C5A55] flex items-center gap-2">
+                    <div className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span>{art.category?.name || 'Uncategorized'}</span>
                       <span aria-hidden="true">·</span>
                       <span className="font-mono tabular-nums">
@@ -223,11 +223,11 @@ export default function AdminOverviewSection({
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
                       onClick={() => onPreviewArticle(art)}
-                      className="p-1.5 text-[#5C5A55] hover:text-[#141413] cursor-pointer"
+                      className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#5C5A55] hover:text-[#141413] cursor-pointer rounded"
                       title="Preview"
                     >
                       <Eye size={14} />
@@ -235,7 +235,7 @@ export default function AdminOverviewSection({
                     <button
                       type="button"
                       onClick={() => onEditArticle(art)}
-                      className="p-1.5 text-[#1E3A5F] hover:text-[#141413] cursor-pointer"
+                      className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#1E3A5F] hover:text-[#141413] cursor-pointer rounded"
                       title="Edit"
                     >
                       <Edit3 size={14} />
@@ -248,13 +248,13 @@ export default function AdminOverviewSection({
         </div>
 
         {/* Recently Updated */}
-        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between">
+        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden min-w-0">
+          <div className="px-4 sm:px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-2">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Recently Updated Articles</h2>
             <button
               type="button"
               onClick={() => onOpenTab('articles')}
-              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0"
             >
               Manage &rarr;
             </button>
@@ -264,10 +264,10 @@ export default function AdminOverviewSection({
           ) : (
             <div className="divide-y divide-[#E5E0D8]">
               {recentlyUpdated.map((art) => (
-                <div key={art.id} className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-[#FAF8F5]">
+                <div key={art.id} className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-[#FAF8F5]">
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-[#141413] truncate">{art.title}</div>
-                    <div className="text-xs text-[#5C5A55] flex items-center gap-2">
+                    <div className="text-xs text-[#5C5A55] flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span className="capitalize font-medium">{art.status}</span>
                       <span aria-hidden="true">·</span>
                       <span className="font-mono tabular-nums">
@@ -278,7 +278,7 @@ export default function AdminOverviewSection({
                   <button
                     type="button"
                     onClick={() => onEditArticle(art)}
-                    className="text-xs font-semibold text-[#1E3A5F] hover:underline shrink-0 cursor-pointer"
+                    className="min-h-[36px] px-2.5 text-xs font-semibold text-[#1E3A5F] hover:underline shrink-0 cursor-pointer"
                   >
                     Edit
                   </button>
@@ -289,8 +289,8 @@ export default function AdminOverviewSection({
         </div>
 
         {/* Most Viewed Articles */}
-        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5E0D8]">
+        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden min-w-0">
+          <div className="px-4 sm:px-5 py-4 border-b border-[#E5E0D8]">
             <h2 className="text-base font-serif font-semibold text-[#141413]">Most Viewed Articles</h2>
           </div>
           {mostViewed.length === 0 ? (
@@ -298,7 +298,7 @@ export default function AdminOverviewSection({
           ) : (
             <div className="divide-y divide-[#E5E0D8]">
               {mostViewed.map((art, index) => (
-                <div key={art.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                <div key={art.id} className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-xs font-mono tabular-nums text-[#8C4A27] w-5 shrink-0">
                       0{index + 1}
@@ -318,15 +318,15 @@ export default function AdminOverviewSection({
         </div>
 
         {/* Recent Contact Messages */}
-        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between">
+        <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden min-w-0">
+          <div className="px-4 sm:px-5 py-4 border-b border-[#E5E0D8] flex items-center justify-between gap-2">
             <h2 className="text-base font-serif font-semibold text-[#141413]">
               Recent Contact Messages ({metrics.unreadMessages} unread)
             </h2>
             <button
               type="button"
               onClick={() => onOpenTab('messages')}
-              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0"
             >
               Inbox &rarr;
             </button>
@@ -336,7 +336,7 @@ export default function AdminOverviewSection({
           ) : (
             <div className="divide-y divide-[#E5E0D8]">
               {recentMessages.map((msg) => (
-                <div key={msg.id} className="px-5 py-3.5 space-y-1">
+                <div key={msg.id} className="px-4 sm:px-5 py-3.5 space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium text-[#141413] truncate">{msg.subject}</span>
                     <span

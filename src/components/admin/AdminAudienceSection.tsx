@@ -53,10 +53,10 @@ export function SubscribersSection({
 
   return (
     <div className="space-y-5">
-      <div className="bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-serif font-semibold text-[#141413]">Newsletter Subscribers</h1>
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">Newsletter Subscribers</h1>
             <p className="text-xs text-[#5C5A55] tabular-nums">
               {subscribers.filter((s) => s.status === 'subscribed').length} active ·{' '}
               {subscribers.length} total records
@@ -65,27 +65,27 @@ export function SubscribersSection({
           <button
             type="button"
             onClick={handleExportCsv}
-            className="px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold text-[#141413] rounded inline-flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            className="w-full sm:w-auto min-h-[40px] px-4 py-2 bg-[#EFECE6] hover:bg-[#E5E0D8] text-xs font-semibold text-[#141413] rounded inline-flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Download size={13} /> Export CSV
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A7770]" />
             <input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by email or signup source..."
-              className="w-full h-10 pl-10 pr-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
+              className="w-full min-w-0 h-10 pl-10 pr-4 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'subscribed' | 'unsubscribed')}
-            className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold"
+            className="w-full sm:w-auto min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold"
           >
             <option value="all">All Statuses</option>
             <option value="subscribed">Subscribed</option>
@@ -94,40 +94,33 @@ export function SubscribersSection({
         </div>
       </div>
 
-      <div className="bg-white border border-[#E5E0D8] rounded overflow-x-auto">
+      <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-10 text-center text-sm text-[#5C5A55]">
             No newsletter subscribers match the active filter.
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase tracking-wider text-[#5C5A55]">
-              <tr>
-                <th className="px-5 py-3">Email</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Joined</th>
-                <th className="px-5 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E0D8]">
+          <>
+            {/* Mobile Card List */}
+            <div className="sm:hidden divide-y divide-[#E5E0D8]">
               {filtered.map((sub) => (
-                <tr key={sub.id} className="hover:bg-[#FAF8F5]/70">
-                  <td className="px-5 py-3 font-medium text-[#141413]">{sub.email}</td>
-                  <td className="px-4 py-3 text-xs font-mono text-[#5C5A55]">{sub.source}</td>
-                  <td className="px-4 py-3">
+                <div key={sub.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-sm text-[#141413] break-all">{sub.email}</span>
                     <span
-                      className={`text-xs font-semibold capitalize ${
+                      className={`text-xs font-semibold capitalize shrink-0 ${
                         sub.status === 'subscribed' ? 'text-[#14532D]' : 'text-[#7A7770]'
                       }`}
                     >
                       {sub.status}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs font-mono tabular-nums text-[#5C5A55]">
-                    {sub.created_at.split('T')[0]}
-                  </td>
-                  <td className="px-5 py-3 text-right whitespace-nowrap space-x-2">
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-[#5C5A55]">
+                    <span>{sub.source}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="tabular-nums">{sub.created_at.split('T')[0]}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-1">
                     <button
                       type="button"
                       onClick={async () => {
@@ -138,7 +131,7 @@ export function SubscribersSection({
                           onRefresh();
                         }
                       }}
-                      className="px-2.5 py-1 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold cursor-pointer"
+                      className="min-h-[38px] px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold cursor-pointer"
                     >
                       {sub.status === 'subscribed' ? 'Unsubscribe' : 'Reactivate'}
                     </button>
@@ -146,17 +139,78 @@ export function SubscribersSection({
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(sub)}
-                        className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                        className="min-h-[38px] min-w-[38px] inline-flex items-center justify-center p-1.5 text-[#991B1B] bg-[#FEF2F2] rounded cursor-pointer"
                         title="Delete Subscriber"
                       >
                         <Trash2 size={14} />
                       </button>
                     )}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#FAF8F5] border-b border-[#E5E0D8] text-[11px] uppercase tracking-wider text-[#5C5A55]">
+                  <tr>
+                    <th className="px-5 py-3">Email</th>
+                    <th className="px-4 py-3">Source</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Joined</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E0D8]">
+                  {filtered.map((sub) => (
+                    <tr key={sub.id} className="hover:bg-[#FAF8F5]/70">
+                      <td className="px-5 py-3 font-medium text-[#141413]">{sub.email}</td>
+                      <td className="px-4 py-3 text-xs font-mono text-[#5C5A55]">{sub.source}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs font-semibold capitalize ${
+                            sub.status === 'subscribed' ? 'text-[#14532D]' : 'text-[#7A7770]'
+                          }`}
+                        >
+                          {sub.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs font-mono tabular-nums text-[#5C5A55]">
+                        {sub.created_at.split('T')[0]}
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap space-x-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const nextStatus = sub.status === 'subscribed' ? 'unsubscribed' : 'subscribed';
+                            const ok = await updateSubscriberStatus(sub.id, nextStatus);
+                            if (ok) {
+                              toast.success(`Subscriber marked ${nextStatus}.`);
+                              onRefresh();
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-[#EFECE6] hover:bg-[#E5E0D8] rounded text-xs font-semibold cursor-pointer"
+                        >
+                          {sub.status === 'subscribed' ? 'Unsubscribe' : 'Reactivate'}
+                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(sub)}
+                            className="p-1.5 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                            title="Delete Subscriber"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -198,9 +252,9 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
 
   return (
     <div className="space-y-5">
-      <div className="bg-white border border-[#E5E0D8] rounded p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-serif font-semibold text-[#141413]">Editorial Contact Messages</h1>
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-serif font-semibold text-[#141413]">Editorial Contact Messages</h1>
           <p className="text-xs text-[#5C5A55] tabular-nums">
             {messages.filter((m) => m.status === 'unread').length} unread · {messages.length} total
           </p>
@@ -208,7 +262,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'all' | ContactMessageStatus)}
-          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold self-start sm:self-auto"
+          className="w-full sm:w-auto min-w-0 h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold"
         >
           <option value="all">All Messages</option>
           <option value="unread">Unread</option>
@@ -227,11 +281,11 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
           {filtered.map((msg) => {
             const currentNotes = notesDraft[msg.id] ?? msg.admin_notes ?? '';
             return (
-              <div key={msg.id} className="bg-white border border-[#E5E0D8] rounded p-5 space-y-4">
+              <div key={msg.id} className="bg-white border border-[#E5E0D8] rounded p-4 sm:p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-serif font-semibold text-[#141413]">{msg.subject}</h2>
+                      <h2 className="text-base font-serif font-semibold text-[#141413] break-words [overflow-wrap:anywhere]">{msg.subject}</h2>
                       <span
                         className={`text-xs font-semibold capitalize ${
                           msg.status === 'unread' ? 'text-[#8C4A27]' : 'text-[#5C5A55]'
@@ -240,7 +294,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                         · {msg.status}
                       </span>
                     </div>
-                    <div className="text-xs text-[#5C5A55]">
+                    <div className="text-xs text-[#5C5A55] break-words [overflow-wrap:anywhere]">
                       From <strong className="text-[#141413]">{msg.name}</strong> ({msg.email}) ·{' '}
                       <span className="font-mono tabular-nums">{msg.created_at.split('T')[0]}</span>
                     </div>
@@ -258,7 +312,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                           onRefresh();
                         }
                       }}
-                      className="h-9 px-2.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold"
+                      className="h-10 sm:h-9 px-2.5 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs font-semibold"
                     >
                       <option value="unread">Unread</option>
                       <option value="read">Read</option>
@@ -269,7 +323,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(msg)}
-                        className="p-2 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
+                        className="min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center p-2 text-[#991B1B] hover:bg-[#FEF2F2] rounded cursor-pointer"
                         title="Delete Message"
                       >
                         <Trash2 size={14} />
@@ -278,7 +332,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                   </div>
                 </div>
 
-                <p className="text-sm text-[#2A2927] leading-relaxed bg-[#FAF8F5] p-4 rounded border border-[#E5E0D8]">
+                <p className="text-sm text-[#2A2927] leading-relaxed bg-[#FAF8F5] p-3.5 sm:p-4 rounded border border-[#E5E0D8] break-words [overflow-wrap:anywhere]">
                   {msg.message}
                 </p>
 
@@ -288,7 +342,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                     value={currentNotes}
                     onChange={(e) => setNotesDraft((prev) => ({ ...prev, [msg.id]: e.target.value }))}
                     placeholder="Internal editorial notes (only visible to admin/editors)..."
-                    className="flex-1 h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
+                    className="flex-1 min-w-0 h-10 sm:h-9 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-xs"
                   />
                   <button
                     type="button"
@@ -303,7 +357,7 @@ export function MessagesSection({ messages, canDelete = true, onRefresh }: Messa
                         toast.error('Failed to save admin notes.');
                       }
                     }}
-                    className="h-9 px-4 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer whitespace-nowrap"
+                    className="w-full sm:w-auto h-10 sm:h-9 px-4 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer whitespace-nowrap"
                   >
                     Save Notes
                   </button>

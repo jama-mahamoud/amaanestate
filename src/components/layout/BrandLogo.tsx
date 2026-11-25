@@ -2,7 +2,7 @@ import React from 'react';
 
 export const OFFICIAL_LOGO_SRC = '/images/amaanestate-logo.png';
 export const OFFICIAL_LOGO_ALT =
-  'AmaanEstate — Global Real Estate Media, Research & Marketplace';
+  'AmaanEstate — Global Real Estate Media, Research & Market Intelligence';
 
 type BrandLogoVariant = 'header' | 'footer' | 'auth' | 'admin' | 'error';
 
@@ -12,11 +12,11 @@ interface BrandLogoProps {
 }
 
 const VARIANT_CLASSES: Record<BrandLogoVariant, string> = {
-  header: 'h-14 sm:h-[66px] w-auto max-w-[140px] sm:max-w-[175px] object-contain',
-  footer: 'h-20 sm:h-24 w-auto max-w-[200px] sm:max-w-[230px] object-contain',
-  auth: 'h-16 sm:h-20 w-auto max-w-[180px] object-contain',
-  admin: 'h-12 w-auto max-w-[150px] object-contain',
-  error: 'h-14 w-auto max-w-[170px] object-contain mx-auto',
+  header: 'h-11 sm:h-[64px] w-auto max-w-[120px] sm:max-w-[175px] object-contain',
+  footer: 'h-16 sm:h-24 w-auto max-w-[180px] sm:max-w-[230px] object-contain',
+  auth: 'h-14 sm:h-20 w-auto max-w-[170px] sm:max-w-[180px] object-contain',
+  admin: 'h-10 sm:h-12 w-auto max-w-[140px] sm:max-w-[150px] object-contain',
+  error: 'h-12 sm:h-14 w-auto max-w-[160px] sm:max-w-[170px] object-contain mx-auto',
 };
 
 export default function BrandLogo({ variant = 'header', className = '' }: BrandLogoProps) {
