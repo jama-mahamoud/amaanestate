@@ -11,29 +11,46 @@ import {
   syncInternalTrafficWithProfile,
 } from './lib/internalTraffic';
 
-const Home = React.lazy(() => import('./pages/Home'));
-const BuyPage = React.lazy(() => import('./pages/BuyPage'));
-const RentPage = React.lazy(() => import('./pages/RentPage'));
-const PropertyDetailsPage = React.lazy(() => import('./pages/PropertyDetailsPage'));
-const GlobalMarketsIndexPage = React.lazy(() => import('./pages/GlobalMarketsIndexPage'));
-const GlobalMarketPage = React.lazy(() => import('./pages/GlobalMarketPage'));
-const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
-const SearchPage = React.lazy(() => import('./pages/SearchPage'));
-const ArticleDetailsPage = React.lazy(() => import('./pages/ArticleDetailsPage'));
-const AboutPage = React.lazy(() => import('./pages/AboutPage'));
-const ContactPage = React.lazy(() => import('./pages/ContactPage'));
-const EditorialPolicyPage = React.lazy(() => import('./pages/EditorialPolicyPage'));
-const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage'));
-const TermsPage = React.lazy(() => import('./pages/TermsPage'));
-const CookiePolicyPage = React.lazy(() => import('./pages/CookiePolicyPage'));
-const AdvertisingDisclosurePage = React.lazy(() => import('./pages/AdvertisingDisclosurePage'));
-const CorrectionsPolicyPage = React.lazy(() => import('./pages/CorrectionsPolicyPage'));
-const NewsletterPage = React.lazy(() => import('./pages/NewsletterPage'));
-const AuthPage = React.lazy(() => import('./pages/AuthPage'));
-const AccountPage = React.lazy(() => import('./pages/AccountPage'));
-const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
-const LegacyNewsRoute = React.lazy(() => import('./pages/LegacyNewsRoute'));
-const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+function lazyRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  return React.lazy(() =>
+    factory().catch((error) => {
+      const key = 'chunk_retry_' + window.location.pathname;
+      const retried = sessionStorage.getItem(key);
+      if (!retried) {
+        sessionStorage.setItem(key, 'true');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    })
+  );
+}
+
+const Home = lazyRetry(() => import('./pages/Home'));
+const BuyPage = lazyRetry(() => import('./pages/BuyPage'));
+const RentPage = lazyRetry(() => import('./pages/RentPage'));
+const PropertyDetailsPage = lazyRetry(() => import('./pages/PropertyDetailsPage'));
+const GlobalMarketsIndexPage = lazyRetry(() => import('./pages/GlobalMarketsIndexPage'));
+const GlobalMarketPage = lazyRetry(() => import('./pages/GlobalMarketPage'));
+const CategoryPage = lazyRetry(() => import('./pages/CategoryPage'));
+const SearchPage = lazyRetry(() => import('./pages/SearchPage'));
+const ArticleDetailsPage = lazyRetry(() => import('./pages/ArticleDetailsPage'));
+const AboutPage = lazyRetry(() => import('./pages/AboutPage'));
+const ContactPage = lazyRetry(() => import('./pages/ContactPage'));
+const EditorialPolicyPage = lazyRetry(() => import('./pages/EditorialPolicyPage'));
+const PrivacyPolicyPage = lazyRetry(() => import('./pages/PrivacyPolicyPage'));
+const TermsPage = lazyRetry(() => import('./pages/TermsPage'));
+const CookiePolicyPage = lazyRetry(() => import('./pages/CookiePolicyPage'));
+const AdvertisingDisclosurePage = lazyRetry(() => import('./pages/AdvertisingDisclosurePage'));
+const CorrectionsPolicyPage = lazyRetry(() => import('./pages/CorrectionsPolicyPage'));
+const NewsletterPage = lazyRetry(() => import('./pages/NewsletterPage'));
+const AuthPage = lazyRetry(() => import('./pages/AuthPage'));
+const AccountPage = lazyRetry(() => import('./pages/AccountPage'));
+const AdminDashboardPage = lazyRetry(() => import('./pages/admin/AdminDashboardPage'));
+const LegacyNewsRoute = lazyRetry(() => import('./pages/LegacyNewsRoute'));
+const NotFoundPage = lazyRetry(() => import('./pages/NotFoundPage'));
 
 function PageFallback() {
   return (
