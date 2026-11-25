@@ -169,7 +169,7 @@ export default function GlobalMarketsSection() {
   const scrollTrackBy = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const distance = Math.max(el.clientWidth * 0.65, 260);
+    const distance = Math.max(el.clientWidth * 0.65, 280);
     el.scrollBy({
       left: direction === 'right' ? distance : -distance,
       behavior: 'smooth',
@@ -182,7 +182,7 @@ export default function GlobalMarketsSection() {
     <MotionConfig reducedMotion="user">
       <section
         aria-labelledby="explore-markets-heading"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5"
       >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5E0D8] pb-4">
           <div className="space-y-1">
@@ -233,20 +233,20 @@ export default function GlobalMarketsSection() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap gap-3.5 sm:gap-4 lg:overflow-hidden py-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap gap-4 sm:gap-5 lg:overflow-hidden py-0.5">
             {Array.from({ length: 4 }).map((_, idx) => (
               <div
                 key={idx}
-                className="w-full lg:shrink-0 lg:w-[264px] bg-white border border-[#E5E0D8] rounded-md overflow-hidden animate-pulse"
+                className="w-full lg:shrink-0 lg:w-[300px] bg-white border border-[#E5E0D8] rounded-md overflow-hidden animate-pulse"
               >
-                <div className="aspect-[16/9] w-full bg-[#0A182B]" />
-                <div className="p-3.5 sm:p-4 space-y-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-3.5 rounded-[2px] bg-[#EBE6DF] shrink-0" />
-                    <div className="h-4 w-28 rounded bg-[#EBE6DF]" />
+                <div className="aspect-[16/10] w-full bg-[#EBE6DF]" />
+                <div className="p-4 sm:p-5 space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-[18px] rounded-[2px] bg-[#EBE6DF] shrink-0" />
+                    <div className="h-5 w-32 rounded bg-[#EBE6DF]" />
                   </div>
-                  <div className="h-3 w-24 rounded bg-[#EBE6DF]" />
-                  <div className="h-7 w-full rounded bg-[#FAF8F5]" />
+                  <div className="h-3.5 w-28 rounded bg-[#EBE6DF]" />
+                  <div className="h-8 w-full rounded bg-[#F3EFE6]" />
                 </div>
               </div>
             ))}
@@ -256,7 +256,7 @@ export default function GlobalMarketsSection() {
             ref={scrollRef}
             role="list"
             aria-label="International real estate market intelligence by country"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap items-stretch gap-3.5 sm:gap-4 lg:overflow-x-auto lg:snap-x lg:snap-mandatory lg:scroll-smooth lg:no-scrollbar py-0.5"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap items-stretch gap-4 sm:gap-5 lg:overflow-x-auto lg:snap-x lg:snap-mandatory lg:scroll-smooth lg:no-scrollbar py-0.5"
           >
             <AnimatePresence initial={true}>
               {countries.map((item, index) => {
@@ -266,7 +266,7 @@ export default function GlobalMarketsSection() {
                 const targetHref = getHomepageCountryTargetHref(item);
 
                 const reportCountLabel = `${item.reportCount} ${
-                  item.reportCount === 1 ? 'Report' : 'Reports'
+                  item.reportCount === 1 ? 'Published Report' : 'Published Reports'
                 }`;
 
                 const updatedLabel = formatMarketDateLabel(item.latestUpdatedAt);
@@ -281,19 +281,19 @@ export default function GlobalMarketsSection() {
                     key={item.countrySlug}
                     role="listitem"
                     layout="position"
-                    initial={isFirstReveal ? { opacity: 0, x: 28 } : false}
+                    initial={isFirstReveal ? { opacity: 0, x: 32 } : false}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -16 }}
+                    exit={{ opacity: 0, x: -20 }}
                     transition={{
                       opacity: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
                       x: {
-                        duration: 0.36,
+                        duration: 0.38,
                         ease: [0.16, 1, 0.3, 1],
-                        delay: isInitialRenderRef.current ? Math.min(index * 0.04, 0.2) : 0,
+                        delay: isInitialRenderRef.current ? Math.min(index * 0.045, 0.22) : 0,
                       },
-                      layout: { duration: 0.32, ease: [0.16, 1, 0.3, 1] },
+                      layout: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
                     }}
-                    className="w-full lg:w-[264px] lg:shrink-0 lg:snap-start min-w-0"
+                    className="w-full lg:w-[300px] lg:shrink-0 lg:snap-start min-w-0"
                   >
                     <Link
                       to={targetHref}
@@ -304,28 +304,28 @@ export default function GlobalMarketsSection() {
                         countryName={item.countryName}
                       />
 
-                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-3 min-w-0">
-                        <div className="space-y-2.5 min-w-0">
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3.5 min-w-0">
+                        <div className="space-y-3 min-w-0">
                           <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               {hasValidIsoCode ? (
                                 <span
-                                  className={`fi fi-${isoCode} w-5 h-[14px] rounded-[2px] ring-1 ring-black/15 shrink-0`}
+                                  className={`fi fi-${isoCode} w-6 h-[18px] rounded-[2px] ring-1 ring-black/15 shrink-0`}
                                   aria-hidden="true"
                                 />
                               ) : (
                                 <Globe2
-                                  size={16}
+                                  size={18}
                                   className="text-[#8C4A27] shrink-0"
                                   aria-hidden="true"
                                 />
                               )}
-                              <h3 className="font-serif font-semibold text-base leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors truncate">
+                              <h3 className="font-serif font-semibold text-lg leading-snug text-[#141413] group-hover:text-[#1E3A5F] transition-colors truncate">
                                 {item.countryName}
                               </h3>
                             </div>
 
-                            <p className="text-[11px] text-[#5C5A55] tabular-nums">
+                            <p className="text-xs text-[#5C5A55] tabular-nums">
                               {reportCountLabel}
                               {item.cityCount > 0
                                 ? ` · ${item.cityCount} ${item.cityCount === 1 ? 'City' : 'Cities'}`
@@ -333,7 +333,7 @@ export default function GlobalMarketsSection() {
                             </p>
                           </div>
 
-                          <div className="pt-2 border-t border-[#F0ECE1]">
+                          <div className="pt-2.5 border-t border-[#F0ECE1]">
                             <MarketTrendIndicator
                               pct={item.propertyPriceTrendPct}
                               dir={item.propertyPriceTrendDir}
@@ -343,11 +343,11 @@ export default function GlobalMarketsSection() {
                           </div>
                         </div>
 
-                        <div className="pt-2.5 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs min-h-[26px]">
-                          <span className="text-[10px] text-[#7A7770] truncate">
+                        <div className="pt-3 border-t border-[#F0ECE1] flex items-center justify-between gap-2 text-xs min-h-[28px]">
+                          <span className="text-[11px] text-[#7A7770] truncate">
                             {updateDisplay}
                           </span>
-                          <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0 whitespace-nowrap text-xs">
+                          <span className="font-semibold text-[#1E3A5F] group-hover:text-[#8C4A27] shrink-0 whitespace-nowrap">
                             View Report &rarr;
                           </span>
                         </div>

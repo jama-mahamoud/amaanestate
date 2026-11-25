@@ -12,7 +12,7 @@ const MAP_PAD_X = 76;
 const MAP_PAD_Y = 44;
 
 const MEMORY_SVG_CACHE = new Map<string, string>();
-const DISK_CACHE_DIR = path.join(os.tmpdir(), "amaanestate-country-maps-v3");
+const DISK_CACHE_DIR = path.join(os.tmpdir(), "amaanestate-country-maps-v2");
 
 let cachedHighResFeatures: Feature<Geometry>[] | null = null;
 let cachedContextFeatures: Feature<Geometry>[] | null = null;
@@ -211,41 +211,36 @@ function renderCountrySvg(isoCode: string): string | null {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_WIDTH} ${MAP_HEIGHT}" width="${MAP_WIDTH}" height="${MAP_HEIGHT}" role="img" aria-label="Geographic map of ${safeIso}">`,
     `<defs>`,
-    `<linearGradient id="ae-map-bg-${safeIso}" x1="0%" y1="0%" x2="100%" y2="100%">`,
-    `<stop offset="0%" stop-color="#142842"/>`,
-    `<stop offset="50%" stop-color="#10243A"/>`,
-    `<stop offset="100%" stop-color="#0A182B"/>`,
+    `<linearGradient id="ae-map-paper-${safeIso}" x1="0%" y1="0%" x2="100%" y2="100%">`,
+    `<stop offset="0%" stop-color="#F6F2EA"/>`,
+    `<stop offset="100%" stop-color="#EAE3D5"/>`,
     `</linearGradient>`,
-    `<linearGradient id="ae-map-country-${safeIso}" x1="0%" y1="0%" x2="100%" y2="100%">`,
-    `<stop offset="0%" stop-color="#E2C17D"/>`,
-    `<stop offset="100%" stop-color="#C9A45C"/>`,
+    `<linearGradient id="ae-map-country-${safeIso}" x1="0%" y1="0%" x2="0%" y2="100%">`,
+    `<stop offset="0%" stop-color="#274B78"/>`,
+    `<stop offset="100%" stop-color="#173152"/>`,
     `</linearGradient>`,
-    `<linearGradient id="ae-map-glow-${safeIso}" x1="0%" y1="0%" x2="0%" y2="100%">`,
-    `<stop offset="0%" stop-color="#C9A45C" stop-opacity="0.35"/>`,
-    `<stop offset="100%" stop-color="#C9A45C" stop-opacity="0"/>`,
-    `</linearGradient>`,
-    `<filter id="ae-map-shadow-${safeIso}" x="-12%" y="-12%" width="124%" height="124%">`,
-    `<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.45"/>`,
+    `<filter id="ae-map-shadow-${safeIso}" x="-8%" y="-8%" width="116%" height="116%">`,
+    `<feDropShadow dx="0" dy="2" stdDeviation="3.5" flood-color="#141413" flood-opacity="0.16"/>`,
     `</filter>`,
     `<clipPath id="ae-map-clip-${safeIso}">`,
     `<rect x="0" y="0" width="${MAP_WIDTH}" height="${MAP_HEIGHT}"/>`,
     `</clipPath>`,
     `</defs>`,
     `<g clip-path="url(#ae-map-clip-${safeIso})">`,
-    `<rect x="0" y="0" width="${MAP_WIDTH}" height="${MAP_HEIGHT}" fill="url(#ae-map-bg-${safeIso})"/>`,
+    `<rect x="0" y="0" width="${MAP_WIDTH}" height="${MAP_HEIGHT}" fill="url(#ae-map-paper-${safeIso})"/>`,
     graticulePath
-      ? `<path d="${graticulePath}" fill="none" stroke="#C9A45C" stroke-opacity="0.06" stroke-width="0.75"/>`
+      ? `<path d="${graticulePath}" fill="none" stroke="#1E3A5F" stroke-opacity="0.08" stroke-width="0.7"/>`
       : "",
     neighborPaths.length > 0
-      ? `<g fill="#162D4A" stroke="#223E63" stroke-width="0.65" stroke-linejoin="round">${neighborPaths
+      ? `<g fill="#E2DACB" stroke="#CFC4B0" stroke-width="0.65" stroke-linejoin="round">${neighborPaths
           .map((d) => `<path d="${d}"/>`)
           .join("")}</g>`
       : "",
-    `<path d="${targetPath}" fill="url(#ae-map-country-${safeIso})" stroke="#EADBBA" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round" filter="url(#ae-map-shadow-${safeIso})"/>`,
+    `<path d="${targetPath}" fill="url(#ae-map-country-${safeIso})" stroke="#0F2036" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" filter="url(#ae-map-shadow-${safeIso})"/>`,
     hasMarker
-      ? `<circle cx="${projectedPoint![0].toFixed(1)}" cy="${projectedPoint![1].toFixed(1)}" r="5.5" fill="#10243A" stroke="#C9A45C" stroke-width="1.75"/><circle cx="${projectedPoint![0].toFixed(1)}" cy="${projectedPoint![1].toFixed(1)}" r="2" fill="#E2C17D"/>`
+      ? `<circle cx="${projectedPoint![0].toFixed(1)}" cy="${projectedPoint![1].toFixed(1)}" r="5" fill="#FAF8F5" fill-opacity="0.9"/><circle cx="${projectedPoint![0].toFixed(1)}" cy="${projectedPoint![1].toFixed(1)}" r="2.75" fill="#8C4A27"/>`
       : "",
-    `<rect x="0.5" y="0.5" width="${MAP_WIDTH - 1}" height="${MAP_HEIGHT - 1}" fill="none" stroke="#C9A45C" stroke-opacity="0.2"/>`,
+    `<rect x="0.5" y="0.5" width="${MAP_WIDTH - 1}" height="${MAP_HEIGHT - 1}" fill="none" stroke="#1E3A5F" stroke-opacity="0.1"/>`,
     `</g>`,
     `</svg>`,
   ]
