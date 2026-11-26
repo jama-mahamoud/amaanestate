@@ -13,9 +13,11 @@ import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketComparisonCity, GlobalMarketComparisonReport } from '../types';
 import { getGlobalMarketComparisonBySlug } from '../services/globalMarketsService';
 import {
+  formatDaysOnMarket,
   formatMarketCurrency,
   formatMarketDateLabel,
   formatMarketGranularityLabel,
+  formatMarketInteger,
   resolveComparisonCanonicalUrl,
   resolveComparisonSocialImageMetadata,
 } from '../lib/globalMarkets';
@@ -89,8 +91,18 @@ function CityPanel({
 }) {
   const iso = (city.country_code || '').trim().toLowerCase();
   const hasFlag = /^[a-z]{2}$/.test(iso);
-  const saleFormatted = formatMarketCurrency(city.avg_sale_price, city.currency);
+  const medianSaleFormatted = formatMarketCurrency(city.median_sale_price, city.currency);
+  const avgSaleFormatted = formatMarketCurrency(city.avg_sale_price, city.currency);
   const rentFormatted = formatMarketCurrency(city.avg_monthly_rent, city.currency, '/mo');
+  const homesSoldFormatted = formatMarketInteger(city.homes_sold, 'home', 'homes');
+  const daysOnMarketFormatted = formatDaysOnMarket(city.days_on_market);
+
+  const primarySaleLabel = medianSaleFormatted
+    ? 'Median Sale Price'
+    : avgSaleFormatted
+    ? 'Avg. Sale Price'
+    : 'Median Sale Price';
+  const primarySaleValue = medianSaleFormatted || avgSaleFormatted;
 
   return (
     <article className="bg-white border border-[#E5E0D8] rounded-md overflow-hidden flex flex-col h-full min-w-0">
@@ -130,17 +142,22 @@ function CityPanel({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#F0ECE1]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#F0ECE1]">
             <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded p-3 min-w-0">
               <span className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
-                Avg. Sale Price
+                {primarySaleLabel}
               </span>
-              {saleFormatted ? (
+              {primarySaleValue ? (
                 <span className="mt-1 block font-mono text-base sm:text-lg font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
-                  {saleFormatted}
+                  {primarySaleValue}
                 </span>
               ) : (
                 <span className="mt-1 block text-xs text-[#7A7770] italic">Data unavailable</span>
+              )}
+              {medianSaleFormatted && avgSaleFormatted && (
+                <span className="mt-1 block text-[11px] font-mono tabular-nums text-[#5C5A55]">
+                  Avg: {avgSaleFormatted}
+                </span>
               )}
             </div>
 
@@ -175,6 +192,32 @@ function CityPanel({
                 emptyLabel="Data unavailable"
                 variant="card"
               />
+            </div>
+
+            <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded p-3 min-w-0">
+              <span className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
+                Homes Sold
+              </span>
+              {homesSoldFormatted ? (
+                <span className="mt-1 block font-mono text-base font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                  {homesSoldFormatted}
+                </span>
+              ) : (
+                <span className="mt-1 block text-xs text-[#7A7770] italic">Data unavailable</span>
+              )}
+            </div>
+
+            <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded p-3 min-w-0">
+              <span className="block text-[11px] uppercase tracking-wider font-semibold text-[#5C5A55]">
+                Days on Market
+              </span>
+              {daysOnMarketFormatted ? (
+                <span className="mt-1 block font-mono text-base font-semibold tabular-nums text-[#141413] break-words [overflow-wrap:anywhere]">
+                  {daysOnMarketFormatted}
+                </span>
+              ) : (
+                <span className="mt-1 block text-xs text-[#7A7770] italic">Data unavailable</span>
+              )}
             </div>
           </div>
         </div>
@@ -319,10 +362,17 @@ export default function GlobalMarketComparisonPage() {
   const currenciesDiffer =
     cityA.currency.trim().toUpperCase() !== cityB.currency.trim().toUpperCase();
 
+  const cityAMedianSale = formatMarketCurrency(cityA.median_sale_price, cityA.currency);
+  const cityBMedianSale = formatMarketCurrency(cityB.median_sale_price, cityB.currency);
   const cityASale = formatMarketCurrency(cityA.avg_sale_price, cityA.currency);
   const cityBSale = formatMarketCurrency(cityB.avg_sale_price, cityB.currency);
+  const hasAnyAvgSalePrice = Boolean(cityASale || cityBSale);
   const cityARent = formatMarketCurrency(cityA.avg_monthly_rent, cityA.currency, '/mo');
   const cityBRent = formatMarketCurrency(cityB.avg_monthly_rent, cityB.currency, '/mo');
+  const cityAHomesSold = formatMarketInteger(cityA.homes_sold, 'home', 'homes');
+  const cityBHomesSold = formatMarketInteger(cityB.homes_sold, 'home', 'homes');
+  const cityADom = formatDaysOnMarket(cityA.days_on_market);
+  const cityBDom = formatDaysOnMarket(cityB.days_on_market);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12 space-y-10 sm:space-y-12">
@@ -445,23 +495,44 @@ export default function GlobalMarketComparisonPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 sm:px-5 font-medium text-[#4A4843]">
-                    Average Property Sale Price
+                    Median Sale Price
                   </td>
                   <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
-                    {cityASale || (
+                    {cityAMedianSale || (
                       <span className="font-sans font-normal italic text-[#7A7770]">
                         Data unavailable
                       </span>
                     )}
                   </td>
                   <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
-                    {cityBSale || (
+                    {cityBMedianSale || (
                       <span className="font-sans font-normal italic text-[#7A7770]">
                         Data unavailable
                       </span>
                     )}
                   </td>
                 </tr>
+                {hasAnyAvgSalePrice && (
+                  <tr>
+                    <td className="py-3.5 px-4 sm:px-5 font-medium text-[#4A4843]">
+                      Average Property Sale Price
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                      {cityASale || (
+                        <span className="font-sans font-normal italic text-[#7A7770]">
+                          Data unavailable
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                      {cityBSale || (
+                        <span className="font-sans font-normal italic text-[#7A7770]">
+                          Data unavailable
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td className="py-3.5 px-4 sm:px-5 font-medium text-[#4A4843]">
                     Average Monthly Rent
@@ -525,6 +596,44 @@ export default function GlobalMarketComparisonPage() {
                       emptyLabel="Data unavailable"
                       variant="summary"
                     />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3.5 px-4 sm:px-5 font-medium text-[#4A4843]">
+                    Homes Sold
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                    {cityAHomesSold || (
+                      <span className="font-sans font-normal italic text-[#7A7770]">
+                        Data unavailable
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                    {cityBHomesSold || (
+                      <span className="font-sans font-normal italic text-[#7A7770]">
+                        Data unavailable
+                      </span>
+                    )}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3.5 px-4 sm:px-5 font-medium text-[#4A4843]">
+                    Days on Market
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                    {cityADom || (
+                      <span className="font-sans font-normal italic text-[#7A7770]">
+                        Data unavailable
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 font-mono tabular-nums font-semibold text-[#141413]">
+                    {cityBDom || (
+                      <span className="font-sans font-normal italic text-[#7A7770]">
+                        Data unavailable
+                      </span>
+                    )}
                   </td>
                 </tr>
                 <tr>

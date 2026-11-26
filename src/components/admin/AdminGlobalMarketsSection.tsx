@@ -82,6 +82,7 @@ function makeEmptyComparisonCity(): SaveComparisonCityInput {
     country_code: '',
     image_url: '',
     image_alt: '',
+    median_sale_price: null,
     avg_sale_price: null,
     avg_monthly_rent: null,
     currency: 'USD',
@@ -89,6 +90,8 @@ function makeEmptyComparisonCity(): SaveComparisonCityInput {
     property_price_trend_dir: null,
     rental_price_trend_pct: null,
     rental_price_trend_dir: null,
+    homes_sold: null,
+    days_on_market: null,
     data_source_name: '',
     data_source_url: '',
     data_period: '',
@@ -332,6 +335,10 @@ export default function AdminGlobalMarketsSection({
         ...compForm.city_a,
         country_code: compForm.city_a.country_code || '',
         city_slot: 'A',
+        median_sale_price:
+          compForm.city_a.median_sale_price === '' || compForm.city_a.median_sale_price === null
+            ? null
+            : Number(compForm.city_a.median_sale_price),
         avg_sale_price:
           compForm.city_a.avg_sale_price === '' || compForm.city_a.avg_sale_price === null
             ? null
@@ -350,11 +357,23 @@ export default function AdminGlobalMarketsSection({
           compForm.city_a.rental_price_trend_pct === null
             ? null
             : Number(compForm.city_a.rental_price_trend_pct),
+        homes_sold:
+          compForm.city_a.homes_sold === '' || compForm.city_a.homes_sold === null
+            ? null
+            : Number(compForm.city_a.homes_sold),
+        days_on_market:
+          compForm.city_a.days_on_market === '' || compForm.city_a.days_on_market === null
+            ? null
+            : Number(compForm.city_a.days_on_market),
       },
       city_b: {
         ...compForm.city_b,
         country_code: compForm.city_b.country_code || '',
         city_slot: 'B',
+        median_sale_price:
+          compForm.city_b.median_sale_price === '' || compForm.city_b.median_sale_price === null
+            ? null
+            : Number(compForm.city_b.median_sale_price),
         avg_sale_price:
           compForm.city_b.avg_sale_price === '' || compForm.city_b.avg_sale_price === null
             ? null
@@ -373,6 +392,14 @@ export default function AdminGlobalMarketsSection({
           compForm.city_b.rental_price_trend_pct === null
             ? null
             : Number(compForm.city_b.rental_price_trend_pct),
+        homes_sold:
+          compForm.city_b.homes_sold === '' || compForm.city_b.homes_sold === null
+            ? null
+            : Number(compForm.city_b.homes_sold),
+        days_on_market:
+          compForm.city_b.days_on_market === '' || compForm.city_b.days_on_market === null
+            ? null
+            : Number(compForm.city_b.days_on_market),
       },
     });
   }, [compForm]);
@@ -482,6 +509,7 @@ export default function AdminGlobalMarketsSection({
         country_code: comparison.city_a.country_code,
         image_url: comparison.city_a.image_url || '',
         image_alt: comparison.city_a.image_alt || '',
+        median_sale_price: comparison.city_a.median_sale_price ?? null,
         avg_sale_price: comparison.city_a.avg_sale_price ?? null,
         avg_monthly_rent: comparison.city_a.avg_monthly_rent ?? null,
         currency: comparison.city_a.currency || 'USD',
@@ -489,6 +517,8 @@ export default function AdminGlobalMarketsSection({
         property_price_trend_dir: comparison.city_a.property_price_trend_dir || null,
         rental_price_trend_pct: comparison.city_a.rental_price_trend_pct ?? null,
         rental_price_trend_dir: comparison.city_a.rental_price_trend_dir || null,
+        homes_sold: comparison.city_a.homes_sold ?? null,
+        days_on_market: comparison.city_a.days_on_market ?? null,
         data_source_name: comparison.city_a.data_source_name || '',
         data_source_url: comparison.city_a.data_source_url || '',
         data_period: comparison.city_a.data_period || '',
@@ -502,6 +532,7 @@ export default function AdminGlobalMarketsSection({
         country_code: comparison.city_b.country_code,
         image_url: comparison.city_b.image_url || '',
         image_alt: comparison.city_b.image_alt || '',
+        median_sale_price: comparison.city_b.median_sale_price ?? null,
         avg_sale_price: comparison.city_b.avg_sale_price ?? null,
         avg_monthly_rent: comparison.city_b.avg_monthly_rent ?? null,
         currency: comparison.city_b.currency || 'USD',
@@ -509,6 +540,8 @@ export default function AdminGlobalMarketsSection({
         property_price_trend_dir: comparison.city_b.property_price_trend_dir || null,
         rental_price_trend_pct: comparison.city_b.rental_price_trend_pct ?? null,
         rental_price_trend_dir: comparison.city_b.rental_price_trend_dir || null,
+        homes_sold: comparison.city_b.homes_sold ?? null,
+        days_on_market: comparison.city_b.days_on_market ?? null,
         data_source_name: comparison.city_b.data_source_name || '',
         data_source_url: comparison.city_b.data_source_url || '',
         data_period: comparison.city_b.data_period || '',
@@ -1080,8 +1113,18 @@ export default function AdminGlobalMarketsSection({
               {filteredComparisons.map((comp) => {
                 const isoA = (comp.city_a.country_code || '').trim().toLowerCase();
                 const isoB = (comp.city_b.country_code || '').trim().toLowerCase();
-                const saleA = formatMarketCurrency(comp.city_a.avg_sale_price, comp.city_a.currency);
-                const saleB = formatMarketCurrency(comp.city_b.avg_sale_price, comp.city_b.currency);
+                const medianA = formatMarketCurrency(
+                  comp.city_a.median_sale_price,
+                  comp.city_a.currency
+                );
+                const medianB = formatMarketCurrency(
+                  comp.city_b.median_sale_price,
+                  comp.city_b.currency
+                );
+                const avgA = formatMarketCurrency(comp.city_a.avg_sale_price, comp.city_a.currency);
+                const avgB = formatMarketCurrency(comp.city_b.avg_sale_price, comp.city_b.currency);
+                const saleLabelA = medianA ? `Median ${medianA}` : avgA ? `Avg ${avgA}` : 'Data unavailable';
+                const saleLabelB = medianB ? `Median ${medianB}` : avgB ? `Avg ${avgB}` : 'Data unavailable';
                 const publicHref = `/global-markets/comparisons/${encodeURIComponent(comp.slug)}`;
 
                 return (
@@ -1137,10 +1180,10 @@ export default function AdminGlobalMarketsSection({
 
                     <div className="text-xs font-mono tabular-nums text-[#141413] space-y-0.5">
                       <div>
-                        {comp.city_a.city_name}: {saleA || 'Data unavailable'} ({comp.city_a.currency})
+                        {comp.city_a.city_name}: {saleLabelA} ({comp.city_a.currency})
                       </div>
                       <div>
-                        {comp.city_b.city_name}: {saleB || 'Data unavailable'} ({comp.city_b.currency})
+                        {comp.city_b.city_name}: {saleLabelB} ({comp.city_b.currency})
                       </div>
                     </div>
 
@@ -1389,8 +1432,24 @@ export default function AdminGlobalMarketsSection({
                   {filteredComparisons.map((comp) => {
                     const isoA = (comp.city_a.country_code || '').trim().toLowerCase();
                     const isoB = (comp.city_b.country_code || '').trim().toLowerCase();
-                    const saleA = formatMarketCurrency(comp.city_a.avg_sale_price, comp.city_a.currency);
-                    const saleB = formatMarketCurrency(comp.city_b.avg_sale_price, comp.city_b.currency);
+                    const medianA = formatMarketCurrency(
+                      comp.city_a.median_sale_price,
+                      comp.city_a.currency
+                    );
+                    const medianB = formatMarketCurrency(
+                      comp.city_b.median_sale_price,
+                      comp.city_b.currency
+                    );
+                    const avgA = formatMarketCurrency(
+                      comp.city_a.avg_sale_price,
+                      comp.city_a.currency
+                    );
+                    const avgB = formatMarketCurrency(
+                      comp.city_b.avg_sale_price,
+                      comp.city_b.currency
+                    );
+                    const saleSummaryA = medianA ? `Median ${medianA}` : avgA ? `Avg ${avgA}` : 'N/A';
+                    const saleSummaryB = medianB ? `Median ${medianB}` : avgB ? `Avg ${avgB}` : 'N/A';
                     const trendA = formatMarketTrend(
                       comp.city_a.property_price_trend_pct,
                       comp.city_a.property_price_trend_dir
@@ -1446,11 +1505,11 @@ export default function AdminGlobalMarketsSection({
                         <td className="py-3.5 px-4 text-xs font-mono tabular-nums text-[#141413]">
                           <div className="space-y-0.5">
                             <div>
-                              A ({comp.city_a.city_name}): {saleA || 'N/A'}
+                              A ({comp.city_a.city_name}): {saleSummaryA}
                               {trendA ? ` (${trendA})` : ''}
                             </div>
                             <div>
-                              B ({comp.city_b.city_name}): {saleB || 'N/A'}
+                              B ({comp.city_b.city_name}): {saleSummaryB}
                               {trendB ? ` (${trendB})` : ''}
                             </div>
                           </div>

@@ -248,7 +248,32 @@ export default function ComparisonCityEditorSection({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div>
+            <label
+              htmlFor={`${idPrefix}-median-sale-price`}
+              className="block text-xs font-semibold text-[#4A4843] mb-1"
+            >
+              Median Property Sale Price
+            </label>
+            <input
+              id={`${idPrefix}-median-sale-price`}
+              type="number"
+              min={0}
+              step="any"
+              value={city.median_sale_price ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChange((prev) => ({
+                  ...prev,
+                  median_sale_price: val === '' ? null : val,
+                }));
+              }}
+              placeholder="Optional numeric value"
+              className="w-full h-10 px-3 bg-white border border-[#D6CEBE] rounded text-sm font-mono"
+            />
+          </div>
+
           <div>
             <label
               htmlFor={`${idPrefix}-sale-price`}
@@ -318,6 +343,56 @@ export default function ComparisonCityEditorSection({
               }}
               placeholder={slot === 'A' ? 'AED' : 'GBP'}
               className="w-full h-10 px-3 bg-white border border-[#D6CEBE] rounded text-sm font-mono uppercase"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`${idPrefix}-homes-sold`}
+              className="block text-xs font-semibold text-[#4A4843] mb-1"
+            >
+              Homes Sold (Count)
+            </label>
+            <input
+              id={`${idPrefix}-homes-sold`}
+              type="number"
+              min={0}
+              step={1}
+              value={city.homes_sold ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChange((prev) => ({
+                  ...prev,
+                  homes_sold: val === '' ? null : val,
+                }));
+              }}
+              placeholder="e.g., 1480"
+              className="w-full h-10 px-3 bg-white border border-[#D6CEBE] rounded text-sm font-mono"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`${idPrefix}-days-on-market`}
+              className="block text-xs font-semibold text-[#4A4843] mb-1"
+            >
+              Days on Market (Days)
+            </label>
+            <input
+              id={`${idPrefix}-days-on-market`}
+              type="number"
+              min={0}
+              step={1}
+              value={city.days_on_market ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChange((prev) => ({
+                  ...prev,
+                  days_on_market: val === '' ? null : val,
+                }));
+              }}
+              placeholder="e.g., 15"
+              className="w-full h-10 px-3 bg-white border border-[#D6CEBE] rounded text-sm font-mono"
             />
           </div>
         </div>

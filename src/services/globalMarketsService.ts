@@ -849,6 +849,7 @@ export interface SaveComparisonCityInput {
   country_code?: string;
   image_url?: string | null;
   image_alt?: string | null;
+  median_sale_price?: number | string | null;
   avg_sale_price?: number | string | null;
   avg_monthly_rent?: number | string | null;
   currency: string;
@@ -856,6 +857,8 @@ export interface SaveComparisonCityInput {
   property_price_trend_dir?: MarketTrendDirection | null;
   rental_price_trend_pct?: number | string | null;
   rental_price_trend_dir?: MarketTrendDirection | null;
+  homes_sold?: number | string | null;
+  days_on_market?: number | string | null;
   data_source_name: string;
   data_source_url?: string | null;
   data_period: string;
@@ -892,6 +895,7 @@ function emptyComparisonCity(slot: ComparisonCitySlot): GlobalMarketComparisonCi
     country_code: '',
     image_url: null,
     image_alt: null,
+    median_sale_price: null,
     avg_sale_price: null,
     avg_monthly_rent: null,
     currency: 'USD',
@@ -899,6 +903,8 @@ function emptyComparisonCity(slot: ComparisonCitySlot): GlobalMarketComparisonCi
     property_price_trend_dir: null,
     rental_price_trend_pct: null,
     rental_price_trend_dir: null,
+    homes_sold: null,
+    days_on_market: null,
     data_source_name: '',
     data_source_url: null,
     data_period: '',
@@ -930,6 +936,7 @@ export function normalizeComparisonCityRow(
     country_code: countryCode,
     image_url: row.image_url ? String(row.image_url).trim() : null,
     image_alt: row.image_alt ? String(row.image_alt).trim() : null,
+    median_sale_price: normalizeNullableNumber(row.median_sale_price),
     avg_sale_price: normalizeNullableNumber(row.avg_sale_price),
     avg_monthly_rent: normalizeNullableNumber(row.avg_monthly_rent),
     currency: String(row.currency || 'USD').trim().toUpperCase(),
@@ -939,6 +946,8 @@ export function normalizeComparisonCityRow(
     rental_price_trend_pct: normalizeNullableNumber(row.rental_price_trend_pct),
     rental_price_trend_dir:
       (row.rental_price_trend_dir as MarketTrendDirection | null) || null,
+    homes_sold: normalizeNullableNumber(row.homes_sold),
+    days_on_market: normalizeNullableNumber(row.days_on_market),
     data_source_name: String(row.data_source_name || '').trim(),
     data_source_url: row.data_source_url ? String(row.data_source_url).trim() : null,
     data_period: String(row.data_period || '').trim(),
@@ -1174,16 +1183,28 @@ function prepareComparisonCityPayload(
     };
   }
 
+  const medianSale = normalizeNullableNumber(city.median_sale_price);
   const avgSale = normalizeNullableNumber(city.avg_sale_price);
   const avgRent = normalizeNullableNumber(city.avg_monthly_rent);
   const propPct = normalizeNullableNumber(city.property_price_trend_pct);
   const rentPct = normalizeNullableNumber(city.rental_price_trend_pct);
+  const homesSold = normalizeNullableNumber(city.homes_sold);
+  const daysOnMarket = normalizeNullableNumber(city.days_on_market);
 
+  if (medianSale !== null && medianSale < 0) {
+    return { ok: false, error: `${slotLabel}: Median property sale price cannot be negative.` };
+  }
   if (avgSale !== null && avgSale < 0) {
-    return { ok: false, error: `${slotLabel}: Average sale price cannot be negative.` };
+    return { ok: false, error: `${slotLabel}: Average property sale price cannot be negative.` };
   }
   if (avgRent !== null && avgRent < 0) {
     return { ok: false, error: `${slotLabel}: Average monthly rent cannot be negative.` };
+  }
+  if (homesSold !== null && (!Number.isInteger(homesSold) || homesSold < 0)) {
+    return { ok: false, error: `${slotLabel}: Homes Sold must be a non-negative whole number.` };
+  }
+  if (daysOnMarket !== null && (!Number.isInteger(daysOnMarket) || daysOnMarket < 0)) {
+    return { ok: false, error: `${slotLabel}: Days on Market must be a non-negative whole number.` };
   }
 
   const currency = (city.currency || 'USD').trim().toUpperCase().slice(0, 8) || 'USD';
@@ -1210,6 +1231,7 @@ function prepareComparisonCityPayload(
       country_code: countryCode,
       image_url: imageUrl,
       image_alt: (city.image_alt || '').trim() || null,
+      median_sale_price: medianSale,
       avg_sale_price: avgSale,
       avg_monthly_rent: avgRent,
       currency,
@@ -1217,6 +1239,8 @@ function prepareComparisonCityPayload(
       property_price_trend_dir: propDir,
       rental_price_trend_pct: rentPct,
       rental_price_trend_dir: rentDir,
+      homes_sold: homesSold,
+      days_on_market: daysOnMarket,
       data_source_name: (city.data_source_name || '').trim(),
       data_source_url: sourceUrl,
       data_period: (city.data_period || '').trim(),
@@ -1426,10 +1450,44 @@ export async function saveGlobalMarketComparison(
     { ...cityBPayload, comparison_id: savedParent.id, city_slot: 'B' },
   ];
 
-  const { data: savedCities, error: citiesError } = await supabase
+  let { data: savedCities, error: citiesError } = await supabase
     .from('global_market_comparison_cities')
     .upsert(cityRows, { onConflict: 'comparison_id,city_slot' })
     .select('*');
+
+  if (citiesError) {
+    const errCode = String(citiesError.code || '');
+    const errMsg = `${citiesError.message || ''} ${citiesError.details || ''} ${citiesError.hint || ''}`;
+    const isMissingNewMetricCol =
+      (errCode === 'PGRST204' || errCode === '42703') &&
+      /(median_sale_price|homes_sold|days_on_market)/i.test(errMsg);
+
+    if (isMissingNewMetricCol) {
+      const hasNewMetricValues = cityRows.some(
+        (r) =>
+          r.median_sale_price !== null ||
+          r.homes_sold !== null ||
+          r.days_on_market !== null
+      );
+      if (hasNewMetricValues) {
+        if (isNew && savedParent?.id) {
+          await supabase.from('global_market_comparisons').delete().eq('id', savedParent.id);
+        }
+        return {
+          success: false,
+          error:
+            'Database columns "median_sale_price", "homes_sold", or "days_on_market" are missing. Run supabase/migrations/20261125020000_add_comparison_city_median_homes_dom.sql in Supabase SQL Editor first.',
+        };
+      }
+      const legacyCityRows = cityRows.map(
+        ({ median_sale_price: _m, homes_sold: _h, days_on_market: _d, ...rest }) => rest
+      );
+      ({ data: savedCities, error: citiesError } = await supabase
+        .from('global_market_comparison_cities')
+        .upsert(legacyCityRows, { onConflict: 'comparison_id,city_slot' })
+        .select('*'));
+    }
+  }
 
   if (citiesError || !savedCities || savedCities.length < 2) {
     if (isNew && savedParent?.id) {

@@ -227,6 +227,28 @@ export function formatMarketCurrency(
   }
 }
 
+export function formatMarketInteger(
+  value?: number | null,
+  unitSingular?: string,
+  unitPlural?: string
+): string | null {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return null;
+  }
+  const numeric = Math.round(Number(value));
+  if (numeric < 0) return null;
+  const formatted = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(numeric);
+  if (!unitSingular) return formatted;
+  const unit = numeric === 1 ? unitSingular : unitPlural || `${unitSingular}s`;
+  return `${formatted} ${unit}`;
+}
+
+export function formatDaysOnMarket(days?: number | null): string | null {
+  return formatMarketInteger(days, 'day', 'days');
+}
+
 export type ResolvedMarketTrendState = 'up' | 'down' | 'flat' | 'none';
 
 export function resolveMarketTrendDirection(

@@ -570,6 +570,7 @@ export interface GlobalMarketComparisonCity {
   country_code: string;
   image_url?: string | null;
   image_alt?: string | null;
+  median_sale_price?: number | null;
   avg_sale_price?: number | null;
   avg_monthly_rent?: number | null;
   currency: string;
@@ -577,6 +578,8 @@ export interface GlobalMarketComparisonCity {
   property_price_trend_dir?: MarketTrendDirection | null;
   rental_price_trend_pct?: number | null;
   rental_price_trend_dir?: MarketTrendDirection | null;
+  homes_sold?: number | null;
+  days_on_market?: number | null;
   data_source_name: string;
   data_source_url?: string | null;
   data_period: string;

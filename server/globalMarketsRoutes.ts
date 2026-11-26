@@ -325,6 +325,10 @@ function normalizeServerComparisonCityRow(
     country_code: countryCode,
     image_url: row?.image_url ? String(row.image_url).trim() : null,
     image_alt: row?.image_alt ? String(row.image_alt).trim() : null,
+    median_sale_price:
+      row?.median_sale_price !== null && row?.median_sale_price !== undefined
+        ? Number(row.median_sale_price)
+        : null,
     avg_sale_price:
       row?.avg_sale_price !== null && row?.avg_sale_price !== undefined
         ? Number(row.avg_sale_price)
@@ -344,6 +348,14 @@ function normalizeServerComparisonCityRow(
         ? Number(row.rental_price_trend_pct)
         : null,
     rental_price_trend_dir: row?.rental_price_trend_dir || null,
+    homes_sold:
+      row?.homes_sold !== null && row?.homes_sold !== undefined
+        ? Number(row.homes_sold)
+        : null,
+    days_on_market:
+      row?.days_on_market !== null && row?.days_on_market !== undefined
+        ? Number(row.days_on_market)
+        : null,
     data_source_name: String(row?.data_source_name || "").trim(),
     data_source_url: row?.data_source_url ? String(row.data_source_url).trim() : null,
     data_period: String(row?.data_period || "").trim(),
