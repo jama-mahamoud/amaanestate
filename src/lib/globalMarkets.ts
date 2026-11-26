@@ -227,6 +227,49 @@ export function formatMarketCurrency(
   }
 }
 
+export function formatCompactMarketCurrency(
+  amount?: number | null,
+  currency = 'USD'
+): string | null {
+  if (amount === null || amount === undefined || !Number.isFinite(Number(amount))) {
+    return null;
+  }
+  const numeric = Number(amount);
+  if (numeric < 0) return null;
+
+  if (numeric < 1000) {
+    return formatMarketCurrency(numeric, currency);
+  }
+
+  const safeCurrency = /^[A-Z]{3}$/.test((currency || '').trim().toUpperCase())
+    ? currency.trim().toUpperCase()
+    : 'USD';
+
+  try {
+    const options: Intl.NumberFormatOptions =
+      numeric >= 1_000_000
+        ? {
+            style: 'currency',
+            currency: safeCurrency,
+            notation: 'compact',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }
+        : {
+            style: 'currency',
+            currency: safeCurrency,
+            notation: 'compact',
+            maximumFractionDigits: 0,
+          };
+    return new Intl.NumberFormat('en-US', options).format(numeric);
+  } catch {
+    if (numeric >= 1_000_000) {
+      return `${safeCurrency} ${(numeric / 1_000_000).toFixed(2)}M`;
+    }
+    return `${safeCurrency} ${Math.round(numeric / 1000)}K`;
+  }
+}
+
 export function formatMarketInteger(
   value?: number | null,
   unitSingular?: string,
