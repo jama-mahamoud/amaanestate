@@ -1,26 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 
 export default function CorrectionsPolicyPage() {
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/corrections-policy'];
   useSEO({
-    title: 'Corrections & Fact-Checking Policy | AmaanEstate',
-    description:
-      'Comprehensive Corrections and Fact-Checking Policy for AmaanEstate covering primary sourcing, real estate statistics verification, property listing corrections, reader error reports, and editorial accountability.',
-    url: `${getCanonicalOrigin()}/corrections-policy`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Corrections & Fact-Checking Policy',
-          item: 'https://www.amaanestate.com/corrections-policy',
-        },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/corrections-policy`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/corrections-policy`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/corrections-policy` },
+      ]),
+    ],
   });
 
   return (

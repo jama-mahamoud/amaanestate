@@ -1,8 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Article } from '../types';
 import { getPublishedArticles } from '../services/editorialService';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildHomeStructuredData,
+  DEFAULT_SEO_DESCRIPTION,
+  DEFAULT_SEO_TITLE,
+} from '../lib/seoUtils';
 import GlobalMarketsSection from '../components/marketplace/GlobalMarketsSection';
 import ArticleCard from '../components/editorial/ArticleCard';
 
@@ -10,13 +15,16 @@ export default function Home() {
   const [latestNews, setLatestNews] = useState<Article[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
 
+  const origin = getCanonicalOrigin();
+  const homeStructuredData = useMemo(() => buildHomeStructuredData(origin), [origin]);
+
   useSEO({
-    title: 'AmaanEstate | Global Real Estate News, Research & Market Intelligence',
-    description:
-      'Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.',
-    url: `${getCanonicalOrigin()}/`,
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    url: `${origin}/`,
     image: '/images/articles/sovereign-capital-logistics-corridors.jpg',
     imageAlt: 'AmaanEstate — Global Real Estate Media, Research & Market Intelligence',
+    structuredData: homeStructuredData,
   });
 
   useEffect(() => {
@@ -44,7 +52,26 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="pt-5 sm:pt-10 pb-6 sm:pb-8 space-y-10 sm:space-y-14 lg:space-y-16">
+    <div className="pt-5 sm:pt-8 pb-6 sm:pb-8 space-y-8 sm:space-y-12 lg:space-y-14">
+      <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="border-b border-[#E5E0D8] pb-4 sm:pb-5 flex flex-col md:flex-row md:items-end justify-between gap-3">
+          <div className="space-y-1.5 max-w-3xl">
+            <p className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
+              AMAAN ESTATE · Global Real Estate Media &amp; Research
+            </p>
+            <h1
+              id="home-hero-heading"
+              className="text-2xl sm:text-3xl lg:text-[2.15rem] font-serif font-semibold leading-tight text-[#141413]"
+            >
+              Global Real Estate News, Research &amp; Market Intelligence
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-[#4A4843] max-w-md leading-relaxed">
+            Independent housing research, city-level property comparisons, real estate investment insights, and architectural reporting.
+          </p>
+        </div>
+      </header>
+
       {/* 1. GLOBAL MARKETS (PRIMARY REAL ESTATE MARKET INTELLIGENCE) */}
       <GlobalMarketsSection />
 

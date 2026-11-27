@@ -1,26 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 
 export default function PrivacyPolicyPage() {
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/privacy-policy'];
   useSEO({
-    title: 'Privacy Policy | AmaanEstate',
-    description:
-      'Privacy Policy for AmaanEstate (amaanestate.com) explaining what personal and technical data is collected, how it is used and stored, and how users can manage privacy preferences.',
-    url: `${getCanonicalOrigin()}/privacy-policy`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Privacy Policy',
-          item: 'https://www.amaanestate.com/privacy-policy',
-        },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/privacy-policy`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/privacy-policy`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/privacy-policy` },
+      ]),
+    ],
   });
 
   return (

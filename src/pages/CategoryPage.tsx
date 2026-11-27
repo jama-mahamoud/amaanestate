@@ -4,6 +4,7 @@ import { Article, Category } from '../types';
 import { getCategoryBySlug, getPublishedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { CATEGORY_FALLBACK_SEO_META, truncateAtWordBoundary } from '../lib/seoUtils';
 import ArticleCard from '../components/editorial/ArticleCard';
 import AdPlacement from '../components/editorial/AdPlacement';
 import NewsletterBox from '../components/editorial/NewsletterBox';
@@ -42,29 +43,47 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
     };
   }, [activeSlug, sortBy, keyword]);
 
+  const fallbackMeta = CATEGORY_FALLBACK_SEO_META[activeSlug];
+  const origin = getCanonicalOrigin();
+  const categoryTitle =
+    category?.seo_title || fallbackMeta?.title || category?.name || 'Real Estate Insights & News';
+  const categoryDescription = truncateAtWordBoundary(
+    category?.seo_description || category?.description || fallbackMeta?.description,
+    158
+  );
+  const categoryUrl = category ? `${origin}/${encodeURIComponent(category.slug)}` : undefined;
+
   useSEO({
-    title: category?.seo_title || category?.name || 'Real Estate Insights & News',
-    description:
-      category?.seo_description ||
-      category?.description ||
-      'Explore global real estate news, housing market research, and property investment insights on AmaanEstate.',
-    url: category ? `${getCanonicalOrigin()}/${encodeURIComponent(category.slug)}` : undefined,
+    title: categoryTitle,
+    description: categoryDescription,
+    url: categoryUrl,
+    image: category?.image_url || undefined,
+    imageAlt: category?.name || fallbackMeta?.name || undefined,
     noIndex: !loading && !category,
     omitCanonical: !loading && !category,
     structuredData: category
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: category.name,
-              item: `https://www.amaanestate.com/${category.slug}`,
-            },
-          ],
-        }
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: category.name,
+            description: categoryDescription,
+            url: categoryUrl,
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: category.name,
+                item: `${origin}/${category.slug}`,
+              },
+            ],
+          },
+        ]
       : undefined,
   });
 
@@ -106,6 +125,8 @@ export default function CategoryPage({ forcedSlug }: CategoryPageProps) {
             <img
               src={resolveEditorialImage(category?.image_url, 'hero-pavilion')}
               alt={category?.name || 'Category cover'}
+              fetchPriority="high"
+              decoding="async"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />

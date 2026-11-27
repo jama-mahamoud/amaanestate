@@ -35,6 +35,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             <img
               src={imageSrc}
               alt={article.featured_image_alt || article.title}
+              decoding="async"
               referrerPolicy="no-referrer"
               onError={() => setImgFailed(true)}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
@@ -138,6 +139,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             src={imageSrc}
             alt={article.featured_image_alt || article.title}
             loading="lazy"
+            decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setImgFailed(true)}
             className="w-full h-full object-cover transition-transform duration-600 ease-out group-hover:scale-[1.03]"

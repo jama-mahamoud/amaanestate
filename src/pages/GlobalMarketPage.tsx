@@ -28,6 +28,7 @@ import {
 } from '../lib/globalMarkets';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { formatSeoTitle, truncateAtWordBoundary } from '../lib/seoUtils';
 import ArticleCard from '../components/editorial/ArticleCard';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 import NotFoundPage from './NotFoundPage';
@@ -169,12 +170,12 @@ export default function GlobalMarketPage() {
 
   const seoTitle = isReportView
     ? activeReport
-      ? activeReport.seo_title || `${activeReport.title} | AmaanEstate`
+      ? formatSeoTitle(activeReport.seo_title || activeReport.title)
       : loading
       ? 'Loading Global Market Intelligence | AmaanEstate'
       : 'Market Report Not Found (404) | AmaanEstate'
     : countrySummary
-    ? `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`
+    ? formatSeoTitle(`${countrySummary.countryName} Real Estate Market Overview`)
     : loading
     ? 'Loading Global Market Intelligence | AmaanEstate'
     : 'Market Report Not Found (404) | AmaanEstate';
@@ -187,17 +188,18 @@ export default function GlobalMarketPage() {
 
   const seoDescription = isReportView
     ? activeReport
-      ? (
+      ? truncateAtWordBoundary(
           activeReport.seo_description ||
-          activeReport.market_overview ||
-          activeReport.market_analysis ||
-          `Verified residential property price trends, rental market analysis, and investment insights for ${activeReport.city_name || activeReport.country_name}.`
-        ).slice(0, 160)
+            activeReport.market_overview ||
+            activeReport.market_analysis ||
+            `Verified residential property price trends, rental market analysis, and investment insights for ${activeReport.city_name || activeReport.country_name}.`,
+          158
+        )
       : 'Real estate market intelligence, residential price trends, and rental research on AmaanEstate.'
     : countrySummary
-    ? `Explore ${countrySummary.countryName} real estate market overview (${countryCoverageSummary}), residential price trends, rental indicators, and published market research.`.slice(
-        0,
-        160
+    ? truncateAtWordBoundary(
+        `Explore ${countrySummary.countryName} real estate market overview (${countryCoverageSummary}), residential price trends, rental indicators, and published market research.`,
+        158
       )
     : 'Real estate market intelligence, residential price trends, and rental research on AmaanEstate.';
 
@@ -571,6 +573,8 @@ export default function GlobalMarketPage() {
                       <img
                         src={resolveEditorialImage(sub.cover_image)}
                         alt={sub.cover_image_alt || sub.title}
+                        loading="lazy"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                       />
@@ -771,6 +775,8 @@ export default function GlobalMarketPage() {
           <img
             src={resolveEditorialImage(activeReport.cover_image)}
             alt={activeReport.cover_image_alt || activeReport.title}
+            fetchPriority="high"
+            decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setImgFailed(true)}
             className="w-full h-full object-cover"

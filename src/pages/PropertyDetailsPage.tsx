@@ -11,6 +11,7 @@ import {
   getPropertyBySlug,
 } from '../services/propertyService';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { truncateAtWordBoundary } from '../lib/seoUtils';
 import PropertyGallery from '../components/marketplace/PropertyGallery';
 import PropertyEnquiryForm from '../components/marketplace/PropertyEnquiryForm';
 
@@ -64,9 +65,12 @@ export default function PropertyDetailsPage() {
       ? 'Loading Property | AmaanEstate'
       : 'Property Unavailable | AmaanEstate',
     description: property
-      ? `${formatPropertyTypeLabel(property.property_type)} ${
-          property.transaction_type === 'rent' ? 'for rent' : 'for sale'
-        } in ${locationText}. ${(property.description || '').slice(0, 140)}`
+      ? truncateAtWordBoundary(
+          `${formatPropertyTypeLabel(property.property_type)} ${
+            property.transaction_type === 'rent' ? 'for rent' : 'for sale'
+          } in ${locationText}. ${property.description || ''}`,
+          158
+        )
       : 'Browse residential properties for sale and rent on the AmaanEstate global property marketplace.',
     image: primaryImage?.image_url || undefined,
     imageAlt: primaryImage?.alt_text || property?.title,

@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 
 import { RobotsDirective } from '../types';
+import {
+  DEFAULT_OG_IMAGE_ALT,
+  DEFAULT_OG_IMAGE_PATH,
+  DEFAULT_SEO_DESCRIPTION,
+  DEFAULT_SEO_TITLE,
+  formatSeoTitle,
+  truncateAtWordBoundary,
+} from '../lib/seoUtils';
 
 export interface SEOProps {
   title?: string;
@@ -8,6 +16,7 @@ export interface SEOProps {
   image?: string;
   imageAlt?: string;
   url?: string;
+  lang?: 'en' | 'so' | string;
   noIndex?: boolean;
   robotsDirective?: RobotsDirective;
   omitCanonical?: boolean;
@@ -37,19 +46,13 @@ function toAbsoluteUrl(value?: string): string | undefined {
   return `${origin}${value.startsWith('/') ? '' : '/'}${value}`;
 }
 
-const DEFAULT_SEO_TITLE =
-  'AmaanEstate | Global Real Estate News, Research & Market Intelligence';
-const DEFAULT_SEO_DESCRIPTION =
-  'Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.';
-const DEFAULT_OG_IMAGE = '/images/articles/sovereign-capital-logistics-corridors.jpg';
-const DEFAULT_OG_IMAGE_ALT = 'AmaanEstate — Global Real Estate Media, Research & Market Intelligence';
-
 export function useSEO({
   title,
   description,
   image,
   imageAlt,
   url,
+  lang = 'en',
   noIndex = false,
   robotsDirective,
   omitCanonical = false,
@@ -61,15 +64,13 @@ export function useSEO({
   structuredData,
 }: SEOProps) {
   useEffect(() => {
-    const hasBrand = title ? /amaan\s*estate/i.test(title) : false;
-    const fullTitle = title
-      ? hasBrand
-        ? title
-        : `${title} | AmaanEstate`
-      : DEFAULT_SEO_TITLE;
+    const docLang = (lang || 'en').trim().toLowerCase() === 'so' ? 'so' : 'en';
+    document.documentElement.lang = docLang;
+
+    const fullTitle = formatSeoTitle(title, DEFAULT_SEO_TITLE);
     document.title = fullTitle;
 
-    const metaDesc = description || DEFAULT_SEO_DESCRIPTION;
+    const metaDesc = truncateAtWordBoundary(description, 158, DEFAULT_SEO_DESCRIPTION);
 
     const setMetaTag = (attributeName: string, attributeValue: string, content: string) => {
       let element = document.querySelector(`meta[${attributeName}="${attributeValue}"]`);
@@ -104,11 +105,12 @@ export function useSEO({
       document.querySelector('meta[name="keywords"]')?.remove();
     }
 
-    const resolvedImage = image || DEFAULT_OG_IMAGE;
+    const resolvedImage = image || DEFAULT_OG_IMAGE_PATH;
     const resolvedImageAlt = imageAlt || (image ? fullTitle : DEFAULT_OG_IMAGE_ALT);
     const absoluteImage = toAbsoluteUrl(resolvedImage);
 
     setMetaTag('property', 'og:site_name', 'AmaanEstate');
+    setMetaTag('property', 'og:locale', docLang === 'so' ? 'so_SO' : 'en_US');
     setMetaTag('property', 'og:title', fullTitle);
     setMetaTag('property', 'og:description', metaDesc);
     setMetaTag('property', 'og:type', type);
@@ -156,10 +158,12 @@ export function useSEO({
       });
     }
 
-    const existingScripts = document.querySelectorAll('script[data-amaan-seo="true"]');
-    existingScripts.forEach((s) => s.remove());
+    // Remove both prior CSR and SSR JSON-LD blocks before applying route structured data
+    document
+      .querySelectorAll('script[data-amaan-seo="true"], script[data-amaan-ssr-seo="true"]')
+      .forEach((s) => s.remove());
 
-    if (structuredData) {
+    if (structuredData && !noIndex) {
       const blocks = Array.isArray(structuredData) ? structuredData : [structuredData];
       blocks.forEach((block) => {
         const scriptEl = document.createElement('script');
@@ -175,6 +179,7 @@ export function useSEO({
     image,
     imageAlt,
     url,
+    lang,
     noIndex,
     robotsDirective,
     omitCanonical,

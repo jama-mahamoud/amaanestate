@@ -52,6 +52,8 @@ export default function PropertyGallery({ title, images }: PropertyGalleryProps)
         <img
           src={activeImage.image_url}
           alt={activeImage.alt_text || title}
+          fetchPriority="high"
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() =>
             setFailedUrls((prev) => ({ ...prev, [activeImage.image_url]: true }))
@@ -113,6 +115,8 @@ export default function PropertyGallery({ title, images }: PropertyGalleryProps)
               <img
                 src={img.image_url}
                 alt={img.alt_text || `${title} photo ${idx + 1}`}
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />

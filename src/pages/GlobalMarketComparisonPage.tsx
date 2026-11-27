@@ -22,6 +22,7 @@ import {
   resolveComparisonSocialImageMetadata,
 } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { formatSeoTitle, truncateAtWordBoundary } from '../lib/seoUtils';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 import NotFoundPage from './NotFoundPage';
 
@@ -63,6 +64,7 @@ function CityComparisonImage({
         <img
           src={city.image_url!}
           alt={city.image_alt || `${city.city_name}, ${city.country_name} — ${fallbackTitle}`}
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
           className="w-full h-full object-cover"
@@ -278,17 +280,18 @@ export default function GlobalMarketComparisonPage() {
   const socialMeta = resolveComparisonSocialImageMetadata({ comparison });
 
   const seoTitle = comparison
-    ? comparison.seo_title || `${comparison.title} | AmaanEstate`
+    ? formatSeoTitle(comparison.seo_title || comparison.title)
     : loading
     ? 'Loading City Market Comparison | AmaanEstate'
     : 'City Market Comparison Not Found (404) | AmaanEstate';
 
   const seoDescription = comparison
-    ? (
+    ? truncateAtWordBoundary(
         comparison.seo_description ||
-        comparison.short_intro ||
-        `Side-by-side residential property market comparison between ${comparison.city_a.city_name} and ${comparison.city_b.city_name} (${comparison.reporting_period}).`
-      ).slice(0, 160)
+          comparison.short_intro ||
+          `Side-by-side residential property market comparison between ${comparison.city_a.city_name} and ${comparison.city_b.city_name} (${comparison.reporting_period}).`,
+        158
+      )
     : 'Independent two-city residential real estate market comparisons and investment research on AmaanEstate.';
 
   useSEO({

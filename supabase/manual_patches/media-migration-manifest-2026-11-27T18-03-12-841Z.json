@@ -1,0 +1,227 @@
+{
+  "mode": "dry-run",
+  "items": [
+    {
+      "table": "articles",
+      "id": "01da9bb3-9663-42ef-bc6c-17332800a7fc",
+      "slug": "cristiano-ronaldo-s-pestana-cr7-paris-hotel-210-rooms-and-2027-opening",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/fvzfBu2IZSrmKlCNjNDw5wZ-tr6GDW9BCPoWxPXsbwE9TiAJ84gnXWJUf6zNCXi1_jfjXGKw5pPyKRB7a37QdzshA4JRFma9pZ8bkQu8-G8xzjJPucFtuxyS7S5r7ZbdlTLCzam_IDQMH1GRIxU759IFR-Dy4vvYMTsV8D-ZjHqceIiv1-bD6pCdq1sOAP0M?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/fvzfBu2IZSrmKlCNjNDw5wZ-tr6GDW9BCPoWxPXsbwE9TiAJ84gnXWJUf6zNCXi1_jfjXGKw5pPyKRB7a37QdzshA4JRFma9pZ8bkQu8-G8xzjJPucFtuxyS7S5r7ZbdlTLCzam_IDQMH1GRIxU759IFR-Dy4vvYMTsV8D-ZjHqceIiv1-bD6pCdq1sOAP0M?purpose=fullsize"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/cristiano-ronaldo-s-pestana-cr7-paris-hotel-210-rooms-and-20-20c2b7834da0.jpg] (image/jpeg, 79666 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/cristiano-ronaldo-s-pestana-cr7-paris-hotel-210-rooms-and-20-20c2b7834da0.jpg] (image/jpeg, 79666 bytes)"
+      }
+    },
+    {
+      "table": "articles",
+      "id": "04e24f67-cb7f-43ad-8d24-f1da9e69d57b",
+      "slug": "london-s-luxury-flat-glut-exposes-a-wider-real-estate-development-risk-in-2026",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/UDOW6uoVqehK6yMeCqwJhXPDTEpBswZ_ndC63YNLlispW1IwR9o3BDFrH2nZ_SQPrvi5_C7cQxpIsbvHD1ZHOMUIUcCJ5LZ-M9rqQkVDXfSWZKJ-Fpjn5dEgKnrCrkuStEIC3ma6BL0V6mC0xC0hjaWyCmrVCAauR-7sPVXPt5K8UG8XUIETbxDuv7Gw8sll?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/UDOW6uoVqehK6yMeCqwJhXPDTEpBswZ_ndC63YNLlispW1IwR9o3BDFrH2nZ_SQPrvi5_C7cQxpIsbvHD1ZHOMUIUcCJ5LZ-M9rqQkVDXfSWZKJ-Fpjn5dEgKnrCrkuStEIC3ma6BL0V6mC0xC0hjaWyCmrVCAauR-7sPVXPt5K8UG8XUIETbxDuv7Gw8sll?purpose=fullsize",
+        "gallery_images": [
+          "https://images.openai.com/static-rsc-4/UDOW6uoVqehK6yMeCqwJhXPDTEpBswZ_ndC63YNLlispW1IwR9o3BDFrH2nZ_SQPrvi5_C7cQxpIsbvHD1ZHOMUIUcCJ5LZ-M9rqQkVDXfSWZKJ-Fpjn5dEgKnrCrkuStEIC3ma6BL0V6mC0xC0hjaWyCmrVCAauR-7sPVXPt5K8UG8XUIETbxDuv7Gw8sll?purpose=fullsize",
+          "https://images.openai.com/static-rsc-4/SjA-jNoAmr7iXkTxG7TaPuI2hl4Dq7ztcWugVm_9T0qnToZyg-MYfN8O2YzExuv1vl1MELX-nCxGIvDt7SbTnCdru7vaoXhm90sztytUJuEFSgLqO58gEx1Dgw3L1hacBIl9xlPYNyD9i77_mHkskft8_xKDD5vHlJW3NC9mqRQBPPcuEf2RIBHqnZxBCv54?purpose=fullsize"
+        ]
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/london-s-luxury-flat-glut-exposes-a-wider-real-estate-develo-ae61239530e6.jpg] (image/jpeg, 52136 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/london-s-luxury-flat-glut-exposes-a-wider-real-estate-develo-ae61239530e6.jpg] (image/jpeg, 52136 bytes)",
+        "gallery_images": [
+          "[DRY-RUN -> editorial-media/migrated/articles/london-s-luxury-flat-glut-exposes-a-wider-real-estate-develo-ae61239530e6.jpg] (image/jpeg, 52136 bytes)",
+          "[DRY-RUN -> editorial-media/migrated/articles/london-s-luxury-flat-glut-exposes-a-wider-real-estate-develo-a92addd8329d.jpg] (image/jpeg, 410700 bytes)"
+        ]
+      }
+    },
+    {
+      "table": "articles",
+      "id": "30ad30cb-29ba-448a-b01e-b3d8c44273a1",
+      "slug": "the-cheapest-state-to-rent-in-the-us-in-2026-why-oklahoma-stands-out",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/gWK7Dh5XzVfTksmNBaC6pHsN_Iuqv9hI3SW5vK8w41ViduwTp97S4_JV2hewaxYzxhG6L2PqRlNDfY3UCZAZiCsl-mkJzkHCgSexPWrHQqDRM9X6sJtQucQMSnPMoSTi0AFhzlEbNW0c9Q_nNUYoYja7VpGh0tALhx4a-l5JADd-4EcQl-Igk30U2PjApMuF?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/hHt4AhUwd2HaOt7GKLqeOCEt5DnyWA3TxsFVL1NCAsVTG25fzHiwVRHm58lt8UZ9CztIMEQu1hkkwZT2QUy_xCBYbcsNHUcVLUibGeByZ8xRlnARBeFhaawuzSa02x-V5Sfaa5GScnB-UeQ4lmerW3hlAIyzZPU2N8NmdE4RBZ0VJzSyXfZozcMI8JbQiphr?purpose=fullsize"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/the-cheapest-state-to-rent-in-the-us-in-2026-why-oklahoma-st-dfe57c9cb766.jpg] (image/jpeg, 74430 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/the-cheapest-state-to-rent-in-the-us-in-2026-why-oklahoma-st-b98e9bed1a2a.jpg] (image/jpeg, 143591 bytes)"
+      }
+    },
+    {
+      "table": "articles",
+      "id": "c880ed66-f505-4185-880f-c90dc0d1f93a",
+      "slug": "toronto-vs-washington-d-c-what-detached-family-homes-cost-in-2026",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/bf5Y82-IKY7niIi9ImRkncmYmbODLqnkcURlHtarvDBqeCiOyNWRJ0sqmmfLvk38TNwSXUfCcIxd8IIDXP5QqlKHixlNk9G1-MIH_j8FtPnsYNoJvf6RCFJj2OBwOESZM0rlWzevbhmlXbxlVdnHQL2A8AiTFsnH3kSs6rjyxh4-D_PuThw30zDjV3bnRNxo?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/bf5Y82-IKY7niIi9ImRkncmYmbODLqnkcURlHtarvDBqeCiOyNWRJ0sqmmfLvk38TNwSXUfCcIxd8IIDXP5QqlKHixlNk9G1-MIH_j8FtPnsYNoJvf6RCFJj2OBwOESZM0rlWzevbhmlXbxlVdnHQL2A8AiTFsnH3kSs6rjyxh4-D_PuThw30zDjV3bnRNxo?purpose=fullsize",
+        "gallery_images": [
+          "https://images.openai.com/static-rsc-4/YP87PcGjmDBuNAFcFLfbVrbJoP2hHjgE8v_75yCledCzRgEt9EVQKopzjVGoh_tX0FG9mr6fhW3q8MewpJa9-18A4dfhmh16V_y3HQ1Zs3CAMiJGsJzncAHwb0S9zcLZJC8AGvfgow3gLCEFssIbhin4xGSHSLHZurtEGJ6IH5F9DLfVYMX9MrrMfXpbYY0Z?purpose=fullsize",
+          "https://images.openai.com/static-rsc-4/aUzz3P6Ut_Ww_ucxppAvMsJRQmEk8NpmfNMpV1mgkuOeNwquAPCp_nh5nlGDUAXPAZIFFXrHejjToVpq2Xp2LgtdOATGhBYJyXo60hcnFJMSJPjiIzXH-D65T1LUDN_Z_k39Sbq9t9ebGExdkhpga_RtmWaX_4Hz4slILxQZ6S0mQaQjesrES_mAxJeBi3fw?purpose=fullsize"
+        ]
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-e74801155dae.jpg] (image/jpeg, 105392 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-e74801155dae.jpg] (image/jpeg, 105392 bytes)",
+        "gallery_images": [
+          "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-ebdc26fee53a.jpg] (image/jpeg, 437272 bytes)",
+          "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-c505ef091120.jpg] (image/jpeg, 634598 bytes)"
+        ]
+      }
+    },
+    {
+      "table": "articles",
+      "id": "91b71e17-211b-4b49-aafb-6389faa6fc1b",
+      "slug": "what-is-amaanestate-exploring-our-mission-vision-and-global-real-estate-platform",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/bf5Y82-IKY7niIi9ImRkncmYmbODLqnkcURlHtarvDBqeCiOyNWRJ0sqmmfLvk38TNwSXUfCcIxd8IIDXP5QqlKHixlNk9G1-MIH_j8FtPnsYNoJvf6RCFJj2OBwOESZM0rlWzevbhmlXbxlVdnHQL2A8AiTFsnH3kSs6rjyxh4-D_PuThw30zDjV3bnRNxo?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/bf5Y82-IKY7niIi9ImRkncmYmbODLqnkcURlHtarvDBqeCiOyNWRJ0sqmmfLvk38TNwSXUfCcIxd8IIDXP5QqlKHixlNk9G1-MIH_j8FtPnsYNoJvf6RCFJj2OBwOESZM0rlWzevbhmlXbxlVdnHQL2A8AiTFsnH3kSs6rjyxh4-D_PuThw30zDjV3bnRNxo?purpose=fullsize"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-e74801155dae.jpg] (image/jpeg, 105392 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/toronto-vs-washington-d-c-what-detached-family-homes-cost-in-e74801155dae.jpg] (image/jpeg, 105392 bytes)"
+      }
+    },
+    {
+      "table": "articles",
+      "id": "9da08072-87bd-4466-9b44-e3307ca4d818",
+      "slug": "nidaamka-cluster-ka-deegaanka-soomaalida-faa-iido-mise-khasaare",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/3QwnP0JL0VXzv7dzNr0twHjx_xC95Y-PQpmkLgShDJWOuBIUgtun7ohWR0kF9kA6hcsprSCqi0bdOrNyEeMuSSr2K3eUbzURTTqOSqy4NBbrtyIvJyqW9TUKsrYsXNF9G1bc_jG-vXbM2jR70auLaZK6R0wAzLt2Bbw8Z-JluH8?purpose=inline",
+        "og_image": "https://images.openai.com/static-rsc-4/3QwnP0JL0VXzv7dzNr0twHjx_xC95Y-PQpmkLgShDJWOuBIUgtun7ohWR0kF9kA6hcsprSCqi0bdOrNyEeMuSSr2K3eUbzURTTqOSqy4NBbrtyIvJyqW9TUKsrYsXNF9G1bc_jG-vXbM2jR70auLaZK6R0wAzLt2Bbw8Z-JluH8?purpose=inline"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/nidaamka-cluster-ka-deegaanka-soomaalida-faa-iido-mise-khasa-c63cf2b4f46b.jpg] (image/jpeg, 276644 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/nidaamka-cluster-ka-deegaanka-soomaalida-faa-iido-mise-khasa-c63cf2b4f46b.jpg] (image/jpeg, 276644 bytes)"
+      }
+    },
+    {
+      "table": "articles",
+      "id": "a866a75b-ce64-4720-a937-9dfacdda65eb",
+      "slug": "7-most-affordable-cities-to-rent-a-home-in-ethiopia-in-2026",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/-kTE0ykwSG8HKf_-rUIEDXZOg-h_fX1f5U8rXNkEH1GTmqeVniSbvFRH2UYA7nbZ2AzyHdEeFNeSthb1iptbgvmF9E09KFOyaFXUR5MwFCuleFGIzGE6RnsXSSqN4mItJWS3pmvumdmIs7ha-MnrYrevVmzABTmENxLslh4FtxqAUKv9GM__H0zJ6AG5DAU4?purpose=fullsize",
+        "og_image": "https://images.openai.com/static-rsc-4/2dYDX55NSKofnQDkSNrayusc7qvtjEEsq_8lxRyOZsmmqrt22bV8MxBTQRbn7BQRXgy5AvkKPwM_TbleiWsOIo-GAw2_kOtm5hS6goz6QRZ35rf1bKGugYARHr_l3Vou4rrffMMMgYYaTm7yezFwsKHMviRBIC0sm--xm29f9v4C1-RZnraLAtHcz-B7EuNb?purpose=fullsize"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/7-most-affordable-cities-to-rent-a-home-in-ethiopia-in-2026--8ddb603ca92c.jpg] (image/jpeg, 126047 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/7-most-affordable-cities-to-rent-a-home-in-ethiopia-in-2026--29110a19a8fd.jpg] (image/jpeg, 153752 bytes)"
+      }
+    },
+    {
+      "table": "articles",
+      "id": "c7d0bc8e-59b8-4367-afc6-440b9bd26ba1",
+      "slug": "cheapest-states-to-live-in-the-u-s-in-2026-top-10-affordable-places",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/mXNsp6KLQih0LFYj1daa1twS2V2dgxvrza1iDxRwOhMXWF4W4dJNpwmgdqyqf-ljcy720ZpkATvmjnhZYqiKnYPabKLXCrpWy0gvFauzlLWMSIBNwFXmlU6SsuDJ8C4QjhmFwl16-VNscYu9oY8NNWCSFvgwpQSp0zf-inljYys?purpose=inline",
+        "og_image": "https://images.openai.com/static-rsc-4/mXNsp6KLQih0LFYj1daa1twS2V2dgxvrza1iDxRwOhMXWF4W4dJNpwmgdqyqf-ljcy720ZpkATvmjnhZYqiKnYPabKLXCrpWy0gvFauzlLWMSIBNwFXmlU6SsuDJ8C4QjhmFwl16-VNscYu9oY8NNWCSFvgwpQSp0zf-inljYys?purpose=inline",
+        "gallery_images": [
+          "https://images.openai.com/static-rsc-4/IY6o0RmHMe3lxhAKkqnwbQhU8AgDkDzdE-SvANqaTA7R92mSUkdRM6oYCsfDW0GOyqVyHBnrTBrJNYRpNTgp78bFCh2cOHAdSbpSuF8T5BfxxTF4Ve1doc0HhIfXmBx35Zgyt9WEU8yz3u_A1yq1XuDwkXziwaoJszGDJ5oYS_ufEo2SLdhlY0sdTTznGnps?purpose=fullsize",
+          "https://images.openai.com/static-rsc-4/aSktx1jqMCalPUZBHYyZMW2bSBo5UI8KHZ6NrvfWlSmFqKoZEKsHoMYNeaPZ4HooDoIhjkOfLfFmaSsLasQ1_kvf8c_LZpb-gK9A5IdYkxQW4F5kCODksj7mYeiResWcxjM_dp6Eo27WvKIwJPZksXEqhQcbO-ukM38D3xc84Rr0oXoDNyNu6tSxWjUjha7T?purpose=fullsize"
+        ]
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/cheapest-states-to-live-in-the-u-s-in-2026-top-10-affordable-a3ce5c1e8620.jpg] (image/jpeg, 296112 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/cheapest-states-to-live-in-the-u-s-in-2026-top-10-affordable-a3ce5c1e8620.jpg] (image/jpeg, 296112 bytes)",
+        "gallery_images": [
+          "[DRY-RUN -> editorial-media/migrated/articles/cheapest-states-to-live-in-the-u-s-in-2026-top-10-affordable-2f57c7097a70.jpg] (image/jpeg, 287303 bytes)",
+          "[DRY-RUN -> editorial-media/migrated/articles/cheapest-states-to-live-in-the-u-s-in-2026-top-10-affordable-606278262921.jpg] (image/jpeg, 157050 bytes)"
+        ]
+      }
+    },
+    {
+      "table": "articles",
+      "id": "fa8052f6-90f2-48c0-ab6e-f33f12c6d737",
+      "slug": "united-states-housing-market-2026-sales-hit-16-year-low",
+      "before": {
+        "featured_image": "https://images.openai.com/static-rsc-4/6wQecN2h0piMMRkBoyNLAgxYOqW6GK7g4rsqJZrlA4YXIP1dRdHCR9PWChBtErNtqHmGoxRJ5yCJ9yoPPbKK15Z6wvPz8wW26hiryo_5iOjq-L4H3EL1fvNwjfqRBQS_oQGOLP7ey2lWHsJzFlK0KwT39bn7Vp24IDFTy0H4wJU?purpose=inline",
+        "og_image": "https://images.openai.com/static-rsc-4/6wQecN2h0piMMRkBoyNLAgxYOqW6GK7g4rsqJZrlA4YXIP1dRdHCR9PWChBtErNtqHmGoxRJ5yCJ9yoPPbKK15Z6wvPz8wW26hiryo_5iOjq-L4H3EL1fvNwjfqRBQS_oQGOLP7ey2lWHsJzFlK0KwT39bn7Vp24IDFTy0H4wJU?purpose=inline"
+      },
+      "updates": {
+        "featured_image": "[DRY-RUN -> editorial-media/migrated/articles/united-states-housing-market-2026-sales-hit-16-year-low-feat-9e53481a7a62.jpg] (image/jpeg, 315853 bytes)",
+        "og_image": "[DRY-RUN -> editorial-media/migrated/articles/united-states-housing-market-2026-sales-hit-16-year-low-feat-9e53481a7a62.jpg] (image/jpeg, 315853 bytes)"
+      }
+    },
+    {
+      "table": "global_markets",
+      "id": "c42ab170-0d36-4f24-87d4-ec0d462d9aaa",
+      "slug": "china-housing-market-prices-sales-and-investment-outlook-for-2027",
+      "before": {
+        "cover_image": "https://images.openai.com/static-rsc-4/oiIH18Yui1an3mW-LyZSK639x6dxXAy7baRdk4zEo-Zdcmpo2YQu6ieMa5VWgFPLgLRA_LtlOo7XS7pOwA0An4scLx1nbtaj1K25JeE0CS94MS6yFv_YK1kQkHry2KeYjArxdzz5GOi5F55TEa8SQA7zaNCr1ajUfg0n15Fhpu_2RhO3QlMjK2RBKQXGEYfq?purpose=fullsize"
+      },
+      "updates": {
+        "cover_image": "[DRY-RUN -> editorial-media/migrated/global-markets/china-housing-market-prices-sales-and-investment-outlook-for-707b9be08c33.jpg] (image/jpeg, 153931 bytes)"
+      }
+    },
+    {
+      "table": "global_markets",
+      "id": "291ec437-5904-4bc8-bce8-18b323447f34",
+      "slug": "tokyo-tokyo-housing-market-rising-prices-and-bubble-risk-in-2026",
+      "before": {
+        "cover_image": "https://images.openai.com/static-rsc-4/-Aevgmj0rfqPYcaguuRHM-DifmhzPa46X5tlo3hXY9fs-CFBaVahtJPMQQePWY9Vpun7S37owI4DMh9gYe6yXyelcCDgHgl69iQJT4t5GmPC_FaVJgdNj9hjwRAQbmOssceu3eqD36OwPR8novVq8i_YdzTrWuHoMJ85S3GNBef8UtVOhj_m4hsPH91o0W9Q?purpose=fullsize"
+      },
+      "updates": {
+        "cover_image": "[DRY-RUN -> editorial-media/migrated/global-markets/tokyo-tokyo-housing-market-rising-prices-and-bubble-risk-in--7f352d4d7e70.jpg] (image/jpeg, 316319 bytes)"
+      }
+    },
+    {
+      "table": "global_markets",
+      "id": "c3e456ae-4f75-4a7d-8a68-e16579a0e081",
+      "slug": "uk-housing-market-house-prices-rental-growth-and-investment-outlook-2026",
+      "before": {
+        "cover_image": "https://images.openai.com/static-rsc-4/0NQFAr0U_KeApR9p57PTlNeMl2rP_lag4WKsWqc_KaRzgB7Wy6NHQaSwKUgS9yN7dUPcI4ru-EF3y-i62zxZFwvNTAmHZtiSGTNOdKZQcfdjyAwL-MBUQHb9x2OzdWxI2wv1OgNQe5F8fPMhC_AeBkjTZGZmZ-B2xrvQBJn1OXP5PB84GOeRgCSTdaguCdYs?purpose=fullsize",
+        "social_image": "https://images.openai.com/static-rsc-4/0NQFAr0U_KeApR9p57PTlNeMl2rP_lag4WKsWqc_KaRzgB7Wy6NHQaSwKUgS9yN7dUPcI4ru-EF3y-i62zxZFwvNTAmHZtiSGTNOdKZQcfdjyAwL-MBUQHb9x2OzdWxI2wv1OgNQe5F8fPMhC_AeBkjTZGZmZ-B2xrvQBJn1OXP5PB84GOeRgCSTdaguCdYs?purpose=fullsize"
+      },
+      "updates": {
+        "cover_image": "[DRY-RUN -> editorial-media/migrated/global-markets/uk-housing-market-house-prices-rental-growth-and-investment--24dc452ba13b.jpg] (image/jpeg, 196446 bytes)",
+        "social_image": "[DRY-RUN -> editorial-media/migrated/global-markets/uk-housing-market-house-prices-rental-growth-and-investment--24dc452ba13b.jpg] (image/jpeg, 196446 bytes)"
+      }
+    },
+    {
+      "table": "global_markets",
+      "id": "c665ad2f-706e-4860-b858-b2ca13c90441",
+      "slug": "addis-ababa-ethiopia-housing-market-property-prices-rental-trends-and-investment-outlook-2026-2027",
+      "before": {
+        "cover_image": "https://images.openai.com/static-rsc-4/1CKBORkFyAoVbBh5VlYvRMM2gtWTaQDxJC-sLLP8s9F2nZ5yfn9iHv_El-6VAByjorR0rNW77Y4Mv3MteGP6lzIOljAfyWHFApe3jFNh1tbhiKwZR99JWyRQ40Eg3of_zdQwXO8SOOiAI2NjgO_mDXzhAlukffYS0nemDyyQ3J9bX09nxnL9PGphElREbHOj?purpose=fullsize",
+        "social_image": "https://images.openai.com/static-rsc-4/1CKBORkFyAoVbBh5VlYvRMM2gtWTaQDxJC-sLLP8s9F2nZ5yfn9iHv_El-6VAByjorR0rNW77Y4Mv3MteGP6lzIOljAfyWHFApe3jFNh1tbhiKwZR99JWyRQ40Eg3of_zdQwXO8SOOiAI2NjgO_mDXzhAlukffYS0nemDyyQ3J9bX09nxnL9PGphElREbHOj?purpose=fullsize"
+      },
+      "updates": {
+        "cover_image": "[DRY-RUN -> editorial-media/migrated/global-markets/addis-ababa-ethiopia-housing-market-property-prices-rental-t-7024cec51255.jpg] (image/jpeg, 210378 bytes)",
+        "social_image": "[DRY-RUN -> editorial-media/migrated/global-markets/addis-ababa-ethiopia-housing-market-property-prices-rental-t-7024cec51255.jpg] (image/jpeg, 210378 bytes)"
+      }
+    },
+    {
+      "table": "global_market_comparisons",
+      "id": "f6ecaf3e-3caa-4eff-bd5d-971f41770d9f",
+      "slug": "san-francisco-vs-manhattan-property-market",
+      "before": {
+        "social_image": "https://images.openai.com/static-rsc-4/0wzCiMzknelDegIR2od0OeAvZvHUgZB1bpm2LggsBfMFd7NhwXzzKQH4sKP4545hlbSVBC9EYU9O1-wEhEqUjibCLlMYEI--pQxdG-KsSqJa7-5sz5qbyG3eJroR8gaubuR4i_zHGU9umUXejHxYuPpY_BbbelJDV2Cj3CPijQMAm-PHXzdjl03zIZrvPvwn?purpose=fullsize"
+      },
+      "updates": {
+        "social_image": "[DRY-RUN -> editorial-media/migrated/comparisons/san-francisco-vs-manhattan-property-market-social-71e6ffdbff3c.jpg] (image/jpeg, 131249 bytes)"
+      }
+    },
+    {
+      "table": "global_market_comparison_cities",
+      "id": "308557a3-3832-4474-a31c-3600dde4c83b",
+      "city_name": "Manhattan",
+      "before": {
+        "image_url": "https://images.openai.com/static-rsc-4/0wzCiMzknelDegIR2od0OeAvZvHUgZB1bpm2LggsBfMFd7NhwXzzKQH4sKP4545hlbSVBC9EYU9O1-wEhEqUjibCLlMYEI--pQxdG-KsSqJa7-5sz5qbyG3eJroR8gaubuR4i_zHGU9umUXejHxYuPpY_BbbelJDV2Cj3CPijQMAm-PHXzdjl03zIZrvPvwn?purpose=fullsize"
+      },
+      "updates": {
+        "image_url": "[DRY-RUN -> editorial-media/migrated/comparisons/san-francisco-vs-manhattan-property-market-social-71e6ffdbff3c.jpg] (image/jpeg, 131249 bytes)"
+      }
+    },
+    {
+      "table": "global_market_comparison_cities",
+      "id": "f5eb6322-d33b-457a-b60d-d7f2c2c2dd3d",
+      "city_name": "San Francisco",
+      "before": {
+        "image_url": "https://images.openai.com/static-rsc-4/roCLzj2xTnAYRCocf2LYKtxmAhFQvXolOyi16I1Opy5keV9jqinviOrhvePtXDnHk4waS1Bkr5UeP510xpG_qQktNM8zdtL-vSvawGE8RAZSL52e1La20e72_61lzRGSuvvTcE02m2Qxm6M0yKZ-dv-9vrsl6e0IL5C41VooFli344I7ol73EmukZAiE-ASo?purpose=fullsize"
+      },
+      "updates": {
+        "image_url": "[DRY-RUN -> editorial-media/migrated/comparison-cities/san-francisco-a-de92a22a463b.jpg] (image/jpeg, 649319 bytes)"
+      }
+    }
+  ]
+}

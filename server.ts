@@ -5,12 +5,28 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import type { ViteDevServer } from "vite";
-import { SEED_ARTICLE_BY_SLUG, ALL_SEED_EDITORIAL_ARTICLES } from "./src/data/allArticles";
+import {
+  SEED_ARTICLE_BY_SLUG,
+  ALL_SEED_EDITORIAL_ARTICLES,
+  countArticleBodyWords,
+} from "./src/data/allArticles";
 import { normalizeCountryInfo, getCountryQueryVariants } from "./src/lib/countries";
 import {
   normalizeArticleSlugInput,
   resolveLegacyArticleRedirectSlug,
 } from "./src/lib/legacyRedirects";
+import {
+  buildBreadcrumbStructuredData,
+  buildHomeStructuredData,
+  CATEGORY_FALLBACK_SEO_META,
+  DEFAULT_OG_IMAGE_PATH,
+  DEFAULT_SEO_DESCRIPTION,
+  DEFAULT_SEO_TITLE,
+  detectContentLanguage,
+  formatSeoTitle,
+  STATIC_ROUTE_SEO_META,
+  truncateAtWordBoundary,
+} from "./src/lib/seoUtils";
 import {
   getActiveRedirectSourceSet,
   lookupActiveRedirect,
@@ -25,7 +41,6 @@ import {
   registerGlobalMarketsRoutes,
 } from "./server/globalMarketsRoutes";
 import {
-  DEFAULT_MARKET_OG_IMAGE_PATH,
   aggregateCountrySummaries,
   resolveComparisonCanonicalUrl,
   resolveComparisonSocialImageMetadata,
@@ -75,6 +90,57 @@ app.use((req, res, next) => {
   const hostname = rawHost.split(":")[0].toLowerCase();
   if (hostname === "amaanestate.com") {
     return res.redirect(308, `https://www.amaanestate.com${req.originalUrl}`);
+  }
+  return next();
+});
+
+// Block direct public access to SQL dumps, config manifests, env files, and source/docs directories
+const BLOCKED_SENSITIVE_PREFIXES = [
+  "/supabase",
+  "/docs",
+  "/server",
+  "/.env",
+  "/.git",
+];
+const BLOCKED_SENSITIVE_EXACT = new Set([
+  "/package.json",
+  "/package-lock.json",
+  "/tsconfig.json",
+  "/vercel.json",
+  "/vite.config.ts",
+  "/metadata.json",
+  "/api/index.ts",
+  "/004_editorial_25_articles.sql",
+]);
+
+app.use((req, res, next) => {
+  const lowerPath = (req.path || "").toLowerCase();
+  const isBlockedPrefix = BLOCKED_SENSITIVE_PREFIXES.some(
+    (prefix) => lowerPath === prefix || lowerPath.startsWith(`${prefix}/`) || lowerPath.startsWith(`${prefix}.`)
+  );
+  const isBlockedExtension = /\.(sql|env|bak|log|map)$/i.test(lowerPath);
+  if (isBlockedPrefix || BLOCKED_SENSITIVE_EXACT.has(lowerPath) || isBlockedExtension) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(404).type("text/plain; charset=utf-8").send("Not Found");
+  }
+  return next();
+});
+
+// Permanent 301 trailing-slash canonical normalization (except "/" and "/api/*")
+app.use((req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (
+    req.path.length > 1 &&
+    req.path.endsWith("/") &&
+    !req.path.startsWith("/api/") &&
+    !req.path.startsWith("/src/") &&
+    !req.path.startsWith("/@")
+  ) {
+    const cleanPath = req.path.replace(/\/+$/, "") || "/";
+    const queryIndex = req.url.indexOf("?");
+    const qs = queryIndex >= 0 ? req.url.slice(queryIndex) : "";
+    return res.redirect(301, `${cleanPath}${qs}`);
   }
   return next();
 });
@@ -179,21 +245,35 @@ async function fetchArticleForOg(slug: string): Promise<{
   title: string;
   slug: string;
   excerpt?: string | null;
+  content?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
   featured_image?: string | null;
   og_image?: string | null;
   featured_image_alt?: string | null;
   published_at?: string | null;
+  updated_at?: string | null;
   created_at?: string | null;
+  canonical_url?: string | null;
+  robots_directive?: string | null;
+  schema_type?: string | null;
+  keywords?: string[] | null;
+  alternate_language?: string | null;
+  alternate_article_slug?: string | null;
+  category?: { id?: string; name: string; slug: string } | null;
+  author?: { id?: string; name: string; slug?: string; title?: string } | null;
+  article_tags?: Array<{ tags?: { name: string; slug: string } | null }>;
 } | null> {
   const supabaseConfig = getSupabaseConfig();
 
   if (supabaseConfig) {
     try {
       const nowIso = encodeURIComponent(new Date().toISOString());
-      const response = await fetch(
-        `${supabaseConfig.url}/rest/v1/articles?slug=eq.${encodeURIComponent(slug)}&status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})&select=*`,
+      const selectRelational = encodeURIComponent(
+        "*,categories(id,name,slug),authors(id,name,slug,title),article_tags(tags(name,slug))"
+      );
+      let response = await fetch(
+        `${supabaseConfig.url}/rest/v1/articles?slug=eq.${encodeURIComponent(slug)}&status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})&select=${selectRelational}`,
         {
           headers: {
             apikey: supabaseConfig.anonKey,
@@ -201,10 +281,28 @@ async function fetchArticleForOg(slug: string): Promise<{
           },
         }
       );
+      if (!response.ok) {
+        response = await fetch(
+          `${supabaseConfig.url}/rest/v1/articles?slug=eq.${encodeURIComponent(slug)}&status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})&select=*`,
+          {
+            headers: {
+              apikey: supabaseConfig.anonKey,
+              Authorization: `Bearer ${supabaseConfig.anonKey}`,
+            },
+          }
+        );
+      }
       if (response.ok) {
         const rows = (await response.json()) as Array<any>;
         if (Array.isArray(rows) && rows.length > 0) {
-          return rows[0];
+          const row = rows[0];
+          const relCategory = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+          const relAuthor = Array.isArray(row.authors) ? row.authors[0] : row.authors;
+          return {
+            ...row,
+            category: relCategory || row.category || null,
+            author: relAuthor || row.author || null,
+          };
         }
         return null;
       }
@@ -216,20 +314,102 @@ async function fetchArticleForOg(slug: string): Promise<{
   // Fallback to local seed dataset only when Supabase is not configured
   const seed = SEED_ARTICLE_BY_SLUG[slug];
   if (seed) {
+    const catMeta = CATEGORY_FALLBACK_SEO_META[seed.category_slug];
     return {
       title: seed.title,
       slug: seed.slug,
       excerpt: seed.excerpt,
+      content: seed.content,
       seo_title: seed.seo_title,
       seo_description: seed.seo_description,
       featured_image: seed.featured_image,
       og_image: seed.featured_image,
       featured_image_alt: seed.featured_image_alt,
       published_at: seed.published_at,
+      keywords: [seed.primary_keyword, ...(seed.secondary_keywords || [])].filter(Boolean),
+      category: {
+        name: catMeta?.name || seed.category_slug,
+        slug: seed.category_slug,
+      },
     };
   }
 
   return null;
+}
+
+async function fetchPublishedArticlesForSsr(options?: {
+  categorySlug?: string;
+  limit?: number;
+}): Promise<Array<{ title: string; slug: string; excerpt?: string | null; categorySlug?: string; categoryName?: string }>> {
+  const limit = options?.limit ?? 12;
+  const supabaseConfig = getSupabaseConfig();
+
+  if (supabaseConfig) {
+    try {
+      const nowIso = encodeURIComponent(new Date().toISOString());
+      let categoryFilter = "";
+      if (options?.categorySlug) {
+        const catRes = await fetch(
+          `${supabaseConfig.url}/rest/v1/categories?slug=eq.${encodeURIComponent(options.categorySlug)}&select=id,name,slug&limit=1`,
+          {
+            headers: {
+              apikey: supabaseConfig.anonKey,
+              Authorization: `Bearer ${supabaseConfig.anonKey}`,
+            },
+          }
+        );
+        if (catRes.ok) {
+          const cats = (await catRes.json()) as any[];
+          if (Array.isArray(cats) && cats.length > 0) {
+            categoryFilter = `&category_id=eq.${encodeURIComponent(cats[0].id)}`;
+          } else {
+            return [];
+          }
+        }
+      }
+
+      const selectCols = encodeURIComponent("title,slug,excerpt,categories(name,slug)");
+      const endpoint = `${supabaseConfig.url}/rest/v1/articles?status=eq.published&or=(published_at.is.null,published_at.lte.${nowIso})${categoryFilter}&select=${selectCols}&order=published_at.desc.nullslast,created_at.desc&limit=${limit}`;
+      const res = await fetch(endpoint, {
+        headers: {
+          apikey: supabaseConfig.anonKey,
+          Authorization: `Bearer ${supabaseConfig.anonKey}`,
+        },
+      });
+      if (res.ok) {
+        const rows = (await res.json()) as any[];
+        if (Array.isArray(rows)) {
+          return rows
+            .filter((r) => isValidPublicSlug(r.slug))
+            .map((r) => {
+              const cat = Array.isArray(r.categories) ? r.categories[0] : r.categories;
+              return {
+                title: r.title,
+                slug: r.slug,
+                excerpt: r.excerpt,
+                categorySlug: cat?.slug,
+                categoryName: cat?.name,
+              };
+            });
+        }
+      }
+    } catch {
+      // Fallback safely to empty or local seed if unconfigured
+    }
+    return [];
+  }
+
+  const filtered = options?.categorySlug
+    ? ALL_SEED_EDITORIAL_ARTICLES.filter((a) => a.category_slug === options.categorySlug)
+    : ALL_SEED_EDITORIAL_ARTICLES;
+
+  return filtered.slice(0, limit).map((a) => ({
+    title: a.title,
+    slug: a.slug,
+    excerpt: a.excerpt,
+    categorySlug: a.category_slug,
+    categoryName: CATEGORY_FALLBACK_SEO_META[a.category_slug]?.name || a.category_slug,
+  }));
 }
 
 function getIndexTemplateHtml(): string {
@@ -250,13 +430,90 @@ function getIndexTemplateHtml(): string {
   return `<!doctype html><html lang="en"><head><meta charset="UTF-8" /></head><body><div id="root"></div></body></html>`;
 }
 
+function setHtmlDocumentLang(html: string, lang: "en" | "so"): string {
+  return html.replace(/<html\b([^>]*)>/i, (_match, attrs: string) => {
+    if (/\blang\s*=/i.test(attrs)) {
+      return `<html${attrs.replace(/\blang\s*=\s*["'][^"']*["']/i, `lang="${lang}"`)}>`;
+    }
+    return `<html lang="${lang}"${attrs}>`;
+  });
+}
+
+function stripJsonLdScripts(html: string): string {
+  return html.replace(
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,
+    ""
+  );
+}
+
+function renderJsonLdScripts(blocks: Array<Record<string, any>>): string {
+  return blocks
+    .filter(Boolean)
+    .map((block) => {
+      const safeJson = JSON.stringify(block).replace(/</g, "\\u003c");
+      return `    <script type="application/ld+json" data-amaan-ssr-seo="true">${safeJson}</script>`;
+    })
+    .join("\n");
+}
+
+function sanitizeArticleBodyForSsr(rawBody?: string | null): string {
+  if (!rawBody) return "";
+  return rawBody
+    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/<h1(\b[^>]*)>/gi, "<h2$1>")
+    .replace(/<\/h1>/gi, "</h2>");
+}
+
+function injectSsrRootShell(
+  html: string,
+  options: {
+    mainHtml: string;
+  }
+): string {
+  const shell = `<div id="root"><div data-amaan-ssr="true" style="max-width:72rem;margin:0 auto;padding:1.5rem 1rem;color:#141413;">
+    <header style="border-bottom:1px solid #E5E0D8;padding-bottom:1rem;margin-bottom:1.5rem;">
+      <nav aria-label="Primary Navigation" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;font-size:0.875rem;">
+        <a href="/" style="font-weight:700;color:#141413;text-decoration:none;">AMAAN ESTATE</a>
+        <a href="/global-markets">Global Markets</a>
+        <a href="/investment">Investment</a>
+        <a href="/architecture">Architecture</a>
+        <a href="/construction">Construction</a>
+        <a href="/home-living">Home &amp; Living</a>
+        <a href="/news">News</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </header>
+    <main>${options.mainHtml}</main>
+    <footer style="border-top:1px solid #E5E0D8;margin-top:2.5rem;padding-top:1rem;font-size:0.75rem;color:#5C5A55;">
+      <nav aria-label="Footer Navigation" style="display:flex;flex-wrap:wrap;gap:1rem;">
+        <a href="/about">About AmaanEstate</a>
+        <a href="/editorial-policy">Editorial Policy</a>
+        <a href="/corrections-policy">Corrections Policy</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/cookie-policy">Cookie Policy</a>
+        <a href="/advertising-disclosure">Advertising Disclosure</a>
+        <a href="/terms">Terms of Use</a>
+        <a href="/newsletter">Newsletter</a>
+      </nav>
+    </footer>
+  </div></div>`;
+
+  return html.replace(/<div\s+id=["']root["']\s*>\s*<\/div>/i, shell);
+}
+
 function stripSeoHeadTags(templateHtml: string): string {
-  return templateHtml
+  return stripJsonLdScripts(templateHtml)
     .replace(/<title>[\s\S]*?<\/title>/gi, "")
     .replace(/<meta\s+[^>]*name=["']description["'][^>]*>/gi, "")
     .replace(/<meta\s+[^>]*name=["']robots["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*name=["']keywords["'][^>]*>/gi, "")
     .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
+    .replace(/<link\s+[^>]*data-amaan-hreflang=["']true["'][^>]*>/gi, "")
     .replace(/<meta\s+[^>]*property=["']og:[^"']*["'][^>]*>/gi, "")
+    .replace(/<meta\s+[^>]*property=["']article:[^"']*["'][^>]*>/gi, "")
     .replace(/<meta\s+[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
 }
 
@@ -277,19 +534,28 @@ async function injectArticleOgMetadata(
     typeof article.robots_directive === "string" && article.robots_directive.trim()
       ? article.robots_directive.trim()
       : "index, follow";
+  const isNoIndex = robotsContent.toLowerCase().includes("noindex");
+
+  const articleLang = detectContentLanguage({
+    title: article.title,
+    excerpt: article.excerpt,
+    content: article.content,
+    alternateLanguage: article.alternate_language,
+  });
 
   const rawTitle = article.seo_title || article.title;
-  const pageTitle = /amaan\s*estate/i.test(rawTitle) ? rawTitle : `${rawTitle} | AmaanEstate`;
-  const rawDescription =
-    article.seo_description ||
-    article.excerpt ||
-    "Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.";
-  const cleanDescription = stripHtml(rawDescription).slice(0, 180);
+  const pageTitle = formatSeoTitle(rawTitle);
+  const cleanDescription = truncateAtWordBoundary(
+    article.seo_description || article.excerpt,
+    158,
+    DEFAULT_SEO_DESCRIPTION
+  );
 
   const rawImage = article.og_image || article.featured_image;
   const absoluteImageUrl = resolveAbsoluteImageUrl(rawImage, baseUrl);
   const imageAlt = article.featured_image_alt || article.title;
   const publishedTime = article.published_at || article.created_at || new Date().toISOString();
+  const modifiedTime = article.updated_at || publishedTime;
 
   let hreflangTags = "";
   if (
@@ -301,7 +567,7 @@ async function injectArticleOgMetadata(
     const altArticle = await fetchArticleForOg(article.alternate_article_slug.trim());
     if (altArticle) {
       const altLang = article.alternate_language.trim().toLowerCase();
-      const selfLang = altLang === "en" ? "so" : "en";
+      const selfLang = articleLang === "so" || altLang === "en" ? "so" : "en";
       const altHref = `${baseUrl}/articles/${encodeURIComponent(altArticle.slug)}`;
       const xDefaultHref = selfLang === "en" ? selfCanonicalUrl : altHref;
       hreflangTags = `
@@ -311,16 +577,80 @@ async function injectArticleOgMetadata(
     }
   }
 
+  const tagNames: string[] = Array.isArray(article.keywords) && article.keywords.length > 0
+    ? article.keywords
+    : Array.isArray(article.article_tags)
+    ? article.article_tags
+        .map((row: any) => row?.tags?.name)
+        .filter((name: unknown): name is string => typeof name === "string" && Boolean(name))
+    : [];
+
+  const schemaType =
+    article.schema_type || (article.category?.slug === "news" ? "NewsArticle" : "Article");
+  const wordCount = countArticleBodyWords(article.content || "");
+  const jsonLdScripts = isNoIndex
+    ? ""
+    : renderJsonLdScripts([
+        {
+          "@context": "https://schema.org",
+          "@type": schemaType,
+          headline: article.seo_title || article.title,
+          description: cleanDescription,
+          inLanguage: articleLang,
+          datePublished: publishedTime,
+          dateModified: modifiedTime,
+          articleSection: article.category?.name || "Editorial",
+          wordCount,
+          image: [absoluteImageUrl],
+          ...(tagNames.length > 0 ? { keywords: tagNames.join(", ") } : {}),
+          author: article.author?.name
+            ? { "@type": "Person", name: article.author.name }
+            : {
+                "@type": "Organization",
+                "@id": `${baseUrl}/#organization`,
+                name: "AmaanEstate",
+                url: `${baseUrl}/`,
+              },
+          publisher: {
+            "@type": "Organization",
+            "@id": `${baseUrl}/#organization`,
+            name: "AmaanEstate",
+            alternateName: "Amaan Estate",
+            url: `${baseUrl}/`,
+            logo: {
+              "@type": "ImageObject",
+              url: `${baseUrl}/images/amaanestate-logo.png`,
+              width: 1672,
+              height: 941,
+            },
+          },
+          mainEntityOfPage: selfCanonicalUrl,
+        },
+        buildBreadcrumbStructuredData([
+          { name: "Home", item: `${baseUrl}/` },
+          ...(article.category?.slug
+            ? [
+                {
+                  name: article.category.name || article.category.slug,
+                  item: `${baseUrl}/${encodeURIComponent(article.category.slug)}`,
+                },
+              ]
+            : []),
+          { name: article.title, item: selfCanonicalUrl },
+        ]),
+      ]);
+
   const metadataHtml = `
     <title>${escapeHtml(pageTitle)}</title>
     <meta name="description" content="${escapeHtml(cleanDescription)}" />
     <meta name="robots" content="${escapeHtml(robotsContent)}" />
-    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />${hreflangTags}
+    ${!isNoIndex ? `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />` : ""}${hreflangTags}
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="AmaanEstate" />
-    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:locale" content="${articleLang === "so" ? "so_SO" : "en_US"}" />
+    ${!isNoIndex ? `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />` : ""}
     <meta property="og:title" content="${escapeHtml(pageTitle)}" />
     <meta property="og:description" content="${escapeHtml(cleanDescription)}" />
     <meta property="og:image" content="${escapeHtml(absoluteImageUrl)}" />
@@ -328,6 +658,7 @@ async function injectArticleOgMetadata(
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
     <meta property="article:published_time" content="${escapeHtml(publishedTime)}" />
+    <meta property="article:modified_time" content="${escapeHtml(modifiedTime)}" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -336,27 +667,45 @@ async function injectArticleOgMetadata(
     <meta name="twitter:description" content="${escapeHtml(cleanDescription)}" />
     <meta name="twitter:image" content="${escapeHtml(absoluteImageUrl)}" />
     <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
+${jsonLdScripts}
   `;
 
-  const cleanHtml = stripSeoHeadTags(templateHtml);
-  return cleanHtml.replace("</head>", `${metadataHtml}\n  </head>`);
+  const ssrArticleBody = sanitizeArticleBodyForSsr(article.content);
+  const ssrMainHtml = `<article>
+    ${article.category?.slug ? `<p><a href="/${escapeHtml(article.category.slug)}">${escapeHtml(article.category.name || article.category.slug)}</a></p>` : ""}
+    <h1>${escapeHtml(article.title)}</h1>
+    ${article.excerpt ? `<p>${escapeHtml(article.excerpt)}</p>` : ""}
+    <p>By ${escapeHtml(article.author?.name || "AMAAN ESTATE Editorial Desk")}</p>
+    <div>${ssrArticleBody}</div>
+  </article>`;
+
+  let html = setHtmlDocumentLang(stripSeoHeadTags(templateHtml), articleLang);
+  html = html.replace("</head>", `${metadataHtml}\n  </head>`);
+  return injectSsrRootShell(html, { mainHtml: ssrMainHtml });
 }
 
 function injectNotFoundMetadata(
   templateHtml: string,
-  options?: { title?: string; description?: string }
+  options?: { title?: string; description?: string; heading?: string }
 ): string {
   const title = options?.title || "Page Not Found (404) | AmaanEstate";
-  const description =
-    options?.description ||
-    "The requested page or article could not be found on AmaanEstate.";
+  const description = truncateAtWordBoundary(
+    options?.description || "The requested page or article could not be found on AmaanEstate.",
+    158
+  );
+  const heading = options?.heading || "Page Not Found";
   const metadataHtml = `
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="robots" content="noindex, nofollow" />
   `;
-  const cleanHtml = stripSeoHeadTags(templateHtml);
-  return cleanHtml.replace("</head>", `${metadataHtml}\n  </head>`);
+  const cleanHtml = setHtmlDocumentLang(stripSeoHeadTags(templateHtml), "en").replace(
+    "</head>",
+    `${metadataHtml}\n  </head>`
+  );
+  return injectSsrRootShell(cleanHtml, {
+    mainHtml: `<section><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(description)}</p><p><a href="/">Return to Homepage</a> · <a href="/global-markets">Explore Global Markets</a></p></section>`,
+  });
 }
 
 function injectSpaRouteMetadata(
@@ -371,18 +720,28 @@ function injectSpaRouteMetadata(
     image?: string;
     imageAlt?: string;
     includeSocialMeta?: boolean;
+    lang?: "en" | "so";
+    structuredData?: Array<Record<string, any>>;
+    ssrMainHtml?: string;
+    baseUrl?: string;
   }
 ): string {
-  let html = templateHtml;
-  if (options.title) {
-    html = html.replace(/<title>[\s\S]*?<\/title>/gi, `<title>${escapeHtml(options.title)}</title>`);
-  }
-  if (options.description) {
-    html = html.replace(
-      /<meta\s+[^>]*name=["']description["'][^>]*>/gi,
-      `<meta name="description" content="${escapeHtml(options.description)}" />`
-    );
-  }
+  const docLang = options.lang || "en";
+  let html = setHtmlDocumentLang(stripJsonLdScripts(templateHtml), docLang);
+
+  const formattedTitle = formatSeoTitle(options.title, DEFAULT_SEO_TITLE);
+  const cleanDescription = truncateAtWordBoundary(
+    options.description,
+    158,
+    DEFAULT_SEO_DESCRIPTION
+  );
+
+  html = html.replace(/<title>[\s\S]*?<\/title>/gi, `<title>${escapeHtml(formattedTitle)}</title>`);
+  html = html.replace(
+    /<meta\s+[^>]*name=["']description["'][^>]*>/gi,
+    `<meta name="description" content="${escapeHtml(cleanDescription)}" />`
+  );
+
   html = html
     .replace(/<meta\s+[^>]*name=["']robots["'][^>]*>/gi, "")
     .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi, "")
@@ -390,7 +749,7 @@ function injectSpaRouteMetadata(
 
   if (options.includeSocialMeta) {
     html = html
-      .replace(/<meta\s+[^>]*property=["']og:(?:type|title|description|image(?::width|:height|:alt)?)["'][^>]*>/gi, "")
+      .replace(/<meta\s+[^>]*property=["']og:(?:type|locale|title|description|image(?::width|:height|:alt)?)["'][^>]*>/gi, "")
       .replace(/<meta\s+[^>]*name=["']twitter:(?:card|site|title|description|image(?::alt)?)["'][^>]*>/gi, "");
   }
 
@@ -407,28 +766,34 @@ function injectSpaRouteMetadata(
   }
 
   if (options.includeSocialMeta) {
-    const socialTitle = options.title || "AmaanEstate | Global Real Estate News, Research & Market Intelligence";
-    const socialDescription =
-      options.description ||
-      "Explore global real estate market intelligence, residential price trends, rental dynamics, property investment insights, and architectural news with AmaanEstate.";
-    const socialImage = resolveAbsoluteImageUrl(options.image || DEFAULT_MARKET_OG_IMAGE_PATH, SITE_URL);
+    const socialOrigin = options.baseUrl || SITE_URL;
+    const socialImage = resolveAbsoluteImageUrl(options.image || DEFAULT_OG_IMAGE_PATH, socialOrigin);
     const socialImageAlt =
       options.imageAlt || "AmaanEstate — Global Real Estate Media, Research & Market Intelligence";
 
     tags.push(`<meta property="og:type" content="${escapeHtml(options.ogType || "website")}" />`);
-    tags.push(`<meta property="og:title" content="${escapeHtml(socialTitle)}" />`);
-    tags.push(`<meta property="og:description" content="${escapeHtml(socialDescription)}" />`);
+    tags.push(`<meta property="og:locale" content="${docLang === "so" ? "so_SO" : "en_US"}" />`);
+    tags.push(`<meta property="og:title" content="${escapeHtml(formattedTitle)}" />`);
+    tags.push(`<meta property="og:description" content="${escapeHtml(cleanDescription)}" />`);
     tags.push(`<meta property="og:image" content="${escapeHtml(socialImage)}" />`);
     tags.push(`<meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}" />`);
     tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
     tags.push(`<meta name="twitter:site" content="@amaanestate" />`);
-    tags.push(`<meta name="twitter:title" content="${escapeHtml(socialTitle)}" />`);
-    tags.push(`<meta name="twitter:description" content="${escapeHtml(socialDescription)}" />`);
+    tags.push(`<meta name="twitter:title" content="${escapeHtml(formattedTitle)}" />`);
+    tags.push(`<meta name="twitter:description" content="${escapeHtml(cleanDescription)}" />`);
     tags.push(`<meta name="twitter:image" content="${escapeHtml(socialImage)}" />`);
     tags.push(`<meta name="twitter:image:alt" content="${escapeHtml(socialImageAlt)}" />`);
   }
 
-  return html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`);
+  if (!isNoIndex && options.structuredData && options.structuredData.length > 0) {
+    tags.push(renderJsonLdScripts(options.structuredData));
+  }
+
+  html = html.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`);
+  if (options.ssrMainHtml) {
+    html = injectSsrRootShell(html, { mainHtml: options.ssrMainHtml });
+  }
+  return html;
 }
 
 async function sendHtmlPage(
@@ -532,12 +897,6 @@ registerSeoRoutes(app);
 
 // Register Global Real Estate Market Intelligence API Routes
 registerGlobalMarketsRoutes(app);
-
-// Direct file attachment download for 004_editorial_25_articles.sql
-app.get("/004_editorial_25_articles.sql", (req, res) => {
-  const filePath = path.join(process.cwd(), "supabase", "migrations", "004_editorial_25_articles.sql");
-  res.download(filePath, "004_editorial_25_articles.sql");
-});
 
 function setNoCacheSeoHeaders(res: express.Response) {
   res.setHeader("Cache-Control", "public, max-age=0, s-maxage=0, must-revalidate");
@@ -2133,10 +2492,18 @@ app.get(["/sitemap-:page.xml", "/api/sitemap-:page.xml"], async (req, res) => {
     setNoCacheSeoHeaders(res);
     const pageNum = Number(req.params.page);
     const baseUrl = getCanonicalBaseUrl(req.headers.host);
-    const xml = await buildPaginatedSitemapXml(pageNum, baseUrl);
-    if (!xml) {
+    if (!Number.isInteger(pageNum) || pageNum < 1) {
       return res.status(404).type("text/plain").send("Sitemap page not found");
     }
+    const entries = await collectSitemapEntries(baseUrl);
+    const chunks = chunkSitemapEntries(entries);
+    if (pageNum === 1 && chunks.length <= 1) {
+      return res.redirect(301, "/sitemap.xml");
+    }
+    if (pageNum > chunks.length) {
+      return res.status(404).type("text/plain").send("Sitemap page not found");
+    }
+    const xml = renderUrlSetXml(chunks[pageNum - 1]);
     res.header("Content-Type", "application/xml; charset=utf-8");
     return res.status(200).send(xml);
   } catch (err) {
@@ -2350,15 +2717,45 @@ app.get("/properties/:slug", async (req, res) => {
 
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = `${baseUrl}/properties/${encodeURIComponent(prop.slug)}`;
+  const propTitle = formatSeoTitle(prop.title);
+  const propDesc = truncateAtWordBoundary(
+    prop.description || `${prop.title} in ${prop.city}, ${prop.country}`,
+    158
+  );
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
-    title: `${prop.title} | AmaanEstate`,
-    description: stripHtml(prop.description || `${prop.title} in ${prop.city}, ${prop.country}`).slice(0, 160),
+    title: propTitle,
+    description: propDesc,
+    includeSocialMeta: true,
+    baseUrl,
+    structuredData: [
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateListing",
+        name: prop.title,
+        description: propDesc,
+        url: canonicalUrl,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: prop.city,
+          addressCountry: prop.country,
+        },
+      },
+      buildBreadcrumbStructuredData([
+        { name: "Home", item: `${baseUrl}/` },
+        {
+          name: prop.transaction_type === "rent" ? "Rent Property" : "Buy Property",
+          item: `${baseUrl}/${prop.transaction_type === "rent" ? "rent" : "buy"}`,
+        },
+        { name: prop.title, item: canonicalUrl },
+      ]),
+    ],
+    ssrMainHtml: `<article><h1>${escapeHtml(prop.title)}</h1><p>${escapeHtml(`${prop.city}, ${prop.country}`)}</p><p>${escapeHtml(propDesc)}</p></article>`,
   });
   return sendHtmlPage(req, res, 200, html);
 });
 
-// Category slug route (/category/:slug)
+// Legacy /category/:slug -> permanent 301 canonical redirect to /:slug
 app.get("/category/:slug", async (req, res) => {
   const slug = normalizeArticleSlugInput(req.params.slug);
   const templateHtml = getIndexTemplateHtml();
@@ -2372,13 +2769,7 @@ app.get("/category/:slug", async (req, res) => {
       injectNotFoundMetadata(templateHtml, { title: "Section Not Found (404) | AmaanEstate" })
     );
   }
-  const baseUrl = getCanonicalBaseUrl(req.headers.host);
-  const html = injectSpaRouteMetadata(templateHtml, {
-    canonicalUrl: `${baseUrl}/${encodeURIComponent(cat.slug)}`,
-    title: cat.seo_title || `${cat.name} | AmaanEstate`,
-    description: cat.seo_description || cat.description || undefined,
-  });
-  return sendHtmlPage(req, res, 200, html);
+  return res.redirect(301, `/${encodeURIComponent(cat.slug)}`);
 });
 
 // Global Markets Directory, Country & City Market Intelligence SSR SEO routes
@@ -2394,20 +2785,64 @@ app.get("/global-markets", async (req, res) => {
     fetchEligibleGlobalMarketsForSitemap(),
     fetchEligibleComparisonsForSitemap(),
   ]);
-  const hasPublished = aggregateCountrySummaries(markets).length > 0 || comparisons.length > 0;
+  const countrySummaries = aggregateCountrySummaries(markets);
+  const hasPublished = countrySummaries.length > 0 || comparisons.length > 0;
+
+  const title = "Global Real Estate Markets & Intelligence | AmaanEstate";
+  const description =
+    "Explore verified international residential property price trends, rental market indicators, and city-level real estate investment intelligence.";
+  const ssrMainHtml = `<section>
+    <h1>Explore International Real Estate Markets</h1>
+    <p>${escapeHtml(description)}</p>
+    ${
+      countrySummaries.length > 0
+        ? `<h2>Country Market Reports</h2><ul>${countrySummaries
+            .map(
+              (c) =>
+                `<li><a href="/global-markets/${encodeURIComponent(c.countrySlug)}">${escapeHtml(c.countryName)} Real Estate Market</a></li>`
+            )
+            .join("")}</ul>`
+        : ""
+    }
+    ${
+      comparisons.length > 0
+        ? `<h2>City Market Comparisons</h2><ul>${comparisons
+            .map(
+              (comp) =>
+                `<li><a href="/global-markets/comparisons/${encodeURIComponent(comp.slug)}">${escapeHtml(comp.title)}</a></li>`
+            )
+            .join("")}</ul>`
+        : ""
+    }
+  </section>`;
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl: `${baseUrl}/global-markets`,
     noIndex: !hasPublished,
-    title: "Global Real Estate Markets & Housing Intelligence | AmaanEstate",
-    description:
-      "Explore verified international residential property price trends, rental market indicators, and city-level real estate investment intelligence.",
+    title,
+    description,
+    includeSocialMeta: true,
+    baseUrl,
+    structuredData: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Global Real Estate Markets & Intelligence",
+        description,
+        url: `${baseUrl}/global-markets`,
+      },
+      buildBreadcrumbStructuredData([
+        { name: "Home", item: `${baseUrl}/` },
+        { name: "Global Markets", item: `${baseUrl}/global-markets` },
+      ]),
+    ],
+    ssrMainHtml,
   });
   return sendHtmlPage(req, res, 200, html);
 });
 
 app.get("/global-markets/comparisons", (_req, res) => {
-  return res.redirect(302, "/global-markets");
+  return res.redirect(301, "/global-markets");
 });
 
 app.get("/global-markets/comparisons/:comparisonSlug", async (req, res) => {
@@ -2439,13 +2874,19 @@ app.get("/global-markets/comparisons/:comparisonSlug", async (req, res) => {
 
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = resolveComparisonCanonicalUrl(comparison, baseUrl);
-  const pageTitle = comparison.seo_title || `${comparison.title} | AmaanEstate`;
-  const description = stripHtml(
+  const pageTitle = formatSeoTitle(comparison.seo_title || comparison.title);
+  const description = truncateAtWordBoundary(
     comparison.seo_description ||
       comparison.short_intro ||
-      `Side-by-side residential property market comparison between ${comparison.city_a.city_name} and ${comparison.city_b.city_name} (${comparison.reporting_period}).`
-  ).slice(0, 160);
+      `Side-by-side residential property market comparison between ${comparison.city_a.city_name} and ${comparison.city_b.city_name} (${comparison.reporting_period}).`,
+    158
+  );
   const socialMeta = resolveComparisonSocialImageMetadata({ comparison });
+  const ssrMainHtml = `<article>
+    <h1>${escapeHtml(comparison.title)}</h1>
+    <p>${escapeHtml(comparison.short_intro || description)}</p>
+    <h2>${escapeHtml(comparison.city_a.city_name)}, ${escapeHtml(comparison.city_a.country_name)} vs ${escapeHtml(comparison.city_b.city_name)}, ${escapeHtml(comparison.city_b.country_name)}</h2>
+  </article>`;
 
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
@@ -2455,6 +2896,27 @@ app.get("/global-markets/comparisons/:comparisonSlug", async (req, res) => {
     image: socialMeta.image,
     imageAlt: socialMeta.imageAlt,
     includeSocialMeta: true,
+    baseUrl,
+    structuredData: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: pageTitle,
+        description,
+        url: canonicalUrl,
+        dateModified:
+          comparison.last_verified_at ||
+          comparison.updated_at ||
+          comparison.published_at ||
+          comparison.created_at,
+      },
+      buildBreadcrumbStructuredData([
+        { name: "Home", item: `${baseUrl}/` },
+        { name: "Global Markets", item: `${baseUrl}/global-markets` },
+        { name: comparison.title, item: canonicalUrl },
+      ]),
+    ],
+    ssrMainHtml,
   });
   return sendHtmlPage(req, res, 200, html);
 });
@@ -2483,29 +2945,63 @@ app.get("/global-markets/:countrySlug", async (req, res) => {
     );
   }
 
-  const { countrySummary, primaryReport } = countryData;
+  const { countrySummary, primaryReport, allReports } = countryData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = `${baseUrl}/global-markets/${encodeURIComponent(countrySummary.countrySlug)}`;
   const coverageLabel =
     countrySummary.cityCount > 0
       ? `${countrySummary.reportCount} ${countrySummary.reportCount === 1 ? "report" : "reports"} across ${countrySummary.cityCount} ${countrySummary.cityCount === 1 ? "city" : "cities"}`
       : `${countrySummary.reportCount} verified ${countrySummary.reportCount === 1 ? "report" : "reports"}`;
-  const pageTitle = `${countrySummary.countryName} Real Estate Market Overview & Intelligence | AmaanEstate`;
+  const pageTitle = formatSeoTitle(`${countrySummary.countryName} Real Estate Market Overview`);
+  const description = truncateAtWordBoundary(
+    `Explore ${countrySummary.countryName} real estate market overview (${coverageLabel}), residential price trends, rental indicators, and published market research.`,
+    158
+  );
   const socialMeta = resolveMarketSocialImageMetadata({
     report: primaryReport,
     fallbackTitle: `${countrySummary.countryName} Real Estate Market Overview`,
   });
 
+  const ssrMainHtml = `<section>
+    <h1>${escapeHtml(countrySummary.countryName)} Real Estate Market Overview</h1>
+    <p>${escapeHtml(description)}</p>
+    ${
+      allReports.length > 0
+        ? `<h2>Published Reports</h2><ul>${allReports
+            .map(
+              (rep) =>
+                `<li><a href="/global-markets/${encodeURIComponent(rep.country_slug)}/${encodeURIComponent(rep.slug)}">${escapeHtml(rep.title)}</a></li>`
+            )
+            .join("")}</ul>`
+        : ""
+    }
+  </section>`;
+
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
     title: pageTitle,
-    description: stripHtml(
-      `Explore ${countrySummary.countryName} real estate market overview (${coverageLabel}), residential price trends, rental indicators, and published market research.`
-    ).slice(0, 160),
+    description,
     ogType: "website",
     image: socialMeta.image,
     imageAlt: socialMeta.imageAlt,
     includeSocialMeta: true,
+    baseUrl,
+    structuredData: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: pageTitle,
+        description,
+        url: canonicalUrl,
+        dateModified: countrySummary.latestUpdatedAt || undefined,
+      },
+      buildBreadcrumbStructuredData([
+        { name: "Home", item: `${baseUrl}/` },
+        { name: "Global Markets", item: `${baseUrl}/global-markets` },
+        { name: countrySummary.countryName, item: canonicalUrl },
+      ]),
+    ],
+    ssrMainHtml,
   });
   return sendHtmlPage(req, res, 200, html);
 });
@@ -2541,49 +3037,87 @@ app.get("/global-markets/:countrySlug/:reportSlug", async (req, res) => {
   const { report, allCountryReports } = reportData;
   const baseUrl = getCanonicalBaseUrl(req.headers.host);
   const canonicalUrl = resolveReportCanonicalUrl(report, allCountryReports, baseUrl);
-  const pageTitle = report.seo_title || `${report.title} | AmaanEstate`;
+  const pageTitle = formatSeoTitle(report.seo_title || report.title);
+  const description = truncateAtWordBoundary(
+    report.seo_description ||
+      report.market_overview ||
+      `Market intelligence, property price trends, and rental insights for ${report.city_name || report.country_name}.`,
+    158
+  );
   const socialMeta = resolveMarketSocialImageMetadata({
     report,
     fallbackTitle: report.title,
   });
 
+  const ssrMainHtml = `<article>
+    <h1>${escapeHtml(report.title)}</h1>
+    ${report.market_overview ? `<h2>Market Overview</h2><p>${escapeHtml(report.market_overview)}</p>` : ""}
+    ${report.market_analysis ? `<h2>Market Analysis</h2><p>${escapeHtml(report.market_analysis)}</p>` : ""}
+    ${report.investment_insights ? `<h2>Investment Insights</h2><p>${escapeHtml(report.investment_insights)}</p>` : ""}
+  </article>`;
+
   const html = injectSpaRouteMetadata(templateHtml, {
     canonicalUrl,
     title: pageTitle,
-    description: stripHtml(
-      report.seo_description ||
-        report.market_overview ||
-        `Market intelligence, property price trends, and rental insights for ${report.city_name || report.country_name}.`
-    ).slice(0, 160),
+    description,
     ogType: "article",
     image: socialMeta.image,
     imageAlt: socialMeta.imageAlt,
     includeSocialMeta: true,
+    baseUrl,
+    structuredData: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: pageTitle,
+        description,
+        url: canonicalUrl,
+        dateModified:
+          report.last_verified_at ||
+          report.updated_at ||
+          report.published_at ||
+          report.created_at,
+      },
+      buildBreadcrumbStructuredData([
+        { name: "Home", item: `${baseUrl}/` },
+        { name: "Global Markets", item: `${baseUrl}/global-markets` },
+        {
+          name: report.country_name,
+          item: `${baseUrl}/global-markets/${encodeURIComponent(report.country_slug)}`,
+        },
+        { name: report.city_name || report.title, item: canonicalUrl },
+      ]),
+    ],
+    ssrMainHtml,
   });
   return sendHtmlPage(req, res, 200, html);
 });
 
-const PUBLIC_INDEXABLE_SPA_ROUTES = new Map<string, { title?: string; description?: string }>([
-  ["/", {}],
-  ["/investment", { title: "Real Estate Investment | AmaanEstate" }],
-  ["/architecture", { title: "Architecture | AmaanEstate" }],
-  ["/construction", { title: "Construction | AmaanEstate" }],
-  ["/home-living", { title: "Home & Living | AmaanEstate" }],
-  ["/news", { title: "Global Real Estate News | AmaanEstate" }],
-  ["/about", { title: "About AmaanEstate | Global Real Estate Media, Research & Market Intelligence" }],
-  ["/contact", { title: "Contact AmaanEstate | Editorial & Market Research Desk" }],
-  ["/editorial-policy", { title: "Editorial Policy & Standards | AmaanEstate" }],
-  ["/corrections-policy", { title: "Corrections & Fact-Checking Policy | AmaanEstate" }],
-  ["/privacy-policy", { title: "Privacy Policy | AmaanEstate" }],
-  ["/cookie-policy", { title: "Cookie Policy | AmaanEstate" }],
-  ["/advertising-disclosure", { title: "Advertising Disclosure | AmaanEstate" }],
-  ["/terms", { title: "Terms of Use | AmaanEstate" }],
-  ["/newsletter", { title: "Newsletter & Briefings | AmaanEstate" }],
+const CATEGORY_SPA_SLUGS = new Set([
+  "investment",
+  "architecture",
+  "construction",
+  "home-living",
+  "news",
 ]);
 
-const NOINDEX_FOLLOW_SPA_ROUTES = new Map<string, { title?: string; description?: string }>([
-  ["/buy", { title: "Buy Real Estate & Properties for Sale | AmaanEstate" }],
-  ["/rent", { title: "Rent Real Estate & Properties for Lease | AmaanEstate" }],
+const NOINDEX_FOLLOW_SPA_ROUTES = new Map<string, { title: string; description: string }>([
+  [
+    "/buy",
+    {
+      title: "Buy Real Estate & Properties for Sale | AmaanEstate",
+      description:
+        "Explore houses, apartments, villas, townhouses, and land for sale worldwide on AmaanEstate.",
+    },
+  ],
+  [
+    "/rent",
+    {
+      title: "Rent Real Estate & Properties for Lease | AmaanEstate",
+      description:
+        "Browse apartments, houses, villas, and townhouses available for rent internationally on AmaanEstate.",
+    },
+  ],
 ]);
 
 const NOINDEX_SPA_ROUTES = new Set<string>([
@@ -2618,36 +3152,182 @@ app.use(async (req, res, next) => {
       return res.redirect(customRedirect.status_code, customRedirect.target_path);
     }
 
-    if (PUBLIC_INDEXABLE_SPA_ROUTES.has(cleanPath)) {
-      const meta = PUBLIC_INDEXABLE_SPA_ROUTES.get(cleanPath) || {};
-      const canonicalUrl = cleanPath === "/" ? `${baseUrl}/` : `${baseUrl}${cleanPath}`;
+    // 1. Homepage (/) with SSR links to live global markets & latest articles
+    if (cleanPath === "/") {
+      const [latestArticles, globalMarkets, comparisons] = await Promise.all([
+        fetchPublishedArticlesForSsr({ limit: 6 }),
+        fetchEligibleGlobalMarketsForSitemap().catch(() => []),
+        fetchEligibleComparisonsForSitemap().catch(() => []),
+      ]);
+      const countrySummaries = aggregateCountrySummaries(globalMarkets);
+
+      const ssrMainHtml = `<section>
+        <h1>Global Real Estate News, Research &amp; Market Intelligence</h1>
+        <p>${escapeHtml(DEFAULT_SEO_DESCRIPTION)}</p>
+        ${
+          countrySummaries.length > 0
+            ? `<h2>Explore International Real Estate Markets</h2><ul>${countrySummaries
+                .map(
+                  (c) =>
+                    `<li><a href="/global-markets/${encodeURIComponent(c.countrySlug)}">${escapeHtml(c.countryName)} Real Estate Market Overview</a></li>`
+                )
+                .join("")}</ul>`
+            : ""
+        }
+        ${
+          comparisons.length > 0
+            ? `<h2>Featured City Market Comparisons</h2><ul>${comparisons
+                .map(
+                  (comp) =>
+                    `<li><a href="/global-markets/comparisons/${encodeURIComponent(comp.slug)}">${escapeHtml(comp.title)}</a></li>`
+                )
+                .join("")}</ul>`
+            : ""
+        }
+        ${
+          latestArticles.length > 0
+            ? `<h2>Latest Real Estate Insights</h2><ul>${latestArticles
+                .map(
+                  (a) =>
+                    `<li><a href="/articles/${encodeURIComponent(a.slug)}">${escapeHtml(a.title)}</a>${a.excerpt ? ` — ${escapeHtml(truncateAtWordBoundary(a.excerpt, 120))}` : ""}</li>`
+                )
+                .join("")}</ul>`
+            : ""
+        }
+      </section>`;
+
       const html = injectSpaRouteMetadata(templateHtml, {
-        canonicalUrl,
-        title: meta.title,
-        description: meta.description,
+        canonicalUrl: `${baseUrl}/`,
+        title: DEFAULT_SEO_TITLE,
+        description: DEFAULT_SEO_DESCRIPTION,
+        includeSocialMeta: true,
+        baseUrl,
+        structuredData: [buildHomeStructuredData(baseUrl)],
+        ssrMainHtml,
       });
       return sendHtmlPage(req, res, 200, html);
     }
 
+    // 2. Editorial Section / Category Routes (/:slug)
+    const slugSegment = cleanPath.slice(1);
+    const isKnownOrDynamicCategory =
+      !slugSegment.includes("/") &&
+      (CATEGORY_SPA_SLUGS.has(slugSegment) ||
+        (!STATIC_ROUTE_SEO_META[cleanPath] &&
+          !NOINDEX_FOLLOW_SPA_ROUTES.has(cleanPath) &&
+          !NOINDEX_SPA_ROUTES.has(cleanPath)));
+
+    if (isKnownOrDynamicCategory) {
+      const cat = await fetchCategoryForSeo(slugSegment);
+      if (cat) {
+        const fallback = CATEGORY_FALLBACK_SEO_META[cat.slug];
+        const catTitle = formatSeoTitle(
+          cat.seo_title || fallback?.title || cat.name || slugSegment
+        );
+        const catDesc = truncateAtWordBoundary(
+          cat.seo_description || cat.description || fallback?.description,
+          158
+        );
+        const catUrl = `${baseUrl}/${encodeURIComponent(cat.slug)}`;
+        const catArticles = await fetchPublishedArticlesForSsr({
+          categorySlug: cat.slug,
+          limit: 12,
+        });
+
+        const ssrMainHtml = `<section>
+          <h1>${escapeHtml(fallback?.name || cat.name)}</h1>
+          <p>${escapeHtml(cat.description || catDesc)}</p>
+          ${
+            catArticles.length > 0
+              ? `<ul>${catArticles
+                  .map(
+                    (a) =>
+                      `<li><a href="/articles/${encodeURIComponent(a.slug)}">${escapeHtml(a.title)}</a>${a.excerpt ? ` — ${escapeHtml(truncateAtWordBoundary(a.excerpt, 120))}` : ""}</li>`
+                  )
+                  .join("")}</ul>`
+              : ""
+          }
+        </section>`;
+
+        const html = injectSpaRouteMetadata(templateHtml, {
+          canonicalUrl: catUrl,
+          title: catTitle,
+          description: catDesc,
+          includeSocialMeta: true,
+          baseUrl,
+          structuredData: [
+            {
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              name: cat.name,
+              description: catDesc,
+              url: catUrl,
+            },
+            buildBreadcrumbStructuredData([
+              { name: "Home", item: `${baseUrl}/` },
+              { name: cat.name, item: catUrl },
+            ]),
+          ],
+          ssrMainHtml,
+        });
+        return sendHtmlPage(req, res, 200, html);
+      }
+    }
+
+    // 3. Static Editorial & Governance Pages
+    const staticMeta = STATIC_ROUTE_SEO_META[cleanPath];
+    if (staticMeta) {
+      const canonicalUrl = `${baseUrl}${cleanPath}`;
+      const html = injectSpaRouteMetadata(templateHtml, {
+        canonicalUrl,
+        title: staticMeta.title,
+        description: staticMeta.description,
+        includeSocialMeta: true,
+        baseUrl,
+        structuredData: [
+          {
+            "@context": "https://schema.org",
+            "@type": staticMeta.schemaType || "WebPage",
+            name: staticMeta.pageName,
+            description: staticMeta.description,
+            url: canonicalUrl,
+          },
+          buildBreadcrumbStructuredData([
+            { name: "Home", item: `${baseUrl}/` },
+            { name: staticMeta.pageName, item: canonicalUrl },
+          ]),
+        ],
+        ssrMainHtml: `<section><h1>${escapeHtml(staticMeta.pageName)}</h1><p>${escapeHtml(staticMeta.description)}</p></section>`,
+      });
+      return sendHtmlPage(req, res, 200, html);
+    }
+
+    // 4. Marketplace Listing Directory Pages (noindex, follow)
     if (NOINDEX_FOLLOW_SPA_ROUTES.has(cleanPath)) {
-      const meta = NOINDEX_FOLLOW_SPA_ROUTES.get(cleanPath) || {};
+      const meta = NOINDEX_FOLLOW_SPA_ROUTES.get(cleanPath)!;
       const html = injectSpaRouteMetadata(templateHtml, {
         noIndex: true,
         robotsDirective: "noindex, follow",
         title: meta.title,
         description: meta.description,
+        includeSocialMeta: true,
+        baseUrl,
       });
       return sendHtmlPage(req, res, 200, html);
     }
 
+    // 5. Private / Search Utility Pages (noindex, nofollow)
     if (NOINDEX_SPA_ROUTES.has(cleanPath)) {
       const html = injectSpaRouteMetadata(templateHtml, {
         noIndex: true,
+        robotsDirective: "noindex, nofollow",
+        title: cleanPath === "/search" ? "Search Archive | AmaanEstate" : "AmaanEstate Account",
+        baseUrl,
       });
       return sendHtmlPage(req, res, 200, html);
     }
 
-    // Any other unknown route returns a proper HTTP 404 without homepage canonical
+    // 6. Any other unknown route returns a real HTTP 404 without homepage canonical or JSON-LD
     setNoCacheSeoHeaders(res);
     return sendHtmlPage(
       req,

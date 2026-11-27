@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 import { submitContactMessage } from '../services/editorialService';
 import { toast } from 'sonner';
 
@@ -12,19 +17,26 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/contact'];
   useSEO({
-    title: 'Contact AmaanEstate | Editorial & Market Research Desk',
-    description:
-      'Contact AmaanEstate for real estate news tips, market intelligence collaborations, architecture submissions, advertising partnerships, or reader corrections.',
-    url: `${getCanonicalOrigin()}/contact`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Contact', item: 'https://www.amaanestate.com/contact' },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/contact`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/contact`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/contact` },
+      ]),
+    ],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

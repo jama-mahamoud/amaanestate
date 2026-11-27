@@ -1,26 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 
 export default function CookiePolicyPage() {
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/cookie-policy'];
   useSEO({
-    title: 'Cookie Policy | AmaanEstate',
-    description:
-      'Cookie Policy for AmaanEstate (amaanestate.com) detailing essential authentication storage, Google Tag Manager, Google AdSense advertising cookies, and browser controls.',
-    url: `${getCanonicalOrigin()}/cookie-policy`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Cookie Policy',
-          item: 'https://www.amaanestate.com/cookie-policy',
-        },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/cookie-policy`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/cookie-policy`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/cookie-policy` },
+      ]),
+    ],
   });
 
   return (

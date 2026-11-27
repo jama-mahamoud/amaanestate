@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { STATIC_ROUTE_SEO_META } from '../lib/seoUtils';
 import { subscribeNewsletter, unsubscribeNewsletter } from '../services/editorialService';
 
 export default function NewsletterPage() {
@@ -8,11 +9,30 @@ export default function NewsletterPage() {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const origin = getCanonicalOrigin();
+  const meta = STATIC_ROUTE_SEO_META['/newsletter'];
+
   useSEO({
-    title: 'Newsletter & Real Estate Briefing | AmaanEstate',
-    description:
-      'Subscribe to AmaanEstate global real estate news, housing research briefings, investment insights, and property market analysis.',
-    url: `${getCanonicalOrigin()}/newsletter`,
+    title: meta.title,
+    description: meta.description,
+    url: `${origin}/newsletter`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: meta.pageName,
+        description: meta.description,
+        url: `${origin}/newsletter`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+          { '@type': 'ListItem', position: 2, name: 'Newsletter', item: `${origin}/newsletter` },
+        ],
+      },
+    ],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

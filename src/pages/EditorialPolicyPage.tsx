@@ -1,13 +1,38 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { STATIC_ROUTE_SEO_META } from '../lib/seoUtils';
 
 export default function EditorialPolicyPage() {
+  const origin = getCanonicalOrigin();
+  const meta = STATIC_ROUTE_SEO_META['/editorial-policy'];
+
   useSEO({
-    title: 'Editorial Policy & Standards | AmaanEstate',
-    description:
-      'AmaanEstate editorial independence, real estate research verification methodology, corrections policy, and advertising separation standards.',
-    url: `${getCanonicalOrigin()}/editorial-policy`,
+    title: meta.title,
+    description: meta.description,
+    url: `${origin}/editorial-policy`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: meta.pageName,
+        description: meta.description,
+        url: `${origin}/editorial-policy`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Editorial Policy & Standards',
+            item: `${origin}/editorial-policy`,
+          },
+        ],
+      },
+    ],
   });
 
   return (

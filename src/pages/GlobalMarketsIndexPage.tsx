@@ -44,25 +44,39 @@ export default function GlobalMarketsIndexPage() {
     };
   }, []);
 
+  const origin = getCanonicalOrigin();
+  const pageUrl = `${origin}/global-markets`;
+  const title = 'Global Real Estate Markets & Intelligence';
+  const description =
+    'Explore verified residential property price trends, rental market indicators, and investment insights across international real estate markets.';
+
   useSEO({
-    title: 'Global Real Estate Markets & Housing Intelligence | AmaanEstate',
-    description:
-      'Explore verified residential property price trends, rental market indicators, and investment insights across international real estate markets.',
-    url: `${getCanonicalOrigin()}/global-markets`,
+    title,
+    description,
+    url: pageUrl,
     noIndex: !loading && countries.length === 0 && comparisons.length === 0,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Global Markets',
-          item: 'https://www.amaanestate.com/global-markets',
-        },
-      ],
-    },
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: title,
+        description,
+        url: pageUrl,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Global Markets',
+            item: pageUrl,
+          },
+        ],
+      },
+    ],
   });
 
   return (

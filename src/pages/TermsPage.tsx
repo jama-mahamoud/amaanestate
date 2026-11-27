@@ -1,26 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 
 export default function TermsPage() {
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/terms'];
   useSEO({
-    title: 'Terms of Use | AmaanEstate',
-    description:
-      'Terms of Use for AmaanEstate (amaanestate.com) covering editorial content, real estate research disclaimers, property marketplace listings, intellectual property, and acceptable use.',
-    url: `${getCanonicalOrigin()}/terms`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Terms of Use',
-          item: 'https://www.amaanestate.com/terms',
-        },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/terms`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/terms`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/terms` },
+      ]),
+    ],
   });
 
   return (

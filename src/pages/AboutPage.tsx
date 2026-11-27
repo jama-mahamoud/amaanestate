@@ -1,23 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { STATIC_ROUTE_SEO_META } from '../lib/seoUtils';
 import { resolveEditorialImage } from '../lib/editorialImages';
 import NewsletterBox from '../components/editorial/NewsletterBox';
 
 export default function AboutPage() {
+  const origin = getCanonicalOrigin();
+  const aboutMeta = STATIC_ROUTE_SEO_META['/about'];
+
   useSEO({
-    title: 'About AmaanEstate | Global Real Estate Media, Research & Market Intelligence',
-    description:
-      'AmaanEstate is a global real estate media, research, and market intelligence platform providing property market news, housing research, real estate investment insights, and international market analysis.',
-    url: `${getCanonicalOrigin()}/about`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        { '@type': 'ListItem', position: 2, name: 'About', item: 'https://www.amaanestate.com/about' },
-      ],
-    },
+    title: aboutMeta.title,
+    description: aboutMeta.description,
+    url: `${origin}/about`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        name: aboutMeta.pageName,
+        description: aboutMeta.description,
+        url: `${origin}/about`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+          { '@type': 'ListItem', position: 2, name: 'About', item: `${origin}/about` },
+        ],
+      },
+    ],
   });
 
   return (
@@ -59,6 +71,8 @@ export default function AboutPage() {
             <img
               src={resolveEditorialImage('architecture-pavilion')}
               alt="Minimalist contemporary architectural residence"
+              loading="lazy"
+              decoding="async"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />

@@ -1,6 +1,12 @@
 export const LEGACY_NEWS_TO_ARTICLE_REDIRECTS: Record<string, string> = {
   'amaanestate-soomaaliya-platform-ka-casriga-ah-ee-kiraynta-iyo-iibinta-guryaha':
     'what-is-amaanestate-exploring-our-mission-vision-and-global-real-estate-platform',
+  'uk-planning-infrastructure-act-2025-housing-reforms':
+    'uk-planning-infrastructure-act-2025',
+  'sovereign-capital-logistics-europe-east-africa-2026':
+    'sovereign-wealth-funds-logistics-real-estate',
+  'dubai-real-estate-strategy-2033-dld-market-roadmap':
+    'dubai-real-estate-strategy-2033-investment-market-outlook',
 };
 
 export function normalizeArticleSlugInput(rawSlug?: string | null): string {

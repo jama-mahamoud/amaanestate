@@ -99,10 +99,15 @@ export default function EditorialContent({ content }: EditorialContentProps) {
       }
     );
 
-    // Resolve relative image URLs safely
+    // Resolve relative image URLs safely and enforce lazy/async decoding
     return processed.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (_match, p1, src, p2) => {
       const resolved = resolveEditorialImage(src);
-      return `<img ${p1}src="${resolved}" ${p2}>`;
+      const attrs = `${p1}src="${resolved}" ${p2}`;
+      const withLoading = /\bloading\s*=/i.test(attrs) ? attrs : `${attrs} loading="lazy"`;
+      const withDecoding = /\bdecoding\s*=/i.test(withLoading)
+        ? withLoading
+        : `${withLoading} decoding="async"`;
+      return `<img ${withDecoding}>`;
     });
   }, [content, isHtml]);
 
@@ -129,6 +134,8 @@ export default function EditorialContent({ content }: EditorialContentProps) {
                   <img
                     src={resolved}
                     alt={alt || 'Editorial illustration'}
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                     className="w-full h-auto object-cover m-0"
                   />

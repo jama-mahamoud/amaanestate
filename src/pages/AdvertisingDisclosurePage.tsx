@@ -1,26 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import {
+  buildBreadcrumbStructuredData,
+  CANONICAL_SITE_ORIGIN,
+  STATIC_ROUTE_SEO_META,
+} from '../lib/seoUtils';
 
 export default function AdvertisingDisclosurePage() {
+  const origin = getCanonicalOrigin();
+  const seoMeta = STATIC_ROUTE_SEO_META['/advertising-disclosure'];
   useSEO({
-    title: 'Advertising Disclosure | AmaanEstate',
-    description:
-      'Advertising and Commercial Disclosure for AmaanEstate (amaanestate.com), explaining editorial independence, display advertising, sponsored content labeling, featured property listings, and commercial separation.',
-    url: `${getCanonicalOrigin()}/advertising-disclosure`,
-    structuredData: {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.amaanestate.com/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Advertising Disclosure',
-          item: 'https://www.amaanestate.com/advertising-disclosure',
-        },
-      ],
-    },
+    title: seoMeta.title,
+    description: seoMeta.description,
+    url: `${origin}/advertising-disclosure`,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: seoMeta.pageName,
+        description: seoMeta.description,
+        url: `${CANONICAL_SITE_ORIGIN}/advertising-disclosure`,
+        inLanguage: 'en',
+      },
+      buildBreadcrumbStructuredData([
+        { name: 'Home', item: `${CANONICAL_SITE_ORIGIN}/` },
+        { name: seoMeta.pageName, item: `${CANONICAL_SITE_ORIGIN}/advertising-disclosure` },
+      ]),
+    ],
   });
 
   return (

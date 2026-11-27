@@ -26,10 +26,6 @@
       "destination": "/api/index"
     },
     {
-      "source": "/004_editorial_25_articles.sql",
-      "destination": "/api/index"
-    },
-    {
       "source": "/articles/(.*)",
       "destination": "/api/index"
     },
@@ -59,10 +55,10 @@
     },
     {
       "source": "/",
-      "destination": "/index.html"
+      "destination": "/api/index"
     },
     {
-      "source": "/((?!sitemap\\.xml|sitemap-.*\\.xml|robots\\.txt|004_editorial_25_articles\\.sql|.*\\..*).*)",
+      "source": "/((?!sitemap\\.xml|sitemap-.*\\.xml|robots\\.txt|.*\\..*).*)",
       "destination": "/api/index"
     }
   ],

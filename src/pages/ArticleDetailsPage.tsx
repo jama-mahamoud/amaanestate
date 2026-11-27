@@ -6,6 +6,7 @@ import { getPublishedArticleBySlug, getRelatedArticles } from '../services/edito
 import { resolveEditorialImage } from '../lib/editorialImages';
 import { countArticleBodyWords } from '../data/allArticles';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import { detectContentLanguage, truncateAtWordBoundary } from '../lib/seoUtils';
 import { resolveLegacyArticleRedirectSlug } from '../lib/legacyRedirects';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';
@@ -105,17 +106,27 @@ export default function ArticleDetailsPage() {
     return undefined;
   }, [article]);
 
+  const articleLang = useMemo(() => {
+    if (!article) return 'en';
+    return detectContentLanguage({
+      title: article.title,
+      excerpt: article.excerpt,
+      content: article.content,
+      alternateLanguage: article.alternate_language,
+    });
+  }, [article]);
+
   const alternateLinks = useMemo(() => {
     if (!article || !alternateArticle || !article.alternate_language) return undefined;
     const altLang = article.alternate_language.trim().toLowerCase();
-    const selfLang = altLang === 'en' ? 'so' : 'en';
+    const selfLang = articleLang === 'so' || altLang === 'en' ? 'so' : 'en';
     const altHref = `${getCanonicalOrigin()}/articles/${encodeURIComponent(alternateArticle.slug)}`;
     return [
       { hrefLang: selfLang, href: selfArticleUrl },
       { hrefLang: altLang, href: altHref },
       { hrefLang: 'x-default', href: selfLang === 'en' ? selfArticleUrl : altHref },
     ];
-  }, [article, alternateArticle, selfArticleUrl]);
+  }, [article, alternateArticle, selfArticleUrl, articleLang]);
 
   const structuredData = useMemo(() => {
     if (!article) return undefined;
@@ -132,7 +143,8 @@ export default function ArticleDetailsPage() {
       '@context': 'https://schema.org',
       '@type': schemaType,
       headline: article.seo_title || article.title,
-      description: article.seo_description || article.excerpt,
+      description: truncateAtWordBoundary(article.seo_description || article.excerpt, 158),
+      inLanguage: articleLang,
       datePublished: article.published_at || article.created_at,
       dateModified: article.updated_at || article.published_at || article.created_at,
       articleSection: article.category?.name || 'Editorial',
@@ -205,6 +217,7 @@ export default function ArticleDetailsPage() {
     image: article?.og_image || article?.featured_image || undefined,
     imageAlt: article?.featured_image_alt || article?.title || undefined,
     url: article ? articleUrl : undefined,
+    lang: articleLang,
     noIndex: !loading && !article,
     robotsDirective: article
       ? article.robots_directive || 'index, follow'
@@ -320,6 +333,8 @@ export default function ArticleDetailsPage() {
                 <img
                   src={authorAvatar}
                   alt={article.author.name}
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                   className="w-10 h-10 rounded-full object-cover bg-[#EBE6DF] shrink-0"
                 />
@@ -382,6 +397,8 @@ export default function ArticleDetailsPage() {
             <img
               src={featuredImageSrc}
               alt={article.featured_image_alt || article.title}
+              fetchPriority="high"
+              decoding="async"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />
@@ -407,6 +424,8 @@ export default function ArticleDetailsPage() {
                     <img
                       src={resolveEditorialImage(img)}
                       alt={`${article.title} plate ${i + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                     />
@@ -442,6 +461,8 @@ export default function ArticleDetailsPage() {
               <img
                 src={authorAvatar}
                 alt={article.author.name}
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover bg-[#EBE6DF] shrink-0"
               />
