@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import path from "path";
 import fs from "fs";
+import zlib from "zlib";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import type { ViteDevServer } from "vite";
@@ -40,6 +41,7 @@ import {
   fetchGlobalMarketReportForSeo,
   registerGlobalMarketsRoutes,
 } from "./server/globalMarketsRoutes";
+import { registerImpactRoutes } from "./server/impactRoutes";
 import {
   aggregateCountrySummaries,
   resolveComparisonCanonicalUrl,
@@ -82,6 +84,85 @@ if (!activeDirname) {
 
 const PORT = 3000;
 export const app = express();
+
+app.use((req, res, next) => {
+  if (req.method === "HEAD") return next();
+  const acceptEncoding = String(req.headers["accept-encoding"] || "");
+  if (!/\bgzip\b/i.test(acceptEncoding)) return next();
+
+  const origWrite = res.write.bind(res);
+  const origEnd = res.end.bind(res);
+  let gzipStream: zlib.Gzip | null = null;
+  let compressionDecided = false;
+
+  const shouldCompress = () => {
+    if (res.headersSent) return false;
+    if (res.statusCode === 204 || res.statusCode === 206 || res.statusCode === 304) return false;
+    if (res.getHeader("Content-Encoding")) return false;
+    const contentType = String(res.getHeader("Content-Type") || "");
+    return /^(text\/|application\/(javascript|x-javascript|json|xml|rss\+xml)|image\/svg\+xml)/i.test(
+      contentType
+    );
+  };
+
+  const ensureGzip = (firstChunk?: any) => {
+    if (compressionDecided) return;
+    compressionDecided = true;
+    const byteLen =
+      firstChunk === undefined || firstChunk === null
+        ? 0
+        : Buffer.isBuffer(firstChunk)
+        ? firstChunk.length
+        : Buffer.byteLength(String(firstChunk));
+
+    if (!shouldCompress()) return;
+
+    const declaredLen = Number(res.getHeader("Content-Length") || 0);
+    if (declaredLen > 0 && declaredLen < 1024) return;
+    if (declaredLen === 0 && byteLen === 0) return;
+
+    res.removeHeader("Content-Length");
+    res.setHeader("Content-Encoding", "gzip");
+    res.setHeader("Vary", "Accept-Encoding");
+
+    const stream = zlib.createGzip({ level: 6 });
+    stream.on("data", (compressedChunk) => {
+      origWrite(compressedChunk);
+    });
+    stream.on("drain", () => {
+      res.emit("drain");
+    });
+    stream.on("end", () => {
+      origEnd();
+    });
+    gzipStream = stream;
+  };
+
+  res.write = ((chunk: any, encoding?: any, cb?: any): boolean => {
+    ensureGzip(chunk);
+    if (gzipStream) {
+      return gzipStream.write(chunk, encoding, cb);
+    }
+    return origWrite(chunk, encoding, cb);
+  }) as typeof res.write;
+
+  res.end = ((chunk?: any, encoding?: any, cb?: any): any => {
+    ensureGzip(chunk);
+    if (gzipStream) {
+      if (typeof chunk === "function") {
+        gzipStream.end(chunk);
+      } else if (chunk !== undefined && chunk !== null) {
+        gzipStream.end(chunk, encoding, cb);
+      } else {
+        gzipStream.end(cb);
+      }
+      return res;
+    }
+    return origEnd(chunk, encoding, cb);
+  }) as typeof res.end;
+
+  next();
+});
 
 app.use(express.json());
 
@@ -724,6 +805,7 @@ function injectSpaRouteMetadata(
     structuredData?: Array<Record<string, any>>;
     ssrMainHtml?: string;
     baseUrl?: string;
+    preloadHeroImage?: boolean;
   }
 ): string {
   const docLang = options.lang || "en";
@@ -760,6 +842,11 @@ function injectSpaRouteMetadata(
   const tags: string[] = [
     `<meta name="robots" content="${escapeHtml(robotsContent)}" />`,
   ];
+  if (options.preloadHeroImage) {
+    tags.push(
+      `<link rel="preload" as="image" href="/images/hero/hero-pavilion-640.webp" imagesrcset="/images/hero/hero-pavilion-640.webp 640w, /images/hero/hero-pavilion-960.webp 960w, /images/hero/hero-pavilion-1376.webp 1376w" imagesizes="(max-width: 1023px) calc(100vw - 2rem), 600px" fetchpriority="high" />`
+    );
+  }
   if (options.canonicalUrl && !isNoIndex) {
     tags.push(`<link rel="canonical" href="${escapeHtml(options.canonicalUrl)}" />`);
     tags.push(`<meta property="og:url" content="${escapeHtml(options.canonicalUrl)}" />`);
@@ -897,6 +984,9 @@ registerSeoRoutes(app);
 
 // Register Global Real Estate Market Intelligence API Routes
 registerGlobalMarketsRoutes(app);
+
+// Register Authorized Impact Catalog Lookup Routes (HousingAnywhere Affiliate Editor)
+registerImpactRoutes(app);
 
 function setNoCacheSeoHeaders(res: express.Response) {
   res.setHeader("Cache-Control", "public, max-age=0, s-maxage=0, must-revalidate");
@@ -3162,11 +3252,13 @@ app.use(async (req, res, next) => {
       const countrySummaries = aggregateCountrySummaries(globalMarkets);
 
       const ssrMainHtml = `<section>
-        <h1>Global Real Estate News, Research &amp; Market Intelligence</h1>
-        <p>${escapeHtml(DEFAULT_SEO_DESCRIPTION)}</p>
+        <h1>Global Real Estate. Informed Decisions.</h1>
+        <p>Discover properties, explore international markets, and access trusted real estate research from around the world.</p>
+        <p><a href="/buy">Buy Properties</a> · <a href="/rent">Rent Properties</a> · <a href="/global-markets">Explore Global Markets</a></p>
         ${
           countrySummaries.length > 0
-            ? `<h2>Explore International Real Estate Markets</h2><ul>${countrySummaries
+            ? `<h2>Explore Global Markets</h2><ul>${countrySummaries
+                .slice(0, 4)
                 .map(
                   (c) =>
                     `<li><a href="/global-markets/${encodeURIComponent(c.countrySlug)}">${escapeHtml(c.countryName)} Real Estate Market Overview</a></li>`
@@ -3176,7 +3268,8 @@ app.use(async (req, res, next) => {
         }
         ${
           comparisons.length > 0
-            ? `<h2>Featured City Market Comparisons</h2><ul>${comparisons
+            ? `<h2>City Market Comparisons</h2><ul>${comparisons
+                .slice(0, 3)
                 .map(
                   (comp) =>
                     `<li><a href="/global-markets/comparisons/${encodeURIComponent(comp.slug)}">${escapeHtml(comp.title)}</a></li>`
@@ -3187,6 +3280,7 @@ app.use(async (req, res, next) => {
         ${
           latestArticles.length > 0
             ? `<h2>Latest Real Estate Insights</h2><ul>${latestArticles
+                .slice(0, 3)
                 .map(
                   (a) =>
                     `<li><a href="/articles/${encodeURIComponent(a.slug)}">${escapeHtml(a.title)}</a>${a.excerpt ? ` — ${escapeHtml(truncateAtWordBoundary(a.excerpt, 120))}` : ""}</li>`
@@ -3202,6 +3296,7 @@ app.use(async (req, res, next) => {
         description: DEFAULT_SEO_DESCRIPTION,
         includeSocialMeta: true,
         baseUrl,
+        preloadHeroImage: true,
         structuredData: [buildHomeStructuredData(baseUrl)],
         ssrMainHtml,
       });
@@ -3346,7 +3441,15 @@ app.use(async (req, res, next) => {
 async function startServer() {
   const httpServer = http.createServer(app);
 
-  app.use(express.static(path.join(process.cwd(), "public")));
+  app.use(
+    express.static(path.join(process.cwd(), "public"), {
+      setHeaders: (res, filePath) => {
+        if (/[/\\](images|flags)[/\\]|favicon|apple-touch-icon|android-chrome/i.test(filePath)) {
+          res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
+        }
+      },
+    })
+  );
 
   if (process.env.NODE_ENV !== "production") {
     const vitePkg = "vite";
@@ -3362,7 +3465,19 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (/[/\\]assets[/\\]/i.test(filePath)) {
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          } else if (filePath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+          } else {
+            res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
+          }
+        },
+      })
+    );
     app.get("*", (req, res) => {
       return res.status(404).type("text/plain").send("Not Found");
     });

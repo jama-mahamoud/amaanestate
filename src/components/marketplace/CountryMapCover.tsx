@@ -29,6 +29,8 @@ export default function CountryMapCover({
           <img
             src={mapUrl}
             alt={`Geographic map outline of ${countryName}`}
+            width={800}
+            height={450}
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"

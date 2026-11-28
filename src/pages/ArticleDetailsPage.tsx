@@ -4,9 +4,12 @@ import { ArrowLeft, Check, Copy, Share2 } from 'lucide-react';
 import { Article } from '../types';
 import { getPublishedArticleBySlug, getRelatedArticles } from '../services/editorialService';
 import { resolveEditorialImage } from '../lib/editorialImages';
-import { countArticleBodyWords } from '../data/allArticles';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
-import { detectContentLanguage, truncateAtWordBoundary } from '../lib/seoUtils';
+import {
+  countArticleBodyWords,
+  detectContentLanguage,
+  truncateAtWordBoundary,
+} from '../lib/seoUtils';
 import { resolveLegacyArticleRedirectSlug } from '../lib/legacyRedirects';
 import ArticleCard, { formatPublicationDate } from '../components/editorial/ArticleCard';
 import EditorialMarkdown from '../components/editorial/EditorialMarkdown';

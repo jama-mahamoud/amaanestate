@@ -1,4 +1,5 @@
 import { MediaItem, Tag } from '../types';
+import { countArticleBodyWords } from '../lib/seoUtils';
 import { SeedEditorialArticle, INVESTMENT_ARTICLES } from './articlesInvestment';
 import { ARCHITECTURE_ARTICLES } from './articlesArchitecture';
 import { CONSTRUCTION_ARTICLES } from './articlesConstruction';
@@ -73,11 +74,7 @@ export function formatTagDisplayName(raw: string): string {
     .join(' ');
 }
 
-export function countArticleBodyWords(html: string): number {
-  const withoutRefs = html.split(/<h2>References/i)[0];
-  const plain = withoutRefs.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  return plain ? plain.split(' ').filter(Boolean).length : 0;
-}
+export { countArticleBodyWords };
 
 export function computeReadingTimeMinutes(html: string): number {
   const words = countArticleBodyWords(html);

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Globe2, ImageOff, Link2, X } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
+import { ImageOff, Link2, X } from 'lucide-react';
 import { ComparisonCitySlot, MarketTrendDirection } from '../../types';
 import { normalizeCountryInfo } from '../../lib/countries';
 import { isValidHttpsUrl } from '../../lib/globalMarkets';
 import { SaveComparisonCityInput } from '../../services/globalMarketsService';
+import CountryFlag from '../ui/CountryFlag';
 
 interface ComparisonCityEditorSectionProps {
   slot: ComparisonCitySlot;
@@ -114,13 +114,12 @@ export default function ComparisonCityEditorSection({
           </label>
           <div className="flex items-center gap-2">
             <div className="h-10 w-12 border border-[#D6CEBE] rounded bg-white flex items-center justify-center shrink-0">
-              {hasIsoFlag ? (
-                <span
-                  className={`fi fi-${cleanIso} w-6 h-[18px] rounded-[2px] ring-1 ring-black/10`}
-                />
-              ) : (
-                <Globe2 size={16} className="text-[#8C4A27]" />
-              )}
+              <CountryFlag
+                code={cleanIso}
+                className="w-6 h-[18px] rounded-[2px] ring-1 ring-black/10"
+                fallbackSize={16}
+                fallbackClassName="text-[#8C4A27]"
+              />
             </div>
             <input
               id={`${idPrefix}-country-code`}

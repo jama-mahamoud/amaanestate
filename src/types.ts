@@ -407,6 +407,7 @@ export interface Property {
   source_name: string;
   source_listing_id?: string | null;
   source_url?: string | null;
+  raw_payload?: Record<string, any> | null;
   published_at?: string | null;
   created_by?: string | null;
   created_at: string;

@@ -20,14 +20,25 @@ const VARIANT_CLASSES: Record<BrandLogoVariant, string> = {
 };
 
 export default function BrandLogo({ variant = 'header', className = '' }: BrandLogoProps) {
+  const isHeader = variant === 'header';
+
   return (
-    <img
-      src={OFFICIAL_LOGO_SRC}
-      alt={OFFICIAL_LOGO_ALT}
-      width={1672}
-      height={941}
-      decoding="async"
-      className={`block select-none ${VARIANT_CLASSES[variant]} ${className}`.trim()}
-    />
+    <picture className="inline-block shrink-0">
+      <source
+        type="image/webp"
+        srcSet="/images/amaanestate-logo-360.webp 360w, /images/amaanestate-logo-720.webp 720w"
+        sizes={isHeader ? '(max-width: 639px) 120px, 175px' : '230px'}
+      />
+      <img
+        src={OFFICIAL_LOGO_SRC}
+        alt={OFFICIAL_LOGO_ALT}
+        width={1672}
+        height={941}
+        loading={isHeader ? 'eager' : 'lazy'}
+        decoding={isHeader ? 'sync' : 'async'}
+        fetchPriority={isHeader ? 'high' : undefined}
+        className={`block select-none ${VARIANT_CLASSES[variant]} ${className}`.trim()}
+      />
+    </picture>
   );
 }

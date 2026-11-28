@@ -35,28 +35,58 @@
         }
       })();
     </script>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-TGGX2LR5');</script>
-    <!-- End Google Tag Manager -->
+    <!-- Google Tag Manager & AdSense Deferred Loader (preserves DataLayer + verification without blocking FCP/LCP) -->
+    <script>
+      (function (w, d) {
+        w.dataLayer = w.dataLayer || [];
+        var tagsLoaded = false;
+        function loadThirdPartyTags() {
+          if (tagsLoaded) return;
+          tagsLoaded = true;
+          w.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          var gtm = d.createElement('script');
+          gtm.async = true;
+          gtm.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TGGX2LR5';
+          d.head.appendChild(gtm);
+
+          var ads = d.createElement('script');
+          ads.async = true;
+          ads.crossOrigin = 'anonymous';
+          ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7965451372324178';
+          d.head.appendChild(ads);
+        }
+        w.addEventListener('load', function () {
+          if ('requestIdleCallback' in w) {
+            w.requestIdleCallback(loadThirdPartyTags, { timeout: 1200 });
+          } else {
+            w.setTimeout(loadThirdPartyTags, 200);
+          }
+        }, { once: true });
+        w.setTimeout(loadThirdPartyTags, 3500);
+      })(window, document);
+    </script>
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AmaanEstate | Global Real Estate News &amp; Market Research</title>
 
-    <!-- Google AdSense Verification Script & Account Meta Tag -->
+    <!-- Google AdSense Account Meta Tag -->
     <meta name="google-adsense-account" content="ca-pub-7965451372324178" />
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7965451372324178" crossorigin="anonymous"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
 
     <meta name="theme-color" content="#FAF8F5" />
     <meta
@@ -65,9 +95,10 @@
     />
     <meta name="robots" content="index, follow" />
 
-    <link rel="shortcut icon" href="/images/amaanestate-logo.png" />
-    <link rel="icon" type="image/png" href="/images/amaanestate-logo.png" />
-    <link rel="apple-touch-icon" href="/images/amaanestate-logo.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="canonical" href="https://www.amaanestate.com/" />
 
     <meta property="og:type" content="website" />

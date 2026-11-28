@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, LayoutDashboard, LogOut, Menu, Search, User, X } from 'lucide-react';
 import { getCurrentUserProfile, signOutUser } from '../../services/adminService';
-import { SocialLink, getActiveSocialLinks } from '../../services/socialService';
+import { SocialLink, DEFAULT_SEED_LINKS, getActiveSocialLinks } from '../../services/socialService';
 import { subscribeNewsletter } from '../../services/editorialService';
 import { SocialIcon } from './SocialIcons';
 import BrandLogo from './BrandLogo';
@@ -16,12 +16,8 @@ interface LayoutProps {
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
-  { to: '/global-markets', label: 'Global Markets' },
-  { to: '/investment', label: 'Investment' },
-  { to: '/architecture', label: 'Architecture' },
-  { to: '/construction', label: 'Construction' },
-  { to: '/home-living', label: 'Home & Living' },
-  { to: '/news', label: 'Global News' },
+  { to: '/buy', label: 'Buy' },
+  { to: '/rent', label: 'Rent' },
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
 ];
@@ -34,10 +30,10 @@ export default function Layout({ children }: LayoutProps) {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Social Links state
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  // Social Links state (seeded immediately to prevent footer CLS)
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(DEFAULT_SEED_LINKS);
 
-  // Footer Newsletter State
+  // Footer Newsletter State (shown on non-homepage routes so / does not render duplicate newsletter forms)
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubmitting, setNewsletterSubmitting] = useState(false);
 
@@ -78,7 +74,20 @@ export default function Layout({ children }: LayoutProps) {
       if (active) setCurrentUser(prof);
     });
 
-    fetchSocialLinks();
+    let idleId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    const scheduleSocialRefresh = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        idleId = (window as any).requestIdleCallback(() => {
+          if (active) fetchSocialLinks();
+        }, { timeout: 1500 });
+      } else {
+        timerId = setTimeout(() => {
+          if (active) fetchSocialLinks();
+        }, 400);
+      }
+    };
+    scheduleSocialRefresh();
 
     const handleSocialUpdate = () => {
       fetchSocialLinks();
@@ -98,6 +107,10 @@ export default function Layout({ children }: LayoutProps) {
 
     return () => {
       active = false;
+      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timerId !== null) clearTimeout(timerId);
       window.removeEventListener('social_links_updated', handleSocialUpdate);
       sub?.data.subscription.unsubscribe();
     };
@@ -137,24 +150,27 @@ export default function Layout({ children }: LayoutProps) {
     currentUser?.email?.split('@')[0] ||
     'Account';
 
+  const showFooterNewsletter =
+    location.pathname !== '/' && location.pathname !== '/newsletter';
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#141413]">
-      {/* Clean Responsive Editorial Header */}
+      {/* Clean Responsive Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E5E0D8]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-[72px] lg:h-auto xl:h-[72px] flex items-center justify-between lg:flex-wrap xl:flex-nowrap gap-x-2 sm:gap-x-6 xl:gap-x-5 2xl:gap-x-6 gap-y-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-[72px] flex items-center justify-between gap-x-4 sm:gap-x-6">
           {/* Zone 1: Official AmaanEstate Logo */}
           <Link
             to="/"
-            aria-label="AmaanEstate — Global Real Estate Media, Research & Market Intelligence"
-            className="order-1 inline-flex items-center shrink-0 lg:py-1.5 xl:py-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
+            aria-label="AmaanEstate — Global Real Estate Media, Research & Marketplace"
+            className="inline-flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
           >
-            <BrandLogo variant="header" className="lg:h-[56px] xl:h-[64px]" />
+            <BrandLogo variant="header" className="lg:h-[60px]" />
           </Link>
 
-          {/* Zone 2: Clean Typographic Navigation (two-tier rail on 1024px-1279px, single-row inline on 1280px+) */}
+          {/* Zone 2: Simplified Main Navigation */}
           <nav
             aria-label="Primary navigation"
-            className="hidden lg:flex lg:order-3 xl:order-2 lg:basis-full xl:basis-auto lg:w-full xl:w-auto items-center lg:justify-center xl:justify-start lg:gap-5 xl:gap-4 2xl:gap-5 lg:border-t lg:border-[#E5E0D8]/80 xl:border-t-0 lg:py-2 xl:py-0 text-[13px] font-medium text-[#5C5A55]"
+            className="hidden lg:flex items-center gap-7 text-[13px] font-medium text-[#5C5A55]"
           >
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -175,15 +191,15 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Zone 3: Search Action + Auth Login / Account Action + Mobile/Tablet Drawer Trigger */}
-          <div className="order-2 xl:order-3 flex items-center gap-1.5 sm:gap-2.5 shrink-0 lg:py-1.5 xl:py-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <Link
               to="/search"
               aria-label="Search articles"
               title="Search editorial archive"
-              className="hidden sm:inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-3 xl:px-2.5 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 text-xs font-semibold text-[#141413] bg-white border border-[#E5E0D8] hover:border-[#1E3A5F] rounded transition-colors whitespace-nowrap shrink-0"
             >
               <Search size={14} />
-              <span className="xl:hidden">Search</span>
+              <span>Search</span>
             </Link>
 
             {currentUser ? (
@@ -193,7 +209,7 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => setUserMenuOpen((o) => !o)}
                   aria-expanded={userMenuOpen}
                   aria-label="Account menu"
-                  className="inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-2.5 sm:px-3 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-2.5 sm:px-3 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <User size={14} />
                   <span className="max-w-[76px] sm:max-w-[96px] truncate">{displayName}</span>
@@ -243,7 +259,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 to="/login"
                 aria-label="Login or create account"
-                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] lg:min-h-0 px-3 sm:px-3.5 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 sm:px-3.5 py-2 text-xs font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C49] rounded transition-colors whitespace-nowrap shrink-0"
               >
                 <User size={14} />
                 <span>Login</span>
@@ -265,7 +281,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Mobile / Tablet Navigation Panel */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#FAF8F5] border-t border-[#E5E0D8] px-4 py-4 space-y-3 max-h-[calc(100dvh-3.5rem)] sm:max-h-[calc(100dvh-4.5rem)] overflow-y-auto shadow-lg">
-            <nav aria-label="Mobile navigation" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 sm:gap-2">
+            <nav aria-label="Mobile navigation" className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.to}
@@ -291,7 +307,7 @@ export default function Layout({ children }: LayoutProps) {
                 className="sm:hidden min-h-[44px] w-full py-2.5 px-4 text-center text-sm font-semibold bg-white border border-[#E5E0D8] text-[#141413] rounded inline-flex items-center justify-center gap-1.5"
               >
                 <Search size={14} />
-                <span>Search Articles</span>
+                <span>Search Archive</span>
               </Link>
               {currentUser ? (
                 <>
@@ -330,77 +346,75 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 min-w-0">{children}</main>
 
-      {/* Premium International Editorial Publication Footer */}
+      {/* International Real Estate Platform Footer */}
       <footer className="bg-white border-t border-[#E5E0D8] mt-12 sm:mt-16 text-[#141413]">
-        {/* Newsletter Subscription Bar */}
-        <div className="bg-[#FAF8F5] border-b border-[#E5E0D8]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center justify-between">
-              <div className="lg:col-span-6 space-y-1.5">
-                <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
-                  Global Real Estate Briefing
-                </p>
-                <h3 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
-                  Stay Informed. Think Globally.
-                </h3>
-                <p className="text-xs sm:text-sm text-[#5C5A55] max-w-lg leading-relaxed">
-                  Receive selected property research, market insights and international real estate developments in your inbox.
-                </p>
-              </div>
+        {/* Newsletter Subscription Bar (for inner pages; homepage renders Section 6 directly in main) */}
+        {showFooterNewsletter && (
+          <div className="bg-[#FAF8F5] border-b border-[#E5E0D8]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center justify-between">
+                <div className="lg:col-span-6 space-y-1.5">
+                  <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#8C4A27]">
+                    Global Real Estate Briefing
+                  </p>
+                  <h3 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413]">
+                    Stay Informed. Think Globally.
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#5C5A55] max-w-lg leading-relaxed">
+                    Receive selected property research, market insights and international real estate developments in your inbox.
+                  </p>
+                </div>
 
-              <div className="lg:col-span-6 min-w-0">
-                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-2.5 max-w-lg lg:ml-auto">
-                  <input
-                    type="email"
-                    required
-                    aria-label="Email address for briefing newsletter"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    className="flex-1 min-w-0 w-full h-11 px-4 bg-white border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={newsletterSubmitting}
-                    className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#141413] text-white text-xs font-semibold uppercase tracking-wider rounded transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0 w-full sm:w-auto"
-                  >
-                    {newsletterSubmitting ? 'Subscribing...' : 'Subscribe'}
-                  </button>
-                </form>
+                <div className="lg:col-span-6 min-w-0">
+                  <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-2.5 max-w-lg lg:ml-auto">
+                    <input
+                      type="email"
+                      required
+                      aria-label="Email address for briefing newsletter"
+                      value={newsletterEmail}
+                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className="flex-1 min-w-0 w-full h-11 px-4 bg-white border border-[#D6CEBE] rounded text-sm text-[#141413] placeholder:text-[#7A7770] focus:outline-none focus:border-[#1E3A5F]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={newsletterSubmitting}
+                      className="h-11 px-6 bg-[#1E3A5F] hover:bg-[#141413] text-white text-xs font-semibold uppercase tracking-wider rounded transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0 w-full sm:w-auto"
+                    >
+                      {newsletterSubmitting ? 'Subscribing...' : 'Subscribe'}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Main Editorial & Market Intelligence Footer Layout */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
-          
-          {/* Column 1: Brand & About (lg:col-span-4) */}
-          <div className="sm:col-span-2 lg:col-span-4 space-y-5">
-            <Link
-              to="/"
-              aria-label="AmaanEstate — Global Real Estate Media, Research & Market Intelligence"
-              className="inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
-            >
-              <BrandLogo variant="footer" />
-            </Link>
-            
-            <p className="text-sm text-[#4A4843] leading-relaxed max-w-md">
-              AmaanEstate is a global real estate platform providing property market news, housing research, investment insights, market analysis, and international market intelligence.
-            </p>
-
-            <div className="pt-1">
-              <p className="text-xs font-serif italic text-[#8C4A27] font-medium border-l-2 border-[#8C4A27] pl-3 py-0.5">
-                Global Real Estate Media, Research &amp; Market Intelligence.
+        {/* Main Footer Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
+          {/* Brand Summary & Social Links */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-8 border-b border-[#E5E0D8] items-start">
+            <div className="lg:col-span-6 space-y-3.5">
+              <Link
+                to="/"
+                aria-label="AmaanEstate — Global Real Estate Media, Research & Marketplace"
+                className="inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F] rounded"
+              >
+                <BrandLogo variant="footer" />
+              </Link>
+              <p className="text-sm text-[#4A4843] leading-relaxed max-w-xl">
+                AMAAN ESTATE – Global Real Estate Media, Research &amp; Marketplace. Combining international property discovery, city-level market research, and independent real estate journalism.
+              </p>
+              <p className="text-xs font-serif italic text-[#8C4A27] font-medium">
+                Global Real Estate. Informed Decisions.
               </p>
             </div>
 
-            {/* Dynamic Social Media Links with Recognizable Icons */}
-            <div className="pt-3 space-y-2.5">
+            <div className="lg:col-span-6 lg:text-right space-y-2.5">
               <p className="text-[11px] uppercase tracking-widest font-semibold text-[#5C5A55]">
                 Follow AMAAN ESTATE
               </p>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap lg:justify-end items-center gap-2">
                 {socialLinks.map((link) => (
                   <a
                     key={link.id || link.platform}
@@ -409,7 +423,7 @@ export default function Layout({ children }: LayoutProps) {
                     rel="noopener noreferrer"
                     title={link.name}
                     aria-label={link.name}
-                    className="inline-flex items-center gap-2 min-h-[40px] px-3 py-1.5 text-xs font-medium text-[#141413] bg-[#FAF8F5] hover:bg-[#1E3A5F] hover:text-white border border-[#E5E0D8] rounded transition-all duration-200 group"
+                    className="inline-flex items-center gap-2 min-h-[38px] px-3 py-1.5 text-xs font-medium text-[#141413] bg-[#FAF8F5] hover:bg-[#1E3A5F] hover:text-white border border-[#E5E0D8] rounded transition-all duration-200 group"
                   >
                     <SocialIcon platform={link.icon_name || link.platform} size={15} />
                     <span>{link.name}</span>
@@ -419,117 +433,138 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          {/* Column 2: Global Markets (lg:col-span-2) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
-              Global Markets
-            </h4>
-            <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
-              <li>
-                <Link to="/global-markets" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Global Markets
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* 5 Explicit Footer Link Columns */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+            {/* Column 1: Explore */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+                Explore
+              </h4>
+              <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
+                <li>
+                  <Link to="/buy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Buy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/rent" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Rent
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 3: Editorial Categories (lg:col-span-2) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
-              Editorial
-            </h4>
-            <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
-              <li>
-                <Link to="/investment" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Investment
-                </Link>
-              </li>
-              <li>
-                <Link to="/architecture" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Architecture
-                </Link>
-              </li>
-              <li>
-                <Link to="/construction" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Construction
-                </Link>
-              </li>
-              <li>
-                <Link to="/home-living" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Home &amp; Living
-                </Link>
-              </li>
-              <li>
-                <Link to="/news" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Global News
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Column 2: Global Markets */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+                Global Markets
+              </h4>
+              <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
+                <li>
+                  <Link to="/global-markets" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Global Markets
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 4: About & Publication (lg:col-span-2) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
-              Publication
-            </h4>
-            <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
-              <li>
-                <Link to="/about" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  About AMAAN ESTATE
-                </Link>
-              </li>
-              <li>
-                <Link to="/editorial-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Editorial Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/corrections-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Corrections Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link to="/newsletter" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Newsletter
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Column 3: Editorial */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+                Editorial
+              </h4>
+              <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
+                <li>
+                  <Link to="/investment" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Investment
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/architecture" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Architecture
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/construction" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Construction
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/home-living" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Home &amp; Living
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/news" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Global News
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 5: Policies & Transparency (lg:col-span-2) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
-              Policies &amp; Trust
-            </h4>
-            <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
-              <li>
-                <Link to="/privacy-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Terms of Use
-                </Link>
-              </li>
-              <li>
-                <Link to="/cookie-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Cookie Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/advertising-disclosure" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
-                  Advertising Disclosure
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Column 4: Publication */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+                Publication
+              </h4>
+              <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
+                <li>
+                  <Link to="/about" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    About AMAAN ESTATE
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/editorial-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Editorial Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/corrections-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Corrections Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/newsletter" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Newsletter
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
+            {/* Column 5: Policies & Trust */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-sans uppercase tracking-widest font-semibold text-[#141413] border-b border-[#E5E0D8] pb-2">
+                Policies &amp; Trust
+              </h4>
+              <ul className="space-y-1 sm:space-y-2.5 text-sm text-[#5C5A55]">
+                <li>
+                  <Link to="/privacy-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Terms of Use
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cookie-policy" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/advertising-disclosure" className="inline-flex items-center min-h-[36px] sm:min-h-0 py-0.5 hover:text-[#141413] transition-colors">
+                    Advertising Disclosure
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Footer Bar */}

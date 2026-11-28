@@ -9,7 +9,6 @@ import {
   MapPin,
   ShieldCheck,
 } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
 import {
   Article,
   GlobalMarketCountrySummary,
@@ -27,6 +26,7 @@ import {
   resolveReportCanonicalUrl,
 } from '../lib/globalMarkets';
 import { resolveEditorialImage } from '../lib/editorialImages';
+import CountryFlag from '../components/ui/CountryFlag';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { formatSeoTitle, truncateAtWordBoundary } from '../lib/seoUtils';
 import ArticleCard from '../components/editorial/ArticleCard';
@@ -370,14 +370,12 @@ export default function GlobalMarketPage() {
           </nav>
 
           <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
-            {hasIsoFlag ? (
-              <span
-                className={`fi fi-${isoCode} w-7 h-[21px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-                aria-hidden="true"
-              />
-            ) : (
-              <Globe2 size={20} className="text-[#8C4A27] shrink-0" aria-hidden="true" />
-            )}
+            <CountryFlag
+              code={isoCode}
+              className="w-7 h-[21px] rounded-[2px] ring-1 ring-black/10 shrink-0"
+              fallbackSize={20}
+              fallbackClassName="text-[#8C4A27] shrink-0"
+            />
             <span className="text-xs uppercase tracking-[0.16em] sm:tracking-[0.2em] font-semibold text-[#8C4A27]">
               {countrySummary.countryName} · Country Market Overview
             </span>
@@ -725,14 +723,12 @@ export default function GlobalMarketPage() {
         </nav>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
-          {hasIsoFlag ? (
-            <span
-              className={`fi fi-${isoCode} w-7 h-[21px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-              aria-hidden="true"
-            />
-          ) : (
-            <Globe2 size={20} className="text-[#8C4A27] shrink-0" aria-hidden="true" />
-          )}
+          <CountryFlag
+            code={isoCode}
+            className="w-7 h-[21px] rounded-[2px] ring-1 ring-black/10 shrink-0"
+            fallbackSize={20}
+            fallbackClassName="text-[#8C4A27] shrink-0"
+          />
           <span className="text-xs uppercase tracking-[0.16em] sm:tracking-[0.2em] font-semibold text-[#8C4A27] break-words">
             {activeReport.city_name
               ? `${activeReport.city_name} · ${countrySummary.countryName}`

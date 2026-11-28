@@ -5,11 +5,9 @@ import {
   Building2,
   Calendar,
   ExternalLink,
-  Globe2,
   Scale,
   ShieldCheck,
 } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketComparisonCity, GlobalMarketComparisonReport } from '../types';
 import { getGlobalMarketComparisonBySlug } from '../services/globalMarketsService';
 import {
@@ -23,6 +21,7 @@ import {
 } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { formatSeoTitle, truncateAtWordBoundary } from '../lib/seoUtils';
+import CountryFlag from '../components/ui/CountryFlag';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 import NotFoundPage from './NotFoundPage';
 
@@ -123,14 +122,12 @@ function CityPanel({
             </div>
 
             <div className="flex items-center gap-2.5 min-w-0">
-              {hasFlag ? (
-                <span
-                  className={`fi fi-${iso} w-6 h-[18px] rounded-[2px] ring-1 ring-black/15 shrink-0`}
-                  aria-hidden="true"
-                />
-              ) : (
-                <Globe2 size={18} className="text-[#8C4A27] shrink-0" aria-hidden="true" />
-              )}
+              <CountryFlag
+                code={city.country_code}
+                className="w-6 h-[18px] rounded-[2px] ring-1 ring-black/15 shrink-0"
+                fallbackSize={18}
+                fallbackClassName="text-[#8C4A27] shrink-0"
+              />
               <div className="min-w-0">
                 <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#141413] leading-snug break-words">
                   {city.city_name}

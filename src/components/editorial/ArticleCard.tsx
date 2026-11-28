@@ -35,6 +35,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
             <img
               src={imageSrc}
               alt={article.featured_image_alt || article.title}
+              width={1024}
+              height={640}
               decoding="async"
               referrerPolicy="no-referrer"
               onError={() => setImgFailed(true)}
@@ -138,6 +140,8 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           <img
             src={imageSrc}
             alt={article.featured_image_alt || article.title}
+            width={1024}
+            height={640}
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"

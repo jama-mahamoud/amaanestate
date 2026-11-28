@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Globe2 } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
+import { ArrowRight } from 'lucide-react';
 import { GlobalMarketComparisonCity, GlobalMarketComparisonReport } from '../../types';
 import {
   formatCompactMarketCurrency,
@@ -10,6 +9,7 @@ import {
   isValidHttpsUrl,
   resolveMarketTrendDirection,
 } from '../../lib/globalMarkets';
+import CountryFlag from '../ui/CountryFlag';
 import { CurvedTrendSparkline } from './MarketTrendIndicator';
 
 interface ComparisonMarketCardProps {
@@ -40,8 +40,11 @@ function CityHalfVisual({
         <img
           src={cleanUrl}
           alt={imageAlt || `${cityName} residential market`}
+          width={400}
+          height={224}
           onError={() => setFailed(true)}
           loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
         />
@@ -62,14 +65,12 @@ function CityHalfVisual({
       }`}
     >
       <div className="flex items-center gap-1.5 text-white/95">
-        {/^[a-z]{2}$/.test(iso) ? (
-          <span
-            className={`fi fi-${iso} w-4 h-3 rounded-[2px] ring-1 ring-white/25 shrink-0`}
-            aria-hidden="true"
-          />
-        ) : (
-          <Globe2 size={13} className="text-[#C9A45C] shrink-0" aria-hidden="true" />
-        )}
+        <CountryFlag
+          code={iso}
+          className="w-4 h-3 rounded-[2px] ring-1 ring-white/25 shrink-0"
+          fallbackSize={13}
+          fallbackClassName="text-[#C9A45C] shrink-0"
+        />
         <span className="font-serif text-xs font-semibold truncate max-w-[96px]">
           {cityName}
         </span>
@@ -111,14 +112,12 @@ function CityCompactMetricCell({ city }: { city: GlobalMarketComparisonCity }) {
   return (
     <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded-[5px] px-2.5 py-2 min-w-0 flex flex-col justify-between gap-1.5">
       <div className="flex items-center gap-1.5 min-w-0">
-        {hasFlag ? (
-          <span
-            className={`fi fi-${iso} w-4 h-3 rounded-[2px] ring-1 ring-black/15 shrink-0`}
-            aria-hidden="true"
-          />
-        ) : (
-          <Globe2 size={13} className="text-[#C9A45C] shrink-0" aria-hidden="true" />
-        )}
+        <CountryFlag
+          code={city.country_code}
+          className="w-4 h-3 rounded-[2px] ring-1 ring-black/15 shrink-0"
+          fallbackSize={13}
+          fallbackClassName="text-[#C9A45C] shrink-0"
+        />
         <span className="text-xs font-semibold text-[#1E3A5F] truncate">
           {city.city_name}
         </span>

@@ -27,6 +27,12 @@ export function stripHtmlForSeo(raw?: string | null): string {
     .trim();
 }
 
+export function countArticleBodyWords(html: string): number {
+  const withoutRefs = html.split(/<h2>References/i)[0];
+  const plain = withoutRefs.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return plain ? plain.split(' ').filter(Boolean).length : 0;
+}
+
 export function formatSeoTitle(
   rawTitle?: string | null,
   fallback: string = DEFAULT_SEO_TITLE

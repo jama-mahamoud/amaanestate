@@ -3,12 +3,16 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, MapPin, Phone, UserCheck } from 'lucide-react';
 import { Property } from '../types';
 import {
+  formatListingSourceLabel,
   formatListingStatusLabel,
   formatPropertyLocation,
   formatPropertyPrice,
   formatPropertyTypeLabel,
+  getPartnerTrackingUrl,
   getPrimaryPropertyImage,
   getPropertyBySlug,
+  isPartnerListing,
+  isValidExternalPropertyUrl,
 } from '../services/propertyService';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
 import { truncateAtWordBoundary } from '../lib/seoUtils';
@@ -207,6 +211,8 @@ export default function PropertyDetailsPage() {
   }
 
   const isSample = Boolean(property.is_sample) || property.source_name === 'showcase_sample';
+  const partnerListing = isPartnerListing(property);
+  const partnerTrackingUrl = getPartnerTrackingUrl(property);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
@@ -258,6 +264,12 @@ export default function PropertyDetailsPage() {
               </span>
               <span aria-hidden="true">·</span>
               <span>{formatPropertyTypeLabel(property.property_type)}</span>
+              {partnerListing && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-semibold text-[#1E3A5F]">Partner Listing</span>
+                </>
+              )}
               <span aria-hidden="true">·</span>
               <span className="font-semibold text-[#1E3A5F]">
                 {formatListingStatusLabel(property.listing_status)}
@@ -370,25 +382,33 @@ export default function PropertyDetailsPage() {
                   <div className="text-[11px] uppercase tracking-wider font-semibold text-[#7A7770]">
                     Source Attribution
                   </div>
-                  <p className="text-[#141413] font-medium capitalize">
-                    {property.source_name || 'AMAAN ESTATE Direct'}
+                  <p className="text-[#141413] font-medium">
+                    {formatListingSourceLabel(property.source_name)}
                   </p>
                   {property.source_listing_id && (
                     <p className="text-xs font-mono text-[#5C5A55]">
-                      Listing ID: {property.source_listing_id}
+                      Listing ID / SKU: {property.source_listing_id}
                     </p>
                   )}
-                  {property.source_url && (
-                    <a
-                      href={property.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] hover:underline pt-1"
-                    >
-                      <span>View Original Source Record</span>
-                      <ExternalLink size={12} />
-                    </a>
-                  )}
+                  {(() => {
+                    const sourceHref = partnerListing
+                      ? partnerTrackingUrl
+                      : isValidExternalPropertyUrl(property.source_url)
+                      ? property.source_url!.trim()
+                      : null;
+                    if (!sourceHref) return null;
+                    return (
+                      <a
+                        href={sourceHref}
+                        target="_blank"
+                        rel={partnerListing ? 'noopener noreferrer sponsored' : 'noopener noreferrer'}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] hover:underline pt-1"
+                      >
+                        <span>{partnerListing ? 'View Property' : 'View Original Source Record'}</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    );
+                  })()}
                 </div>
               </div>
             </section>
@@ -405,9 +425,43 @@ export default function PropertyDetailsPage() {
           </div>
         </div>
 
-        {/* Right Sticky Enquiry Panel */}
-        <aside className="lg:col-span-4 lg:sticky lg:top-24">
-          <PropertyEnquiryForm property={property} />
+        {/* Right Sticky Enquiry / Partner Panel */}
+        <aside className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+          {partnerListing ? (
+            <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] uppercase tracking-wider font-semibold bg-[#EFF4FA] text-[#1E3A5F] border border-[#C7D6E8]">
+                  Partner Listing
+                </span>
+                <span className="text-[11px] font-medium text-[#7A7770]">
+                  For Rent
+                </span>
+              </div>
+              <h2 className="text-lg font-serif font-semibold text-[#141413]">
+                View &amp; Request Directly on Partner Site
+              </h2>
+              <p className="text-xs text-[#4A4843] leading-relaxed">
+                This rental residence is listed via an external housing partner. Check live availability and submit rental or booking requests directly on the partner platform.
+              </p>
+              {partnerTrackingUrl ? (
+                <a
+                  href={partnerTrackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="w-full h-11 px-5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold uppercase tracking-wider rounded inline-flex items-center justify-center gap-2 transition-colors"
+                >
+                  <span>View Property</span>
+                  <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              ) : (
+                <p className="text-xs text-[#991B1B] font-medium">
+                  Partner tracking link unavailable.
+                </p>
+              )}
+            </div>
+          ) : (
+            <PropertyEnquiryForm property={property} />
+          )}
         </aside>
       </div>
     </div>

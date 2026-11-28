@@ -144,8 +144,8 @@ export default function AuthPage({ initialMode = 'signin' }: AuthPageProps) {
     }
   };
 
-  const handleDemoPreview = () => {
-    enterDemoAdminMode();
+  const handleDemoPreview = async () => {
+    await enterDemoAdminMode();
     navigate('/admin', { replace: true });
   };
 

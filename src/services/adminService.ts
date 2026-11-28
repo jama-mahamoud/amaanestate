@@ -15,8 +15,11 @@ import {
   SubscriberStatus,
   Tag,
 } from '../types';
-import { hydrateDemoArticle, loadDemoDb, saveDemoDb } from './demoContent';
 import { syncInternalTrafficWithProfile } from '../lib/internalTraffic';
+
+async function getDemoHelpers() {
+  return import('./demoContent');
+}
 
 const DEMO_ADMIN_SESSION_KEY = 'amaan_estate_demo_admin_session';
 
@@ -61,6 +64,7 @@ export async function getCurrentUserProfile(): Promise<Profile | null> {
   }
 
   if (typeof window !== 'undefined' && window.localStorage.getItem(DEMO_ADMIN_SESSION_KEY) === 'active') {
+    const { loadDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     return db.profiles[0] || null;
   }
@@ -180,10 +184,11 @@ export async function signInAdmin(email: string, password: string): Promise<Admi
   };
 }
 
-export function enterDemoAdminMode(): Profile {
+export async function enterDemoAdminMode(): Promise<Profile> {
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(DEMO_ADMIN_SESSION_KEY, 'active');
   }
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const profile = db.profiles[0];
   syncInternalTrafficWithProfile(profile, { force: true });
@@ -236,6 +241,7 @@ export async function getAdminArticles(): Promise<Article[]> {
     }));
   }
 
+  const { loadDemoDb, hydrateDemoArticle } = await getDemoHelpers();
   const db = loadDemoDb();
   return [...db.articles]
     .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
@@ -392,6 +398,7 @@ export async function upsertArticle(
     return { success: true, article: data as Article, seoSchemaPending };
   }
 
+  const { loadDemoDb, saveDemoDb, hydrateDemoArticle } = await getDemoHelpers();
   const db = loadDemoDb();
   const now = new Date().toISOString();
   const resolvedTags = db.tags.filter((t) => tagIds.includes(t.id));
@@ -433,9 +440,13 @@ export async function deleteArticle(id: string): Promise<boolean> {
     const { error } = await supabase.from('articles').delete().eq('id', id);
     return !error;
   }
-  const db = loadDemoDb();
-  db.articles = db.articles.filter((a) => a.id !== id);
-  saveDemoDb(db);
+  if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
+    const db = loadDemoDb();
+    db.articles = db.articles.filter((a) => a.id !== id);
+    saveDemoDb(db);
+    return true;
+  }
   return true;
 }
 
@@ -445,6 +456,7 @@ export async function getAdminCategories(): Promise<Category[]> {
     if (error) console.error('getAdminCategories error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().categories].sort((a, b) => a.display_order - b.display_order);
 }
 
@@ -458,6 +470,7 @@ export async function upsertCategory(payload: Partial<Category> & { name: string
     return { success: true };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   if (payload.id) {
     const idx = db.categories.findIndex((c) => c.id === payload.id);
@@ -487,6 +500,7 @@ export async function deleteCategory(id: string): Promise<{ success: boolean; er
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   if (db.articles.some((a) => a.category_id === id)) {
     return { success: false, error: 'Cannot delete a category that still contains articles.' };
@@ -502,6 +516,7 @@ export async function getAdminAuthors(): Promise<Author[]> {
     if (error) console.error('getAdminAuthors error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().authors];
 }
 
@@ -514,6 +529,7 @@ export async function upsertAuthor(payload: Partial<Author> & { name: string; sl
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   if (payload.id) {
     const idx = db.authors.findIndex((a) => a.id === payload.id);
@@ -550,6 +566,7 @@ export async function deleteAuthor(id: string): Promise<{ success: boolean; erro
     }
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   if (db.articles.some((a) => a.author_id === id)) {
     return { success: false, error: 'Cannot delete an author assigned to existing articles.' };
@@ -565,6 +582,7 @@ export async function getTags(): Promise<Tag[]> {
     if (error) console.error('getTags error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().tags];
 }
 
@@ -587,6 +605,7 @@ export async function createTag(name: string): Promise<Tag | null> {
     return data || null;
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const existing = db.tags.find((t) => t.slug === slug);
   if (existing) return existing;
@@ -610,6 +629,7 @@ export async function updateTag(id: string, name: string): Promise<{ success: bo
     return { success: true };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const item = db.tags.find((t) => t.id === id);
   if (item) {
@@ -626,6 +646,7 @@ export async function deleteTag(id: string): Promise<{ success: boolean; error?:
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.tags = db.tags.filter((t) => t.id !== id);
   saveDemoDb(db);
@@ -638,6 +659,7 @@ export async function getMediaLibrary(): Promise<MediaItem[]> {
     if (error) console.error('getMediaLibrary error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().media];
 }
 
@@ -762,6 +784,7 @@ export async function registerExternalMediaUrl(payload: {
     return { success: true, item: mediaRow as MediaItem };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const created: MediaItem = {
     id: `med-${Date.now()}`,
@@ -787,6 +810,7 @@ export async function updateMediaItem(
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const item = db.media.find((m) => m.id === id);
   if (item) {
@@ -804,6 +828,7 @@ export async function deleteMediaItem(item: MediaItem): Promise<boolean> {
     const { error } = await supabase.from('media').delete().eq('id', item.id);
     return !error;
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.media = db.media.filter((m) => m.id !== item.id);
   saveDemoDb(db);
@@ -816,6 +841,7 @@ export async function getSubscribers(): Promise<NewsletterSubscriber[]> {
     if (error) console.error('getSubscribers error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().subscribers];
 }
 
@@ -824,6 +850,7 @@ export async function updateSubscriberStatus(id: string, status: SubscriberStatu
     const { error } = await supabase.from('newsletter_subscribers').update({ status }).eq('id', id);
     return !error;
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const item = db.subscribers.find((s) => s.id === id);
   if (item) {
@@ -839,6 +866,7 @@ export async function deleteSubscriber(id: string): Promise<boolean> {
     const { error } = await supabase.from('newsletter_subscribers').delete().eq('id', id);
     return !error;
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.subscribers = db.subscribers.filter((s) => s.id !== id);
   saveDemoDb(db);
@@ -851,6 +879,7 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
     if (error) console.error('getContactMessages error:', error);
     return data || [];
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return [...loadDemoDb().messages];
 }
 
@@ -862,6 +891,7 @@ export async function updateContactMessage(
     const { error } = await supabase.from('contact_messages').update(updates).eq('id', id);
     return !error;
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const msg = db.messages.find((m) => m.id === id);
   if (msg) {
@@ -876,6 +906,7 @@ export async function deleteContactMessage(id: string): Promise<boolean> {
     const { error } = await supabase.from('contact_messages').delete().eq('id', id);
     return !error;
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.messages = db.messages.filter((m) => m.id !== id);
   saveDemoDb(db);
@@ -888,6 +919,7 @@ export async function updateSiteSettings(settings: Partial<SiteSettings>): Promi
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.siteSettings = { ...db.siteSettings, ...settings, updated_at: new Date().toISOString() };
   saveDemoDb(db);
@@ -907,6 +939,7 @@ export async function getUsersAndRoles(): Promise<{ profiles: Profile[]; roles: 
       roles: rolesRes.data || [],
     };
   }
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   return { profiles: db.profiles, roles: db.roles };
 }
@@ -917,6 +950,7 @@ export async function updateUserRole(profileId: string, roleId: string): Promise
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const profile = db.profiles.find((p) => p.id === profileId);
   const role = db.roles.find((r) => r.id === roleId) || null;
@@ -949,6 +983,7 @@ export async function updateOwnProfile(updates: {
     if (error) return { success: false, error: error.message };
     return { success: true };
   }
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   if (db.profiles[0]) {
     db.profiles[0] = { ...db.profiles[0], ...updates };

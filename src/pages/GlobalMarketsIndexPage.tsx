@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe2 } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
 import { GlobalMarketComparisonReport, GlobalMarketCountrySummary } from '../types';
 import {
   getPublishedMarketComparisons,
@@ -9,6 +8,7 @@ import {
 } from '../services/globalMarketsService';
 import { formatMarketCurrency } from '../lib/globalMarkets';
 import { getCanonicalOrigin, useSEO } from '../hooks/useSEO';
+import CountryFlag from '../components/ui/CountryFlag';
 import ComparisonMarketCard from '../components/marketplace/ComparisonMarketCard';
 import MarketTrendIndicator from '../components/marketplace/MarketTrendIndicator';
 
@@ -147,14 +147,12 @@ export default function GlobalMarketsIndexPage() {
                 <div className="space-y-3 min-w-0">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      {hasFlag ? (
-                        <span
-                          className={`fi fi-${iso} w-6 h-[18px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Globe2 size={18} className="text-[#8C4A27] shrink-0" />
-                      )}
+                      <CountryFlag
+                        code={item.countryCode}
+                        className="w-6 h-[18px] rounded-[2px] ring-1 ring-black/10 shrink-0"
+                        fallbackSize={18}
+                        fallbackClassName="text-[#8C4A27] shrink-0"
+                      />
                       <h2 className="text-lg sm:text-xl font-serif font-semibold text-[#141413] group-hover:text-[#1E3A5F] transition-colors leading-snug break-words">
                         {item.countryName}
                       </h2>

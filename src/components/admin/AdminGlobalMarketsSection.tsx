@@ -16,7 +16,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import 'flag-icons/css/flag-icons.min.css';
+import CountryFlag from '../ui/CountryFlag';
 import {
   GlobalMarketComparisonReport,
   GlobalMarketReport,
@@ -980,14 +980,12 @@ export default function AdminGlobalMarketsSection({
                   <div key={report.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        {hasFlag ? (
-                          <span
-                            className={`fi fi-${iso} w-5 h-[14px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Globe2 size={15} className="text-[#8C4A27] shrink-0" />
-                        )}
+                        <CountryFlag
+                          code={iso}
+                          className="w-5 h-[14px] rounded-[2px] ring-1 ring-black/10 shrink-0"
+                          fallbackSize={15}
+                          fallbackClassName="text-[#8C4A27] shrink-0"
+                        />
                         <div className="min-w-0">
                           <div className="font-semibold text-[#141413] text-xs break-words">
                             {report.country_name}
@@ -1135,12 +1133,18 @@ export default function AdminGlobalMarketsSection({
                         <div className="min-w-0">
                           <div className="font-semibold text-[#141413] text-xs flex flex-wrap items-center gap-1.5">
                             {/^[a-z]{2}$/.test(isoA) && (
-                              <span className={`fi fi-${isoA} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                              <CountryFlag
+                                code={isoA}
+                                className="w-4 h-3 rounded-[2px] ring-1 ring-black/10"
+                              />
                             )}
                             <span>{comp.city_a.city_name || 'City A'}</span>
                             <span className="text-[#8C4A27]">vs</span>
                             {/^[a-z]{2}$/.test(isoB) && (
-                              <span className={`fi fi-${isoB} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                              <CountryFlag
+                                code={isoB}
+                                className="w-4 h-3 rounded-[2px] ring-1 ring-black/10"
+                              />
                             )}
                             <span>{comp.city_b.city_name || 'City B'}</span>
                           </div>
@@ -1289,14 +1293,12 @@ export default function AdminGlobalMarketsSection({
                       <tr key={report.id} className="hover:bg-[#FAF8F5]">
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
-                            {hasFlag ? (
-                              <span
-                                className={`fi fi-${iso} w-5 h-[14px] rounded-[2px] ring-1 ring-black/10 shrink-0`}
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <Globe2 size={15} className="text-[#8C4A27] shrink-0" />
-                            )}
+                            <CountryFlag
+                              code={iso}
+                              className="w-5 h-[14px] rounded-[2px] ring-1 ring-black/10 shrink-0"
+                              fallbackSize={15}
+                              fallbackClassName="text-[#8C4A27] shrink-0"
+                            />
                             <div>
                               <div className="font-semibold text-[#141413] text-xs">
                                 {report.country_name}
@@ -1468,12 +1470,18 @@ export default function AdminGlobalMarketsSection({
                             <div>
                               <div className="font-semibold text-[#141413] text-xs flex items-center gap-1.5">
                                 {/^[a-z]{2}$/.test(isoA) && (
-                                  <span className={`fi fi-${isoA} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                                  <CountryFlag
+                                    code={isoA}
+                                    className="w-4 h-3 rounded-[2px] ring-1 ring-black/10"
+                                  />
                                 )}
                                 <span>{comp.city_a.city_name || 'City A'}</span>
                                 <span className="text-[#8C4A27]">vs</span>
                                 {/^[a-z]{2}$/.test(isoB) && (
-                                  <span className={`fi fi-${isoB} w-4 h-3 rounded-[2px] ring-1 ring-black/10`} />
+                                  <CountryFlag
+                                    code={isoB}
+                                    className="w-4 h-3 rounded-[2px] ring-1 ring-black/10"
+                                  />
                                 )}
                                 <span>{comp.city_b.city_name || 'City B'}</span>
                               </div>
@@ -1763,13 +1771,12 @@ export default function AdminGlobalMarketsSection({
                     </label>
                     <div className="flex items-center gap-2">
                       <div className="h-10 w-12 border border-[#D6CEBE] rounded bg-[#FAF8F5] flex items-center justify-center shrink-0">
-                        {hasIsoFlag ? (
-                          <span
-                            className={`fi fi-${cleanIsoPreview} w-6 h-[18px] rounded-[2px] ring-1 ring-black/10`}
-                          />
-                        ) : (
-                          <Globe2 size={16} className="text-[#8C4A27]" />
-                        )}
+                        <CountryFlag
+                          code={cleanIsoPreview}
+                          className="w-6 h-[18px] rounded-[2px] ring-1 ring-black/10"
+                          fallbackSize={16}
+                          fallbackClassName="text-[#8C4A27]"
+                        />
                       </div>
                       <input
                         type="text"

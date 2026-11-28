@@ -17,8 +17,11 @@ import {
 } from '../lib/globalMarkets';
 import { getAuthorizedDataSourceById } from '../lib/marketDataSources';
 import { getPublishedArticles } from './editorialService';
-import { loadDemoDb, saveDemoDb } from './demoContent';
 import { isPgrst205Error } from './propertyService';
+
+async function getDemoHelpers() {
+  return import('./demoContent');
+}
 import {
   Article,
   ComparisonCitySlot,
@@ -189,6 +192,7 @@ export async function getPublishedMarketCountries(): Promise<{
     }
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const reports = (db.globalMarkets || []).map(normalizeGlobalMarketRow);
   return {
@@ -271,6 +275,7 @@ export async function getGlobalMarketCountryPageData(
     }
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const eligible = (db.globalMarkets || [])
     .map(normalizeGlobalMarketRow)
@@ -409,6 +414,7 @@ export async function getAdminGlobalMarkets(): Promise<{
   schemaPending: boolean;
 }> {
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     return {
       reports: (db.globalMarkets || []).map(normalizeGlobalMarketRow),
@@ -596,6 +602,7 @@ export async function saveGlobalMarket(
   const rowPayload = prepared.payload;
 
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     const list = db.globalMarkets || [];
     const existingIdx = input.id ? list.findIndex((r) => r.id === input.id) : -1;
@@ -699,6 +706,7 @@ export async function updateGlobalMarketStatus(
   }
 
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     const idx = (db.globalMarkets || []).findIndex((r) => r.id === report.id);
     if (idx >= 0) {
@@ -730,6 +738,7 @@ export async function deleteGlobalMarket(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     db.globalMarkets = (db.globalMarkets || []).filter((r) => r.id !== id);
     saveDemoDb(db);
@@ -1049,6 +1058,7 @@ export async function getPublishedMarketComparisons(options?: {
     }
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const list = (db.globalMarketComparisons || [])
     .map(normalizeGlobalMarketComparisonRow)
@@ -1099,6 +1109,7 @@ export async function getGlobalMarketComparisonBySlug(
     }
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const match = (db.globalMarketComparisons || [])
     .map(normalizeGlobalMarketComparisonRow)
@@ -1116,6 +1127,7 @@ export async function getAdminGlobalMarketComparisons(): Promise<{
   schemaPending: boolean;
 }> {
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     return {
       comparisons: (db.globalMarketComparisons || []).map(normalizeGlobalMarketComparisonRow),
@@ -1357,6 +1369,7 @@ export async function saveGlobalMarketComparison(
   const { comparisonPayload, cityAPayload, cityBPayload } = prepared;
 
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     const list = db.globalMarketComparisons || [];
     const existingIdx = input.id ? list.findIndex((c) => c.id === input.id) : -1;
@@ -1521,6 +1534,7 @@ export async function updateGlobalMarketComparisonStatus(
   }
 
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     const list = db.globalMarketComparisons || [];
     const idx = list.findIndex((c) => c.id === comparison.id);
@@ -1558,6 +1572,7 @@ export async function deleteGlobalMarketComparison(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured || !supabase) {
+    const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
     const db = loadDemoDb();
     db.globalMarketComparisons = (db.globalMarketComparisons || []).filter((c) => c.id !== id);
     saveDemoDb(db);

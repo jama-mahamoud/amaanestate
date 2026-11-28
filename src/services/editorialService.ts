@@ -1,7 +1,9 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Article, Category, SiteSettings, Tag } from '../types';
-import { SEED_ARTICLE_BY_SLUG } from '../data/allArticles';
-import { hydrateDemoArticle, loadDemoDb, saveDemoDb } from './demoContent';
+
+async function getDemoHelpers() {
+  return import('./demoContent');
+}
 
 export interface ArticleQueryOptions {
   categorySlug?: string;
@@ -18,10 +20,15 @@ function normalizeArticleRow(row: any): Article {
     : Array.isArray(row.tags)
     ? row.tags
     : [];
-  const seed = row.slug ? SEED_ARTICLE_BY_SLUG[row.slug] : undefined;
-  const keywords = seed
-    ? [seed.primary_keyword, ...seed.secondary_keywords]
-    : tags.map((t) => t.name).filter(Boolean);
+  const supportingKeywords = Array.isArray(row.supporting_keywords)
+    ? row.supporting_keywords
+    : [];
+  const rawKeywords = [
+    ...(row.focus_keyword ? [String(row.focus_keyword)] : []),
+    ...supportingKeywords.map(String),
+    ...tags.map((t) => t.name).filter(Boolean),
+  ];
+  const keywords = Array.from(new Set(rawKeywords.filter(Boolean)));
 
   return {
     id: row.id,
@@ -30,8 +37,8 @@ function normalizeArticleRow(row: any): Article {
     excerpt: row.excerpt || '',
     content: row.content || '',
     featured_image: row.featured_image || null,
-    featured_image_alt: row.featured_image_alt || seed?.featured_image_alt || null,
-    featured_image_caption: row.featured_image_caption || seed?.featured_image_caption || null,
+    featured_image_alt: row.featured_image_alt || null,
+    featured_image_caption: row.featured_image_caption || null,
     gallery_images: Array.isArray(row.gallery_images) ? row.gallery_images : [],
     category_id: row.category_id,
     author_id: row.author_id,
@@ -80,6 +87,7 @@ export async function getCategories(): Promise<Category[]> {
     return data || [];
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   return [...db.categories].sort((a, b) => a.display_order - b.display_order);
 }
@@ -98,6 +106,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     return data || null;
   }
 
+  const { loadDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   return db.categories.find((c) => c.slug === slug) || null;
 }
@@ -172,6 +181,7 @@ export async function getPublishedArticles(options: ArticleQueryOptions = {}): P
   }
 
   // Demonstration fallback when Supabase credentials are not yet configured
+  const { loadDemoDb, hydrateDemoArticle } = await getDemoHelpers();
   const db = loadDemoDb();
   const now = Date.now();
   let results = db.articles
@@ -245,6 +255,7 @@ export async function getPublishedArticleBySlug(slug: string): Promise<Article |
     return normalizeArticleRow(data);
   }
 
+  const { loadDemoDb, saveDemoDb, hydrateDemoArticle } = await getDemoHelpers();
   const db = loadDemoDb();
   const found = db.articles.find((a) => a.slug === slug && a.status === 'published');
   if (!found) return null;
@@ -273,6 +284,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return data as SiteSettings;
     }
   }
+  const { loadDemoDb } = await getDemoHelpers();
   return loadDemoDb().siteSettings;
 }
 
@@ -303,6 +315,7 @@ export async function subscribeNewsletter(
     return { success: true, message: 'Subscription confirmed. Welcome to AMAAN ESTATE.' };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const existing = db.subscribers.find((s) => s.email.toLowerCase() === normalized);
   if (existing) {
@@ -342,6 +355,7 @@ export async function unsubscribeNewsletter(email: string): Promise<{ success: b
     return { success: true, message: 'You have been unsubscribed from future editorial mailings.' };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   const existing = db.subscribers.find((s) => s.email.toLowerCase() === normalized);
   if (!existing) {
@@ -373,6 +387,7 @@ export async function submitContactMessage(payload: {
     return { success: true };
   }
 
+  const { loadDemoDb, saveDemoDb } = await getDemoHelpers();
   const db = loadDemoDb();
   db.messages.unshift({
     id: `msg-${Date.now()}`,

@@ -12,7 +12,7 @@ export interface SocialLink {
   updated_at?: string;
 }
 
-const DEFAULT_SEED_LINKS: SocialLink[] = [
+export const DEFAULT_SEED_LINKS: SocialLink[] = [
   {
     id: 'soc-twitter',
     platform: 'twitter',
