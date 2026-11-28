@@ -251,6 +251,66 @@ export function validatePropertyAffiliateRules(input: {
   return null;
 }
 
+export function formatAreaUnitLabel(unit?: AreaUnit | string | null): string {
+  const normalized = (unit || '').trim().toLowerCase();
+  if (normalized === 'sqm') return 'm²';
+  if (normalized === 'sqft') return 'sq ft';
+  if (normalized === 'acres') return 'acres';
+  return normalized || 'm²';
+}
+
+export async function checkImpactApiStatus(): Promise<{
+  configured: boolean;
+  catalogIdConfigured: boolean;
+  catalogReachable: boolean;
+  statusCode?: number | null;
+  catalogName?: string | null;
+  message: string;
+}> {
+  const headers: Record<string, string> = {};
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    } catch {
+      // Proceed without bearer if session retrieval fails
+    }
+  }
+
+  try {
+    const response = await fetch('/api/properties/impact/status', {
+      method: 'GET',
+      headers,
+      cache: 'no-store',
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload) {
+      return {
+        configured: false,
+        catalogIdConfigured: false,
+        catalogReachable: false,
+        statusCode: response.status,
+        message:
+          payload?.error ||
+          `Server Impact status endpoint returned HTTP ${response.status} (check Vercel server deployment).`,
+      };
+    }
+    return payload;
+  } catch {
+    return {
+      configured: false,
+      catalogIdConfigured: false,
+      catalogReachable: false,
+      statusCode: null,
+      message: 'Network error reaching /api/properties/impact/status.',
+    };
+  }
+}
+
 export async function lookupImpactPropertyDetails(params: {
   sku: string;
   originalUrl?: string | null;
@@ -278,10 +338,15 @@ export async function lookupImpactPropertyDetails(params: {
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload) {
+      const statusDetail =
+        response.status === 404
+          ? `HTTP 404 — authorized catalog lookup endpoint is not deployed on this server.`
+          : `HTTP ${response.status} — unable to reach authorized catalog lookup endpoint.`;
       return {
         authorizedSourceAvailable: false,
         sourceName: 'Impact Partner Catalog API',
-        reason: payload?.error || 'Unable to reach authorized catalog lookup endpoint.',
+        statusCode: response.status,
+        reason: payload?.error || statusDetail,
         matched: false,
         data: null,
       };

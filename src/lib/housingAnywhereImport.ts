@@ -22,6 +22,7 @@ export type TrackedPropertyField =
   | 'bedrooms'
   | 'bathrooms'
   | 'area_value'
+  | 'available_from'
   | 'description'
   | 'features'
   | 'images'
@@ -67,6 +68,7 @@ export interface AuthorizedImpactLookupResponse {
   authorizedSourceAvailable: boolean;
   sourceName: string;
   reason?: string;
+  statusCode?: number;
   matched: boolean;
   data: {
     title?: string | null;
@@ -83,9 +85,19 @@ export interface AuthorizedImpactLookupResponse {
     bathrooms?: number | null;
     area_value?: number | null;
     area_unit?: AreaUnit | null;
+    available_from?: string | null;
     features?: string[];
     images?: ImportedImageCandidate[];
   } | null;
+}
+
+export interface ImpactApiStatusResponse {
+  configured: boolean;
+  catalogIdConfigured: boolean;
+  catalogReachable: boolean;
+  statusCode?: number | null;
+  catalogName?: string | null;
+  message: string;
 }
 
 const COUNTRY_TO_CURRENCY: Record<string, string> = {

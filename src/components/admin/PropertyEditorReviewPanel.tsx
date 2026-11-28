@@ -37,6 +37,7 @@ const TRACKED_FIELD_LABELS: Array<{ key: TrackedPropertyField; label: string }> 
   { key: 'bedrooms', label: 'Bedrooms' },
   { key: 'bathrooms', label: 'Bathrooms' },
   { key: 'area_value', label: 'Floor Area' },
+  { key: 'available_from', label: 'Available From' },
   { key: 'description', label: 'Description' },
   { key: 'features', label: 'Features' },
   { key: 'images', label: 'Property Photos' },
@@ -84,6 +85,8 @@ export default function PropertyEditorReviewPanel({
         return form.bathrooms !== null && form.bathrooms !== undefined;
       case 'area_value':
         return form.area_value !== null && form.area_value !== undefined;
+      case 'available_from':
+        return Boolean((form.available_from || '').trim());
       case 'description':
         return Boolean(form.description.trim());
       case 'features':

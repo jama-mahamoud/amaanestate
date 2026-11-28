@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, MapPin, Phone, UserCheck } from 'lucide-react';
 import { Property } from '../types';
 import {
+  formatAreaUnitLabel,
   formatListingSourceLabel,
   formatListingStatusLabel,
   formatPropertyLocation,
@@ -11,6 +12,7 @@ import {
   getPartnerTrackingUrl,
   getPrimaryPropertyImage,
   getPropertyBySlug,
+  isHousingAnywhereSource,
   isPartnerListing,
   isValidExternalPropertyUrl,
 } from '../services/propertyService';
@@ -203,7 +205,7 @@ export default function PropertyDetailsPage() {
   if (property.area_value !== null && property.area_value !== undefined) {
     specs.push({
       label: 'Floor / Lot Area',
-      value: `${Number(property.area_value).toLocaleString()} ${property.area_unit}`,
+      value: `${Number(property.area_value).toLocaleString()} ${formatAreaUnitLabel(property.area_unit)}`,
     });
   }
   if (property.transaction_type === 'rent' && property.available_from) {
@@ -212,7 +214,11 @@ export default function PropertyDetailsPage() {
 
   const isSample = Boolean(property.is_sample) || property.source_name === 'showcase_sample';
   const partnerListing = isPartnerListing(property);
+  const isHousingAnywhere = isHousingAnywhereSource(property.source_name);
   const partnerTrackingUrl = getPartnerTrackingUrl(property);
+  const partnerActionLabel = isHousingAnywhere
+    ? 'View Property on HousingAnywhere'
+    : 'View Property on Partner Site';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
@@ -267,7 +273,9 @@ export default function PropertyDetailsPage() {
               {partnerListing && (
                 <>
                   <span aria-hidden="true">·</span>
-                  <span className="font-semibold text-[#1E3A5F]">Partner Listing</span>
+                  <span className="font-semibold text-[#1E3A5F]">
+                    {isHousingAnywhere ? 'Partner Listing · HousingAnywhere' : 'Partner Listing'}
+                  </span>
                 </>
               )}
               <span aria-hidden="true">·</span>
@@ -404,7 +412,7 @@ export default function PropertyDetailsPage() {
                         rel={partnerListing ? 'noopener noreferrer sponsored' : 'noopener noreferrer'}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A5F] hover:underline pt-1"
                       >
-                        <span>{partnerListing ? 'View Property' : 'View Original Source Record'}</span>
+                        <span>{partnerListing ? partnerActionLabel : 'View Original Source Record'}</span>
                         <ExternalLink size={12} />
                       </a>
                     );
@@ -431,26 +439,38 @@ export default function PropertyDetailsPage() {
             <div className="bg-white border border-[#E5E0D8] rounded p-6 space-y-4">
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] uppercase tracking-wider font-semibold bg-[#EFF4FA] text-[#1E3A5F] border border-[#C7D6E8]">
-                  Partner Listing
+                  {isHousingAnywhere ? 'HousingAnywhere Partner' : 'Partner Listing'}
                 </span>
                 <span className="text-[11px] font-medium text-[#7A7770]">
                   For Rent
                 </span>
               </div>
               <h2 className="text-lg font-serif font-semibold text-[#141413]">
-                View &amp; Request Directly on Partner Site
+                {isHousingAnywhere
+                  ? 'Book or Inquire via HousingAnywhere'
+                  : 'View & Request Directly on Partner Site'}
               </h2>
               <p className="text-xs text-[#4A4843] leading-relaxed">
-                This rental residence is listed via an external housing partner. Check live availability and submit rental or booking requests directly on the partner platform.
+                {isHousingAnywhere
+                  ? 'This rental property is syndicated through our verified HousingAnywhere partner feed. Check live availability, tenant terms, and submit booking requests directly on HousingAnywhere.'
+                  : 'This rental residence is listed via an external housing partner. Check live availability and submit rental or booking requests directly on the partner platform.'}
               </p>
+              {property.source_listing_id && (
+                <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded px-3 py-2 text-[11px] text-[#5C5A55] flex items-center justify-between gap-2">
+                  <span>Partner Reference SKU</span>
+                  <span className="font-mono font-semibold text-[#141413]">
+                    {property.source_listing_id}
+                  </span>
+                </div>
+              )}
               {partnerTrackingUrl ? (
                 <a
                   href={partnerTrackingUrl}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
-                  className="w-full h-11 px-5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold uppercase tracking-wider rounded inline-flex items-center justify-center gap-2 transition-colors"
+                  className="w-full min-h-11 px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold uppercase tracking-wider rounded inline-flex items-center justify-center gap-2 text-center transition-colors"
                 >
-                  <span>View Property</span>
+                  <span>{partnerActionLabel}</span>
                   <ExternalLink size={14} aria-hidden="true" />
                 </a>
               ) : (

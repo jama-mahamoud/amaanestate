@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, ExternalLink, MapPin } from 'lucide-react';
+import { Building2, MapPin } from 'lucide-react';
 import { Property } from '../../types';
 import {
+  formatAreaUnitLabel,
   formatListingStatusLabel,
   formatPropertyLocation,
   formatPropertyPrice,
   formatPropertyTypeLabel,
-  getPartnerTrackingUrl,
   getPrimaryPropertyImage,
+  isHousingAnywhereSource,
   isPartnerListing,
 } from '../../services/propertyService';
 
@@ -29,7 +30,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   const isSample = Boolean(property.is_sample || property.source_name === 'showcase_sample');
   const partnerListing = isPartnerListing(property);
-  const partnerTrackingUrl = getPartnerTrackingUrl(property);
+  const isHousingAnywhere = isHousingAnywhereSource(property.source_name);
   const internalHref = `/properties/${encodeURIComponent(property.slug)}`;
 
   const specItems: string[] = [];
@@ -40,7 +41,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     specItems.push(`${property.bathrooms} ${Number(property.bathrooms) === 1 ? 'Bath' : 'Baths'}`);
   }
   if (property.area_value !== null && property.area_value !== undefined) {
-    specItems.push(`${Number(property.area_value).toLocaleString()} ${property.area_unit}`);
+    specItems.push(
+      `${Number(property.area_value).toLocaleString()} ${formatAreaUnitLabel(property.area_unit)}`
+    );
   }
 
   const imageContent =
@@ -67,24 +70,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <article className="bg-white border border-[#E5E0D8] rounded-md overflow-hidden flex flex-col group hover:border-[#1E3A5F] transition-colors min-w-0">
-      {partnerTrackingUrl ? (
-        <a
-          href={partnerTrackingUrl}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          aria-label={`${property.title} — Partner Listing`}
-          className="relative block aspect-[4/3] bg-[#EBE6DF] overflow-hidden"
-        >
-          {imageContent}
-        </a>
-      ) : (
-        <Link
-          to={internalHref}
-          className="relative block aspect-[4/3] bg-[#EBE6DF] overflow-hidden"
-        >
-          {imageContent}
-        </Link>
-      )}
+      <Link
+        to={internalHref}
+        aria-label={`${property.title}${partnerListing ? ' — Partner Listing' : ''}`}
+        className="relative block aspect-[4/3] bg-[#EBE6DF] overflow-hidden"
+      >
+        {imageContent}
+      </Link>
 
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5 min-w-0">
         <div className="space-y-1.5 min-w-0">
@@ -97,7 +89,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {partnerListing && (
               <>
                 <span aria-hidden="true">&middot;</span>
-                <span className="font-semibold text-[#1E3A5F]">Partner Listing</span>
+                <span className="font-semibold text-[#1E3A5F]">
+                  {isHousingAnywhere ? 'Partner · HousingAnywhere' : 'Partner Listing'}
+                </span>
               </>
             )}
             {isSample && (
@@ -121,17 +115,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           <h3 className="text-[15px] sm:text-base font-serif font-semibold text-[#141413] leading-snug line-clamp-2 group-hover:text-[#1E3A5F] transition-colors break-words">
-            {partnerTrackingUrl ? (
-              <a
-                href={partnerTrackingUrl}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-              >
-                {property.title}
-              </a>
-            ) : (
-              <Link to={internalHref}>{property.title}</Link>
-            )}
+            <Link to={internalHref}>{property.title}</Link>
           </h3>
 
           {locationText && (
@@ -149,29 +133,21 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </span>
           ) : (
             <span className="text-[11px] text-[#7A7770] truncate">
-              {partnerListing ? 'External Partner' : 'Property Details'}
+              {isHousingAnywhere
+                ? 'HousingAnywhere Partner'
+                : partnerListing
+                ? 'External Partner'
+                : 'Property Details'}
             </span>
           )}
 
-          {partnerTrackingUrl ? (
-            <a
-              href={partnerTrackingUrl}
-              target="_blank"
-              rel="noopener noreferrer sponsored"
-              className="inline-flex items-center gap-1 font-semibold text-[#1E3A5F] hover:text-[#8C4A27] hover:underline whitespace-nowrap shrink-0"
-            >
-              <span>View Property</span>
-              <ExternalLink size={11} aria-hidden="true" />
-            </a>
-          ) : (
-            <Link
-              to={internalHref}
-              className="inline-flex items-center gap-1 font-semibold text-[#1E3A5F] hover:text-[#8C4A27] hover:underline whitespace-nowrap shrink-0"
-            >
-              <span>View Property</span>
-              <span aria-hidden="true">&rarr;</span>
-            </Link>
-          )}
+          <Link
+            to={internalHref}
+            className="inline-flex items-center gap-1 font-semibold text-[#1E3A5F] hover:text-[#8C4A27] hover:underline whitespace-nowrap shrink-0"
+          >
+            <span>View Details</span>
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
         </div>
       </div>
     </article>

@@ -13,6 +13,7 @@ import { Property } from '../../types';
 import {
   AuthorizedImpactLookupResponse,
   HousingAnywhereParseResult,
+  ImpactApiStatusResponse,
 } from '../../lib/housingAnywhereImport';
 
 interface HousingAnywhereImportPanelProps {
@@ -24,6 +25,7 @@ interface HousingAnywhereImportPanelProps {
   importError: string | null;
   parseResult: HousingAnywhereParseResult | null;
   apiLookup: AuthorizedImpactLookupResponse | null;
+  apiStatus?: ImpactApiStatusResponse | null;
   duplicateMatch: Property | null;
   onOpenDuplicate?: (prop: Property) => void;
   onCopyUrl?: (url: string, label: string) => void;
@@ -38,6 +40,7 @@ export default function HousingAnywhereImportPanel({
   importError,
   parseResult,
   apiLookup,
+  apiStatus,
   duplicateMatch,
   onOpenDuplicate,
   onCopyUrl,
@@ -64,6 +67,24 @@ export default function HousingAnywhereImportPanel({
             Paste the complete HTML Creative copied from the HousingAnywhere Impact Marketplace. The parser safely extracts the SKU, exact Impact tracking link, original HousingAnywhere URL, location hints, and image URLs without executing HTML or scripts.
           </p>
         </div>
+        {apiStatus && (
+          <div
+            className={`px-3 py-1.5 rounded border text-[11px] font-medium shrink-0 self-start ${
+              apiStatus.catalogReachable
+                ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
+                : 'bg-white border-[#D6CEBE] text-[#4A4843]'
+            }`}
+            title={apiStatus.message}
+          >
+            {apiStatus.catalogReachable
+              ? `Impact API Ready${apiStatus.catalogName ? ` · ${apiStatus.catalogName}` : ''}`
+              : apiStatus.configured
+              ? `Impact API Unreachable${apiStatus.statusCode ? ` (HTTP ${apiStatus.statusCode})` : ''}`
+              : apiStatus.statusCode === 404
+              ? 'Impact API Route Not Deployed (HTTP 404)'
+              : 'Impact API Credentials Not Configured'}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

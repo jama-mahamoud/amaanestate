@@ -7,8 +7,11 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Download,
   Edit3,
   ExternalLink,
+  Eye,
+  Globe,
   ImageOff,
   ImagePlus,
   Plus,
@@ -29,6 +32,7 @@ import {
 import {
   HOUSINGANYWHERE_SOURCE_NAME,
   SavePropertyInput,
+  checkImpactApiStatus,
   deleteProperty,
   formatListingSourceLabel,
   formatListingStatusLabel,
@@ -48,6 +52,7 @@ import {
   AuthorizedImpactLookupResponse,
   FieldProvenanceMap,
   HousingAnywhereParseResult,
+  ImpactApiStatusResponse,
   TrackedPropertyField,
   extractOriginalUrlFromImpactUrl,
   parseImpactCreativeHtml,
@@ -55,6 +60,7 @@ import {
 } from '../../lib/housingAnywhereImport';
 import HousingAnywhereImportPanel from './HousingAnywhereImportPanel';
 import PropertyEditorReviewPanel from './PropertyEditorReviewPanel';
+import AffiliatePropertyPreview from './AffiliatePropertyPreview';
 import { toast } from 'sonner';
 
 interface AdminPropertiesSectionProps {
@@ -169,8 +175,12 @@ export default function AdminPropertiesSection({
   const [searchTerm, setSearchTerm] = useState('');
   const [txFilter, setTxFilter] = useState<'all' | 'sale' | 'rent'>('all');
   const [pubFilter, setPubFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
+  const [sourceFilter, setSourceFilter] = useState<
+    'all' | 'manual' | 'housinganywhere' | 'showcase_sample' | 'feed'
+  >('all');
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<'manual' | 'affiliate'>('manual');
   const [form, setForm] = useState<EditorFormState>(EMPTY_FORM);
   const [featuresText, setFeaturesText] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
@@ -179,6 +189,10 @@ export default function AdminPropertiesSection({
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<Property | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Property | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // HousingAnywhere Impact Import & Provenance State
   const [impactHtmlInput, setImpactHtmlInput] = useState('');
@@ -186,6 +200,7 @@ export default function AdminPropertiesSection({
   const [importError, setImportError] = useState<string | null>(null);
   const [parseResult, setParseResult] = useState<HousingAnywhereParseResult | null>(null);
   const [apiLookup, setApiLookup] = useState<AuthorizedImpactLookupResponse | null>(null);
+  const [impactApiStatus, setImpactApiStatus] = useState<ImpactApiStatusResponse | null>(null);
   const [originalListingUrl, setOriginalListingUrl] = useState<string | null>(null);
   const [suggestedLocationTitle, setSuggestedLocationTitle] = useState<string | null>(null);
   const [provenance, setProvenance] = useState<FieldProvenanceMap>({});
@@ -200,6 +215,7 @@ export default function AdminPropertiesSection({
     description: true,
     source: true,
     photos: true,
+    preview: true,
     review: true,
   });
 
@@ -209,7 +225,11 @@ export default function AdminPropertiesSection({
 
   const duplicateSkuMatch = useMemo(() => {
     const sku = (parseResult?.sku || form.source_listing_id || '').trim();
-    if (!sku || !isHousingAnywhereSource(form.source_name || parseResult?.success ? HOUSINGANYWHERE_SOURCE_NAME : '')) {
+    const activeAffiliate =
+      editorMode === 'affiliate' ||
+      isHousingAnywhereSource(form.source_name) ||
+      Boolean(parseResult?.success);
+    if (!sku || !activeAffiliate) {
       return null;
     }
     return (
@@ -220,7 +240,15 @@ export default function AdminPropertiesSection({
           (p.source_listing_id || '').trim().toLowerCase() === sku.toLowerCase()
       ) || null
     );
-  }, [parseResult?.sku, parseResult?.success, form.source_listing_id, form.source_name, form.id, properties]);
+  }, [
+    editorMode,
+    parseResult?.sku,
+    parseResult?.success,
+    form.source_listing_id,
+    form.source_name,
+    form.id,
+    properties,
+  ]);
 
   if (schemaPending) {
     return (
@@ -248,6 +276,15 @@ export default function AdminPropertiesSection({
   const filtered = properties.filter((prop) => {
     if (txFilter !== 'all' && prop.transaction_type !== txFilter) return false;
     if (pubFilter !== 'all' && prop.publication_status !== pubFilter) return false;
+    if (sourceFilter !== 'all') {
+      const isHAProp = isHousingAnywhereSource(prop.source_name);
+      const isSampleProp = prop.source_name === 'showcase_sample' || Boolean(prop.is_sample);
+      const isFeedProp = prop.source_name === 'listhub' || prop.source_name === 'feed';
+      if (sourceFilter === 'housinganywhere' && !isHAProp) return false;
+      if (sourceFilter === 'showcase_sample' && !isSampleProp) return false;
+      if (sourceFilter === 'feed' && !isFeedProp) return false;
+      if (sourceFilter === 'manual' && (isHAProp || isSampleProp || isFeedProp)) return false;
+    }
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       return (
@@ -275,8 +312,9 @@ export default function AdminPropertiesSection({
     setSuggestedLocationTitle(null);
   };
 
-  const openCreateModal = () => {
-    setForm({ ...EMPTY_FORM, images: [] });
+  const openCreateManualModal = () => {
+    setEditorMode('manual');
+    setForm({ ...EMPTY_FORM, source_name: 'manual', images: [] });
     setFeaturesText('');
     setNewImageUrl('');
     setImageUrlError(null);
@@ -287,6 +325,40 @@ export default function AdminPropertiesSection({
     setProvenance({});
     setReviewConfirmed(true);
     setOpenSections({
+      importer: false,
+      core: true,
+      pricing: true,
+      location: true,
+      description: true,
+      source: true,
+      photos: true,
+      preview: false,
+      review: false,
+    });
+    setEditorOpen(true);
+  };
+
+  const openCreateAffiliateModal = () => {
+    setEditorMode('affiliate');
+    setForm({
+      ...EMPTY_FORM,
+      transaction_type: 'rent',
+      rental_period: 'month',
+      currency: 'EUR',
+      area_unit: 'sqm',
+      source_name: HOUSINGANYWHERE_SOURCE_NAME,
+      images: [],
+    });
+    setFeaturesText('');
+    setNewImageUrl('');
+    setImageUrlError(null);
+    setUploadError(null);
+    setBrokenImages({});
+    resetImporterState();
+    setOriginalListingUrl(null);
+    setProvenance({});
+    setReviewConfirmed(false);
+    setOpenSections({
       importer: true,
       core: true,
       pricing: true,
@@ -294,9 +366,13 @@ export default function AdminPropertiesSection({
       description: true,
       source: true,
       photos: true,
+      preview: true,
       review: true,
     });
     setEditorOpen(true);
+    checkImpactApiStatus()
+      .then((status) => setImpactApiStatus(status))
+      .catch(() => {});
   };
 
   const openEditModal = (prop: Property) => {
@@ -312,6 +388,7 @@ export default function AdminPropertiesSection({
         ? null
         : prop.price;
 
+    setEditorMode(isHA ? 'affiliate' : 'manual');
     setForm({
       id: prop.id,
       title: prop.title,
@@ -321,13 +398,13 @@ export default function AdminPropertiesSection({
       listing_status: prop.listing_status,
       publication_status: prop.publication_status,
       price: restoredPrice,
-      currency: prop.currency || 'USD',
+      currency: prop.currency || (isHA ? 'EUR' : 'USD'),
       rental_period: prop.rental_period || 'month',
       available_from: prop.available_from || '',
       bedrooms: prop.bedrooms ?? null,
       bathrooms: prop.bathrooms ?? null,
       area_value: prop.area_value ?? null,
-      area_unit: prop.area_unit || 'sqft',
+      area_unit: prop.area_unit || (isHA ? 'sqm' : 'sqft'),
       address_line: prop.address_line || '',
       city: prop.city,
       state_region: prop.state_region || '',
@@ -379,9 +456,15 @@ export default function AdminPropertiesSection({
       description: true,
       source: true,
       photos: true,
+      preview: isHA,
       review: isHA,
     });
     setEditorOpen(true);
+    if (isHA) {
+      checkImpactApiStatus()
+        .then((status) => setImpactApiStatus(status))
+        .catch(() => {});
+    }
   };
 
   const handleCopyUrl = async (url: string, label: string) => {
@@ -429,57 +512,178 @@ export default function AdminPropertiesSection({
     setApiLookup(lookupResult);
 
     const apiData = lookupResult?.matched && lookupResult.data ? lookupResult.data : null;
-    const nextProvenance: FieldProvenanceMap = { ...parsed.provenance };
+    const nextProvenance: FieldProvenanceMap = { ...provenance, ...parsed.provenance };
+    const preserveManual = (field: TrackedPropertyField) => provenance[field] === 'manual';
 
-    // Merge verified API fields if available, preferring verified API data for missing fields
-    const nextTitle = apiData?.title || parsed.title || '';
-    if (apiData?.title) nextProvenance.title = 'authorized_api';
+    // Non-destructive merge: never overwrite manually verified fields with blank API/HTML responses
+    const nextTitle =
+      preserveManual('title') && form.title.trim()
+        ? form.title.trim()
+        : apiData?.title || parsed.title || form.title.trim() || '';
+    if (apiData?.title && !(preserveManual('title') && form.title.trim())) {
+      nextProvenance.title = 'authorized_api';
+    } else if (preserveManual('title') && form.title.trim()) {
+      nextProvenance.title = 'manual';
+    }
 
-    const nextDescription = apiData?.description || '';
-    if (apiData?.description) nextProvenance.description = 'authorized_api';
+    const nextDescription =
+      preserveManual('description') && form.description.trim()
+        ? form.description
+        : apiData?.description || form.description || '';
+    if (apiData?.description && !(preserveManual('description') && form.description.trim())) {
+      nextProvenance.description = 'authorized_api';
+    } else if (preserveManual('description') && form.description.trim()) {
+      nextProvenance.description = 'manual';
+    }
 
-    const nextPrice =
-      apiData?.price !== undefined && apiData?.price !== null && apiData.price > 0
-        ? apiData.price
-        : null;
-    if (nextPrice !== null) nextProvenance.price = 'authorized_api';
+    const manualPricePresent =
+      preserveManual('price') && form.price !== null && Number(form.price) > 0;
+    const apiPricePresent =
+      apiData?.price !== undefined && apiData?.price !== null && apiData.price > 0;
+    const nextPrice = manualPricePresent
+      ? form.price
+      : apiPricePresent
+      ? apiData!.price!
+      : form.price ?? null;
+    if (apiPricePresent && !manualPricePresent) {
+      nextProvenance.price = 'authorized_api';
+    } else if (manualPricePresent) {
+      nextProvenance.price = 'manual';
+    }
 
-    const nextCurrency = apiData?.currency || parsed.currency || 'EUR';
-    if (apiData?.currency) nextProvenance.currency = 'authorized_api';
+    const nextCurrency =
+      preserveManual('currency') && form.currency.trim()
+        ? form.currency.trim()
+        : apiData?.currency || parsed.currency || form.currency || 'EUR';
+    if (apiData?.currency && !(preserveManual('currency') && form.currency.trim())) {
+      nextProvenance.currency = 'authorized_api';
+    } else if (preserveManual('currency') && form.currency.trim()) {
+      nextProvenance.currency = 'manual';
+    }
 
-    const nextCity = apiData?.city || parsed.city || '';
-    if (apiData?.city) nextProvenance.city = 'authorized_api';
+    const nextCity =
+      preserveManual('city') && form.city.trim()
+        ? form.city.trim()
+        : apiData?.city || parsed.city || form.city.trim() || '';
+    if (apiData?.city && !(preserveManual('city') && form.city.trim())) {
+      nextProvenance.city = 'authorized_api';
+    } else if (preserveManual('city') && form.city.trim()) {
+      nextProvenance.city = 'manual';
+    }
 
-    const nextCountry = apiData?.country || parsed.country || '';
-    if (apiData?.country) nextProvenance.country = 'authorized_api';
+    const nextCountry =
+      preserveManual('country') && form.country.trim()
+        ? form.country.trim()
+        : apiData?.country || parsed.country || form.country.trim() || '';
+    if (apiData?.country && !(preserveManual('country') && form.country.trim())) {
+      nextProvenance.country = 'authorized_api';
+    } else if (preserveManual('country') && form.country.trim()) {
+      nextProvenance.country = 'manual';
+    }
 
-    const nextAddressLine = apiData?.address_line || parsed.addressLine || '';
-    if (apiData?.address_line) nextProvenance.address_line = 'authorized_api';
+    const nextAddressLine =
+      preserveManual('address_line') && form.address_line?.trim()
+        ? form.address_line.trim()
+        : apiData?.address_line || parsed.addressLine || form.address_line || '';
+    if (apiData?.address_line && !(preserveManual('address_line') && form.address_line?.trim())) {
+      nextProvenance.address_line = 'authorized_api';
+    } else if (preserveManual('address_line') && form.address_line?.trim()) {
+      nextProvenance.address_line = 'manual';
+    }
 
-    const nextStateRegion = apiData?.state_region || '';
-    if (apiData?.state_region) nextProvenance.state_region = 'authorized_api';
+    const nextStateRegion =
+      preserveManual('state_region') && form.state_region?.trim()
+        ? form.state_region.trim()
+        : apiData?.state_region || form.state_region || '';
+    if (apiData?.state_region && !(preserveManual('state_region') && form.state_region?.trim())) {
+      nextProvenance.state_region = 'authorized_api';
+    } else if (preserveManual('state_region') && form.state_region?.trim()) {
+      nextProvenance.state_region = 'manual';
+    }
 
-    const nextPostalCode = apiData?.postal_code || '';
-    if (apiData?.postal_code) nextProvenance.postal_code = 'authorized_api';
+    const nextPostalCode =
+      preserveManual('postal_code') && form.postal_code?.trim()
+        ? form.postal_code.trim()
+        : apiData?.postal_code || form.postal_code || '';
+    if (apiData?.postal_code && !(preserveManual('postal_code') && form.postal_code?.trim())) {
+      nextProvenance.postal_code = 'authorized_api';
+    } else if (preserveManual('postal_code') && form.postal_code?.trim()) {
+      nextProvenance.postal_code = 'manual';
+    }
 
-    const nextPropertyType: PropertyType = apiData?.property_type || parsed.propertyType || 'other';
-    if (apiData?.property_type) nextProvenance.property_type = 'authorized_api';
+    const nextPropertyType: PropertyType =
+      preserveManual('property_type') && form.property_type
+        ? form.property_type
+        : apiData?.property_type || parsed.propertyType || form.property_type || 'other';
+    if (apiData?.property_type && !preserveManual('property_type')) {
+      nextProvenance.property_type = 'authorized_api';
+    } else if (preserveManual('property_type')) {
+      nextProvenance.property_type = 'manual';
+    }
 
-    const nextBedrooms = apiData?.bedrooms ?? null;
-    if (nextBedrooms !== null) nextProvenance.bedrooms = 'authorized_api';
+    const nextBedrooms =
+      preserveManual('bedrooms') && form.bedrooms !== null
+        ? form.bedrooms
+        : apiData?.bedrooms ?? form.bedrooms ?? null;
+    if (apiData?.bedrooms !== undefined && apiData?.bedrooms !== null && !preserveManual('bedrooms')) {
+      nextProvenance.bedrooms = 'authorized_api';
+    } else if (preserveManual('bedrooms') && form.bedrooms !== null) {
+      nextProvenance.bedrooms = 'manual';
+    }
 
-    const nextBathrooms = apiData?.bathrooms ?? null;
-    if (nextBathrooms !== null) nextProvenance.bathrooms = 'authorized_api';
+    const nextBathrooms =
+      preserveManual('bathrooms') && form.bathrooms !== null
+        ? form.bathrooms
+        : apiData?.bathrooms ?? form.bathrooms ?? null;
+    if (apiData?.bathrooms !== undefined && apiData?.bathrooms !== null && !preserveManual('bathrooms')) {
+      nextProvenance.bathrooms = 'authorized_api';
+    } else if (preserveManual('bathrooms') && form.bathrooms !== null) {
+      nextProvenance.bathrooms = 'manual';
+    }
 
-    const nextAreaValue = apiData?.area_value ?? null;
-    if (nextAreaValue !== null) nextProvenance.area_value = 'authorized_api';
+    const nextAreaValue =
+      preserveManual('area_value') && form.area_value !== null
+        ? form.area_value
+        : apiData?.area_value ?? form.area_value ?? null;
+    if (apiData?.area_value !== undefined && apiData?.area_value !== null && !preserveManual('area_value')) {
+      nextProvenance.area_value = 'authorized_api';
+    } else if (preserveManual('area_value') && form.area_value !== null) {
+      nextProvenance.area_value = 'manual';
+    }
 
-    const nextAreaUnit: AreaUnit = apiData?.area_unit || 'sqm';
+    const nextAreaUnit: AreaUnit = apiData?.area_unit || form.area_unit || 'sqm';
 
-    const nextFeatures = Array.isArray(apiData?.features) ? apiData.features : [];
-    if (nextFeatures.length > 0) nextProvenance.features = 'authorized_api';
+    const nextAvailableFrom =
+      preserveManual('available_from') && form.available_from?.trim()
+        ? form.available_from.trim()
+        : apiData?.available_from || form.available_from || '';
+    if (apiData?.available_from && !(preserveManual('available_from') && form.available_from?.trim())) {
+      nextProvenance.available_from = 'authorized_api';
+    } else if (preserveManual('available_from') && form.available_from?.trim()) {
+      nextProvenance.available_from = 'manual';
+    }
 
-    // Combine extracted HTML images + any additional authorized API images without duplicating URLs
+    const existingFeatures = featuresText
+      .split(/\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const nextFeatures =
+      preserveManual('features') && existingFeatures.length > 0
+        ? existingFeatures
+        : Array.isArray(apiData?.features) && apiData.features.length > 0
+        ? apiData.features
+        : existingFeatures;
+    if (
+      Array.isArray(apiData?.features) &&
+      apiData.features.length > 0 &&
+      !(preserveManual('features') && existingFeatures.length > 0)
+    ) {
+      nextProvenance.features = 'authorized_api';
+    } else if (preserveManual('features') && existingFeatures.length > 0) {
+      nextProvenance.features = 'manual';
+    }
+
+    // Combine extracted HTML images + API images + preserved manual/uploaded images without duplicating URLs
     const combinedImages: EditorImageItem[] = [];
     const seenUrls = new Set<string>();
     for (const img of parsed.images) {
@@ -509,6 +713,19 @@ export default function AdminPropertiesSection({
         nextProvenance.images = 'authorized_api';
       }
     }
+    for (const existingImg of form.images || []) {
+      if (
+        (existingImg.source === 'manual' || existingImg.source === 'upload') &&
+        !seenUrls.has(existingImg.image_url)
+      ) {
+        seenUrls.add(existingImg.image_url);
+        combinedImages.push({
+          ...existingImg,
+          is_primary: combinedImages.length === 0,
+          display_order: combinedImages.length,
+        });
+      }
+    }
 
     const generatedSlug = nextTitle
       ? slugifyPropertyTitle(nextTitle)
@@ -524,6 +741,7 @@ export default function AdminPropertiesSection({
       slug: prev.id && prev.slug ? prev.slug : generatedSlug,
       transaction_type: 'rent',
       rental_period: prev.rental_period || 'month',
+      available_from: nextAvailableFrom,
       property_type: nextPropertyType,
       publication_status: prev.id ? prev.publication_status : 'draft',
       price: nextPrice,
@@ -540,13 +758,13 @@ export default function AdminPropertiesSection({
       description: nextDescription,
       features: nextFeatures,
       source_name: HOUSINGANYWHERE_SOURCE_NAME,
-      source_listing_id: parsed.sku || '',
-      source_url: parsed.impactTrackingUrl || '',
+      source_listing_id: parsed.sku || prev.source_listing_id || '',
+      source_url: parsed.impactTrackingUrl || prev.source_url || '',
       images: combinedImages,
     }));
 
     setFeaturesText(nextFeatures.join('\n'));
-    setOriginalListingUrl(parsed.originalListingUrl);
+    setOriginalListingUrl(parsed.originalListingUrl || originalListingUrl);
     setSuggestedLocationTitle(parsed.suggestedLocationTitle);
     setProvenance(nextProvenance);
     setBrokenImages({});
@@ -559,24 +777,33 @@ export default function AdminPropertiesSection({
       description: true,
       source: true,
       photos: true,
+      preview: true,
       review: true,
     });
 
     toast.success(
       apiData
         ? 'Impact creative parsed and enriched from authorized catalog.'
-        : 'Impact creative parsed. Review missing fields before saving as Draft.'
+        : 'Impact creative parsed. Review missing fields and preview before saving as Draft.'
     );
   };
 
   const handleClearImporter = () => {
     resetImporterState();
     if (!form.id) {
-      setForm({ ...EMPTY_FORM, images: [] });
+      setForm({
+        ...EMPTY_FORM,
+        transaction_type: 'rent',
+        rental_period: 'month',
+        currency: 'EUR',
+        area_unit: 'sqm',
+        source_name: HOUSINGANYWHERE_SOURCE_NAME,
+        images: [],
+      });
       setFeaturesText('');
       setOriginalListingUrl(null);
       setProvenance({});
-      setReviewConfirmed(true);
+      setReviewConfirmed(false);
     }
   };
 
@@ -672,8 +899,16 @@ export default function AdminPropertiesSection({
       return;
     }
 
-    const isHA = isHousingAnywhereSource(form.source_name);
+    const isHA = editorMode === 'affiliate' || isHousingAnywhereSource(form.source_name);
     const effectiveTransactionType: TransactionType = isHA ? 'rent' : form.transaction_type;
+
+    if (isHA && !form.id && duplicateSkuMatch) {
+      toast.error(
+        `SKU ${duplicateSkuMatch.source_listing_id} already exists ("${duplicateSkuMatch.title}"). Click "Open Existing Listing" to update it instead of creating a duplicate.`
+      );
+      setOpenSections((prev) => ({ ...prev, importer: true }));
+      return;
+    }
 
     if (isHA && !reviewConfirmed) {
       toast.error(
@@ -764,17 +999,105 @@ export default function AdminPropertiesSection({
     await executeSave(form.publication_status);
   };
 
-  const handleDelete = async (prop: Property) => {
-    const res = await deleteProperty(prop.id);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await deleteProperty(deleteTarget.id);
+    setDeleting(false);
     if (!res.success) {
       toast.error(res.error || 'Unable to delete property.');
       return;
     }
-    toast.success(`Deleted "${prop.title}".`);
+    toast.success(`Deleted "${deleteTarget.title}".`);
+    setDeleteTarget(null);
     await onRefresh();
   };
 
-  const isHA = isHousingAnywhereSource(form.source_name);
+  const handleTogglePublicationStatus = async (prop: Property) => {
+    const nextStatus: PublicationStatus =
+      prop.publication_status === 'published' ? 'draft' : 'published';
+    const isHAProp = isHousingAnywhereSource(prop.source_name);
+    const effectivePrice =
+      isHAProp && Number(prop.price) === 0 && prop.raw_payload?.price_unverified === true
+        ? null
+        : prop.price;
+
+    if (nextStatus === 'published') {
+      if (effectivePrice === null || !(Number(effectivePrice) > 0)) {
+        toast.error(
+          'Verified price greater than 0 is required before publishing. Opening editor...'
+        );
+        openEditModal(prop);
+        return;
+      }
+      const affiliateError = validatePropertyAffiliateRules({
+        source_name: prop.source_name,
+        transaction_type: isHAProp ? 'rent' : prop.transaction_type,
+        publication_status: 'published',
+        source_url: prop.source_url,
+        title: prop.title,
+        city: prop.city,
+        country: prop.country,
+        price: effectivePrice,
+      });
+      if (affiliateError) {
+        toast.error(affiliateError);
+        openEditModal(prop);
+        return;
+      }
+    }
+
+    setTogglingStatusId(prop.id);
+    const res = await saveProperty({
+      id: prop.id,
+      title: prop.title,
+      slug: prop.slug,
+      transaction_type: isHAProp ? 'rent' : prop.transaction_type,
+      property_type: prop.property_type,
+      listing_status: prop.listing_status,
+      publication_status: nextStatus,
+      price: prop.price,
+      currency: prop.currency || 'USD',
+      rental_period: prop.rental_period,
+      available_from: prop.available_from,
+      bedrooms: prop.bedrooms,
+      bathrooms: prop.bathrooms,
+      area_value: prop.area_value,
+      area_unit: prop.area_unit,
+      address_line: prop.address_line,
+      city: prop.city,
+      state_region: prop.state_region,
+      country: prop.country,
+      postal_code: prop.postal_code,
+      description: prop.description,
+      features: prop.features || [],
+      is_featured: prop.is_featured,
+      agent_name: prop.agent_name,
+      agent_email: prop.agent_email,
+      agent_phone: prop.agent_phone,
+      brokerage_name: prop.brokerage_name,
+      source_name: prop.source_name,
+      source_listing_id: prop.source_listing_id,
+      source_url: prop.source_url,
+      raw_payload: prop.raw_payload ?? null,
+    });
+    setTogglingStatusId(null);
+
+    if (!res.success) {
+      toast.error(res.error || 'Unable to update publication status.');
+      return;
+    }
+
+    toast.success(
+      nextStatus === 'published'
+        ? `"${prop.title}" published to marketplace.`
+        : `"${prop.title}" moved to Draft.`
+    );
+    await onRefresh();
+  };
+
+  const isAffiliateEditor = editorMode === 'affiliate';
+  const isHA = isAffiliateEditor || isHousingAnywhereSource(form.source_name);
   const parsedFeaturesList = featuresText
     .split(/\n|,/)
     .map((s) => s.trim())
@@ -782,7 +1105,7 @@ export default function AdminPropertiesSection({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-[#E5E0D8] rounded p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
             Property Marketplace CMS
@@ -790,33 +1113,62 @@ export default function AdminPropertiesSection({
           <h1 className="text-2xl font-serif font-semibold text-[#141413]">
             Manage Property Listings ({properties.length})
           </h1>
+          <p className="text-xs text-[#5C5A55] mt-1">
+            Create direct manual listings or import HousingAnywhere affiliate properties in their own dedicated workflows.
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold rounded inline-flex items-center gap-2 cursor-pointer whitespace-nowrap self-start sm:self-auto"
-        >
-          <Plus size={15} />
-          <span>New Property Listing</span>
-        </button>
+
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+          <button
+            type="button"
+            onClick={openCreateManualModal}
+            className="px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#142944] text-white text-xs font-semibold rounded inline-flex items-center gap-2 cursor-pointer whitespace-nowrap transition-colors"
+          >
+            <Plus size={15} />
+            <span>Create Manual Listing</span>
+          </button>
+          <button
+            type="button"
+            onClick={openCreateAffiliateModal}
+            className="px-4 py-2.5 bg-white hover:bg-[#FAF8F5] border border-[#1E3A5F] text-[#1E3A5F] text-xs font-semibold rounded inline-flex items-center gap-2 cursor-pointer whitespace-nowrap transition-colors"
+          >
+            <Download size={15} />
+            <span>Import Affiliate Listing</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-[#E5E0D8] rounded p-4 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="bg-white border border-[#E5E0D8] rounded p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        <div className="relative lg:col-span-5">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7770]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by title, city, country, or listing ID..."
+            placeholder="Search by title, city, country, or listing ID / SKU..."
             className="w-full h-10 pl-9 pr-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413]"
           />
         </div>
         <select
+          value={sourceFilter}
+          onChange={(e) =>
+            setSourceFilter(
+              e.target.value as 'all' | 'manual' | 'housinganywhere' | 'showcase_sample' | 'feed'
+            )
+          }
+          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] lg:col-span-3"
+        >
+          <option value="all">All Sources</option>
+          <option value="manual">Manual (Direct Inventory)</option>
+          <option value="housinganywhere">HousingAnywhere Affiliate</option>
+          <option value="showcase_sample">Showcase Sample</option>
+          <option value="feed">MLS / XML Feeds</option>
+        </select>
+        <select
           value={txFilter}
           onChange={(e) => setTxFilter(e.target.value as 'all' | 'sale' | 'rent')}
-          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413]"
+          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] lg:col-span-2"
         >
           <option value="all">All Transactions</option>
           <option value="sale">For Sale (Buy)</option>
@@ -827,16 +1179,16 @@ export default function AdminPropertiesSection({
           onChange={(e) =>
             setPubFilter(e.target.value as 'all' | 'draft' | 'published' | 'archived')
           }
-          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413]"
+          className="h-10 px-3 bg-[#FAF8F5] border border-[#D6CEBE] rounded text-sm text-[#141413] lg:col-span-2"
         >
-          <option value="all">All Publication Statuses</option>
+          <option value="all">All Statuses</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
       </div>
 
-      {/* Table */}
+      {/* Unified Property Management Table */}
       <div className="bg-white border border-[#E5E0D8] rounded overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-10 text-center space-y-3">
@@ -846,13 +1198,22 @@ export default function AdminPropertiesSection({
                 ? 'No properties stored in Supabase yet.'
                 : 'No properties match your active admin filters.'}
             </p>
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
-            >
-              Add First Property
-            </button>
+            <div className="flex flex-wrap justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={openCreateManualModal}
+                className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+              >
+                Create Manual Listing
+              </button>
+              <button
+                type="button"
+                onClick={openCreateAffiliateModal}
+                className="px-4 py-2 bg-white border border-[#1E3A5F] text-[#1E3A5F] text-xs font-semibold rounded cursor-pointer"
+              >
+                Import Affiliate Listing
+              </button>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -868,99 +1229,139 @@ export default function AdminPropertiesSection({
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5E0D8]">
-                {filtered.map((prop) => (
-                  <tr key={prop.id} className="hover:bg-[#FAF8F5]">
-                    <td className="py-3.5 px-4 max-w-xs">
-                      <div className="font-medium text-[#141413] flex items-center gap-1.5">
-                        {prop.is_featured && (
-                          <Star size={13} className="text-[#8C4A27] fill-[#8C4A27] shrink-0" />
-                        )}
-                        <span className="truncate">{prop.title}</span>
-                      </div>
-                      <div className="text-xs text-[#5C5A55] truncate">
-                        {formatPropertyLocation(prop)}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-[#4A4843]">
-                      <div className="font-semibold uppercase text-[#8C4A27]">
-                        {prop.transaction_type === 'rent' ? 'Rent' : 'Buy / Sale'}
-                      </div>
-                      <div>{formatPropertyTypeLabel(prop.property_type)}</div>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-xs tabular-nums text-[#141413]">
-                      {prop.raw_payload?.price_unverified && Number(prop.price) === 0
-                        ? 'Unverified'
-                        : formatPropertyPrice(
-                            prop.price,
-                            prop.currency,
-                            prop.transaction_type,
-                            prop.rental_period
+                {filtered.map((prop) => {
+                  const isRowHA = isHousingAnywhereSource(prop.source_name);
+                  return (
+                    <tr key={prop.id} className="hover:bg-[#FAF8F5]">
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <div className="font-medium text-[#141413] flex items-center gap-1.5">
+                          {prop.is_featured && (
+                            <Star size={13} className="text-[#8C4A27] fill-[#8C4A27] shrink-0" />
                           )}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      <div className="font-semibold capitalize text-[#141413]">
-                        {prop.publication_status}
-                      </div>
-                      <div className="text-[#5C5A55]">
-                        {formatListingStatusLabel(prop.listing_status)}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-[#5C5A55]">
-                      {prop.source_name === 'showcase_sample' || prop.is_sample ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                          Showcase Sample
-                        </span>
-                      ) : isPartnerListing(prop) ? (
-                        <div className="space-y-1">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-[#EFF4FA] text-[#1E3A5F] border border-[#C7D6E8]">
-                            Partner Listing
-                          </span>
-                          <div className="text-[11px] font-medium text-[#4A4843]">
-                            {formatListingSourceLabel(prop.source_name)}
-                          </div>
-                          {prop.source_listing_id && (
-                            <div className="text-[10px] font-mono text-[#7A7770]">
-                              SKU: {prop.source_listing_id}
-                            </div>
-                          )}
+                          <span className="truncate">{prop.title}</span>
                         </div>
-                      ) : (
-                        <span className="font-mono">{prop.source_name}</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        {prop.publication_status === 'published' && (
-                          <a
-                            href={`/properties/${encodeURIComponent(prop.slug)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 text-[#5C5A55] hover:text-[#1E3A5F]"
-                            title="View public listing"
-                          >
-                            <ExternalLink size={14} />
-                          </a>
+                        <div className="text-xs text-[#5C5A55] truncate">
+                          {formatPropertyLocation(prop)}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-[#4A4843]">
+                        <div className="font-semibold uppercase text-[#8C4A27]">
+                          {prop.transaction_type === 'rent' ? 'Rent' : 'Buy / Sale'}
+                        </div>
+                        <div>{formatPropertyTypeLabel(prop.property_type)}</div>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-xs tabular-nums text-[#141413]">
+                        {prop.raw_payload?.price_unverified && Number(prop.price) === 0
+                          ? 'Unverified'
+                          : formatPropertyPrice(
+                              prop.price,
+                              prop.currency,
+                              prop.transaction_type,
+                              prop.rental_period
+                            )}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs">
+                        <div className="font-semibold capitalize text-[#141413]">
+                          {prop.publication_status}
+                        </div>
+                        <div className="text-[#5C5A55]">
+                          {formatListingStatusLabel(prop.listing_status)}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-[#5C5A55]">
+                        {prop.source_name === 'showcase_sample' || prop.is_sample ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            Showcase Sample
+                          </span>
+                        ) : isPartnerListing(prop) ? (
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-[#EFF4FA] text-[#1E3A5F] border border-[#C7D6E8]">
+                              {isRowHA ? 'Partner Listing · HA' : 'Partner Listing'}
+                            </span>
+                            <div className="text-[11px] font-medium text-[#4A4843]">
+                              {formatListingSourceLabel(prop.source_name)}
+                            </div>
+                            {prop.source_listing_id && (
+                              <div className="text-[10px] font-mono text-[#7A7770]">
+                                SKU: {prop.source_listing_id}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="font-medium text-[#4A4843]">
+                            {formatListingSourceLabel(prop.source_name)}
+                          </span>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(prop)}
-                          className="p-1.5 text-[#1E3A5F] hover:text-[#141413] cursor-pointer"
-                          title="Edit listing"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(prop)}
-                          className="p-1.5 text-[#991B1B] hover:text-[#7F1D1D] cursor-pointer"
-                          title="Delete listing"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewTarget(prop)}
+                            className="p-1.5 text-[#5C5A55] hover:text-[#1E3A5F] cursor-pointer"
+                            title="Preview listing"
+                            aria-label={`Preview ${prop.title}`}
+                          >
+                            <Eye size={14} />
+                          </button>
+                          {prop.publication_status === 'published' && (
+                            <a
+                              href={`/properties/${encodeURIComponent(prop.slug)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-[#5C5A55] hover:text-[#1E3A5F]"
+                              title="Open public property page"
+                            >
+                              <ExternalLink size={14} />
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            disabled={togglingStatusId === prop.id}
+                            onClick={() => handleTogglePublicationStatus(prop)}
+                            className={`px-2 py-1 rounded border text-[11px] font-semibold cursor-pointer disabled:opacity-50 inline-flex items-center gap-1 ${
+                              prop.publication_status === 'published'
+                                ? 'bg-[#FAF8F5] border-[#D6CEBE] text-[#4A4843] hover:bg-[#EFECE6]'
+                                : 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534] hover:bg-[#DCFCE7]'
+                            }`}
+                            title={
+                              prop.publication_status === 'published'
+                                ? 'Unpublish to Draft'
+                                : 'Publish Listing'
+                            }
+                          >
+                            <Globe size={11} />
+                            <span>
+                              {togglingStatusId === prop.id
+                                ? '...'
+                                : prop.publication_status === 'published'
+                                ? 'Unpublish'
+                                : 'Publish'}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(prop)}
+                            className="p-1.5 text-[#1E3A5F] hover:text-[#141413] cursor-pointer"
+                            title={isRowHA ? 'Edit in Affiliate Importer' : 'Edit in Manual Editor'}
+                            aria-label={`Edit ${prop.title}`}
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(prop)}
+                            className="p-1.5 text-[#991B1B] hover:text-[#7F1D1D] cursor-pointer"
+                            title="Delete listing"
+                            aria-label={`Delete ${prop.title}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -973,28 +1374,42 @@ export default function AdminPropertiesSection({
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
-          aria-label={form.id ? 'Edit Property Listing' : 'Create Property Listing'}
+          aria-label={
+            isAffiliateEditor
+              ? form.id
+                ? 'Edit HousingAnywhere Affiliate Listing'
+                : 'Import HousingAnywhere Affiliate Listing'
+              : form.id
+              ? 'Edit Manual Property Listing'
+              : 'Create Manual Property Listing'
+          }
         >
           <div className="bg-white border border-[#E5E0D8] rounded w-full max-w-5xl max-h-[92vh] overflow-y-auto p-5 sm:p-8 space-y-6 my-4">
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs uppercase tracking-widest font-semibold text-[#8C4A27]">
-                    Property Editor
+                    {isAffiliateEditor ? 'Affiliate Import Workflow' : 'Manual Property Editor'}
                   </p>
-                  {isHA && (
+                  {isAffiliateEditor && (
                     <>
                       <span aria-hidden="true" className="text-[#9E988E]">
                         &middot;
                       </span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-[#EFF4FA] text-[#1E3A5F] border border-[#C7D6E8]">
-                        Partner Listing
+                        Partner Listing · HousingAnywhere
                       </span>
                     </>
                   )}
                 </div>
                 <h2 className="text-xl font-serif font-semibold text-[#141413]">
-                  {form.id ? 'Edit Property Listing' : 'Create Property Listing'}
+                  {isAffiliateEditor
+                    ? form.id
+                      ? 'Edit HousingAnywhere Affiliate Listing'
+                      : 'Import HousingAnywhere Affiliate Listing'
+                    : form.id
+                    ? 'Edit Manual Property Listing'
+                    : 'Create Manual Property Listing'}
                 </h2>
               </div>
               <button
@@ -1007,28 +1422,31 @@ export default function AdminPropertiesSection({
               </button>
             </div>
 
-            {/* TOP SECTION: HousingAnywhere (Impact) Auto-Import */}
-            <CollapsibleSection
-              title="Import Property from HousingAnywhere (Impact)"
-              subtitle="One-paste HTML creative extraction & authorized catalog completion"
-              badge={parseResult?.sku ? `SKU ${parseResult.sku}` : undefined}
-              open={openSections.importer}
-              onToggle={() => toggleSection('importer')}
-            >
-              <HousingAnywhereImportPanel
-                htmlInput={impactHtmlInput}
-                onHtmlInputChange={setImpactHtmlInput}
-                onImport={handleRunImpactImport}
-                onClear={handleClearImporter}
-                importing={importing}
-                importError={importError}
-                parseResult={parseResult}
-                apiLookup={apiLookup}
-                duplicateMatch={duplicateSkuMatch}
-                onOpenDuplicate={openEditModal}
-                onCopyUrl={handleCopyUrl}
-              />
-            </CollapsibleSection>
+            {/* DEDICATED TOP SECTION FOR AFFILIATE WORKFLOW ONLY */}
+            {isAffiliateEditor && (
+              <CollapsibleSection
+                title="Import Property from HousingAnywhere (Impact)"
+                subtitle="One-paste HTML creative extraction & authorized catalog completion"
+                badge={parseResult?.sku ? `SKU ${parseResult.sku}` : undefined}
+                open={openSections.importer}
+                onToggle={() => toggleSection('importer')}
+              >
+                <HousingAnywhereImportPanel
+                  htmlInput={impactHtmlInput}
+                  onHtmlInputChange={setImpactHtmlInput}
+                  onImport={handleRunImpactImport}
+                  onClear={handleClearImporter}
+                  importing={importing}
+                  importError={importError}
+                  parseResult={parseResult}
+                  apiLookup={apiLookup}
+                  apiStatus={impactApiStatus}
+                  duplicateMatch={duplicateSkuMatch}
+                  onOpenDuplicate={openEditModal}
+                  onCopyUrl={handleCopyUrl}
+                />
+              </CollapsibleSection>
+            )}
 
             <form onSubmit={handleFormSubmit} className="space-y-5">
               {/* 1. Core Listing Details */}
@@ -1633,33 +2051,31 @@ export default function AdminPropertiesSection({
                     </label>
                     <select
                       id="prop-source-name"
-                      value={form.source_name || 'manual'}
+                      value={isAffiliateEditor ? HOUSINGANYWHERE_SOURCE_NAME : form.source_name || 'manual'}
+                      disabled={isAffiliateEditor}
                       onChange={(e) => {
                         const nextSource = e.target.value;
-                        const nextIsHA = isHousingAnywhereSource(nextSource);
                         setForm((prev) => ({
                           ...prev,
                           source_name: nextSource,
-                          transaction_type: nextIsHA ? 'rent' : prev.transaction_type,
-                          rental_period: nextIsHA
-                            ? prev.rental_period || 'month'
-                            : prev.rental_period,
                         }));
-                        if (nextIsHA) {
-                          setReviewConfirmed(false);
-                        }
                       }}
-                      className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm bg-white"
+                      className="w-full h-10 px-3 border border-[#D6CEBE] rounded text-sm bg-white disabled:bg-[#F3EFE8] disabled:text-[#4A4843]"
                     >
-                      <option value="manual">Manual (Active Genuine Inventory)</option>
-                      <option value="showcase_sample">
-                        Showcase Sample (Illustrative Portfolio Example)
-                      </option>
-                      <option value="listhub">ListHub MLS Feed</option>
-                      <option value="feed">Custom XML / RESO Feed</option>
-                      <option value={HOUSINGANYWHERE_SOURCE_NAME}>
-                        HousingAnywhere Affiliate (Impact)
-                      </option>
+                      {isAffiliateEditor ? (
+                        <option value={HOUSINGANYWHERE_SOURCE_NAME}>
+                          HousingAnywhere Affiliate (Impact)
+                        </option>
+                      ) : (
+                        <>
+                          <option value="manual">Manual (Active Genuine Inventory)</option>
+                          <option value="showcase_sample">
+                            Showcase Sample (Illustrative Portfolio Example)
+                          </option>
+                          <option value="listhub">ListHub MLS Feed</option>
+                          <option value="feed">Custom XML / RESO Feed</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -2072,22 +2488,38 @@ export default function AdminPropertiesSection({
                 )}
               </CollapsibleSection>
 
-              {/* 7. Pre-Save Import & Listing Review */}
-              <CollapsibleSection
-                title="7. Pre-Save Import & Listing Review"
-                subtitle="Source provenance, missing fields, and publishing verification"
-                open={openSections.review}
-                onToggle={() => toggleSection('review')}
-              >
-                <PropertyEditorReviewPanel
-                  form={form}
-                  featuresCount={parsedFeaturesList.length}
-                  originalListingUrl={originalListingUrl}
-                  provenance={provenance}
-                  reviewConfirmed={reviewConfirmed}
-                  onReviewConfirmedChange={setReviewConfirmed}
-                />
-              </CollapsibleSection>
+              {/* 7. Realistic Property Preview & Pre-Save Review (Affiliate Workflow) */}
+              {isAffiliateEditor && (
+                <>
+                  <CollapsibleSection
+                    title="7. Realistic Property Preview"
+                    subtitle="Verify photos, location, rent, specs, and HousingAnywhere button before saving or publishing"
+                    open={openSections.preview}
+                    onToggle={() => toggleSection('preview')}
+                  >
+                    <AffiliatePropertyPreview
+                      property={form}
+                      features={parsedFeaturesList}
+                    />
+                  </CollapsibleSection>
+
+                  <CollapsibleSection
+                    title="8. Pre-Save Import & Listing Review"
+                    subtitle="Source provenance, missing fields, and publishing verification"
+                    open={openSections.review}
+                    onToggle={() => toggleSection('review')}
+                  >
+                    <PropertyEditorReviewPanel
+                      form={form}
+                      featuresCount={parsedFeaturesList.length}
+                      originalListingUrl={originalListingUrl}
+                      provenance={provenance}
+                      reviewConfirmed={reviewConfirmed}
+                      onReviewConfirmedChange={setReviewConfirmed}
+                    />
+                  </CollapsibleSection>
+                </>
+              )}
 
               <div className="border-t border-[#E5E0D8] pt-4 flex flex-wrap items-center justify-end gap-3">
                 <button
@@ -2122,6 +2554,130 @@ export default function AdminPropertiesSection({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Listing Preview Modal (from unified table row) */}
+      {previewTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview ${previewTarget.title}`}
+        >
+          <div className="bg-white border border-[#E5E0D8] rounded w-full max-w-4xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 my-4">
+            <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-widest font-semibold text-[#8C4A27]">
+                  CMS Listing Preview
+                </p>
+                <h2 className="text-lg font-serif font-semibold text-[#141413]">
+                  {previewTarget.title}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewTarget(null)}
+                aria-label="Close listing preview"
+                className="p-2 text-[#5C5A55] hover:text-[#141413] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <AffiliatePropertyPreview
+              property={{
+                ...previewTarget,
+                price:
+                  isHousingAnywhereSource(previewTarget.source_name) &&
+                  Number(previewTarget.price) === 0 &&
+                  previewTarget.raw_payload?.price_unverified === true
+                    ? null
+                    : previewTarget.price,
+                images: previewTarget.images || [],
+              }}
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E5E0D8]">
+              <div className="flex flex-wrap items-center gap-2">
+                {previewTarget.publication_status === 'published' && (
+                  <a
+                    href={`/properties/${encodeURIComponent(previewTarget.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-[#FAF8F5] border border-[#D6CEBE] text-xs font-semibold text-[#1E3A5F] rounded inline-flex items-center gap-1.5"
+                  >
+                    <span>Open Public Page</span>
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = previewTarget;
+                    setPreviewTarget(null);
+                    openEditModal(target);
+                  }}
+                  className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded cursor-pointer"
+                >
+                  Edit Listing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTarget(null)}
+                  className="px-4 py-2 bg-white border border-[#D6CEBE] text-xs font-semibold rounded cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm Property Deletion"
+        >
+          <div className="bg-white border border-[#E5E0D8] rounded w-full max-w-md p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={20} className="text-[#991B1B] shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h2 className="text-base font-serif font-semibold text-[#141413]">
+                  Delete Property Listing?
+                </h2>
+                <p className="text-xs text-[#5C5A55] leading-relaxed">
+                  Are you sure you want to permanently delete{' '}
+                  <strong className="text-[#141413]">{deleteTarget.title}</strong>? This removes the
+                  listing and its image associations from the marketplace.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E5E0D8]">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 bg-white border border-[#D6CEBE] text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
           </div>
         </div>
       )}
